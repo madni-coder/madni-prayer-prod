@@ -5,7 +5,6 @@ const navLinks = [
     { name: "Quran", href: "/quran" },
     { name: "Prayer Times", href: "/prayer-times" },
     { name: "Qibla", href: "/qibla" },
-    { name: "Azan Alerts", href: "/azan-alerts" },
     { name: "Tasbih", href: "/tasbih" },
     { name: "Settings", href: "/settings" },
 ];
