@@ -1,4 +1,3 @@
-// ...existing code from register.js moved here...
 import React, { useState } from "react";
 
 export default function Register() {
@@ -20,13 +19,13 @@ export default function Register() {
     };
 
     return (
-        <div className="flex flex-col items-center justify-center min-h-[80vh] px-4">
+        <div className="flex flex-col items-center justify-center min-h-[80vh] px-4 bg-base-100">
             {!submitted ? (
                 <form
                     onSubmit={handleSubmit}
-                    className="glass-card max-w-md w-full p-8 space-y-6 shadow-lg animate-fade-in"
+                    className="glass-card max-w-md w-full p-8 space-y-6 shadow-lg animate-fade-in bg-base-200 text-base-content"
                 >
-                    <h2 className="text-2xl font-bold text-center text-[var(--primary-green)] mb-2">
+                    <h2 className="text-2xl font-bold text-center text-primary mb-2">
                         Register Yourself
                     </h2>
                     <div className="form-control">
@@ -76,7 +75,7 @@ export default function Register() {
                     </button>
                 </form>
             ) : (
-                <div className="glass-card max-w-md w-full p-8 flex flex-col items-center animate-fade-in">
+                <div className="glass-card max-w-md w-full p-8 flex flex-col items-center animate-fade-in bg-base-200 text-base-content">
                     <svg
                         width="64"
                         height="64"
@@ -98,10 +97,10 @@ export default function Register() {
                             strokeLinecap="round"
                         />
                     </svg>
-                    <h2 className="text-2xl font-bold text-[var(--primary-green)] mb-2">
+                    <h2 className="text-2xl font-bold text-primary mb-2">
                         Welcome, {form.name}!
                     </h2>
-                    <p className="text-center text-[var(--foreground)]">
+                    <p className="text-center">
                         Your account has been created.
                         <br />
                         Enjoy Madni Prayer Times!

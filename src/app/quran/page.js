@@ -19,11 +19,11 @@ export default function Quran() {
     );
 
     return (
-        <section className="flex flex-col items-center justify-center min-h-[70vh] px-4 animate-fade-in">
-            <h2 className="text-2xl md:text-3xl font-bold text-[var(--primary-green)] mb-4">
+        <section className="flex flex-col items-center justify-center min-h-[70vh] px-4 animate-fade-in bg-base-100">
+            <h2 className="text-2xl md:text-3xl font-bold text-primary mb-4">
                 Quran
             </h2>
-            <div className="glass-card p-6 max-w-2xl w-full">
+            <div className="glass-card p-6 max-w-2xl w-full bg-base-200 text-base-content">
                 <input
                     className="input input-bordered w-full mb-4"
                     placeholder="Search Surah by name, number, or Arabic..."
@@ -34,19 +34,19 @@ export default function Quran() {
                     {filtered.map((s) => (
                         <div
                             key={s.number}
-                            className="neumorph-card p-4 flex flex-col items-center transition hover:scale-105 cursor-pointer"
+                            className="neumorph-card p-4 flex flex-col items-center transition hover:scale-105 cursor-pointer bg-base-100 border border-base-300"
                         >
-                            <span className="text-lg font-bold text-[var(--primary-green)]">
+                            <span className="text-lg font-bold text-primary">
                                 {s.number}. {s.name}
                             </span>
                             <span className="text-2xl mb-1">{s.arabic}</span>
-                            <span className="text-xs text-gray-500">
+                            <span className="text-xs text-base-content/60">
                                 Ayahs: {s.ayahs}
                             </span>
                         </div>
                     ))}
                     {filtered.length === 0 && (
-                        <div className="col-span-2 text-center text-gray-400">
+                        <div className="col-span-2 text-center text-base-content/60">
                             No Surah found.
                         </div>
                     )}
