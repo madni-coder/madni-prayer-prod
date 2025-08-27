@@ -64,7 +64,7 @@ const paras = paraNames.map((p, i) => ({
 
 export default function Quran() {
     const [search, setSearch] = useState("");
-    const [view, setView] = useState("surah"); // "surah" or "para"
+    const [view, setView] = useState("para"); // "para" is now default
 
     // Filter logic for Surah and Para
     const filteredSurahs = surahs.filter(

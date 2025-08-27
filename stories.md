@@ -16,7 +16,7 @@
     -   **Acceptance Criteria:**
         -   Surah and Para lists are fetched dynamically.
         -   Lists are scrollable and searchable.
-    -   **Status:** ⬜ Not Done
+    -   **Status:** ⬜ Done
 
 -   As a user, I want to read Quran with Urdu translation (Kanzul Iman).
 
