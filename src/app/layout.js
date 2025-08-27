@@ -22,8 +22,11 @@ export default function RootLayout({ children }) {
         <html lang="en" data-theme="retro">
             <body
                 className={`${geistSans.variable} ${geistMono.variable} antialiased`}
+                
             >
+
                 <TopNav />
+
                 {children}
             </body>
         </html>
