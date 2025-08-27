@@ -44,7 +44,7 @@ const sections = [
 export default function Home() {
     return (
         <main className="min-h-screen flex flex-col items-center justify-center bg-base-100 font-mono">
-            <h1 className="text-5xl font-extrabold mb-10 text-primary tracking-widest retro-title">
+            <h1 className="text-5xl font-extrabold mb-10 text-primary  retro-title">
                 Madni Prayer Times
             </h1>
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-8 w-full max-w-4xl px-4">
