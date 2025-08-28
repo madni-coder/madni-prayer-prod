@@ -59,6 +59,9 @@ export default function PrayerTimes() {
 
     return (
         <section className="flex flex-col items-center justify-center min-h-[70vh] px-1 py-2 sm:px-2 sm:py-4 animate-fade-in bg-base-100">
+            <h2 className="text-2xl md:text-3xl font-bold text-primary mb-3">
+                Prayer Times
+            </h2>
             {/* Top Bar */}
             <div className="w-full max-w-2xl flex flex-col gap-1 sm:gap-0 sm:flex-row flex-wrap items-start sm:items-center justify-between mb-2">
                 <div className="flex items-center gap-2 text-xs sm:text-sm text-base-content/60">
