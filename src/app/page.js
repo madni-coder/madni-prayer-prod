@@ -9,6 +9,7 @@ import {
     FaHashtag,
     FaRegCompass,
 } from "react-icons/fa";
+import Image from "next/image";
 
 const sections = [
     {
@@ -29,7 +30,7 @@ const sections = [
         icon: <FaClock className="text-4xl text-amber-500" />,
         desc: "Get accurate daily prayer times.",
     },
-    
+
     {
         name: "Jamat Times",
         href: "/jamat-times",
@@ -40,9 +41,11 @@ const sections = [
         name: "Tasbih Counter",
         href: "/tasbih",
         icon: (
-            <img
+            <Image
                 src="/tasbih.png"
                 alt="Tasbih Counter"
+                width={40}
+                height={40}
                 className="w-10 h-10 object-cover"
             />
         ),

@@ -29,7 +29,7 @@ export default function Qibla() {
             clearInterval(interval);
             cancelAnimationFrame(raf);
         };
-    }, []);
+    }, [angle]);
 
     function handleCompassClick(e) {
         const rect = e.currentTarget.getBoundingClientRect();
