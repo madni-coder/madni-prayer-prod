@@ -140,49 +140,49 @@ export default function Quran() {
                         : filteredParas.map((p) => (
                               <div
                                   key={p.number}
-                                  className="neumorph-card flex flex-col items-center justify-between transition hover:scale-105 cursor-pointer bg-base-100 border border-base-300"
+                                  className="neumorph-card flex flex-col items-center justify-between transition hover:scale-105 cursor-pointer bg-base-100 border border-primary"
                                   style={{
                                       minHeight: 140,
                                       height: 140,
                                       maxHeight: 140,
                                       minWidth: 0,
                                       width: "100%",
-                                      background: "#232323",
-                                      color: "#fff",
+                                      // Removed hardcoded background and color
                                       borderRadius: 12,
-                                      border: "2px solid #d32f2f",
+                                      // Use theme border color
+                                      // border: "2px solid #d32f2f", // removed
                                       position: "relative",
                                       padding: 12,
                                   }}
                               >
                                   <div className="w-full flex justify-between items-start">
-                                      <span className="text-base font-bold text-red-400">
+                                      <span className="text-base font-bold text-primary">
                                           {p.number}
                                       </span>
                                       {/* Decorative corner, optional */}
                                       <span
-                                          className="text-xs text-red-400"
+                                          className="text-xs text-primary"
                                           style={{ fontFamily: "serif" }}
                                       >
                                           ◤
                                       </span>
                                   </div>
                                   <span
-                                      className="text-2xl mb-1 mt-2 text-center"
+                                      className="text-2xl mb-1 mt-2 text-center text-white"
                                       style={{ fontWeight: 600 }}
                                   >
                                       {p.arabic}
                                   </span>
                                   <div className="w-full flex justify-between items-end mt-auto">
-                                      <span className="text-xs text-red-400">
+                                      <span className="text-xs text-primary">
                                           {p.ruku}
                                       </span>
-                                      <span className="bg-red-600 text-white text-xs px-2 py-1 rounded-full ml-1">
+                                      <span className="bg-primary text-primary-content text-xs px-2 py-1 rounded-full ml-1">
                                           Total Ruku
                                       </span>
                                       {/* Decorative corner, optional */}
                                       <span
-                                          className="text-xs text-red-400"
+                                          className="text-xs text-primary"
                                           style={{ fontFamily: "serif" }}
                                       >
                                           ◢
