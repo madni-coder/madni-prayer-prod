@@ -1,7 +1,7 @@
 masjid
 "use client";
 import React from "react";
-import { usePathname } from "next/navigation";
+
 
 const navLinks = [
     { name: "Home", href: "/" },
