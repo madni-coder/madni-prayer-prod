@@ -1,8 +1,10 @@
-'use client'
+"use client";
 import React from "react";
+import { usePathname } from "next/navigation";
 
 const navLinks = [
     { name: "Home", href: "/" },
+    { name: "Jamat Times", href: "/jamat-times" },
     { name: "Quran", href: "/quran" },
     { name: "Prayer Times", href: "/prayer-times" },
     { name: "Qibla", href: "/qibla" },
@@ -11,6 +13,7 @@ const navLinks = [
 ];
 
 export default function TopNav() {
+    const pathname = usePathname();
     return (
         <nav className="sticky top-0 z-50 bg-base-100 backdrop-blur border-b border-base-300 shadow-sm">
             <div className="max-w-5xl mx-auto flex items-center justify-between px-4 py-2">
@@ -22,7 +25,13 @@ export default function TopNav() {
                         <li key={link.name}>
                             <a
                                 href={link.href}
-                                className="btn btn-ghost btn-sm rounded-full text-base-content hover:bg-primary hover:text-primary-content transition-colors duration-200"
+                                className={`btn btn-ghost btn-sm rounded-full text-base-content hover:bg-primary hover:text-primary-content transition-colors duration-200
+                                    ${
+                                        pathname === link.href
+                                            ? "btn-active bg-primary text-primary-content"
+                                            : ""
+                                    }
+                                `}
                             >
                                 {link.name}
                             </a>
@@ -51,7 +60,13 @@ export default function TopNav() {
                             <li key={link.name}>
                                 <a
                                     href={link.href}
-                                    className="text-base-content hover:bg-primary hover:text-primary-content transition-colors duration-200"
+                                    className={`text-base-content hover:bg-primary hover:text-primary-content transition-colors duration-200
+                                        ${
+                                            pathname === link.href
+                                                ? "bg-primary text-primary-content font-bold"
+                                                : ""
+                                        }
+                                    `}
                                 >
                                     {link.name}
                                 </a>

@@ -1,87 +1,93 @@
 "use client";
 
 import Link from "next/link";
+import {
+    FaQuran,
+    FaCog,
+    FaPeopleArrows,
+    FaClock,
+    FaHashtag,
+    FaRegCompass,
+} from "react-icons/fa";
 
 const sections = [
     {
+        name: "Qibla Finder",
+        href: "/qibla",
+        icon: <FaRegCompass className="text-4xl text-blue-500" />,
+        desc: "Find the direction of the Qibla.",
+    },
+    {
         name: "Quran",
         href: "/quran",
-        icon: "📖",
-        desc: "Read, listen, and search Quran.",
+        icon: <FaQuran className="text-4xl text-emerald-600" />,
+        desc: "Read, listen, and search the Holy Quran.",
     },
     {
         name: "Prayer Times",
         href: "/prayer-times",
-        icon: "🕋",
-        desc: "View daily prayer times.",
+        icon: <FaClock className="text-4xl text-amber-500" />,
+        desc: "Get accurate daily prayer times.",
+    },
+    
+    {
+        name: "Jamat Times",
+        href: "/jamat-times",
+        icon: <FaPeopleArrows className="text-4xl text-rose-500" />,
+        desc: "View local mosque prayer schedules.",
     },
     {
-        name: "Qibla",
-        href: "/qibla",
-        icon: "🧭",
-        desc: "Find Qibla direction.",
-    },
-    {
-        name: "Azan Alerts",
-        href: "/azan-alerts",
-        icon: "🔔",
-        desc: "Set up Azan notifications.",
-    },
-    {
-        name: "Tasbih",
+        name: "Tasbih Counter",
         href: "/tasbih",
-        icon: "🔢",
-        desc: "Digital Tasbih counter.",
+        icon: (
+            <img
+                src="/tasbih.png"
+                alt="Tasbih Counter"
+                className="w-10 h-10 object-cover"
+            />
+        ),
+        desc: "A digital tasbih to track your dhikr.",
     },
     {
         name: "Settings",
         href: "/settings",
-        icon: "⚙️",
-        desc: "App preferences.",
+        icon: <FaCog className="text-4xl text-slate-500" />,
+        desc: "Customize app preferences.",
     },
 ];
 
 export default function Home() {
     return (
-        <main className="min-h-screen flex flex-col items-center justify-center bg-base-100 font-mono">
-            <h1 className="text-5xl font-extrabold mb-10 text-primary  retro-title">
-                Madni Prayer Times
-            </h1>
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-8 w-full max-w-4xl px-4">
+        <main className="flex min-h-screen flex-col items-center justify-center bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-gray-100 p-4 sm:p-6">
+            <header className="text-center mb-10 mt-10">
+                <h1 className="text-4xl sm:text-5xl lg:text-6xl font-extrabold tracking-tight">
+                    <span className="bg-clip-text text-transparent bg-gradient-to-r from-green-500 to-teal-600">
+                        Madni Prayer Times
+                    </span>
+                </h1>
+                <p className="mt-2 text-lg sm:text-xl text-gray-600 dark:text-gray-400 max-w-2xl mx-auto">
+                    Your essential companion for daily Islamic practices.
+                </p>
+            </header>
+            <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 gap-6 w-full max-w-6xl">
                 {sections.map((section) => (
                     <Link
                         key={section.name}
-                        href={"/" + section.href.replace(/^\//, "")}
-                        className="group bg-base-200 border-4 border-primary rounded-lg shadow-lg p-8 flex flex-col items-center transition-transform duration-200 hover:scale-105 hover:bg-base-300 cursor-pointer retro-card"
+                        href={section.href}
+                        className="group relative flex flex-col items-center gap-3 p-6 bg-white dark:bg-gray-800 rounded-2xl shadow-lg border border-gray-200 dark:border-gray-700 hover:shadow-xl transform transition-transform duration-300 hover:scale-105"
                     >
-                        <span className="text-5xl mb-3 text-secondary drop-shadow-sm">
+                        <div className="flex-shrink-0 p-3 rounded-full bg-gray-100 dark:bg-gray-700 mb-2">
                             {section.icon}
-                        </span>
-                        <span className="text-2xl font-bold mb-2 text-base-content group-hover:text-primary transition-colors retro-label">
+                        </div>
+                        <h2 className="text-xl font-semibold mb-1 text-center group-hover:text-green-600 dark:group-hover:text-green-400 transition-colors">
                             {section.name}
-                        </span>
-                        <span className="text-base-content text-base text-center retro-desc">
+                        </h2>
+                        <p className="text-sm text-gray-500 dark:text-gray-400 text-center">
                             {section.desc}
-                        </span>
+                        </p>
                     </Link>
                 ))}
             </div>
-            <style jsx global>{`
-                .retro-title {
-                    font-family: "Courier New", Courier, monospace;
-                    letter-spacing: 0.15em;
-                    text-shadow: 2px 2px 0 #ffd180, 4px 4px 0 #8d6e63;
-                }
-                .retro-card {
-                    box-shadow: 0 4px 0 #8d6e63, 0 8px 0 #ffd180;
-                }
-                .retro-label {
-                    font-family: "Courier New", Courier, monospace;
-                }
-                .retro-desc {
-                    font-family: "Courier New", Courier, monospace;
-                }
-            `}</style>
         </main>
     );
 }
