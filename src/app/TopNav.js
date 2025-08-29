@@ -9,6 +9,8 @@ const navLinks = [
     { name: "Prayer Times", href: "/prayer-times" },
     { name: "Qibla", href: "/qibla" },
     { name: "Tasbih", href: "/tasbih" },
+    { name: "Rewards", href: "/rewards" },
+
     { name: "Settings", href: "/settings" },
 ];
 
