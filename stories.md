@@ -1,4 +1,4 @@
-# Madni Prayer Times – User Stories & Screen Tasks
+# RAAH E HIDAYAT – User Stories & Screen Tasks
 
 ## 1. Registration & Home
 
