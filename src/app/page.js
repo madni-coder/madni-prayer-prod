@@ -65,8 +65,7 @@ export default function Home() {
             <header className="text-center mb-10 mt-10">
                 <h1 className="text-4xl sm:text-5xl lg:text-6xl font-extrabold tracking-tight">
                     <span className="bg-clip-text text-transparent bg-gradient-to-r from-green-500 to-teal-600">
-                        Madni Prayer Times
-                    </span>
+                    RAAH-E-HIDAYAT                  </span>
                 </h1>
                 <p className="mt-2 text-lg sm:text-xl text-gray-600 dark:text-gray-400 max-w-2xl mx-auto">
                     Your essential companion for daily Islamic practices.

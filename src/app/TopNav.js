@@ -10,7 +10,7 @@ const navLinks = [
     { name: "Qibla", href: "/qibla" },
     { name: "Tasbih", href: "/tasbih" },
     { name: "Rewards", href: "/rewards" },
-
+    { name: "Notice", href: "/notice" },
     { name: "Settings", href: "/settings" },
 ];
 
@@ -20,7 +20,7 @@ export default function TopNav() {
         <nav className="sticky top-0 z-50 bg-base-100 backdrop-blur border-b border-base-300 shadow-sm">
             <div className="max-w-5xl mx-auto flex items-center justify-between px-4 py-2">
                 <span className="font-bold text-xl text-primary tracking-wide">
-                    Madni Prayer Times
+                    RAAH-E-HIDAYAT{" "}
                 </span>
                 <ul className="hidden md:flex gap-4">
                     {navLinks.map((link) => (
