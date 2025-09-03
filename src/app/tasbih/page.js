@@ -92,12 +92,7 @@ export default function Tasbih() {
                             <span className="drop-shadow-lg">Count +1</span>
                         </button>
                     </div>
-                    <p className="text-lg mb-2">
-                        Digital counter, auto count, reset, audio, leaderboard.
-                    </p>
-                    <p className="text-sm text-base-content/60">
-                        (Feature coming soon)
-                    </p>
+                   
                 </div>
             </div>
         </section>

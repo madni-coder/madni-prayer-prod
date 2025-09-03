@@ -1,5 +1,6 @@
 "use client";
 import React from "react";
+import Image from "next/image";
 import { usePathname } from "next/navigation";
 
 const navLinks = [
@@ -19,9 +20,19 @@ export default function TopNav() {
     return (
         <nav className="sticky top-0 z-50 bg-base-100 backdrop-blur border-b border-base-300 shadow-sm">
             <div className="max-w-5xl mx-auto flex items-center justify-between px-4 py-2">
-                <span className="font-bold text-xl text-primary tracking-wide">
-                    RAAH-E-HIDAYAT{" "}
-                </span>
+                <div className="flex items-center gap-2">
+                    <span className="font-bold text-xl text-primary tracking-wide">
+                        RAAH-E-HIDAYAT{" "}
+                    </span>
+                    <Image
+                        src="/logo.png"
+                        alt="Raah-e-Hidayat Logo"
+                        width={40}
+                        height={40}
+                        className="w-18 h-10 sm:w-10 sm:h-10 md:w-12 md:h-12 object-contain"
+                        priority
+                    />
+                </div>
                 <ul className="hidden md:flex gap-4">
                     {navLinks.map((link) => (
                         <li key={link.name}>

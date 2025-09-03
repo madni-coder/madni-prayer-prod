@@ -3,37 +3,47 @@ import React, { useEffect, useState } from "react";
 import { Bell, BellOff, MapPin, Calendar, Moon } from "lucide-react";
 
 const prayerTimes = [
-    { name: "Fajr", time: "04:29:23 AM", alert: true, color: "text-primary" },
+    {
+        name: "Fajr",
+        time: "04:29:23 AM",
+        alert: true,
+        color: "text-primary text-base md:text-md",
+    },
     {
         name: "Sun Rise",
         time: "05:43:29 AM",
         alert: false,
-        color: "text-secondary",
+        color: "text-secondary text-base md:text-md",
     },
     {
         name: "Dahwa-e-kubra",
-        time: "11:27:48 AM",
+        time: "11:23:48 AM",
         alert: false,
-        color: "text-base-content/70",
+        color: "text-base-content/70 text-base md:text-md",
     },
-    { name: "Zuhr", time: "12:04:59 PM", alert: true, color: "text-accent" },
+    {
+        name: "Zuhr",
+        time: "12:00:26 PM",
+        alert: true,
+        color: "text-accent text-base md:text-md",
+    },
     {
         name: "Asr (Hanafi)",
-        time: "04:35:58 PM",
+        time: "04:30:00 PM",
         alert: true,
-        color: "text-warning",
+        color: "text-warning text-base md:text-md",
     },
     {
         name: "Maghrib",
-        time: "06:26:12 PM",
+        time: "06:17:25 PM",
         alert: true,
-        color: "text-success",
+        color: "text-success text-base md:text-md",
     },
     {
         name: "Isha (Hanafi)",
-        time: "07:40:09 PM",
+        time: "07:31:00 PM",
         alert: true,
-        color: "text-info",
+        color: "text-info text-base md:text-md",
     },
 ];
 
@@ -59,36 +69,36 @@ export default function PrayerTimes() {
 
     return (
         <section className="flex flex-col items-center justify-center min-h-[70vh] px-1 py-2 sm:px-2 sm:py-4 animate-fade-in bg-base-100">
-            <h2 className="text-2xl md:text-3xl font-bold text-primary mb-3">
+            <h2 className="text-xl sm:text-2xl md:text-3xl font-bold text-primary mb-2 sm:mb-3">
                 Prayer Times
             </h2>
             {/* Top Bar */}
-            <div className="w-full max-w-2xl flex flex-col gap-1 sm:gap-0 sm:flex-row flex-wrap items-start sm:items-center justify-between mb-2">
-                <div className="flex items-center gap-2 text-xs sm:text-sm text-base-content/60">
+            <div className="w-full max-w-2xl flex flex-col sm:flex-row flex-wrap items-center justify-center gap-2 sm:gap-0 mb-2">
+                <div className="flex items-center gap-1 sm:gap-2 text-xs sm:text-sm text-white">
                     <Moon className="w-4 h-4 sm:w-5 sm:h-5" />
-                    <span>3, Rabi-ul-Awwal, 1447</span>
+                    <span>12, Rabi-ul-Awwal, 1447</span>
                 </div>
-                <div className="flex items-center gap-2 text-xs sm:text-sm text-base-content/60">
+                <div className="flex items-center gap-1 sm:gap-2 text-xs sm:text-sm text-white">
                     <Calendar className="w-4 h-4 sm:w-5 sm:h-5" />
-                    <span>Wed 27 August 2025</span>
+                    <span>Fri 05 September 2025</span>
                 </div>
-                <div className="flex items-center gap-2 text-xs sm:text-sm text-base-content/60">
+                <div className="flex items-center gap-1 sm:gap-2 text-xs sm:text-sm text-white">
                     <span>GMT: 5.5, Height: 964ft</span>
                 </div>
-                <div className="flex items-center gap-2 text-xs sm:text-sm text-base-content/60">
+                <div className="flex items-center gap-1 sm:gap-2 text-xs sm:text-sm text-white">
                     <MapPin className="w-4 h-4 sm:w-5 sm:h-5" />
-                    <span>Raipur, Chhattisgarh 492001</span>
+                    <span>Bilaspur, Chhattisgarh 495001</span>
                 </div>
             </div>
             {/* Main Card */}
-            <div className="relative glass-card p-2 sm:p-4 md:p-6 max-w-full sm:max-w-2xl w-full flex flex-col sm:flex-row gap-2 sm:gap-4 items-center bg-base-200 border border-base-300 shadow-md">
+            <div className="relative glass-card p-2 sm:p-4 md:p-6 max-w-full sm:max-w-2xl w-full flex flex-col sm:flex-row gap-3 sm:gap-4 items-center bg-base-200 border border-base-300 shadow-md">
                 {/* Circular Countdown */}
-                <div className="flex flex-col items-center justify-center w-full sm:w-auto">
-                    <div className="relative flex items-center justify-center w-24 h-24 sm:w-32 sm:h-32">
+                <div className="flex flex-col items-center justify-center w-full sm:w-auto mb-2 sm:mb-0">
+                    <div className="relative flex items-center justify-center w-20 h-20 sm:w-28 sm:h-28 md:w-32 md:h-32">
                         <svg
                             className="absolute top-0 left-0"
-                            width="96"
-                            height="96"
+                            width="80"
+                            height="80"
                             viewBox="0 0 128 128"
                         >
                             <circle
@@ -105,10 +115,10 @@ export default function PrayerTimes() {
                             />
                         </svg>
                         <div className="flex flex-col items-center justify-center z-10">
-                            <span className="text-warning font-semibold text-base sm:text-lg">
+                            <span className="text-warning font-semibold text-sm sm:text-base md:text-lg">
                                 {prayerTimes[3].name}
                             </span>
-                            <span className="text-xl sm:text-2xl md:text-3xl font-bold text-base-content">
+                            <span className="text-lg sm:text-xl md:text-2xl font-bold text-base-content">
                                 {formatTime(now)}
                             </span>
                         </div>
@@ -119,37 +129,41 @@ export default function PrayerTimes() {
                     {prayerTimes.map((prayer) => (
                         <div
                             key={prayer.name}
-                            className={`flex items-center justify-between px-2 sm:px-3 py-2 rounded-lg mb-2 bg-base-100 border-l-4 ${
+                            className={`flex items-center justify-between px-3 py-3 rounded-lg mb-3 bg-base-100 border-l-4 ${
                                 prayer.name.startsWith("Fajr")
                                     ? "border-primary"
+                                    : prayer.name.startsWith("Sun Rise")
+                                    ? "border-secondary"
+                                    : prayer.name.startsWith("Dahwa-e-kubra")
+                                    ? "border-amber-500"
                                     : prayer.name.startsWith("Zuhr")
                                     ? "border-accent"
                                     : prayer.name.startsWith("Asr")
                                     ? "border-warning"
                                     : prayer.name.startsWith("Maghrib")
-                                    ? "border-success"
+                                    ? "border-green-500"
                                     : prayer.name.startsWith("Isha")
-                                    ? "border-info"
+                                    ? "border-blue-500"
                                     : "border-base-300"
                             } shadow-sm`}
                         >
                             <span
-                                className={`font-semibold text-sm sm:text-base ${prayer.color}`}
+                                className={`font-semibold text-base md:text-lg flex-1 truncate ${prayer.color}`}
                             >
                                 {prayer.name}
                             </span>
-                            <span className="font-mono text-xs sm:text-base text-base-content/80">
+                            <span className="font-mono text-white md:text-lg text-base-content/90 ml-2 flex-shrink-0">
                                 {prayer.time}
                             </span>
-                            <span>
+                            <span className="ml-2 flex-shrink-0">
                                 {prayer.alert ? (
                                     <Bell
-                                        className="w-4 h-4 sm:w-5 sm:h-5 text-warning"
+                                        className="w-5 h-5 text-warning"
                                         title="Azan alert on"
                                     />
                                 ) : (
                                     <BellOff
-                                        className="w-4 h-4 sm:w-5 sm:h-5 text-base-content/30"
+                                        className="w-5 h-5 text-base-content/30"
                                         title="Azan alert off"
                                     />
                                 )}
@@ -158,10 +172,6 @@ export default function PrayerTimes() {
                     ))}
                 </div>
             </div>
-            {/* Coming soon note */}
-            <p className="text-xs text-base-content/60 mt-2 text-center">
-                (Auto-location, Azan alerts, and masjid list coming soon)
-            </p>
         </section>
     );
 }

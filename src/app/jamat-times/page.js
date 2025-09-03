@@ -7,11 +7,12 @@ const locations = masjidList.map((m) => m.Address);
 const masjids = masjidList.map((m) => m.name);
 
 const jamatTimes = [
-    { name: "Fajr", time: "04:29:23 AM", color: "border-blue-500" },
-    { name: "Zuhr", time: "12:04:59 PM", color: "border-red-500" },
-    { name: "Asar", time: "04:35:58 PM", color: "border-yellow-500" },
-    { name: "Maghrib", time: "06:26:12 PM", color: "border-pink-500" },
-    { name: "Isha", time: "07:40:09 PM", color: "border-indigo-500" },
+    { name: "Fajr", time: "05:25 AM", color: "border-blue-500" },
+    { name: "Zuhr", time: "01:30 PM", color: "border-red-500" },
+    { name: "Asar", time: "05:00 PM", color: "border-yellow-500" },
+    { name: "Maghrib", time: "06:23 PM", color: "border-pink-500" },
+    { name: "Isha", time: "08:30 PM", color: "border-indigo-500" },
+    { name: "Juma Khutba", time: "01:30 PM", color: "border-green-500" },
 ];
 
 function DigitalClock() {
@@ -33,7 +34,7 @@ function DigitalClock() {
             <span className="mt-1 text-xl text-amber-100 tracking-widest">
                 Current Time
             </span>
-            <br/>
+            <br />
             <div className="flex items-end gap-2">
                 <span
                     className="text-4xl md:text-5xl font-mono font-extrabold text-primary bg-black/80 px-6 py-3 rounded-xl shadow-lg border-4 border-primary"
@@ -60,13 +61,13 @@ export default function JamatTimesPage() {
     return (
         <div className="min-h-screen flex flex-col items-center justify-center bg-base-200">
             {/* Responsive and sticky digital clock at the very top */}
-            <div className="sticky top-0 left-0 w-full z-50 flex justify-center bg-base-200/80 backdrop-blur-sm py-2">
+            <div className="sticky top-0 left-0 w-full z-10 flex justify-center bg-base-200/80 backdrop-blur-sm py-2">
                 <div className="w-full max-w-xs sm:max-w-sm md:max-w-md">
                     <DigitalClock />
                 </div>
             </div>
             <div className="w-full max-w-md mt-8">
-                <div className="mb-2 flex justify-start">
+                <div className="flex justify-start mb-8 ml-8">
                     <button
                         className="btn btn-outline btn-primary btn-xxl transition-all duration-200 hover:scale-105 hover:bg-primary hover:text-primary-content"
                         // onClick handler can be added here for actual auto-locate functionality
@@ -75,21 +76,7 @@ export default function JamatTimesPage() {
                     </button>
                 </div>
 
-                <div className="mb-4">
-                    <select
-                        className="select select-primary select-lg w-full"
-                        value={selectedLocation}
-                        onChange={(e) => setSelectedLocation(e.target.value)}
-                    >
-                        <option value=""> Select Location </option>
-                        {locations.map((address) => (
-                            <option key={address} value={address}>
-                                {address}
-                            </option>
-                        ))}
-                    </select>
-                </div>
-                <div className="mb-6">
+                <div className="mb-6 ml-4 mr-4">
                     <select
                         className="select select-primary select-lg w-full"
                         value={selectedMasjid}
@@ -99,6 +86,20 @@ export default function JamatTimesPage() {
                         {masjids.map((masjid) => (
                             <option key={masjid} value={masjid}>
                                 {masjid}
+                            </option>
+                        ))}
+                    </select>
+                </div>
+                <div className="mb-4 ml-4 mr-4">
+                    <select
+                        className="select select-primary select-lg w-full"
+                        value={selectedLocation}
+                        onChange={(e) => setSelectedLocation(e.target.value)}
+                    >
+                        <option value=""> Select Location </option>
+                        {locations.map((address) => (
+                            <option key={address} value={address}>
+                                {address}
                             </option>
                         ))}
                     </select>

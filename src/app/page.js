@@ -8,10 +8,18 @@ import {
     FaClock,
     FaHashtag,
     FaRegCompass,
+    FaGift,
+    FaInfoCircle,
 } from "react-icons/fa";
 import Image from "next/image";
 
 const sections = [
+    {
+        name: "Jamat Times",
+        href: "/jamat-times",
+        icon: <FaPeopleArrows className="text-4xl text-rose-500" />,
+        desc: "View local mosque prayer schedules.",
+    },
     {
         name: "Qibla Finder",
         href: "/qibla",
@@ -32,12 +40,6 @@ const sections = [
     },
 
     {
-        name: "Jamat Times",
-        href: "/jamat-times",
-        icon: <FaPeopleArrows className="text-4xl text-rose-500" />,
-        desc: "View local mosque prayer schedules.",
-    },
-    {
         name: "Tasbih Counter",
         href: "/tasbih",
         icon: (
@@ -50,6 +52,19 @@ const sections = [
             />
         ),
         desc: "A digital tasbih to track your dhikr.",
+    },
+
+    {
+        name: "Rewards",
+        href: "/rewards",
+        icon: <FaGift className="text-4xl text-pink-500" />,
+        desc: "Track your spiritual achievements and milestones.",
+    },
+    {
+        name: "Notice",
+        href: "/notice",
+        icon: <FaInfoCircle className="text-4xl text-cyan-500" />,
+        desc: "View important updates and announcements.",
     },
     {
         name: "Settings",
@@ -65,7 +80,9 @@ export default function Home() {
             <header className="text-center mb-10 mt-10">
                 <h1 className="text-4xl sm:text-5xl lg:text-6xl font-extrabold tracking-tight">
                     <span className="bg-clip-text text-transparent bg-gradient-to-r from-green-500 to-teal-600">
-                    RAAH-E-HIDAYAT                  </span>
+                        RAAH-E-HIDAYAT{" "}
+                    </span>
+                   
                 </h1>
                 <p className="mt-2 text-lg sm:text-xl text-gray-600 dark:text-gray-400 max-w-2xl mx-auto">
                     Your essential companion for daily Islamic practices.

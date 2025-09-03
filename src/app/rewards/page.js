@@ -81,26 +81,11 @@ const medalSVG = [
 
 const RewardsPage = () => {
     return (
-        <div
-            style={{
-                maxWidth: 400,
-                margin: "24px auto",
-                background: "linear-gradient(180deg, #2d185a 0%, #5a3fa0 100%)",
-                borderRadius: 24,
-                padding: 16,
-                color: "#fff",
-                fontFamily: "sans-serif",
-                boxShadow: "0 4px 24px rgba(0,0,0,0.15)",
-            }}
-        >
+        <div className="min-h-screen flex flex-col items-center justify-center bg-base-200">
             {/* Winner Announcement Card */}
             <div
+                className="w-full max-w-md mx-auto bg-base-100 rounded-2xl p-6 mb-6 shadow-xl"
                 style={{
-                    background: "#111",
-                    borderRadius: 24,
-                    padding: "36px 16px 28px 16px",
-                    marginBottom: 24,
-                    boxShadow: "0 4px 24px rgba(0,0,0,0.25)",
                     textAlign: "center",
                     position: "relative",
                     overflow: "hidden",
@@ -215,6 +200,11 @@ const RewardsPage = () => {
                         </g>
                     </svg>
                 </div>
+                <div className="flex justify-center mb-2">
+                    <div className="alert alert-success py-2 px-4 rounded-lg shadow text-lg text-white font-bold w-fit mx-auto">
+                        🎉 Congratulations!
+                    </div>
+                </div>
                 <div
                     style={{
                         color: "#FFD700",
@@ -223,7 +213,7 @@ const RewardsPage = () => {
                         marginBottom: 4,
                     }}
                 >
-                    Amjad Ali
+                    MOHAMMAD ALI
                 </div>
                 <div
                     style={{
@@ -235,64 +225,21 @@ const RewardsPage = () => {
                 >
                     You have earned Gold Medal on this level!
                 </div>
-               
-              
             </div>
-            <div
-                style={{
-                    display: "flex",
-                    justifyContent: "center",
-                    gap: 8,
-                    marginBottom: 12,
-                }}
-            >
+            <div className="flex justify-center gap-2 mb-3">
                 {medalSVG.map((svg, idx) => (
                     <span key={idx}>{svg}</span>
                 ))}
             </div>
-            <div
-                style={{
-                    textAlign: "center",
-                    fontWeight: 600,
-                    fontSize: 22,
-                    marginBottom: 4,
-                }}
-            >
+            <div className="text-center font-semibold text-2xl mb-1">
                 Durood Sharif
             </div>
-
-            <div
-                style={{
-                    textAlign: "center",
-                    fontSize: 14,
-                    color: "#FFD700",
-                    marginBottom: 12,
-                    marginTop: 2,
-                }}
-            >
+            <div className="text-center text-sm text-yellow-400 mb-3 mt-1">
                 Winner of the week
             </div>
-            <div
-                style={{
-                    background: "rgba(255,255,255,0.08)",
-                    borderRadius: 12,
-                    padding: 8,
-                }}
-            >
+            <div className="bg-base-200 rounded-xl p-2 w-full max-w-md">
                 {/* Label Row */}
-                <div
-                    style={{
-                        display: "flex",
-                        alignItems: "center",
-                        padding: "8px 0 4px 0",
-                        borderBottom: "1px solid rgba(255,255,255,0.13)",
-                        fontWeight: 600,
-                        fontSize: 13,
-                        color: "#FFD700",
-                        letterSpacing: 0.2,
-                        textTransform: "uppercase",
-                    }}
-                >
+                <div className="flex items-center py-2 border-b border-yellow-100 font-semibold text-xs text-yellow-400 uppercase tracking-wide">
                     <div style={{ width: 28, textAlign: "center" }}>Medals</div>
                     <div style={{ width: 36, margin: "0 12px" }}></div>
                     <div style={{ flex: 1 }}>Names</div>
@@ -304,15 +251,7 @@ const RewardsPage = () => {
                 {demoData.map((user, idx) => (
                     <div
                         key={idx}
-                        style={{
-                            display: "flex",
-                            alignItems: "center",
-                            padding: "8px 0",
-                            borderBottom:
-                                idx < demoData.length - 1
-                                    ? "1px solid rgba(255,255,255,0.08)"
-                                    : "none",
-                        }}
+                        className="flex items-center py-2 border-b last:border-b-0 border-base-300"
                     >
                         <div style={{ width: 28, textAlign: "center" }}>
                             {idx < 3 ? (
@@ -361,7 +300,7 @@ const RewardsPage = () => {
             </div>
             <style>{`
         @media (max-width: 500px) {
-          div[style*="max-width: 400px"] {
+          div[class*="max-w-md"] {
             max-width: 98vw !important;
             padding: 6vw !important;
           }
