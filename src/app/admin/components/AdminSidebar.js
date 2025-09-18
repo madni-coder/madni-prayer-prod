@@ -1,0 +1,116 @@
+"use client";
+
+import Link from "next/link";
+import { usePathname } from "next/navigation";
+import { Clock, Megaphone, Gift, X } from "lucide-react";
+
+const navigation = [
+    {
+        name: "Jamat Times",
+        href: "/admin/jamat",
+        icon: Clock,
+    },
+    {
+        name: "Notice",
+        href: "/admin/notice",
+        icon: Megaphone,
+    },
+    {
+        name: "Rewards",
+        href: "/admin/rewards",
+        icon: Gift,
+    },
+];
+
+export default function AdminSidebar({ isOpen, onClose }) {
+    const pathname = usePathname();
+
+    return (
+        <>
+            {/* Desktop sidebar */}
+            <div className="hidden lg:flex lg:flex-col lg:w-64 lg:fixed lg:inset-y-0">
+                <div className="flex flex-col flex-grow bg-white border-r border-gray-200 pt-5 pb-4 overflow-y-auto">
+                    <div className="flex items-center flex-shrink-0 px-4">
+                        <h2 className="text-lg font-semibold text-gray-900">
+                            Admin Dashboard
+                        </h2>
+                    </div>
+                    <nav className="mt-8 flex-1 px-2 space-y-1">
+                        {navigation.map((item) => {
+                            const isActive = pathname.startsWith(item.href);
+                            return (
+                                <Link
+                                    key={item.name}
+                                    href={item.href}
+                                    className={`${
+                                        isActive
+                                            ? "bg-blue-50 border-r-4 border-blue-500 text-blue-700"
+                                            : "text-gray-600 hover:bg-gray-50 hover:text-gray-900"
+                                    } group flex items-center px-2 py-2 text-sm font-medium rounded-md transition-colors duration-150`}
+                                >
+                                    <item.icon
+                                        className={`${
+                                            isActive
+                                                ? "text-blue-500"
+                                                : "text-gray-400 group-hover:text-gray-500"
+                                        } mr-3 flex-shrink-0 h-6 w-6`}
+                                        aria-hidden="true"
+                                    />
+                                    {item.name}
+                                </Link>
+                            );
+                        })}
+                    </nav>
+                </div>
+            </div>
+
+            {/* Mobile sidebar */}
+            <div
+                className={`lg:hidden fixed inset-y-0 left-0 z-50 w-64 bg-white transform ${
+                    isOpen ? "translate-x-0" : "-translate-x-full"
+                } transition-transform duration-300 ease-in-out`}
+            >
+                <div className="flex flex-col h-full">
+                    <div className="flex items-center justify-between flex-shrink-0 px-4 py-4 border-b border-gray-200">
+                        <h2 className="text-lg font-semibold text-gray-900">
+                            Admin Dashboard
+                        </h2>
+                        <button
+                            onClick={onClose}
+                            className="p-2 rounded-md text-gray-400 hover:text-gray-600 hover:bg-gray-100"
+                        >
+                            <X className="w-6 h-6" />
+                        </button>
+                    </div>
+                    <nav className="flex-1 px-2 py-4 space-y-1 overflow-y-auto">
+                        {navigation.map((item) => {
+                            const isActive = pathname.startsWith(item.href);
+                            return (
+                                <Link
+                                    key={item.name}
+                                    href={item.href}
+                                    onClick={onClose}
+                                    className={`${
+                                        isActive
+                                            ? "bg-blue-50 border-r-4 border-blue-500 text-blue-700"
+                                            : "text-gray-600 hover:bg-gray-50 hover:text-gray-900"
+                                    } group flex items-center px-2 py-2 text-sm font-medium rounded-md transition-colors duration-150`}
+                                >
+                                    <item.icon
+                                        className={`${
+                                            isActive
+                                                ? "text-blue-500"
+                                                : "text-gray-400 group-hover:text-gray-500"
+                                        } mr-3 flex-shrink-0 h-6 w-6`}
+                                        aria-hidden="true"
+                                    />
+                                    {item.name}
+                                </Link>
+                            );
+                        })}
+                    </nav>
+                </div>
+            </div>
+        </>
+    );
+}
