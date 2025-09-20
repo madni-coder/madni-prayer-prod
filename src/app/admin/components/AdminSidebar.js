@@ -2,9 +2,14 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Clock, Megaphone, Gift, X } from "lucide-react";
+import { Clock, Megaphone, Gift, X ,School} from "lucide-react";
 
 const navigation = [
+    {
+        name: "All  Masjid",
+        href: "/admin/all-masjids",
+        icon: School,
+    },
     {
         name: "Jamat Times",
         href: "/admin/jamat",
