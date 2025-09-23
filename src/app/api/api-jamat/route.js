@@ -10,7 +10,7 @@ export async function POST(request) {
 
         // Validate required fields
         const requiredFields = [
-            "location",
+            "colony",
             "masjid",
             "fazar",
             "zuhar",
@@ -34,7 +34,7 @@ export async function POST(request) {
         // Create new jamat time entry
         const newJamatTime = {
             id: Date.now().toString(), // Simple ID generation
-            location: body.location,
+            colony: body.colony,
             masjid: body.masjid,
             fazar: body.fazar,
             zuhar: body.zuhar,
@@ -68,15 +68,15 @@ export async function POST(request) {
 export async function GET(request) {
     try {
         const { searchParams } = new URL(request.url);
-        const location = searchParams.get("location");
+        const colony = searchParams.get("colony");
         const masjid = searchParams.get("masjid");
 
         let filteredTimes = jamaatTimes;
 
-        // Filter by location if provided
-        if (location) {
+        // Filter by colony if provided
+        if (colony) {
             filteredTimes = filteredTimes.filter((time) =>
-                time.location.toLowerCase().includes(location.toLowerCase())
+                time.colony.toLowerCase().includes(colony.toLowerCase())
             );
         }
 
