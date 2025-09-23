@@ -1,0 +1,33 @@
+// Prisma schema
+// Datasource configured for Supabase pooled (runtime) via DATABASE_URL
+// and direct connection for migrations/introspection via DATABASE_DIRECT_URL
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DATABASE_DIRECT_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+// Add your models below (instruction: do not modify existing models; currently none)
+
+model AllMasjid {
+  id         Int      @id @default(autoincrement())
+  masjidName String
+  colony     String?
+  locality   String?
+  fazar      String?  // Prayer time as string (e.g. HH:MM)
+  zuhar      String?
+  asar       String?
+  maghrib    String?
+  isha       String?
+  juma       String?
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@map("all_masjid")
+}
+

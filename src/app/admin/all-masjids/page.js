@@ -1,34 +1,40 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
 import { RefreshCw, X } from "lucide-react";
 
-const MASJIDS = [
-    {
-        id: 1,
-        name: "Al-Noor Masjid",
-        address: "Block A, Gulshan-e-Iqbal",
-        locality: "Karachi",
-    },
-    {
-        id: 2,
-        name: "Falah Masjid",
-        address: "Model Town, Block C",
-        locality: "Lahore",
-    },
-    {
-        id: 3,
-        name: "Nurani Masjid",
-        address: "F-8 Sector, Street 15",
-        locality: "Islamabad",
-    },
-];
-
 export default function Page() {
+    // Dynamic data state
+    const [masjids, setMasjids] = useState([]);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState(null);
+
+    // Filters
     const [localityFilter, setLocalityFilter] = useState("All");
-    const [addressFilter, setAddressFilter] = useState("All");
+    const [addressFilter, setAddressFilter] = useState("All"); // colony
     const [searchQuery, setSearchQuery] = useState("");
+    const [reloading, setReloading] = useState(false);
+
+    const fetchMasjids = useCallback(async () => {
+        try {
+            setError(null);
+            setReloading(true);
+            const res = await fetch("/api/all-masjids", { cache: "no-store" });
+            const data = await res.json();
+            if (!res.ok) throw new Error(data.error || "Failed to load data");
+            setMasjids(data.data || []);
+        } catch (e) {
+            setError(e.message);
+        } finally {
+            setLoading(false);
+            setReloading(false);
+        }
+    }, []);
+
+    useEffect(() => {
+        fetchMasjids();
+    }, [fetchMasjids]);
 
     const handleReset = () => {
         setLocalityFilter("All");
@@ -36,28 +42,41 @@ export default function Page() {
         setSearchQuery("");
     };
 
-    const clearSearch = () => {
-        setSearchQuery("");
-    };
+    const clearSearch = () => setSearchQuery("");
+    const clearAddressFilter = () => setAddressFilter("All");
+    const clearLocalityFilter = () => setLocalityFilter("All");
 
-    const clearAddressFilter = () => {
-        setAddressFilter("All");
-    };
+    // Build dynamic options
+    const colonyOptions = [
+        "All",
+        ...Array.from(
+            new Set(
+                masjids
+                    .map((m) => m.colony)
+                    .filter((v) => v && v.trim().length > 0)
+            )
+        ),
+    ];
+    const localityOptions = [
+        "All",
+        ...Array.from(
+            new Set(
+                masjids
+                    .map((m) => m.locality)
+                    .filter((v) => v && v.trim().length > 0)
+            )
+        ),
+    ];
 
-    const clearLocalityFilter = () => {
-        setLocalityFilter("All");
-    };
-
-    const filteredMasjids = MASJIDS.filter((masjid) => {
+    const filteredMasjids = masjids.filter((m) => {
         const matchesLocality =
-            localityFilter === "All" || masjid.locality === localityFilter;
-        const matchesAddress =
-            addressFilter === "All" || masjid.address === addressFilter;
-        const matchesSearch = masjid.name
+            localityFilter === "All" || m.locality === localityFilter;
+        const matchesColony =
+            addressFilter === "All" || m.colony === addressFilter;
+        const matchesSearch = (m.masjidName || "")
             .toLowerCase()
             .includes(searchQuery.toLowerCase());
-
-        return matchesLocality && matchesAddress && matchesSearch;
+        return matchesLocality && matchesColony && matchesSearch;
     });
 
     return (
@@ -65,12 +84,37 @@ export default function Page() {
             {/* Header */}
             <div className="flex items-center justify-between mb-6">
                 <h1 className="text-2xl font-semibold text-gray-900">Masjid</h1>
-                <Link href="/admin/all-masjids/add">
-                    <button className="bg-green-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-medium transition-colors">
-                        Add Masjid Entry
+                <div className="flex items-center gap-3">
+                    <button
+                        onClick={fetchMasjids}
+                        disabled={reloading}
+                        className="flex items-center gap-2 border border-gray-300 px-3 py-2 rounded-md text-sm hover:bg-gray-100 disabled:opacity-60"
+                        title="Refresh list"
+                    >
+                        <RefreshCw
+                            size={16}
+                            className={reloading ? "animate-spin" : ""}
+                        />
+                        {reloading ? "Refreshing" : "Refresh"}
                     </button>
-                </Link>
+                    <Link href="/admin/all-masjids/add">
+                        <button className="bg-green-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-medium transition-colors">
+                            Add Masjid Entry
+                        </button>
+                    </Link>
+                </div>
             </div>
+
+            {error && (
+                <div className="mb-4 p-3 bg-red-100 border border-red-300 text-red-700 text-sm rounded">
+                    {error}
+                </div>
+            )}
+            {loading && (
+                <div className="mb-4 p-3 bg-gray-100 border border-gray-300 text-gray-600 text-sm rounded">
+                    Loading masjids...
+                </div>
+            )}
 
             {/* Filters */}
             <div className="bg-white p-4 rounded-lg shadow-sm mb-6">
@@ -110,16 +154,11 @@ export default function Page() {
                                 }
                                 className="w-full px-3 py-2 pr-8 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-black appearance-none"
                             >
-                                <option value="All">All</option>
-                                <option value="Block A, Gulshan-e-Iqbal">
-                                    Block A, Gulshan-e-Iqbal
-                                </option>
-                                <option value="Model Town, Block C">
-                                    Model Town, Block C
-                                </option>
-                                <option value="F-8 Sector, Street 15">
-                                    F-8 Sector, Street 15
-                                </option>
+                                {colonyOptions.map((c) => (
+                                    <option key={c} value={c}>
+                                        {c}
+                                    </option>
+                                ))}
                             </select>
                             {addressFilter !== "All" && (
                                 <button
@@ -144,10 +183,11 @@ export default function Page() {
                                 }
                                 className="w-full px-3 py-2 pr-8 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-black appearance-none"
                             >
-                                <option value="All">All</option>
-                                <option value="Karachi">Karachi</option>
-                                <option value="Lahore">Lahore</option>
-                                <option value="Islamabad">Islamabad</option>
+                                {localityOptions.map((l) => (
+                                    <option key={l} value={l}>
+                                        {l}
+                                    </option>
+                                ))}
                             </select>
                             {localityFilter !== "All" && (
                                 <button
@@ -185,34 +225,34 @@ export default function Page() {
 
                 {/* Table Body */}
                 <div className="divide-y divide-gray-200">
-                    {filteredMasjids.map((masjid) => (
+                    {!loading && filteredMasjids.length === 0 && (
+                        <div className="px-6 py-6 text-sm text-gray-500">
+                            No masjids found.
+                        </div>
+                    )}
+                    {filteredMasjids.map((m) => (
                         <div
-                            key={masjid.id}
+                            key={m.id}
                             className="grid grid-cols-6 gap-4 px-6 py-4 hover:bg-gray-50 transition-colors"
                         >
-                            {/* Masjid Info */}
                             <div className="col-span-2 flex items-center space-x-3">
                                 <div className="w-10 h-10 bg-gray-200 rounded-full flex items-center justify-center">
                                     <span className="text-lg">🕌</span>
                                 </div>
                                 <div>
                                     <div className="font-medium text-gray-900">
-                                        {masjid.name}
+                                        {m.masjidName}
                                     </div>
                                 </div>
                             </div>
-
-                            {/* Colony Address */}
                             <div className="col-span-2">
                                 <div className="text-sm text-gray-900">
-                                    {masjid.address}
+                                    {m.colony || "-"}
                                 </div>
                             </div>
-
-                            {/* Locality */}
                             <div className="col-span-2">
                                 <div className="text-sm text-gray-900">
-                                    {masjid.locality}
+                                    {m.locality || "-"}
                                 </div>
                             </div>
                         </div>

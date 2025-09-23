@@ -1,8 +1,8 @@
 "use client";
 import { useState } from "react";
-import { FaPencilAlt, FaCheckCircle } from "react-icons/fa";
+import { FaCheckCircle } from "react-icons/fa";
 import { useRouter } from "next/navigation";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, Plus } from "lucide-react";
 
 const prayers = [
     { name: "Fajr", defaultTime: "5:00 am" },
@@ -21,6 +21,9 @@ export default function AddMasjidPage() {
     const [times, setTimes] = useState(prayers.map((p) => p.defaultTime));
     const [editIdx, setEditIdx] = useState(null);
     const [editValue, setEditValue] = useState("");
+    const [submitting, setSubmitting] = useState(false);
+    const [error, setError] = useState(null);
+    const [success, setSuccess] = useState(null);
 
     const handleTimeChange = (idx, value) => {
         setTimes((times) => times.map((t, i) => (i === idx ? value : t)));
@@ -38,9 +41,43 @@ export default function AddMasjidPage() {
         setEditIdx(null);
     };
 
-    const handleSubmit = (e) => {
+    const handleSubmit = async (e) => {
         e.preventDefault();
-        // Submit logic here
+        setError(null);
+        setSuccess(null);
+        setSubmitting(true);
+        try {
+            const payload = {
+                masjidName: masjidName.trim(),
+                colony: colony.trim(),
+                locality: locality.trim() || null,
+                // map times
+                fazar: times[0],
+                zuhar: times[1],
+                asar: times[2],
+                maghrib: times[3],
+                isha: times[4],
+                juma: times[5],
+            };
+
+            const res = await fetch("/api/all-masjids", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(payload),
+            });
+
+            const data = await res.json();
+            if (!res.ok) {
+                throw new Error(data.error || "Failed to create masjid");
+            }
+            setSuccess("Masjid added successfully");
+            // redirect after slight delay
+            setTimeout(() => router.push("/admin/all-masjids"), 800);
+        } catch (err) {
+            setError(err.message);
+        } finally {
+            setSubmitting(false);
+        }
     };
 
     return (
@@ -96,15 +133,29 @@ export default function AddMasjidPage() {
                                 className="input input-bordered w-full bg-white text-black border-gray-300 rounded-full"
                                 value={locality}
                                 onChange={(e) => setLocality(e.target.value)}
-                                required
                             />
                         </div>
-                        <button
-                            type="submit"
-                            className="btn w-full mt-4 bg-green-500 hover:bg-green-600 text-white rounded-none"
-                        >
-                            Add Masjid
-                        </button>
+                        {error && (
+                            <div className="text-red-600 text-sm mb-2">
+                                {error}
+                            </div>
+                        )}
+                        {success && (
+                            <div className="text-green-600 text-sm mb-2">
+                                {success}
+                            </div>
+                        )}
+                        {masjidName.trim() &&
+                            colony.trim() &&
+                            locality.trim() && (
+                                <button
+                                    type="submit"
+                                    disabled={submitting}
+                                    className="btn w-full mt-4 bg-green-500 hover:bg-green-600 text-white rounded-none disabled:opacity-60"
+                                >
+                                    {submitting ? "Saving..." : "Add Masjid"}
+                                </button>
+                            )}
                     </form>
                 </div>
                 {/* Jamat Time Table */}
@@ -162,6 +213,7 @@ export default function AddMasjidPage() {
                                                         autoFocus
                                                     />
                                                     <button
+                                                        type="button"
                                                         className="bg-blue-600 hover:bg-blue-700 text-white px-2 py-1 rounded flex items-center"
                                                         onClick={() =>
                                                             handleSave(idx)
@@ -178,10 +230,11 @@ export default function AddMasjidPage() {
                                         </td>
                                         <td>
                                             <button
+                                                type="button"
                                                 className="bg-green-600 hover:bg-green-700 text-white px-2 py-1 rounded flex items-center"
                                                 onClick={() => handleEdit(idx)}
                                             >
-                                                <FaPencilAlt size={16} />
+                                                <Plus size={16} />
                                             </button>
                                         </td>
                                     </tr>
