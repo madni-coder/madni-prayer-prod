@@ -16,8 +16,8 @@ const prayers = [
 export default function AddMasjidPage() {
     const router = useRouter();
     const [masjidName, setMasjidName] = useState("");
-    const [location, setLocation] = useState("");
-    const [city, setCity] = useState("");
+    const [colony, setColony] = useState("");
+    const [locality, setLocality] = useState("");
     const [times, setTimes] = useState(prayers.map((p) => p.defaultTime));
     const [editIdx, setEditIdx] = useState(null);
     const [editValue, setEditValue] = useState("");
@@ -46,7 +46,7 @@ export default function AddMasjidPage() {
     return (
         <div className="min-h-screen bg-white flex flex-col items-center py-10">
             <div className="w-full max-w-5xl flex items-center mb-4">
-            <button
+                <button
                     className="bg-blue-600 hover:bg-blue-700 text-white btn btn-sm mr-2 flex items-center gap-1"
                     onClick={() => router.push("/admin/all-masjids")}
                 >
@@ -77,25 +77,25 @@ export default function AddMasjidPage() {
                         </div>
                         <div className="mb-4">
                             <label className="block text-gray-700 mb-2">
-                                Location
+                                Colony
                             </label>
                             <input
                                 type="text"
                                 className="input input-bordered w-full bg-white text-black border-gray-300 rounded-full"
-                                value={location}
-                                onChange={(e) => setLocation(e.target.value)}
+                                value={colony}
+                                onChange={(e) => setColony(e.target.value)}
                                 required
                             />
                         </div>
                         <div className="mb-4">
                             <label className="block text-gray-700 mb-2">
-                                City
+                                Locality
                             </label>
                             <input
                                 type="text"
                                 className="input input-bordered w-full bg-white text-black border-gray-300 rounded-full"
-                                value={city}
-                                onChange={(e) => setCity(e.target.value)}
+                                value={locality}
+                                onChange={(e) => setLocality(e.target.value)}
                                 required
                             />
                         </div>

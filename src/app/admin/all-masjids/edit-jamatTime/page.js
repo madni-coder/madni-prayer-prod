@@ -13,12 +13,12 @@ const prayers = [
     { name: "Juma", defaultTime: "1:30 pm" }, // Added Juma below Isha
 ];
 
-const locations = ["Location 1", "Location 2", "Location 3"];
+const colonies = ["Colony 1", "Colony 2", "Colony 3"];
 const masjids = ["Masjid A", "Masjid B", "Masjid C"];
 
 export default function JamatTimeTable() {
     const router = useRouter();
-    const [selectedLocation, setSelectedLocation] = useState("");
+    const [selectedColony, setSelectedColony] = useState("");
     const [selectedMasjid, setSelectedMasjid] = useState("");
     const [times, setTimes] = useState(prayers.map((p) => p.defaultTime));
     const [editIdx, setEditIdx] = useState(null);
@@ -51,22 +51,22 @@ export default function JamatTimeTable() {
                 </button>
             </div>
             <div className="flex gap-4 mb-6 w-full max-w-xl">
-                {/* Location Dropdown (DaisyUI) */}
+                {/* Colony Dropdown (DaisyUI) */}
                 <div className="dropdown w-1/2">
                     <label
                         tabIndex={0}
                         className="btn w-full bg-white border text-gray-500 justify-between"
                     >
-                        {selectedLocation || "Select Location"}
+                        {selectedColony || "Select Colony"}
                     </label>
                     <ul
                         tabIndex={0}
                         className="dropdown-content menu p-2 shadow bg-base-100 rounded-box w-full z-10"
                     >
-                        {locations.map((loc) => (
-                            <li key={loc}>
-                                <a onClick={() => setSelectedLocation(loc)}>
-                                    {loc}
+                        {colonies.map((colony) => (
+                            <li key={colony}>
+                                <a onClick={() => setSelectedColony(colony)}>
+                                    {colony}
                                 </a>
                             </li>
                         ))}

@@ -40,11 +40,11 @@
 
 ## 3. Prayer Times
 
--   As a user, I want the app to auto-detect my location and show 5 daily prayer times.
+-   As a user, I want the app to auto-detect my colony and show 5 daily prayer times.
 
     -   **Acceptance Criteria:**
-        -   Location is auto-detected (with permission).
-        -   5 daily prayer times are shown for detected location.
+        -   Colony is auto-detected (with permission).
+        -   5 daily prayer times are shown for detected colony.
     -   **Status:** ⬜ Not Done
 
 -   As a user, I want to enable/disable Azan alerts for each prayer.
@@ -54,9 +54,9 @@
         -   Alerts can be enabled/disabled.
     -   **Status:** ⬜ Not Done
 
--   As a user, I want to see Namaz times for every masjid in my city.
+-   As a user, I want to see Namaz times for every masjid in my locality.
     -   **Acceptance Criteria:**
-        -   List of masjids in city is shown.
+        -   List of masjids in locality is shown.
         -   Namaz times for each masjid are displayed.
     -   **Status:** ⬜ Not Done
 

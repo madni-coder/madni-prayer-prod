@@ -3,7 +3,7 @@ import React, { useState, useEffect } from "react";
 import masjidList from "./list.json";
 
 // Extract addresses and names from the JSON list
-const locations = masjidList.map((m) => m.Address);
+const colonies = masjidList.map((m) => m.Address);
 const masjids = masjidList.map((m) => m.name);
 
 const jamatTimes = [
@@ -55,7 +55,7 @@ function DigitalClock() {
 }
 
 export default function JamatTimesPage() {
-    const [selectedLocation, setSelectedLocation] = useState("");
+    const [selectedColony, setSelectedColony] = useState("");
     const [selectedMasjid, setSelectedMasjid] = useState("");
 
     return (
@@ -76,33 +76,46 @@ export default function JamatTimesPage() {
                     </button>
                 </div>
 
-                <div className="mb-6 ml-4 mr-4">
-                    <select
-                        className="select select-primary select-lg w-full"
-                        value={selectedMasjid}
-                        onChange={(e) => setSelectedMasjid(e.target.value)}
-                    >
-                        <option value=""> Select Masjid </option>
-                        {masjids.map((masjid) => (
-                            <option key={masjid} value={masjid}>
-                                {masjid}
-                            </option>
-                        ))}
-                    </select>
-                </div>
-                <div className="mb-4 ml-4 mr-4">
-                    <select
-                        className="select select-primary select-lg w-full"
-                        value={selectedLocation}
-                        onChange={(e) => setSelectedLocation(e.target.value)}
-                    >
-                        <option value=""> Select Location </option>
-                        {locations.map((address) => (
-                            <option key={address} value={address}>
-                                {address}
-                            </option>
-                        ))}
-                    </select>
+                {/* Side by side dropdowns */}
+                <div className="flex flex-col sm:flex-row gap-4 mb-6 ml-4 mr-4">
+                    <div className="flex-1">
+                        <label className="label">
+                            <span className="label-text font-semibold">
+                                Masjid Name
+                            </span>
+                        </label>
+                        <select
+                            className="select select-primary select-lg w-full"
+                            value={selectedMasjid}
+                            onChange={(e) => setSelectedMasjid(e.target.value)}
+                        >
+                            <option value=""> Select Masjid </option>
+                            {masjids.map((masjid) => (
+                                <option key={masjid} value={masjid}>
+                                    {masjid}
+                                </option>
+                            ))}
+                        </select>
+                    </div>
+                    <div className="flex-1">
+                        <label className="label">
+                            <span className="label-text font-semibold">
+                                Colony Address
+                            </span>
+                        </label>
+                        <select
+                            className="select select-primary select-lg w-full"
+                            value={selectedColony}
+                            onChange={(e) => setSelectedColony(e.target.value)}
+                        >
+                            <option value=""> Select Colony Address </option>
+                            {colonies.map((address) => (
+                                <option key={address} value={address}>
+                                    {address}
+                                </option>
+                            ))}
+                        </select>
+                    </div>
                 </div>
                 <h1 className="text-2xl font-bold mb-2 text-center">
                     Jamat time
