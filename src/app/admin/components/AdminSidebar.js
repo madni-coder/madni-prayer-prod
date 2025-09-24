@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Clock, Megaphone, Gift, X ,School} from "lucide-react";
+import { Clock, Megaphone, Gift, X ,School,Coins} from "lucide-react";
 
 const navigation = [
     {
@@ -25,6 +25,11 @@ const navigation = [
         href: "/admin/rewards",
         icon: Gift,
     },
+    {
+        name: "Durooj Sharif",
+        href: "/admin/durood-sharif",
+        icon: Coins,
+    }
 ];
 
 export default function AdminSidebar({ isOpen, onClose }) {

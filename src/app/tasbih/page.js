@@ -1,34 +1,157 @@
 "use client";
 import React, { useState } from "react";
+import { RotateCw } from "lucide-react";
 
 export default function Tasbih() {
     const [count, setCount] = useState(0);
     const [showResetConfirm, setShowResetConfirm] = useState(false);
 
+    // determine which tick is active (one-based count -> zero-based index)
+    const activeTick = count > 0 ? (count - 1) % 100 : -1;
+
+    // helper to render 100 tick marks around a circle
+    const ticks = Array.from({ length: 100 }).map((_, i) => {
+        const angle = (i / 100) * 360;
+        const long = i % 5 === 0; // every 5th tick longer
+        const isActive = i === activeTick;
+        const y2 = isActive ? -72 : long ? -78 : -84;
+        const strokeW = isActive ? 2.5 : long ? 2 : 1;
+        const strokeColor = isActive ? "white" : "currentColor";
+        return (
+            <line
+                key={i}
+                x1="0"
+                y1={-90}
+                x2="0"
+                y2={y2}
+                strokeWidth={strokeW}
+                transform={`rotate(${angle})`}
+                stroke={strokeColor}
+                strokeLinecap="round"
+            />
+        );
+    });
+
     return (
-        <section className="flex flex-col items-center justify-center min-h-[70vh] px-4 animate-fade-in bg-base-100">
-            <div className="relative w-full max-w-2xl">
-                {/* Confirmation Popup */}
-                {showResetConfirm && (
-                    <div className="fixed inset-0 flex items-center justify-center bg-black/40 z-50">
-                        <div
-                            sx={{
-                                bg: "background",
-                                color: "text",
-                                borderRadius: 12,
-                                boxShadow: "0 8px 32px rgba(0,0,0,0.25)",
-                                p: 4,
-                                minWidth: 300,
-                                textAlign: "center",
-                            }}
-                            className="bg-base-100 text-base-content rounded-2xl shadow-2xl p-6"
+        <section className="flex flex-col items-center min-h-screen px-4 py-6 bg-base-100 text-base-content">
+            {/* Header */}
+            <div className="w-full max-w-3xl flex items-center gap-2">
+                <button aria-label="Back" className="btn btn-ghost btn-square">
+                    <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        className="h-6 w-6"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke="currentColor"
+                    >
+                        <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth="2"
+                            d="M15 19l-7-7 7-7"
+                        />
+                    </svg>
+                </button>
+                <h2 className="flex-1 text-xl font-bold">Tasbih</h2>
+                <button
+                    aria-label="Reset"
+                    className="btn btn-ghost"
+                    onClick={() => setShowResetConfirm(true)}
+                >
+                    <RotateCw className="h-6 w-6" />
+                </button>
+            </div>
+
+            {/* Card */}
+            <div className="w-full max-w-3xl mt-6 card bg-base-200 shadow-md rounded-2xl p-6 flex flex-col items-center">
+                <div className="w-full text-center">
+                    <p className="text-lg font-semibold">durood</p>
+                    <div className="divider my-4" />
+                </div>
+
+                {/* Circular ring with ticks */}
+                <div className="relative flex items-center justify-center mb-8">
+                    <svg
+                        viewBox="-110 -110 220 220"
+                        width="260"
+                        height="260"
+                        className="text-primary/80"
+                    >
+                        <g transform="translate(0,0)">{ticks}</g>
+                        <circle
+                            cx="0"
+                            cy="0"
+                            r="92"
+                            fill="none"
+                            stroke="currentColor"
+                            strokeOpacity="0.08"
+                            strokeWidth="6"
+                        />
+                    </svg>
+
+                    <div className="absolute inset-0 flex items-center justify-center">
+                        <div className="text-center">
+                            <div className="text-4xl md:text-5xl font-extrabold text-primary">
+                                {count}
+                            </div>
+                            <div className="text-sm text-muted">/100</div>
+                        </div>
+                    </div>
+                </div>
+
+                {/* Large tappable area */}
+                <div className="flex flex-col items-center gap-6 w-full">
+                    <button
+                        onClick={() => setCount((c) => (c + 1) % 101)}
+                        className="btn btn-circle btn-lg bg-base-100 border border-primary text-primary shadow-md hover:scale-105 transition-transform"
+                        aria-label="Increment Tasbih"
+                    >
+                        {/* keep a simple hand icon */}
+                        <svg
+                            xmlns="http://www.w3.org/2000/svg"
+                            className="h-24 w-24"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
                         >
-                            <p className="mb-6 text-lg font-semibold">
-                                Are you sure want to RESET?
+                            <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth="1.5"
+                                d="M14 10V5a2 2 0 10-4 0v6"
+                            />
+                            <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth="1.5"
+                                d="M6 12v5a3 3 0 003 3h6a3 3 0 003-3v-6a3 3 0 00-3-3h-1"
+                            />
+                            <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth="1.5"
+                                d="M8 12V8"
+                            />
+                        </svg>
+                    </button>
+
+                    <div className="text-xl text -bold">Tap</div>
+                </div>
+            </div>
+
+            {/* Reset confirmation modal */}
+            {showResetConfirm && (
+                <div className="fixed inset-0 flex items-center justify-center bg-black/40 z-50">
+                    <div className="modal modal-open">
+                        <div className="modal-box text-center">
+                            <h3 className="font-bold text-lg">Reset Counter</h3>
+                            <p className="py-4">
+                                Are you sure you want to reset the tasbih
+                                counter?
                             </p>
-                            <div className="flex justify-center gap-6">
+                            <div className="modal-action justify-center">
                                 <button
-                                    className="bg-primary text-white px-6 py-2 rounded-full font-bold hover:bg-primary/90"
+                                    className="btn btn-primary"
                                     onClick={() => {
                                         setCount(0);
                                         setShowResetConfirm(false);
@@ -37,7 +160,7 @@ export default function Tasbih() {
                                     Yes
                                 </button>
                                 <button
-                                    className="bg-base-300 text-primary px-6 py-2 rounded-full font-bold hover:bg-base-200"
+                                    className="btn btn-ghost"
                                     onClick={() => setShowResetConfirm(false)}
                                 >
                                     No
@@ -45,56 +168,8 @@ export default function Tasbih() {
                             </div>
                         </div>
                     </div>
-                )}
-                <h2 className="text-2xl md:text-3xl font-bold text-primary mb-4">
-                    Tasbih Counter
-                </h2>
-                <div className="glass-card p-8 max-w-2xl w-full text-center bg-base-200 text-base-content shadow-2xl rounded-3xl flex flex-col items-center relative">
-                    {/* Reset Button Top Right (inside card) */}
-                    <button
-                        className="absolute top-4 right-4 z-10 bg-gradient-to-br from-base-300 to-base-100 text-primary text-lg font-bold py-2 px-5 rounded-full shadow-md border-2 border-primary/20 hover:bg-base-200 transition-all active:scale-95"
-                        onClick={() => setShowResetConfirm(true)}
-                        aria-label="Reset Tasbih"
-                    >
-                        Reset
-                    </button>
-                    {/* 3D Counter Display */}
-                    <div
-                        className="relative mb-8"
-                        style={{
-                            perspective: "600px",
-                        }}
-                    >
-                        <div
-                            className="bg-gradient-to-br from-primary to-secondary text-white text-6xl md:text-7xl font-mono font-bold py-8 px-16 rounded-2xl shadow-2xl border-4 border-primary/30"
-                            style={{
-                                transform: "rotateX(18deg) rotateY(-12deg)",
-                                boxShadow:
-                                    "0 8px 32px 0 rgba(31, 38, 135, 0.37), 0 1.5px 0 #fff inset",
-                            }}
-                        >
-                            {count}
-                        </div>
-                        <span className="absolute -bottom-4 left-1/2 -translate-x-1/2 w-32 h-4 bg-primary/30 blur-md rounded-full opacity-60"></span>
-                    </div>
-                    {/* 3D Buttons */}
-                    <div className="flex gap-6 justify-center">
-                        <button
-                            className="relative bg-gradient-to-br from-primary to-secondary text-white text-xl font-bold py-4 px-10 rounded-full shadow-lg transition-transform active:scale-95 border-2 border-primary/40 hover:brightness-110"
-                            style={{
-                                boxShadow:
-                                    "0 6px 20px 0 rgba(31, 38, 135, 0.25), 0 2px 0 #fff inset",
-                                transform: "translateZ(0)",
-                            }}
-                            onClick={() => setCount((c) => c + 1)}
-                            aria-label="Increment Tasbih"
-                        >
-                            <span className="drop-shadow-lg">Count +1</span>
-                        </button>
-                    </div>
-                   
                 </div>
-            </div>
+            )}
         </section>
     );
 }
