@@ -4,6 +4,12 @@ import React, { useEffect, useRef, useState } from "react";
 export default function Qibla() {
     const needleRef = useRef(null);
     const [angle, setAngle] = useState(270);
+    const [deviceHeading, setDeviceHeading] = useState(0);
+    const [location, setLocation] = useState(null);
+    const [error, setError] = useState(null);
+    const [isLoading, setIsLoading] = useState(true);
+    const [isSensorAvailable, setIsSensorAvailable] = useState(false);
+    const [useManual, setUseManual] = useState(false);
 
     useEffect(() => {
         let raf;
@@ -30,6 +36,37 @@ export default function Qibla() {
             cancelAnimationFrame(raf);
         };
     }, [angle]);
+
+    useEffect(() => {
+        let seenEvent = false;
+        const handleOrientation = (event) => {
+            if (typeof event.alpha === "number") {
+                seenEvent = true;
+                setIsSensorAvailable(true);
+                setDeviceHeading(event.alpha || 0);
+            }
+        };
+
+        // Listen briefly to detect if a sensor exists and emits events
+        window.addEventListener("deviceorientationabsolute", handleOrientation);
+        window.addEventListener("deviceorientation", handleOrientation);
+
+        const fallbackTimer = setTimeout(() => {
+            if (!seenEvent) {
+                setIsSensorAvailable(false);
+                setUseManual(true);
+            }
+        }, 2500);
+
+        return () => {
+            window.removeEventListener(
+                "deviceorientationabsolute",
+                handleOrientation
+            );
+            window.removeEventListener("deviceorientation", handleOrientation);
+            clearTimeout(fallbackTimer);
+        };
+    }, []);
 
     function handleCompassClick(e) {
         const rect = e.currentTarget.getBoundingClientRect();
@@ -302,7 +339,6 @@ export default function Qibla() {
                         </div>
                     </div>
                 </div>
-                {/* Move degree display here, just above the dua text */}
                 <div
                     className="degree-display"
                     style={{
@@ -321,6 +357,57 @@ export default function Qibla() {
                 >
                     {`${Math.round(angle % 360)}°`}
                 </div>
+                {/* Manual fallback for desktops/laptops without sensors */}
+                {useManual && (
+                    <div className="mt-4 text-center">
+                        <p className="text-sm mb-2">
+                            Device orientation not available — use the slider to
+                            simulate heading
+                        </p>
+                        <div
+                            style={{
+                                display: "flex",
+                                alignItems: "center",
+                                justifyContent: "center",
+                                gap: 12,
+                            }}
+                        >
+                            <input
+                                type="range"
+                                min={0}
+                                max={359}
+                                value={Math.round(deviceHeading)}
+                                onChange={(e) =>
+                                    setDeviceHeading(Number(e.target.value))
+                                }
+                                style={{ width: 240 }}
+                            />
+                            <input
+                                type="number"
+                                min={0}
+                                max={359}
+                                value={Math.round(deviceHeading)}
+                                onChange={(e) => {
+                                    let v = Number(e.target.value);
+                                    if (isNaN(v)) v = 0;
+                                    v = ((v % 360) + 360) % 360;
+                                    setDeviceHeading(v);
+                                }}
+                                style={{
+                                    width: 72,
+                                    padding: 6,
+                                    borderRadius: 6,
+                                }}
+                            />
+                        </div>
+                        <button
+                            className="btn btn-ghost btn-sm mt-3"
+                            onClick={() => setUseManual(false)}
+                        >
+                            Try enabling device orientation again
+                        </button>
+                    </div>
+                )}
                 <div>
                     <p className="text-lg mb-2">
                         Compass-based Qibla, GPS, and prayer duas.
