@@ -1,25 +1,11 @@
 import { NextResponse } from "next/server";
-import fs from "fs/promises";
-import path from "path";
-
-const DATA_DIR = path.join(process.cwd(), "data");
-const DATA_FILE = path.join(DATA_DIR, "tasbihUsers.json");
-
-async function ensureDataFile() {
-    await fs.mkdir(DATA_DIR, { recursive: true });
-    try {
-        await fs.access(DATA_FILE);
-    } catch (err) {
-        await fs.writeFile(DATA_FILE, "[]", "utf8");
-    }
-}
+import { PrismaClient } from "@prisma/client";
+const prisma = new PrismaClient();
 
 export async function POST(req) {
     try {
         const body = await req.json();
 
-        // Validate fields
-        // Remove title and count validation
         const fullName = body["Full Name"] ?? body.fullName ?? body.fullname;
         const address = body.Address ?? body.address;
         const mobileNumber =
@@ -37,27 +23,14 @@ export async function POST(req) {
             return NextResponse.json({ ok: false, errors }, { status: 400 });
         }
 
-        await ensureDataFile();
-
-        // Read existing
-        const raw = await fs.readFile(DATA_FILE, "utf8");
-        let users = [];
-        try {
-            users = JSON.parse(raw || "[]");
-        } catch (e) {
-            users = [];
-        }
-
-        const newItem = {
-            id: Date.now().toString(),
-            "Full Name": fullName,
-            Address: address,
-            "mobile number": mobileNumber,
-            createdAt: new Date().toISOString(),
-        };
-
-        users.push(newItem);
-        await fs.writeFile(DATA_FILE, JSON.stringify(users, null, 2), "utf8");
+        // Save to database
+        const newItem = await prisma.tasbihUser.create({
+            data: {
+                fullName,
+                address,
+                mobileNumber,
+            },
+        });
 
         return NextResponse.json({ ok: true, data: newItem }, { status: 201 });
     } catch (err) {
@@ -70,19 +43,12 @@ export async function POST(req) {
 
 export async function GET() {
     try {
-        await ensureDataFile();
-        const raw = await fs.readFile(DATA_FILE, "utf8");
-        let users = [];
-        try {
-            users = JSON.parse(raw || "[]");
-        } catch (e) {
-            users = [];
-        }
-        // Map to only required fields
+        // Fetch from database
+        const users = await prisma.tasbihUser.findMany();
         const filtered = users.map((u) => ({
-            "Full Name": u["Full Name"],
-            Address: u.Address,
-            "mobile number": u["mobile number"],
+            "Full Name": u.fullName,
+            Address: u.address,
+            "mobile number": u.mobileNumber,
         }));
         return NextResponse.json({ ok: true, data: filtered }, { status: 200 });
     } catch (err) {
