@@ -18,6 +18,7 @@ export async function POST(request) {
             juma,
             role = null,
             mobile = null,
+            pasteMapUrl = null,
         } = body;
 
         const required = [
@@ -53,6 +54,7 @@ export async function POST(request) {
                 name,
                 role,
                 mobile,
+                pasteMapUrl,
             },
         });
 
@@ -87,6 +89,7 @@ export async function PATCH(request) {
             juma,
             role,
             mobile,
+            pasteMapUrl,
         } = body;
 
         if (!id) {
@@ -122,6 +125,7 @@ export async function PATCH(request) {
         if (juma !== undefined) updateData.juma = juma;
         if (role !== undefined) updateData.role = role;
         if (mobile !== undefined) updateData.mobile = mobile;
+        if (pasteMapUrl !== undefined) updateData.pasteMapUrl = pasteMapUrl;
 
         const updated = await prisma.allMasjid.update({
             where: { id: parseInt(id) },
@@ -166,6 +170,4 @@ export async function GET(request) {
             { status: 500 }
         );
     }
- HEAD
 }
-

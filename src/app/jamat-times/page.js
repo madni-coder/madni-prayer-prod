@@ -83,6 +83,25 @@ export default function JamatTimesPage() {
         }
     };
 
+    // map collapse logic removed; button now opens map directly
+
+    // Build a map URL from API fields or fallback to Google Maps search
+    const getMapUrl = () => {
+        if (!selectedMasjidData) return "";
+        return (
+            selectedMasjidData.mapUrl ||
+            selectedMasjidData.map_url ||
+            selectedMasjidData.map ||
+            encodeURI(
+                `https://www.google.com/maps/search/?api=1&query=${
+                    selectedMasjidData.masjidName
+                } ${selectedMasjidData.colony} ${
+                    selectedMasjidData.locality || ""
+                }`
+            )
+        );
+    };
+
     const colonies = [...new Set(masjids.map((m) => m.colony))];
 
     const getJamatTimes = () => {
@@ -226,6 +245,32 @@ export default function JamatTimesPage() {
                             {selectedMasjidData.locality && (
                                 <span>, {selectedMasjidData.locality}</span>
                             )}
+                        </div>
+
+                        <div className="mt-3">
+                            <button
+                                type="button"
+                                onClick={() => {
+                                    const url = getMapUrl();
+                                    if (url) {
+                                        window.open(
+                                            url,
+                                            "_blank",
+                                            "noopener,noreferrer"
+                                        );
+                                    } else {
+                                        alert(
+                                            "Map not available for this masjid."
+                                        );
+                                    }
+                                }}
+                                className="inline-flex items-center gap-2 px-3 py-2 rounded-md bg-primary/20 hover:bg-primary/30 text-primary transition"
+                            >
+                                <MapPin className="w-5 h-5" />
+                                <span className="font-semibold">
+                                    See Masjid Location In Map
+                                </span>
+                            </button>
                         </div>
                     </div>
                 )}
