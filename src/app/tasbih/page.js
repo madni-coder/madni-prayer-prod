@@ -2,10 +2,12 @@
 import React, { useState, useCallback } from "react";
 import { RotateCw } from "lucide-react";
 import { PiHandTapLight } from "react-icons/pi";
+import UserModal from "../components/UserModal";
 
 export default function Tasbih() {
     const [count, setCount] = useState(0);
     const [showResetConfirm, setShowResetConfirm] = useState(false);
+    const [showUserModal, setShowUserModal] = useState(false);
 
     // shared increment handler (1..100 then wrap to 0)
     const increment = useCallback(() => {
@@ -60,14 +62,15 @@ export default function Tasbih() {
                 </button>
 
                 <h2 className="flex-1 text-xl font-bold">Tasbih</h2>
+
+                <button
+                    className="btn btn-sm btn-primary"
+                    onClick={() => setShowUserModal(true)}
+                    aria-label="Register Durood"
+                >
+                    Register For Durood
+                </button>
             </div>
-            <button
-                aria-label="Reset"
-                className="fixed mt-6 right-4 z-50 btn btn-ghost btn-circle"
-                onClick={() => setShowResetConfirm(true)}
-            >
-                <RotateCw className="h-6 w-6" />
-            </button>
             {/* Card */}
             {/* Make this entire card respond to pointer and keyboard so taps anywhere increment the counter */}
             <div
@@ -87,11 +90,21 @@ export default function Tasbih() {
                 }}
                 aria-label="Tasbih tappable area"
             >
-                <div className="w-full text-center">
+                {/* Header row with label and reset button */}
+                <div className="w-full flex items-center justify-between mb-2">
                     <p className="text-lg font-semibold">Tasbih Counter</p>
-                    <div className="divider my-4" />
+                    <button
+                        aria-label="Reset"
+                        className="btn btn-ghost btn-circle"
+                        onClick={(e) => {
+                            e.stopPropagation();
+                            setShowResetConfirm(true);
+                        }}
+                    >
+                        <RotateCw className="h-6 w-6" />
+                    </button>
                 </div>
-                {/* fixed top-right reset button */}
+                <div className="divider my-4" />
 
                 {/* Circular ring with ticks */}
                 <div className="relative flex items-center justify-center mb-8">
@@ -172,6 +185,16 @@ export default function Tasbih() {
                     </div>
                 </div>
             )}
+
+            {/* User registration modal */}
+            <UserModal
+                open={showUserModal}
+                onClose={() => setShowUserModal(false)}
+                onSuccess={(data) => {
+                    // handle success if needed
+                    setShowUserModal(false);
+                }}
+            />
         </section>
     );
 }

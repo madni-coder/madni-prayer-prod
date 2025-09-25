@@ -1,18 +1,27 @@
 "use client";
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { FaBitcoin, FaMosque } from "react-icons/fa";
 
 export default function DuroodSharifTable() {
     const [search, setSearch] = useState("");
-    const data = [
-        { name: "Ali Khan", address: "123 Main St", tasbih: 12 },
-        { name: "Sara Ahmed", address: "456 Oak Ave", tasbih: 34 },
-        { name: "Tabish Raza", address: "789 Pine Rd", tasbih: 56 },
-    ];
-    const filtered = data.filter(
+    const [users, setUsers] = useState([]);
+    useEffect(() => {
+        async function fetchUsers() {
+            try {
+                const res = await fetch("/api/api-tasbihUsers");
+                const json = await res.json();
+                if (json.ok) setUsers(json.data);
+            } catch (e) {
+                setUsers([]);
+            }
+        }
+        fetchUsers();
+    }, []);
+    const filtered = users.filter(
         (row) =>
-            row.name.toLowerCase().includes(search.toLowerCase()) ||
-            row.address.toLowerCase().includes(search.toLowerCase())
+            row["Full Name"].toLowerCase().includes(search.toLowerCase()) ||
+            row["Address"].toLowerCase().includes(search.toLowerCase()) ||
+            row["mobile number"].toLowerCase().includes(search.toLowerCase())
     );
 
     return (
@@ -20,7 +29,7 @@ export default function DuroodSharifTable() {
             <div className="p-4">
                 <input
                     type="text"
-                    placeholder="Search by name or address"
+                    placeholder="Search by name, address or mobile number"
                     className="input input-bordered bg-white w-full max-w-xs text-black"
                     value={search}
                     onChange={(e) => setSearch(e.target.value)}
@@ -30,13 +39,16 @@ export default function DuroodSharifTable() {
                 <thead>
                     <tr className="bg-[#5fb923] rounded-t-xl">
                         <th className="font-semibold text-base text-white text-left rounded-tl-xl">
-                            Masjid
+                            Name
                         </th>
                         <th className="font-semibold text-base text-white text-left">
                             Colony Address
                         </th>
+                        <th className="font-semibold text-base text-white text-left">
+                            Mobile Number
+                        </th>
                         <th className="font-semibold text-base text-white text-left rounded-tr-xl">
-                            Tasbih Counter
+                            Durood Counts
                         </th>
                     </tr>
                 </thead>
@@ -50,13 +62,20 @@ export default function DuroodSharifTable() {
                                 <span className="bg-amber-100 rounded-full p-2 flex items-center justify-center">
                                     <FaBitcoin className="text-2xl text-amber-700" />
                                 </span>
-                                <span className="font-medium">{row.name}</span>
+                                <span className="font-medium">
+                                    {row["Full Name"]}
+                                </span>
                             </td>
                             <td className="py-4 text-gray-800 text-left">
-                                {row.address}
+                                {row["Address"]}
                             </td>
                             <td className="py-4 text-gray-800 text-left">
-                                {row.tasbih}
+                                {row["mobile number"]}
+                            </td>
+                            <td className="py-4 text-gray-800 text-left">
+                                {row["Durood Counts"]
+                                    ? row["Durood Counts"]
+                                    : "NA"}
                             </td>
                         </tr>
                     ))}
