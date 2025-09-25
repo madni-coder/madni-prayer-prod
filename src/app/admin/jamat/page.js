@@ -231,12 +231,12 @@ export default function JamatTimeTable() {
 
     return (
         <div className="min-h-screen bg-white flex flex-col items-center py-10">
-            <div className="flex gap-4 mb-6 w-full max-w-xl items-center">
+            <div className="flex gap-4 mb-8 w-full max-w-5xl items-center px-4">
                 {/* Colony Dropdown (DaisyUI) */}
-                <div className="dropdown w-1/2 relative">
+                <div className="dropdown flex-1 relative">
                     <label
                         tabIndex={0}
-                        className="btn w-full bg-white border text-gray-500 justify-between"
+                        className="btn w-full bg-white border text-gray-500 justify-between text-lg h-14"
                     >
                         {loading
                             ? "Loading..."
@@ -247,7 +247,7 @@ export default function JamatTimeTable() {
                             onClick={handleClearColony}
                             className="absolute right-2 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 z-20"
                         >
-                            <X size={16} />
+                            <X size={20} />
                         </button>
                     )}
                     <ul
@@ -268,10 +268,10 @@ export default function JamatTimeTable() {
                     </ul>
                 </div>
                 {/* Masjid Dropdown (DaisyUI) */}
-                <div className="dropdown w-1/2 relative">
+                <div className="dropdown flex-1 relative">
                     <label
                         tabIndex={0}
-                        className="btn w-full bg-white border text-gray-500 justify-between"
+                        className="btn w-full bg-white border text-gray-500 justify-between text-lg h-14"
                     >
                         {loading
                             ? "Loading..."
@@ -282,7 +282,7 @@ export default function JamatTimeTable() {
                             onClick={handleClearMasjid}
                             className="absolute right-2 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 z-20"
                         >
-                            <X size={16} />
+                            <X size={20} />
                         </button>
                     )}
                     <ul
@@ -317,16 +317,16 @@ export default function JamatTimeTable() {
                 {/* Reset Button */}
                 <button
                     onClick={handleReset}
-                    className="btn bg-gray-500 hover:bg-gray-600 text-white border-none px-3"
+                    className="btn bg-gray-500 hover:bg-gray-600 text-white border-none px-4 h-14 flex items-center justify-center"
                     title="Reset all selections"
                 >
-                    <RotateCcw size={16} />
+                    <RotateCcw size={24} />
                 </button>
             </div>
             <h1 className="text-3xl font-bold mb-8 text-center text-gray-800">
                 Jamat Time Table
             </h1>
-            <div className="overflow-x-auto w-full max-w-xl">
+            <div className="overflow-x-auto w-full max-w-5xl px-4">
                 {error && (
                     <div className="alert alert-warning mb-4 text-sm">
                         {error}
@@ -337,77 +337,80 @@ export default function JamatTimeTable() {
                         {saveMessage}
                     </div>
                 )}
-                <table className="table w-full border border-gray-200 bg-gray-50">
+                <table className="table w-full max-w-2xl border border-gray-200 bg-gray-50 text-base">
                     <thead className="bg-gray-100">
                         <tr>
-                            <th className="text-gray-700">Prayer</th>
-                            <th className="text-gray-700">Time</th>
-                            <th className="text-gray-700">Actions</th>
+                            <th className="text-gray-700 w-32">Prayer</th>
+                            <th className="text-gray-700 w-40">Time</th>
+                            <th className="text-gray-700 w-24">Actions</th>
                         </tr>
                     </thead>
                     <tbody>
                         {prayers.map((prayer, idx) => (
                             <tr
                                 key={prayer.name}
-                                className="border-b border-gray-200"
+                                className="border-b border-gray-200 h-12"
                             >
                                 <td
                                     className={[
-                                        "font-semibold border-b-2",
+                                        "font-semibold border-b-2 text-base py-2 px-2 w-32",
                                         idx === 0
-                                            ? "text-primary border-primary"
+                                            ? "text-green-600 border-green-400"
                                             : idx === 1
-                                            ? "text-pink-500 border-pink-500"
+                                            ? "text-pink-500 border-pink-300"
                                             : idx === 2
-                                            ? "text-warning border-warning"
+                                            ? "text-yellow-600 border-yellow-400"
                                             : idx === 3
-                                            ? "text-error border-error"
+                                            ? "text-red-500 border-red-400"
                                             : idx === 4
-                                            ? "text-info border-info"
+                                            ? "text-blue-500 border-blue-400"
                                             : idx === 5
-                                            ? "text-[#8B4513] border-[#8B4513]" // Juma brown
+                                            ? "text-[#8B4513] border-[#8B4513]"
                                             : "",
                                     ].join(" ")}
                                 >
                                     {prayer.name}
                                 </td>
-                                <td className="text-blue-600 font-semibold">
+                                <td className="text-blue-700 font-semibold text-base py-2 px-2 w-40">
                                     {editIdx === idx ? (
-                                        <div className="flex items-center gap-2">
-                                            <input
-                                                type="time"
-                                                className="input input-bordered input-sm bg-white text-gray-800 border-gray-300"
-                                                value={editValue}
-                                                onChange={(e) =>
-                                                    setEditValue(e.target.value)
-                                                }
-                                                autoFocus
-                                            />
-                                            <button
-                                                className="bg-blue-600 hover:bg-blue-700 text-white px-2 py-1 rounded flex items-center"
-                                                onClick={() => handleSave(idx)}
-                                            >
-                                                <FaCheckCircle size={16} />
-                                            </button>
-                                        </div>
+                                        <input
+                                            type="time"
+                                            className="input input-bordered input-sm bg-white text-gray-800 border-gray-300"
+                                            value={editValue}
+                                            onChange={(e) =>
+                                                setEditValue(e.target.value)
+                                            }
+                                            autoFocus
+                                        />
                                     ) : (
                                         times[idx]
                                     )}
                                 </td>
-                                <td>
-                                    <button
-                                        className="bg-green-600 hover:bg-green-700 text-white px-2 py-1 rounded flex items-center"
-                                        onClick={() => handleEdit(idx)}
-                                    >
-                                        <FaPencilAlt size={16} />
-                                    </button>
+                                <td className="py-2 px-2 w-24">
+                                    {editIdx === idx ? (
+                                        <button
+                                            className="bg-blue-600 hover:bg-blue-700 text-white px-2 py-1 rounded flex items-center"
+                                            onClick={() => handleSave(idx)}
+                                            title="Save time"
+                                        >
+                                            <FaCheckCircle size={18} />
+                                        </button>
+                                    ) : (
+                                        <button
+                                            className="bg-green-500 hover:bg-green-600 text-white p-2 rounded flex items-center justify-center"
+                                            onClick={() => handleEdit(idx)}
+                                            title="Edit time"
+                                        >
+                                            <FaPencilAlt size={18} />
+                                        </button>
+                                    )}
                                 </td>
                             </tr>
                         ))}
                     </tbody>
                 </table>
                 {!error && !loading && !selectedMasjid && (
-                    <p className="text-center text-gray-500 text-sm mt-4">
+                    <p className="text-center text-gray-500 text-md mt-4">
                         Select a masjid to load jamat times.
                     </p>
                 )}
