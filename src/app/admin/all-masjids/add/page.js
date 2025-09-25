@@ -21,6 +21,7 @@ export default function AddMasjidPage() {
     const [role, setRole] = useState("");
     const [name, setName] = useState("");
     const [mobile, setMobile] = useState("");
+    const [pasteMapUrl, setPasteMapUrl] = useState("");
     const [times, setTimes] = useState(prayers.map((p) => p.defaultTime));
     const [editIdx, setEditIdx] = useState(null);
     const [editValue, setEditValue] = useState("");
@@ -57,6 +58,7 @@ export default function AddMasjidPage() {
                 role: role,
                 name: name.trim(),
                 mobile: mobile,
+                pasteMapUrl: pasteMapUrl.trim(),
                 // map times
                 fazar: times[0],
                 zuhar: times[1],
@@ -179,6 +181,18 @@ export default function AddMasjidPage() {
                                 onChange={(e) => setMobile(e.target.value)}
                                 minLength={10}
                                 maxLength={15}
+                            />
+                        </div>
+                        <div className="mb-4">
+                            <label className="block text-gray-700 mb-2">
+                                Paste Map URL
+                            </label>
+                            <input
+                                type="text"
+                                className="input input-bordered w-full bg-white text-black border-gray-300 rounded-full"
+                                value={pasteMapUrl}
+                                onChange={(e) => setPasteMapUrl(e.target.value)}
+                                placeholder="Paste Google Map URL here"
                             />
                         </div>
                         {error && (

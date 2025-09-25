@@ -28,6 +28,7 @@ model AllMasjid {
   name       String?  // optional
   role       String?  // optional
   mobile     String?  // optional
+  pasteMapUrl String? // Google Map URL for the masjid
   createdAt  DateTime @default(now())
   updatedAt  DateTime @updatedAt
 
