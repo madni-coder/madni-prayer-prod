@@ -1,6 +1,7 @@
 "use client";
 import React, { useState, useCallback } from "react";
 import { RotateCw } from "lucide-react";
+import { PiHandTapLight } from "react-icons/pi";
 
 export default function Tasbih() {
     const [count, setCount] = useState(0);
@@ -39,10 +40,8 @@ export default function Tasbih() {
 
     return (
         <section className="flex flex-col items-center min-h-screen px-4 py-6 bg-base-100 text-base-content">
-            
             {/* Header */}
             <div className="w-full max-w-3xl flex items-center gap-2">
-                
                 <button aria-label="Back" className="btn btn-ghost btn-square">
                     <svg
                         xmlns="http://www.w3.org/2000/svg"
@@ -59,9 +58,8 @@ export default function Tasbih() {
                         />
                     </svg>
                 </button>
-                
+
                 <h2 className="flex-1 text-xl font-bold">Tasbih</h2>
-             
             </div>
             <button
                 aria-label="Reset"
@@ -88,15 +86,12 @@ export default function Tasbih() {
                     }
                 }}
                 aria-label="Tasbih tappable area"
-                
             >
-                
                 <div className="w-full text-center">
                     <p className="text-lg font-semibold">Tasbih Counter</p>
                     <div className="divider my-4" />
                 </div>
-{/* fixed top-right reset button */}
-
+                {/* fixed top-right reset button */}
 
                 {/* Circular ring with ticks */}
                 <div className="relative flex items-center justify-center mb-8">
@@ -136,36 +131,10 @@ export default function Tasbih() {
                             e.stopPropagation();
                             increment();
                         }}
-                        className="btn btn-circle btn-lg bg-base-100 border border-primary text-primary shadow-md hover:scale-105 transition-transform"
+                        className="btn btn-circle bg-base-100 border border-primary text-primary shadow-md hover:scale-105 transition-transform w-28 h-28 flex items-center justify-center"
                         aria-label="Increment Tasbih"
                     >
-                        {/* keep a simple hand icon */}
-                        <svg
-                            xmlns="http://www.w3.org/2000/svg"
-                            className="h-24 w-24"
-                            viewBox="0 0 24 24"
-                            fill="none"
-                            stroke="currentColor"
-                        >
-                            <path
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                strokeWidth="1.5"
-                                d="M14 10V5a2 2 0 10-4 0v6"
-                            />
-                            <path
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                strokeWidth="1.5"
-                                d="M6 12v5a3 3 0 003 3h6a3 3 0 003-3v-6a3 3 0 00-3-3h-1"
-                            />
-                            <path
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                strokeWidth="1.5"
-                                d="M8 12V8"
-                            />
-                        </svg>
+                        <PiHandTapLight className="h-20 w-20" />
                     </button>
 
                     <div className="text-xl font-bold">Tap Anywhere</div>
