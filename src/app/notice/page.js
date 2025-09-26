@@ -1,45 +1,38 @@
 "use client";
 
-import Image from "next/image";
-
-// Mock data for posts
-const posts = [
-    {
-        id: 1,
-        image: "/r1.jpeg",
-        user: "user1",
-        caption: "Beautiful day!",
-    },
-    {
-        id: 2,
-        image: "/r2.jpeg",
-        user: "user2",
-        caption: "Exploring the world!",
-    },
-    {
-        id: 3,
-        image: "/r3.jpeg",
-        user: "user3",
-        caption: "Window to the soul.",
-    },
-    {
-        id: 4,
-        image: "/r4.jpeg",
-        user: "user4",
-        caption: "Nature vibes.",
-    },
-];
+import { useEffect, useState } from "react";
 
 export default function NoticeFeed() {
+    const [images, setImages] = useState([]);
+    const [error, setError] = useState(null);
+
+    useEffect(() => {
+        async function fetchImages() {
+            try {
+                const res = await fetch("/api/api-notice");
+                if (!res.ok) throw new Error(`Fetch error: ${res.status}`);
+                const data = await res.json();
+                setImages(data.images || []);
+            } catch (err) {
+                setError(err.message || "An error occurred");
+            }
+        }
+        fetchImages();
+    }, []);
+
     return (
         <div className="flex flex-col items-center w-full max-w-md mx-auto py-4 bg-base-100">
             <div
-                className="w-full max-w-xs mx-auto overflow-y-auto"
+                className="w-full max-w-xs mx-auto "
                 style={{ height: "calc(100vh - 64px)" }}
             >
-                {posts.map((post) => (
+                {error && (
+                    <div className="text-sm text-error p-3">Error: {error}</div>
+                )}
+
+                {images.map((img, idx) => (
                     <div
-                        key={post.id}
+                        key={idx}
                         className="w-full mb-6 rounded-2xl shadow-lg bg-base-100 overflow-hidden flex flex-col border-4 border-primary"
                         style={{ aspectRatio: "9/16", maxWidth: 360 }}
                     >
@@ -47,21 +40,21 @@ export default function NoticeFeed() {
                             className="relative w-full h-0 flex items-center justify-center bg-base-100"
                             style={{ paddingBottom: "177.77%" }}
                         >
-                            <Image
-                                src={post.image}
-                                alt={post.caption}
-                                fill
-                                className="object-contain"
-                                sizes="(max-width: 360px) 100vw, 360px"
-                                priority={post.id === 1}
+                            {/* Use a regular img tag to avoid Next/Image remote domain configuration */}
+                            <img
+                                src={img.imageSrc}
+                                alt={img.imageName}
+                                className="object-contain w-full h-full"
+                                style={{
+                                    position: "absolute",
+                                    top: 0,
+                                    left: 0,
+                                }}
                             />
                         </div>
                         <div className="p-3 flex flex-col gap-1">
                             <span className="font-semibold text-base-content">
-                                @{post.user}
-                            </span>
-                            <span className="text-sm text-base-content/70">
-                                {post.caption}
+                                {img.imageName}
                             </span>
                         </div>
                     </div>

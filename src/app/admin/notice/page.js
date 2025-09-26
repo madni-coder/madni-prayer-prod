@@ -1,3 +1,6 @@
+"use client";
+import SocialMediaImageUpload from "../../../components/SocialMediaImageUpload";
+
 export default function NoticeAdmin() {
     return (
         <div className="space-y-6">
@@ -13,6 +16,13 @@ export default function NoticeAdmin() {
                 <button className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-md text-sm font-medium">
                     Create Notice
                 </button>
+            </div>
+
+            {/* Social Media Image Upload Component */}
+            <div className="bg-white shadow overflow-hidden sm:rounded-md">
+                <div className="px-4 py-5 sm:p-6">
+                    <SocialMediaImageUpload />
+                </div>
             </div>
 
             <div className="bg-white shadow overflow-hidden sm:rounded-md">
