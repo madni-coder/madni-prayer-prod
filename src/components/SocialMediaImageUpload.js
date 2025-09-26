@@ -3,7 +3,7 @@
 import { useState, useRef, useCallback, useEffect } from "react";
 import { Upload, Trash2, Download } from "lucide-react";
 
-export default function SocialMediaImageUpload({ onUpload }) {
+export default function SocialMediaImageUpload({ onUpload, onUploadComplete }) {
     const [images, setImages] = useState([]);
     const fileInputRef = useRef(null);
     const previewUrlsRef = useRef(new Set());
@@ -94,6 +94,19 @@ export default function SocialMediaImageUpload({ onUpload }) {
                             return img;
                         })
                     );
+
+                    // After successful upload, call onUploadComplete if provided
+                    if (typeof onUploadComplete === "function") {
+                        try {
+                            onUploadComplete();
+                        } catch (err) {
+                            // swallow callback errors to avoid breaking UI
+                            console.error(
+                                "onUploadComplete callback error:",
+                                err
+                            );
+                        }
+                    }
                 } else {
                     console.error(
                         "Failed to upload",
@@ -106,7 +119,7 @@ export default function SocialMediaImageUpload({ onUpload }) {
             // Reset file input
             e.target.value = "";
         },
-        [onUpload]
+        [onUpload, onUploadComplete]
     );
 
     const handleChange = (e) => {
@@ -166,7 +179,7 @@ export default function SocialMediaImageUpload({ onUpload }) {
                     </div>
                     <div>
                         <h2 className="text-xl font-semibold text-gray-900">
-                            Social Media Images
+                            Announcment Media Images
                         </h2>
                         <p className="text-sm text-gray-500">
                             Use the action buttons on each image to download or

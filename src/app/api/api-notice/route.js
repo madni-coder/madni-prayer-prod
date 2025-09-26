@@ -42,7 +42,14 @@ export async function POST(request) {
             .getPublicUrl(imageName);
         const imageSrc = publicUrlData?.publicUrl || null;
 
-        return NextResponse.json({ imageName, imageSrc });
+        // Create a portrait variant URL by appending transformation query params
+        // Frontend can use imageSrcPortrait to show portrait-oriented previews
+        // Use 9:16 ratio (width : height = 9 : 16) e.g. 900x1600
+        const imageSrcPortrait = imageSrc
+            ? `${imageSrc}?width=900&height=1600&fit=crop`
+            : null;
+
+        return NextResponse.json({ imageName, imageSrc, imageSrcPortrait });
     } catch (err) {
         return NextResponse.json(
             { error: err.message || String(err) },
@@ -77,7 +84,16 @@ export async function GET() {
                 .getPublicUrl(file.name).data;
 
             const publicUrl = publicUrlData?.publicUrl || null;
-            return { imageName: file.name, imageSrc: publicUrl };
+            // Use 9:16 ratio (width : height = 9 : 16) e.g. 900x1600
+            const imageSrcPortrait = publicUrl
+                ? `${publicUrl}?width=900&height=1600&fit=crop`
+                : null;
+
+            return {
+                imageName: file.name,
+                imageSrc: publicUrl,
+                imageSrcPortrait,
+            };
         });
 
         return NextResponse.json({ images });
