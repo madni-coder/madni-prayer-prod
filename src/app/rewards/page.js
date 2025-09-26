@@ -1,4 +1,5 @@
-import React from "react";
+"use client";
+import React, { useState } from "react";
 
 const demoData = [
     { firstName: "Dorcius", lastName: "dorlensley", xp: 956 },
@@ -80,6 +81,8 @@ const medalSVG = [
 ];
 
 const RewardsPage = () => {
+    const [showModal, setShowModal] = useState(false);
+
     return (
         <div className="min-h-screen flex flex-col items-center justify-center bg-base-200">
             {/* Winner Announcement Card */}
@@ -226,6 +229,17 @@ const RewardsPage = () => {
                     You have earned Gold Medal on this level!
                 </div>
             </div>
+            <p className="text-center text-xl font-bold mb-2">
+                Register For Weekly Durood Sharif
+            </p>
+            <div className="flex justify-center mb-4">
+                <button
+                    className="btn btn-primary px-6 py-2 rounded-lg font-semibold text-white shadow"
+                    onClick={() => setShowModal(true)}
+                >
+                    Register
+                </button>
+            </div>
             <div className="flex justify-center gap-2 mb-3">
                 {medalSVG.map((svg, idx) => (
                     <span key={idx}>{svg}</span>
@@ -234,9 +248,11 @@ const RewardsPage = () => {
             <div className="text-center font-semibold text-2xl mb-1">
                 Durood Sharif
             </div>
+
             <div className="text-center text-sm text-yellow-400 mb-3 mt-1">
-                Winner of the week
+                Winners of the week
             </div>
+
             <div className="bg-base-200 rounded-xl p-2 w-full max-w-md">
                 {/* Label Row */}
                 <div className="flex items-center py-2 border-b border-yellow-100 font-semibold text-xs text-yellow-400 uppercase tracking-wide">
@@ -298,12 +314,72 @@ const RewardsPage = () => {
                     </div>
                 ))}
             </div>
+            {/* Animated Modal */}
+            {showModal && (
+                <div
+                    className="fixed inset-0 z-50 flex items-center justify-center animate-fadeIn backdrop-blur-lg"
+                    style={{ background: "rgba(255,255,255,0.08)" }}
+                    onClick={() => setShowModal(false)}
+                >
+                    <div
+                        className="bg-base-100 rounded-2xl shadow-xl p-6 w-full max-w-sm relative animate-modalPop border border-base-300"
+                        onClick={(e) => e.stopPropagation()}
+                    >
+                        <button
+                            className="absolute top-2 right-2 text-gray-400 hover:text-gray-200 text-xl"
+                            onClick={() => setShowModal(false)}
+                        >
+                            &times;
+                        </button>
+                        <h3 className="text-lg font-bold mb-4 text-center text-gray-200">
+                            Register for Weekly Durood
+                        </h3>
+                        <form className="flex flex-col gap-3">
+                            <input
+                                type="text"
+                                placeholder="Full Name"
+                                className="input input-bordered bg-base-200 text-gray-100"
+                            />
+                            <input
+                                type="text"
+                                placeholder="Address"
+                                className="input input-bordered bg-base-200 text-gray-100"
+                            />
+                            <input
+                                type="tel"
+                                placeholder="Mobile"
+                                className="input input-bordered bg-base-200 text-gray-100"
+                            />
+                            <button
+                                type="submit"
+                                className="btn btn-success mt-2"
+                            >
+                                Submit
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            )}
             <style>{`
         @media (max-width: 500px) {
           div[class*="max-w-md"] {
             max-width: 98vw !important;
             padding: 6vw !important;
           }
+        }
+        @keyframes fadeIn {
+          from { opacity: 0; }
+          to { opacity: 1; }
+        }
+        .animate-fadeIn {
+          animation: fadeIn 0.3s;
+        }
+        @keyframes modalPop {
+          0% { transform: scale(0.8); opacity: 0; }
+          100% { transform: scale(1); opacity: 1; }
+        }
+        .animate-modalPop {
+          animation: modalPop 0.3s;
         }
       `}</style>
         </div>
