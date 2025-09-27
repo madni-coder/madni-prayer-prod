@@ -70,6 +70,7 @@ export default function UserModal({
                 setStep("registered");
                 setError(null);
                 setLoading(false);
+                onSuccess(); // Call onSuccess for registered user
                 return;
             }
             if (res.status === 500) {
@@ -86,6 +87,7 @@ export default function UserModal({
             setStep("submitted");
             setError(null);
             setLoading(false);
+            onSuccess(); // Call onSuccess for new submission
             return;
         } catch (err) {
             setError("Something went wrong. Please try again.");

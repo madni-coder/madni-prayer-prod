@@ -1,6 +1,6 @@
 "use client";
 import React, { useState, useCallback, useEffect } from "react";
-import { RotateCw } from "lucide-react";
+import { RotateCw, Trash2 } from "lucide-react";
 import { PiHandTapLight } from "react-icons/pi";
 import UserModal from "../../components/UserModal";
 
@@ -15,6 +15,20 @@ export default function Tasbih() {
     });
     const [showResetConfirm, setShowResetConfirm] = useState(false);
     const [showUserModal, setShowUserModal] = useState(false);
+    const [history, setHistory] = useState(() => {
+        if (typeof window !== "undefined") {
+            const saved = localStorage.getItem("duroodHistory");
+            return saved ? JSON.parse(saved) : [];
+        }
+        return [];
+    });
+    const [deleteIndex, setDeleteIndex] = useState(null);
+    const [savedMobile, setSavedMobile] = useState(() => {
+        if (typeof window !== "undefined") {
+            return localStorage.getItem("userMobile") || "";
+        }
+        return "";
+    });
 
     // Sync count to localStorage whenever it changes
     useEffect(() => {
@@ -22,6 +36,13 @@ export default function Tasbih() {
             localStorage.setItem("tasbihCount", count);
         }
     }, [count]);
+
+    // Sync history to localStorage whenever it changes
+    useEffect(() => {
+        if (typeof window !== "undefined") {
+            localStorage.setItem("duroodHistory", JSON.stringify(history));
+        }
+    }, [history]);
 
     // shared increment handler (1..100 then wrap to 0)
     const increment = useCallback(() => {
@@ -82,7 +103,7 @@ export default function Tasbih() {
                     onClick={() => setShowUserModal(true)}
                     aria-label="Register Durood"
                 >
-                    Register For Durood
+                    Submit Durood Sharif
                 </button>
             </div>
             {/* Card */}
@@ -143,7 +164,7 @@ export default function Tasbih() {
                     <div className="absolute inset-0 flex items-center justify-center">
                         <div className="text-center">
                             <div className="text-4xl md:text-5xl font-extrabold text-primary">
-                                {count}
+                                {count.toString().padStart(2, "0")}
                             </div>
                             <div className="text-sm text-muted">/100</div>
                         </div>
@@ -205,11 +226,118 @@ export default function Tasbih() {
                 open={showUserModal}
                 onClose={() => setShowUserModal(false)}
                 onSuccess={(data) => {
-                    // handle success if needed
+                    // Save mobile number to localStorage
+                    if (data && data.mobile) {
+                        localStorage.setItem("userMobile", data.mobile);
+                        setSavedMobile(data.mobile);
+                    }
                     setShowUserModal(false);
+                    // Add new entry to history
+                    const newEntry = {
+                        count: count,
+                        date: new Date().toLocaleDateString(),
+                        time: new Date().toLocaleTimeString(),
+                    };
+                    setHistory((prev) => [newEntry, ...prev]);
                 }}
                 tasbihCount={count}
+                savedMobile={savedMobile}
             />
+
+            {/* Durood history list */}
+            <div className="w-full max-w-3xl mt-6 card bg-base-200 shadow-md rounded-2xl p-6">
+                <h3 className="text-lg font-bold mb-4 text-primary">
+                    Durood History
+                </h3>
+                {history.length === 0 ? (
+                    <div className="text-center text-base text-primary/70">
+                        No history yet. Register your durood to see it here.
+                    </div>
+                ) : (
+                    <table className="table w-full text-primary text-l">
+                        <thead>
+                            <tr>
+                                <th>Counts</th>
+                                <th>Date</th>
+                                <th>Time</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {history.map((item, idx) => (
+                                <tr key={idx}>
+                                    <td>
+                                        {item.count.toString().padStart(2, "0")}
+                                    </td>
+                                    <td>{item.date}</td>
+                                    <td>
+                                        {new Date(
+                                            `1970-01-01T${item.time}`
+                                        ).toLocaleTimeString([], {
+                                            hour: "2-digit",
+                                            minute: "2-digit",
+                                            hour12: true,
+                                        })}
+                                    </td>
+                                    <td>
+                                        <button
+                                            className="btn btn-ghost btn-square"
+                                            onClick={() => setDeleteIndex(idx)}
+                                            aria-label="Delete entry"
+                                        >
+                                            <Trash2 className="h-5 w-5 text-red-500" />
+                                        </button>
+                                    </td>
+                                </tr>
+                            ))}
+                        </tbody>
+                    </table>
+                )}
+                {history.length > 0 && (
+                    <div className="mt-4 text-right text-lg font-bold text-primary">
+                        Total Counts:{" "}
+                        {history
+                            .reduce((sum, item) => sum + Number(item.count), 0)
+                            .toString()
+                            .padStart(2, "0")}
+                    </div>
+                )}
+            </div>
+
+            {/* Delete confirmation modal */}
+            {deleteIndex !== null && (
+                <div className="fixed inset-0 flex items-center justify-center bg-black/40 z-50">
+                    <div className="modal modal-open">
+                        <div className="modal-box text-center">
+                            <h3 className="font-bold text-lg">Delete Entry</h3>
+                            <p className="py-4">
+                                Are you sure you want to delete this entry?
+                            </p>
+                            <div className="modal-action justify-center">
+                                <button
+                                    className="btn btn-error"
+                                    onClick={() => {
+                                        setHistory(
+                                            history.filter(
+                                                (_, i) => i !== deleteIndex
+                                            )
+                                        );
+                                        setDeleteIndex(null);
+                                    }}
+                                >
+                                    Yes
+                                </button>
+                                <button
+                                    className="btn btn-ghost"
+                                    onClick={() => setDeleteIndex(null)}
+                                >
+                                    No
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
         </section>
     );
 }
