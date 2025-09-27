@@ -1,13 +1,27 @@
 "use client";
-import React, { useState, useCallback } from "react";
+import React, { useState, useCallback, useEffect } from "react";
 import { RotateCw } from "lucide-react";
 import { PiHandTapLight } from "react-icons/pi";
-import UserModal from "../components/UserModal";
+import UserModal from "../../components/UserModal";
 
 export default function Tasbih() {
-    const [count, setCount] = useState(0);
+    // Initialize count from localStorage
+    const [count, setCount] = useState(() => {
+        if (typeof window !== "undefined") {
+            const saved = localStorage.getItem("tasbihCount");
+            return saved ? Number(saved) : 0;
+        }
+        return 0;
+    });
     const [showResetConfirm, setShowResetConfirm] = useState(false);
     const [showUserModal, setShowUserModal] = useState(false);
+
+    // Sync count to localStorage whenever it changes
+    useEffect(() => {
+        if (typeof window !== "undefined") {
+            localStorage.setItem("tasbihCount", count);
+        }
+    }, [count]);
 
     // shared increment handler (1..100 then wrap to 0)
     const increment = useCallback(() => {
@@ -194,6 +208,7 @@ export default function Tasbih() {
                     // handle success if needed
                     setShowUserModal(false);
                 }}
+                tasbihCount={count}
             />
         </section>
     );

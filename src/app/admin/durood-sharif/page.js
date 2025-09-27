@@ -73,9 +73,7 @@ export default function DuroodSharifTable() {
                                 {row["mobile number"]}
                             </td>
                             <td className="py-4 text-gray-800 text-left">
-                                {row["Durood Counts"]
-                                    ? row["Durood Counts"]
-                                    : "NA"}
+                                {row["Tasbih Counts"] || "NA"}
                             </td>
                         </tr>
                     ))}
