@@ -15,7 +15,7 @@ export default function UserModal({
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState(null);
     const [visible, setVisible] = useState(open);
-    const [step, setStep] = useState("mobile"); // 'mobile', 'details', 'registered'
+    const [step, setStep] = useState("mobile"); // 'mobile', 'details', 'registered', 'submitted'
     const [savedMobile, setSavedMobile] = useState("");
     const [mobileValue, setMobileValue] = useState("");
 
@@ -82,10 +82,11 @@ export default function UserModal({
                 setLoading(false);
                 return;
             }
-            resetForm();
-            setVisible(false);
-            onSuccess(data);
-            onClose();
+            // Show message card after successful submission
+            setStep("submitted");
+            setError(null);
+            setLoading(false);
+            return;
         } catch (err) {
             setError("Something went wrong. Please try again.");
         } finally {
@@ -121,11 +122,13 @@ export default function UserModal({
                     >
                         <X size={24} />
                     </button>
-                    <h3 className="font-bold text-lg">Register for Durood</h3>
+                    <h3 className="font-bold text-lg">
+                        Register for Durood Counts
+                    </h3>
 
-                    {step === "registered" ? (
-                        <div className="mt-6 text-success text-center text-lg">
-                            Your durood cont is submitted
+                    {step === "registered" || step === "submitted" ? (
+                        <div className="mt-6 text-success text-center text-lg border border-success rounded-lg p-4 bg-green-50">
+                            Your Durood Counts are submitted
                         </div>
                     ) : (
                         <form
@@ -170,6 +173,9 @@ export default function UserModal({
                             )}
                             {step === "details" && (
                                 <>
+                                    <h4 className="text-primary font-semibold text-center mb-2">
+                                        Register for first time
+                                    </h4>
                                     <div className="form-control w-full">
                                         <label className="label">
                                             <span className="label-text">

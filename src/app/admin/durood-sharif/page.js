@@ -47,8 +47,11 @@ export default function DuroodSharifTable() {
                         <th className="font-semibold text-base text-white text-left">
                             Mobile Number
                         </th>
-                        <th className="font-semibold text-base text-white text-left rounded-tr-xl">
+                        <th className="font-semibold text-base text-white text-left">
                             Durood Counts
+                        </th>
+                        <th className="font-semibold text-base text-white text-left rounded-tr-xl">
+                            Date
                         </th>
                     </tr>
                 </thead>
@@ -74,6 +77,9 @@ export default function DuroodSharifTable() {
                             </td>
                             <td className="py-4 text-gray-800 text-left">
                                 {row["Tasbih Counts"] || "NA"}
+                            </td>
+                            <td className="py-4 text-gray-800 text-left">
+                                {row["date"] || new Date().toLocaleDateString()}
                             </td>
                         </tr>
                     ))}
