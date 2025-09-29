@@ -16,7 +16,7 @@ const navigation = [
         icon: Clock,
     },
     {
-        name: "Notice",
+        name: "Aelaan Naama",
         href: "/admin/notice",
         icon: Megaphone,
     },

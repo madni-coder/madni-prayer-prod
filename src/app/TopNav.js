@@ -11,7 +11,7 @@ const navLinks = [
     { name: "Qibla", href: "/qibla" },
     { name: "Tasbih", href: "/tasbih" },
     { name: "Rewards", href: "/rewards" },
-    { name: "Notice", href: "/notice" },
+    { name: "Aelaan Naama", href: "/notice" },
     { name: "Settings", href: "/settings" },
 ];
 
