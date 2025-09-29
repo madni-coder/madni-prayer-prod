@@ -54,3 +54,9 @@ model NoticeImage {
 
   @@map("notice_images")
 }
+
+model FileTable {
+  id      Int    @id
+  fileUrl String
+}
+
