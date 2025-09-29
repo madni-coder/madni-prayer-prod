@@ -47,10 +47,39 @@ export default function JamatTimesPage() {
     const [selectedMasjidData, setSelectedMasjidData] = useState(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState("");
+    const [autoLocating, setAutoLocating] = useState(false);
+    const [userCoords, setUserCoords] = useState(null);
+    const [mapEmbedUrl, setMapEmbedUrl] = useState(null);
 
     useEffect(() => {
         fetchMasjids();
     }, []);
+
+    const handleAutoLocate = () => {
+        if (!navigator.geolocation) {
+            alert("Geolocation is not supported by your browser.");
+            return;
+        }
+        setAutoLocating(true);
+        navigator.geolocation.getCurrentPosition(
+            (position) => {
+                const lat = position.coords.latitude;
+                const lng = position.coords.longitude;
+                setUserCoords({ lat, lng });
+                const embed = `https://www.google.com/maps?q=masjid&ll=${lat},${lng}&z=15&output=embed`;
+                setMapEmbedUrl(embed);
+                setAutoLocating(false);
+            },
+            (err) => {
+                console.error("Geolocation error:", err);
+                setAutoLocating(false);
+                alert(
+                    "Unable to retrieve your location. Please enable location services and try again."
+                );
+            },
+            { enableHighAccuracy: true, timeout: 10000 }
+        );
+    };
 
     const fetchMasjids = async () => {
         try {
@@ -172,10 +201,33 @@ export default function JamatTimesPage() {
 
             <div className="w-full max-w-md mt-8">
                 <div className="flex justify-start mb-8 ml-8">
-                    <button className="btn btn-outline btn-primary btn-xxl transition-all duration-200 hover:scale-105 hover:bg-primary hover:text-primary-content">
-                        AUTO LOCATE
+                    <button
+                        onClick={handleAutoLocate}
+                        disabled={autoLocating}
+                        className="btn btn-outline btn-primary btn-xxl transition-all duration-200 hover:scale-105 hover:bg-primary hover:text-primary-content"
+                    >
+                        {autoLocating ? (
+                            <>
+                                <span className="loading loading-spinner loading-sm mr-2"></span>
+                                LOCATING...
+                            </>
+                        ) : (
+                            "AUTO LOCATE MASJID"
+                        )}
                     </button>
                 </div>
+
+                {mapEmbedUrl && (
+                    <div className="mx-4 mb-6 rounded-lg overflow-hidden border border-primary/20">
+                        <iframe
+                            title="Embedded Map"
+                            src={mapEmbedUrl}
+                            className="w-full"
+                            style={{ height: 300, border: 0 }}
+                            loading="lazy"
+                        ></iframe>
+                    </div>
+                )}
 
                 <div className="flex flex-col sm:flex-row gap-4 mb-6 ml-4 mr-4">
                     <div className="flex-1">
@@ -251,18 +303,13 @@ export default function JamatTimesPage() {
                             <button
                                 type="button"
                                 onClick={() => {
-                                    const url = getMapUrl();
-                                    if (url) {
-                                        window.open(
-                                            url,
-                                            "_blank",
-                                            "noopener,noreferrer"
-                                        );
-                                    } else {
-                                        alert(
-                                            "Map not available for this masjid."
-                                        );
-                                    }
+                                    const query = encodeURIComponent(
+                                        `${selectedMasjidData.masjidName} ${
+                                            selectedMasjidData.colony
+                                        } ${selectedMasjidData.locality || ""}`
+                                    );
+                                    const embed = `https://www.google.com/maps?q=${query}&z=15&output=embed`;
+                                    setMapEmbedUrl(embed);
                                 }}
                                 className="inline-flex items-center gap-2 px-3 py-2 rounded-md bg-primary/20 hover:bg-primary/30 text-primary transition"
                             >
