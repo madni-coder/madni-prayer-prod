@@ -108,6 +108,22 @@ export default function Quran() {
         // Use fileUrl from API
         const urlBase = file.fileUrl;
         const url = `${urlBase}#toolbar=0&navpanes=0&scrollbar=0`;
+
+        // If on a mobile device, open the PDF in a new tab/window instead of embedding
+        // Many mobile browsers show a centered 'Open' button when trying to embed PDFs; opening
+        // in a new tab provides a better direct experience for mobile users.
+        const ua =
+            typeof navigator !== "undefined" ? navigator.userAgent || "" : "";
+        const isMobile = /Mobi|Android|iPhone|iPad|iPod|Windows Phone/i.test(
+            ua
+        );
+        if (isMobile) {
+            // Open the raw file URL in a new tab (avoid fragment which some browsers ignore for direct open)
+            window.open(urlBase, "_blank", "noopener,noreferrer");
+            return;
+        }
+
+        // Desktop: show the in-app iframe reader
         setCurrentPara(p.number);
         setIsIframeLoading(true);
         setReaderUrl(url);
