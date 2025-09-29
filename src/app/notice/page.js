@@ -1,10 +1,13 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { FaAngleLeft } from "react-icons/fa";
+import { useRouter } from "next/navigation";
 
 export default function NoticeFeed() {
     const [images, setImages] = useState([]);
     const [error, setError] = useState(null);
+    const router = useRouter();
 
     useEffect(() => {
         async function fetchImages() {
@@ -21,7 +24,15 @@ export default function NoticeFeed() {
     }, []);
 
     return (
-        <div className="flex flex-col items-center w-full max-w-md mx-auto py-4 bg-base-100">
+        <div className="min-h-screen flex flex-col items-center justify-center bg-base-200">
+            <button
+                className="flex items-center gap-2 mb-4 text-lg text-primary hover:text-green-600 font-semibold"
+                onClick={() => router.push("/")}
+                aria-label="Back to Home"
+                style={{ alignSelf: "flex-start" }}
+            >
+                <FaAngleLeft /> Back
+            </button>
             <div
                 className="w-full max-w-xs mx-auto "
                 style={{ height: "calc(100vh - 64px)" }}

@@ -3,6 +3,8 @@ import React, { useState, useCallback, useEffect } from "react";
 import { RotateCw, Trash2 } from "lucide-react";
 import { PiHandTapLight } from "react-icons/pi";
 import UserModal from "../../components/UserModal";
+import { FaAngleLeft } from "react-icons/fa";
+
 
 export default function Tasbih() {
     // Initialize count from localStorage
@@ -78,24 +80,16 @@ export default function Tasbih() {
     return (
         <section className="flex flex-col items-center min-h-screen px-4 py-6 bg-base-100 text-base-content">
             {/* Header */}
+            <button
+                               className="flex items-center gap-2 mb-4 text-lg text-primary hover:text-green-600 font-semibold"
+                               onClick={() => router.push("/")}
+                               aria-label="Back to Home"
+                               style={{ alignSelf: "flex-start" }}
+                           >
+                               <FaAngleLeft /> Back
+                           </button>
             <div className="w-full max-w-3xl flex items-center gap-2">
-                <button aria-label="Back" className="btn btn-ghost btn-square">
-                    <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        className="h-6 w-6"
-                        fill="none"
-                        viewBox="0 0 24 24"
-                        stroke="currentColor"
-                    >
-                        <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth="2"
-                            d="M15 19l-7-7 7-7"
-                        />
-                    </svg>
-                </button>
-
+              
                 <h2 className="flex-1 text-xl font-bold">Tasbih</h2>
 
                 <button

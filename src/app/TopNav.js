@@ -2,6 +2,7 @@
 import React from "react";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
+import Link from "next/link";
 
 const navLinks = [
     { name: "Home", href: "/" },
@@ -21,9 +22,11 @@ export default function TopNav() {
         <nav className="sticky top-0 z-50 bg-base-100 backdrop-blur border-b border-base-300 shadow-sm">
             <div className="max-w-5xl mx-auto flex items-center justify-between px-4 py-2">
                 <div className="flex items-center gap-2">
-                    <span className="font-bold text-xl text-primary tracking-wide">
-                        RAAH-E-HIDAYAT{" "}
-                    </span>
+                    <Link href="/">
+                        <span className="font-bold text-xl text-primary tracking-wide cursor-pointer">
+                            RAAH-E-HIDAYAT{" "}
+                        </span>
+                    </Link>
                     <Image
                         src="/logo.png"
                         alt="Raah-e-Hidayat Logo"

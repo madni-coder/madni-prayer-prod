@@ -1,7 +1,10 @@
 "use client";
 import React, { useEffect, useRef, useState } from "react";
+import { FaAngleLeft } from "react-icons/fa";
+import { useRouter } from "next/navigation";
 
 export default function Qibla() {
+    const router = useRouter();
     const needleRef = useRef(null);
     const [angle, setAngle] = useState(270);
     const [deviceHeading, setDeviceHeading] = useState(0);
@@ -84,6 +87,14 @@ export default function Qibla() {
 
     return (
         <section className="flex flex-col items-center justify-center min-h-[70vh] px-4 animate-fade-in bg-base-100">
+            <button
+                className="flex items-center gap-2 mb-4 text-lg text-primary hover:text-green-600 font-semibold"
+                onClick={() => router.push("/")}
+                aria-label="Back to Home"
+                style={{ alignSelf: "flex-start" }}
+            >
+                <FaAngleLeft /> Back
+            </button>
             <h2 className="text-2xl md:text-3xl font-bold text-primary mb-4">
                 Qibla Direction
             </h2>

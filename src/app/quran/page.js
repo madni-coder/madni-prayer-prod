@@ -1,6 +1,7 @@
 "use client";
 import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import { FaAngleLeft } from "react-icons/fa";
 
 // Sample Surah data (in real app, fetch from API or static JSON)
 const surahs = [
@@ -77,6 +78,7 @@ async function getPara() {
 }
 
 export default function Quran() {
+    const router = useRouter();
     const [search, setSearch] = useState("");
     const [view, setView] = useState("para"); // "para" is now default
     const [files, setFiles] = useState([]); // store API files
@@ -155,7 +157,15 @@ export default function Quran() {
     );
 
     return (
-        <section className="flex flex-col items-center justify-center min-h-[70vh] px-4 animate-fade-in bg-base-100">
+        <section className="flex flex-col items-center justify-center min-h-screen px-4 animate-fade-in bg-base-100">
+            <button
+                className="flex items-center gap-2 mb-4 text-lg text-primary hover:text-green-600 font-semibold"
+                onClick={() => router.push("/")}
+                aria-label="Back to Home"
+                style={{ alignSelf: "flex-start" }}
+            >
+                <FaAngleLeft /> Back
+            </button>
             <h2 className="text-2xl md:text-3xl font-bold text-primary mb-4">
                 Quran
             </h2>
