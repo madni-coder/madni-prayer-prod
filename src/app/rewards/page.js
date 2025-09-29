@@ -1,5 +1,7 @@
 "use client";
 import React, { useState } from "react";
+import { FaAngleLeft } from "react-icons/fa";
+import { useRouter } from "next/navigation";
 
 const demoData = [
     { firstName: "Dorcius", lastName: "dorlensley", xp: 956 },
@@ -81,10 +83,19 @@ const medalSVG = [
 ];
 
 const RewardsPage = () => {
+    const router = useRouter();
     const [showModal, setShowModal] = useState(false);
 
     return (
         <div className="min-h-screen flex flex-col items-center justify-center bg-base-200">
+            <button
+                className="flex items-center gap-2 mb-4 text-lg text-primary hover:text-green-600 font-semibold"
+                onClick={() => router.push("/")}
+                aria-label="Back to Home"
+                style={{ alignSelf: "flex-start" }}
+            >
+                <FaAngleLeft /> Back
+            </button>
             {/* Winner Announcement Card */}
             <div
                 className="w-full max-w-md mx-auto bg-base-100 rounded-2xl p-6 mb-6 shadow-xl"

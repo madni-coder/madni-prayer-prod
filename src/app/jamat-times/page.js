@@ -1,6 +1,8 @@
 "use client";
 import React, { useState, useEffect } from "react";
 import { MapPin } from "lucide-react";
+import { FaAngleLeft } from "react-icons/fa";
+import { useRouter } from "next/navigation";
 
 function DigitalClock() {
     const [time, setTime] = useState(new Date());
@@ -42,6 +44,7 @@ function DigitalClock() {
 }
 
 export default function JamatTimesPage() {
+    const router = useRouter();
     const [masjids, setMasjids] = useState([]);
     const [selectedMasjid, setSelectedMasjid] = useState("");
     const [selectedMasjidData, setSelectedMasjidData] = useState(null);
@@ -193,6 +196,14 @@ export default function JamatTimesPage() {
 
     return (
         <div className="min-h-screen flex flex-col items-center justify-center bg-base-200">
+            <button
+                className="flex items-center gap-2 mb-4 text-lg text-primary hover:text-green-600 font-semibold"
+                onClick={() => router.push("/")}
+                aria-label="Back to Home"
+                style={{ alignSelf: "flex-start" }}
+            >
+                <FaAngleLeft /> Back
+            </button>
             <div className="sticky top-0 left-0 w-full z-10 flex justify-center bg-base-200/80 backdrop-blur-sm py-2">
                 <div className="w-full max-w-xs sm:max-w-sm md:max-w-md">
                     <DigitalClock />
@@ -303,19 +314,24 @@ export default function JamatTimesPage() {
                             <button
                                 type="button"
                                 onClick={() => {
-                                    const query = encodeURIComponent(
-                                        `${selectedMasjidData.masjidName} ${
-                                            selectedMasjidData.colony
-                                        } ${selectedMasjidData.locality || ""}`
-                                    );
-                                    const embed = `https://www.google.com/maps?q=${query}&z=15&output=embed`;
-                                    setMapEmbedUrl(embed);
+                                    const url = getMapUrl();
+                                    if (url) {
+                                        window.open(
+                                            url,
+                                            "_blank",
+                                            "noopener,noreferrer"
+                                        );
+                                    } else {
+                                        alert(
+                                            "Map not available for this masjid."
+                                        );
+                                    }
                                 }}
                                 className="inline-flex items-center gap-2 px-3 py-2 rounded-md bg-primary/20 hover:bg-primary/30 text-primary transition"
                             >
                                 <MapPin className="w-5 h-5" />
                                 <span className="font-semibold">
-                                    See Masjid Location In Map
+                                    See Masjid Location On Map
                                 </span>
                             </button>
                         </div>

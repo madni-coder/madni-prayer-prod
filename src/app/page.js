@@ -9,7 +9,7 @@ import {
     FaHashtag,
     FaRegCompass,
     FaGift,
-    FaInfoCircle,
+    FaMicrophone,
 } from "react-icons/fa";
 import Image from "next/image";
 
@@ -61,9 +61,9 @@ const sections = [
         desc: "Track your spiritual achievements and milestones.",
     },
     {
-        name: "Notice",
+        name: "Aelaan Naama",
         href: "/notice",
-        icon: <FaInfoCircle className="text-4xl text-cyan-500" />,
+        icon: <FaMicrophone className="text-4xl text-cyan-500" />,
         desc: "View important updates and announcements.",
     },
     {
@@ -82,7 +82,6 @@ export default function Home() {
                     <span className="bg-clip-text text-transparent bg-gradient-to-r from-green-500 to-teal-600">
                         RAAH-E-HIDAYAT{" "}
                     </span>
-                   
                 </h1>
                 <p className="mt-2 text-lg sm:text-xl text-gray-600 dark:text-gray-400 max-w-2xl mx-auto">
                     Your essential companion for daily Islamic practices.
@@ -93,15 +92,15 @@ export default function Home() {
                     <Link
                         key={section.name}
                         href={section.href}
-                        className="group relative flex flex-col items-center gap-3 p-6 bg-white dark:bg-gray-800 rounded-2xl shadow-lg border border-gray-200 dark:border-gray-700 hover:shadow-xl transform transition-transform duration-300 hover:scale-105"
+                        className="group relative flex flex-col items-center gap-3 p-6 bg-white dark:bg-gray-800 rounded-2xl shadow-lg border border-gray-200 dark:border-gray-700 hover:shadow-xl transform transition-transform duration-300 hover:scale-105 hover:bg-green-600 dark:hover:bg-green-700 active:bg-green-600 dark:active:bg-green-800 focus:bg-green-600 dark:focus:bg-green-800"
                     >
-                        <div className="flex-shrink-0 p-3 rounded-full bg-gray-100 dark:bg-gray-700 mb-2">
+                        <div className="flex-shrink-0 p-3 rounded-full bg-gray-900 dark:bg-gray-800 mb-2">
                             {section.icon}
                         </div>
-                        <h2 className="text-xl font-semibold mb-1 text-center group-hover:text-green-600 dark:group-hover:text-green-400 transition-colors">
+                        <h2 className="text-xl font-semibold mb-1 text-center group-hover:text-white-400 group-active:text-white-400 group-focus:text-white-400 transition-colors">
                             {section.name}
                         </h2>
-                        <p className="text-sm text-gray-500 dark:text-gray-400 text-center">
+                        <p className="text-sm text-gray-400 dark:text-gray-400 text-center">
                             {section.desc}
                         </p>
                     </Link>
