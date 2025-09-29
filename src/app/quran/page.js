@@ -1,5 +1,6 @@
 "use client";
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 
 // Sample Surah data (in real app, fetch from API or static JSON)
 const surahs = [
@@ -62,9 +63,66 @@ const paras = paraNames.map((p, i) => ({
     ruku: p.ruku,
 }));
 
+// GET API function referencing route.js
+async function getPara() {
+    try {
+        const res = await fetch("/api/api-quran", { method: "GET" });
+        if (!res.ok) throw new Error("Failed to fetch para files");
+        const data = await res.json();
+        // Return files array as in route.js
+        return data.files;
+    } catch (err) {
+        throw new Error(err.message);
+    }
+}
+
 export default function Quran() {
     const [search, setSearch] = useState("");
     const [view, setView] = useState("para"); // "para" is now default
+    const [files, setFiles] = useState([]); // store API files
+    const [showReader, setShowReader] = useState(false);
+    const [currentPara, setCurrentPara] = useState(null);
+    const [readerUrl, setReaderUrl] = useState("");
+    const [isIframeLoading, setIsIframeLoading] = useState(true);
+
+    // keyboard handlers for reader modal + lock body scroll while open
+    useEffect(() => {
+        if (!showReader) return;
+        const onKey = (e) => {
+            if (e.key === "Escape") setShowReader(false);
+        };
+        window.addEventListener("keydown", onKey);
+        const prevOverflow = document.body.style.overflow;
+        document.body.style.overflow = "hidden";
+        return () => {
+            window.removeEventListener("keydown", onKey);
+            document.body.style.overflow = prevOverflow;
+        };
+    }, [showReader]);
+
+    // Open reader modal for a para
+    const openReader = (p) => {
+        // Find file for this para from API response
+        const file = files.find((f) => f.id === p.number);
+        if (!file) return;
+        // Use fileUrl from API
+        const urlBase = file.fileUrl;
+        const url = `${urlBase}#toolbar=0&navpanes=0&scrollbar=0`;
+        setCurrentPara(p.number);
+        setIsIframeLoading(true);
+        setReaderUrl(url);
+        setShowReader(true);
+    };
+
+    useEffect(() => {
+        getPara()
+            .then((files) => {
+                setFiles(files || []);
+            })
+            .catch((err) => {
+                console.error("Error fetching para files:", err);
+            });
+    }, []);
 
     // Filter logic for Surah and Para
     const filteredSurahs = surahs.filter(
@@ -124,7 +182,7 @@ export default function Quran() {
                         ? filteredSurahs.map((s) => (
                               <div
                                   key={s.number}
-                                  className="neumorph-card p-4 flex flex-col items-center transition hover:scale-105 cursor-pointer bg-base-100 border border-base-300"
+                                  className="neumorph-card p-4 flex flex-col items-center transition hover:scale-105 active:scale-95 hover:shadow-lg active:shadow-md cursor-pointer bg-base-100 border border-base-300"
                               >
                                   <span className="text-lg font-bold text-primary">
                                       {s.number}. {s.name}
@@ -137,59 +195,61 @@ export default function Quran() {
                                   </span>
                               </div>
                           ))
-                        : filteredParas.map((p) => (
-                              <div
-                                  key={p.number}
-                                  className="neumorph-card flex flex-col items-center justify-between transition hover:scale-105 cursor-pointer bg-base-100 border border-primary"
-                                  style={{
-                                      minHeight: 140,
-                                      height: 140,
-                                      maxHeight: 140,
-                                      minWidth: 0,
-                                      width: "100%",
-                                      // Removed hardcoded background and color
-                                      borderRadius: 12,
-                                      // Use theme border color
-                                      // border: "2px solid #d32f2f", // removed
-                                      position: "relative",
-                                      padding: 12,
-                                  }}
-                              >
-                                  <div className="w-full flex justify-between items-start">
-                                      <span className="text-base font-bold text-primary">
-                                          {p.number}
-                                      </span>
-                                      {/* Decorative corner, optional */}
-                                      <span
-                                          className="text-xs text-primary"
-                                          style={{ fontFamily: "serif" }}
-                                      >
-                                          ◤
-                                      </span>
-                                  </div>
-                                  <span
-                                      className="text-2xl mb-1 mt-2 text-center text-white"
-                                      style={{ fontWeight: 600 }}
+                        : filteredParas.map((p) => {
+                              // Find file for this para
+                              const file = files.find((f) => f.id === p.number);
+                              return (
+                                  <div
+                                      key={p.number}
+                                      className="neumorph-card flex flex-col items-center justify-between transition hover:scale-105 active:scale-95 hover:shadow-lg active:shadow-md cursor-pointer bg-base-100 border border-primary"
+                                      style={{
+                                          minHeight: 140,
+                                          height: 140,
+                                          maxHeight: 140,
+                                          minWidth: 0,
+                                          width: "100%",
+                                          borderRadius: 12,
+                                          position: "relative",
+                                          padding: 12,
+                                      }}
+                                      onClick={() => openReader(p)}
                                   >
-                                      {p.arabic}
-                                  </span>
-                                  <div className="w-full flex justify-between items-end mt-auto">
-                                      <span className="text-xs text-primary">
-                                          {p.ruku}
-                                      </span>
-                                      <span className="bg-primary text-primary-content text-xs px-2 py-1 rounded-full ml-1">
-                                          Total Ruku
-                                      </span>
-                                      {/* Decorative corner, optional */}
+                                      <div className="w-full flex justify-between items-start">
+                                          <span className="text-base font-bold text-primary">
+                                              {p.number}
+                                          </span>
+                                          {/* Decorative corner, optional */}
+                                          <span
+                                              className="text-xs text-primary"
+                                              style={{ fontFamily: "serif" }}
+                                          >
+                                              ◤
+                                          </span>
+                                      </div>
                                       <span
-                                          className="text-xs text-primary"
-                                          style={{ fontFamily: "serif" }}
+                                          className="text-2xl mb-1 mt-2 text-center text-white"
+                                          style={{ fontWeight: 600 }}
                                       >
-                                          ◢
+                                          {p.arabic}
                                       </span>
+                                      <div className="w-full flex justify-between items-end mt-auto">
+                                          <span className="text-xs text-primary">
+                                              {p.ruku}
+                                          </span>
+                                          <span className="bg-primary text-primary-content text-xs px-2 py-1 rounded-full ml-1">
+                                              Total Ruku
+                                          </span>
+                                          {/* Decorative corner, optional */}
+                                          <span
+                                              className="text-xs text-primary"
+                                              style={{ fontFamily: "serif" }}
+                                          >
+                                              ◢
+                                          </span>
+                                      </div>
                                   </div>
-                              </div>
-                          ))}
+                              );
+                          })}
                     {(view === "surah" && filteredSurahs.length === 0) ||
                     (view === "para" && filteredParas.length === 0) ? (
                         <div className="col-span-2 sm:col-span-4 text-center text-base-content/60">
@@ -197,6 +257,41 @@ export default function Quran() {
                         </div>
                     ) : null}
                 </div>
+                {/* In-app full-window reader modal (mobile/tablet/web responsive) */}
+                {showReader && (
+                    <div className="fixed inset-0 z-50 bg-black bg-opacity-80">
+                        <div className="flex flex-col h-screen w-screen">
+                            <header className="flex items-center justify-between px-4 py-3 bg-base-200 border-b border-base-300">
+                                <div>
+                                    <span className="font-semibold text-lg">
+                                        Para {currentPara ?? 2}
+                                    </span>
+                                </div>
+                                <div>
+                                    <button
+                                        className="btn btn-sm btn-error"
+                                        onClick={() => setShowReader(false)}
+                                    >
+                                        Close
+                                    </button>
+                                </div>
+                            </header>
+                            <main className="relative flex-1 overflow-hidden bg-base-100">
+                                {isIframeLoading && (
+                                    <div className="absolute inset-0 z-20 flex items-center justify-center bg-white/80">
+                                        <div className="loader border-4 border-t-primary rounded-full w-12 h-12 animate-spin" />
+                                    </div>
+                                )}
+                                <iframe
+                                    src={readerUrl}
+                                    className="w-full h-full min-h-0"
+                                    title={`Para ${currentPara} preview`}
+                                    onLoad={() => setIsIframeLoading(false)}
+                                />
+                            </main>
+                        </div>
+                    </div>
+                )}
             </div>
         </section>
     );
