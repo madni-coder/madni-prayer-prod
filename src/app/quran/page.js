@@ -277,11 +277,6 @@ export default function Quran() {
                                 </div>
                             </header>
                             <main className="relative flex-1 overflow-hidden bg-base-100">
-                                {isIframeLoading && (
-                                    <div className="absolute inset-0 z-20 flex items-center justify-center bg-white/80">
-                                        <div className="loader border-4 border-t-primary rounded-full w-12 h-12 animate-spin" />
-                                    </div>
-                                )}
                                 <iframe
                                     src={readerUrl}
                                     className="w-full h-full min-h-0"
