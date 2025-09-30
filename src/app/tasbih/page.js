@@ -228,13 +228,15 @@ export default function Tasbih() {
                         setSavedMobile(data.mobile);
                     }
                     setShowUserModal(false);
-                    // Add new entry to history
+                    // Capture current count for history, then reset counter
+                    const currentCount = count;
                     const newEntry = {
-                        count: count,
+                        count: currentCount,
                         date: new Date().toLocaleDateString(),
                         time: new Date().toLocaleTimeString(),
                     };
                     setHistory((prev) => [newEntry, ...prev]);
+                    setCount(0);
                 }}
                 tasbihCount={count}
                 savedMobile={savedMobile}
