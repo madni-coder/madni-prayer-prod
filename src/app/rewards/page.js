@@ -435,29 +435,7 @@ const RewardsPage = () => {
                         <h3 className="text-lg font-bold mb-4 text-center text-gray-200">
                             Register for Weekly Durood
                         </h3>
-                        <form className="flex flex-col gap-3">
-                            <input
-                                type="text"
-                                placeholder="Full Name"
-                                className="input input-bordered bg-base-200 text-gray-100"
-                            />
-                            <input
-                                type="text"
-                                placeholder="Address"
-                                className="input input-bordered bg-base-200 text-gray-100"
-                            />
-                            <input
-                                type="tel"
-                                placeholder="Mobile"
-                                className="input input-bordered bg-base-200 text-gray-100"
-                            />
-                            <button
-                                type="submit"
-                                className="btn btn-success mt-2"
-                            >
-                                Submit
-                            </button>
-                        </form>
+                       
                     </div>
                 </div>
             )}
