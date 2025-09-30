@@ -4,46 +4,40 @@ import { Bell, BellOff, MapPin, Calendar, Moon } from "lucide-react";
 import { FaAngleLeft } from "react-icons/fa";
 import { useRouter } from "next/navigation";
 
-const prayerTimes = [
+const initialPrayerTimes = [
     {
         name: "Fajr",
-        time: "04:29:23 AM",
+        time: "—",
         alert: true,
         color: "text-primary text-base md:text-md",
     },
     {
         name: "Sun Rise",
-        time: "05:43:29 AM",
+        time: "—",
         alert: false,
         color: "text-secondary text-base md:text-md",
     },
     {
-        name: "Dahwa-e-kubra",
-        time: "11:23:48 AM",
-        alert: false,
-        color: "text-base-content/70 text-base md:text-md",
-    },
-    {
         name: "Zuhr",
-        time: "12:00:26 PM",
+        time: "—",
         alert: true,
         color: "text-accent text-base md:text-md",
     },
     {
         name: "Asr (Hanafi)",
-        time: "04:30:00 PM",
+        time: "—",
         alert: true,
         color: "text-warning text-base md:text-md",
     },
     {
         name: "Maghrib",
-        time: "06:17:25 PM",
+        time: "—",
         alert: true,
         color: "text-success text-base md:text-md",
     },
     {
         name: "Isha (Hanafi)",
-        time: "07:31:00 PM",
+        time: "—",
         alert: true,
         color: "text-info text-base md:text-md",
     },
@@ -53,10 +47,85 @@ export default function PrayerTimesPage() {
     const router = useRouter();
     // Real-time clock state
     const [now, setNow] = useState(new Date());
+    const [prayerTimes, setPrayerTimes] = React.useState(initialPrayerTimes);
+    const [loading, setLoading] = useState(true);
 
     useEffect(() => {
         const timer = setInterval(() => setNow(new Date()), 1000);
         return () => clearInterval(timer);
+    }, []);
+
+    useEffect(() => {
+        const fetchPrayerTimesAndSetState = async () => {
+            try {
+                const today = new Date();
+                const y = today.getFullYear();
+                const m = String(today.getMonth() + 1).padStart(2, "0");
+                const d = String(today.getDate()).padStart(2, "0");
+                const dateStr = `${y}-${m}-${d}`;
+
+                const res = await fetch(`/api/api-prayerTimes?date=${dateStr}`);
+                const json = await res.json();
+
+                if (!res.ok) {
+                    console.error("Failed to fetch prayer times:", json);
+                    return;
+                }
+
+                const timings = json.timings || {};
+
+                // helper to find the best matching timing key for each displayed prayer
+                const findTimingKey = (displayName) => {
+                    const tokensMap = {
+                        Fajr: ["fajr"],
+                        "Sun Rise": ["sunrise", "sun rise", "sun"],
+                        Zuhr: ["dhuhr", "zuhr", "zuhur"],
+                        "Asr (Hanafi)": ["asr"],
+                        Maghrib: ["maghrib"],
+                        "Isha (Hanafi)": ["isha", "isya"],
+                    };
+
+                    const candidates = Object.keys(timings || {});
+                    const tokens = tokensMap[displayName] || [
+                        displayName.toLowerCase(),
+                    ];
+
+                    for (const token of tokens) {
+                        const found = candidates.find((k) =>
+                            k.toLowerCase().includes(token)
+                        );
+                        if (found) return found;
+                    }
+
+                    // fallback: try an exact key match ignoring case
+                    const exact = candidates.find(
+                        (k) => k.toLowerCase() === displayName.toLowerCase()
+                    );
+                    return exact || null;
+                };
+
+                const cleaned = (val) =>
+                    typeof val === "string"
+                        ? val.replace(/\s*\(.*?\)/, "").trim()
+                        : val;
+
+                setPrayerTimes((prev) =>
+                    prev.map((p) => {
+                        const key = findTimingKey(p.name);
+                        const apiVal = key ? cleaned(timings[key]) : null;
+                        return {
+                            ...p,
+                            time: apiVal || p.time,
+                        };
+                    })
+                );
+                setLoading(false);
+            } catch (err) {
+                console.error("Error fetching prayer times:", err);
+            }
+        };
+
+        fetchPrayerTimesAndSetState();
     }, []);
 
     // Format time as HH:MM:SS AM/PM
@@ -71,7 +140,7 @@ export default function PrayerTimesPage() {
             .replace(/^0/, "");
 
     return (
-        <div className="min-h-screen flex flex-col items-center justify-center bg-base-200">
+        <div className="w-full h-screen flex flex-col items-center justify-center bg-base-200">
             <button
                 className="flex items-center gap-2 mb-4 text-lg text-primary hover:text-green-600 font-semibold"
                 onClick={() => router.push("/")}
@@ -80,7 +149,7 @@ export default function PrayerTimesPage() {
             >
                 <FaAngleLeft /> Back
             </button>
-            <section className="flex flex-col items-center justify-center min-h-[70vh] px-1 py-2 sm:px-2 sm:py-4 animate-fade-in bg-base-100">
+            <section className="flex flex-col items-center justify-center w-full h-full min-h-[70vh] px-1 py-2 sm:px-2 sm:py-4 animate-fade-in bg-base-100">
                 <h2 className="text-xl sm:text-2xl md:text-3xl font-bold text-primary mb-2 sm:mb-3">
                     Prayer Times
                 </h2>
@@ -146,10 +215,6 @@ export default function PrayerTimesPage() {
                                         ? "border-primary"
                                         : prayer.name.startsWith("Sun Rise")
                                         ? "border-secondary"
-                                        : prayer.name.startsWith(
-                                              "Dahwa-e-kubra"
-                                          )
-                                        ? "border-amber-500"
                                         : prayer.name.startsWith("Zuhr")
                                         ? "border-accent"
                                         : prayer.name.startsWith("Asr")
@@ -167,7 +232,30 @@ export default function PrayerTimesPage() {
                                     {prayer.name}
                                 </span>
                                 <span className="font-mono text-white md:text-lg text-base-content/90 ml-2 flex-shrink-0">
-                                    {prayer.time}
+                                    {loading ? (
+                                        <svg
+                                            className="animate-spin h-5 w-5 text-primary"
+                                            xmlns="http://www.w3.org/2000/svg"
+                                            fill="none"
+                                            viewBox="0 0 24 24"
+                                        >
+                                            <circle
+                                                className="opacity-25"
+                                                cx="12"
+                                                cy="12"
+                                                r="10"
+                                                stroke="currentColor"
+                                                strokeWidth="4"
+                                            ></circle>
+                                            <path
+                                                className="opacity-75"
+                                                fill="currentColor"
+                                                d="M4 12a8 8 0 018-8v8z"
+                                            ></path>
+                                        </svg>
+                                    ) : (
+                                        prayer.time
+                                    )}
                                 </span>
                                 <span className="ml-2 flex-shrink-0">
                                     {prayer.alert ? (
