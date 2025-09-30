@@ -70,7 +70,11 @@ export default function UserModal({
                 setStep("registered");
                 setError(null);
                 setLoading(false);
-                onSuccess(); // Call onSuccess for registered user
+                // Show the registered message briefly, then notify parent with mobile and close
+                const registeredMobile = mobileValue.trim();
+                setTimeout(() => {
+                    onSuccess({ mobile: registeredMobile });
+                }, 1500);
                 return;
             }
             if (res.status === 500) {
@@ -87,7 +91,11 @@ export default function UserModal({
             setStep("submitted");
             setError(null);
             setLoading(false);
-            onSuccess(); // Call onSuccess for new submission
+            // Delay notifying parent so the user can see the submitted message
+            const submittedMobile = savedMobile || mobileValue.trim();
+            setTimeout(() => {
+                onSuccess({ mobile: submittedMobile });
+            }, 1500);
             return;
         } catch (err) {
             setError("Something went wrong. Please try again.");

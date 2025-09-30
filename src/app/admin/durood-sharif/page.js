@@ -1,8 +1,10 @@
 "use client";
 import React, { useState, useEffect } from "react";
 import { FaBitcoin, FaMosque } from "react-icons/fa";
+import { useRouter } from "next/navigation";
 
 export default function DuroodSharifTable() {
+    const router = useRouter();
     const [search, setSearch] = useState("");
     const [users, setUsers] = useState([]);
     useEffect(() => {
