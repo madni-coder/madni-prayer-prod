@@ -4,6 +4,7 @@ import { RotateCw, Trash2 } from "lucide-react";
 import { PiHandTapLight } from "react-icons/pi";
 import UserModal from "../../components/UserModal";
 import { FaAngleLeft } from "react-icons/fa";
+import { useRouter } from "next/navigation";
 
 export default function Tasbih() {
     // Initialize count from localStorage
@@ -30,6 +31,8 @@ export default function Tasbih() {
         }
         return "";
     });
+
+    const router = useRouter();
 
     // Sync count to localStorage whenever it changes
     useEffect(() => {

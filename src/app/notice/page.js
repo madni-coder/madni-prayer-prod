@@ -7,6 +7,7 @@ import { useRouter } from "next/navigation";
 export default function NoticeFeed() {
     const [images, setImages] = useState([]);
     const [error, setError] = useState(null);
+    const [loading, setLoading] = useState(true);
     const router = useRouter();
 
     useEffect(() => {
@@ -16,8 +17,10 @@ export default function NoticeFeed() {
                 if (!res.ok) throw new Error(`Fetch error: ${res.status}`);
                 const data = await res.json();
                 setImages(data.images || []);
+                setLoading(false); // Stop loading on API success
             } catch (err) {
                 setError(err.message || "An error occurred");
+                setLoading(false); // Stop loading on error
             }
         }
         fetchImages();
@@ -41,35 +44,44 @@ export default function NoticeFeed() {
                     <div className="text-sm text-error p-3">Error: {error}</div>
                 )}
 
-                {images.map((img, idx) => (
-                    <div
-                        key={idx}
-                        className="w-full mb-6 rounded-2xl shadow-lg bg-base-100 overflow-hidden flex flex-col border-4 border-primary"
-                        style={{ aspectRatio: "9/16", maxWidth: 360 }}
-                    >
-                        <div
-                            className="relative w-full h-0 flex items-center justify-center bg-base-100"
-                            style={{ paddingBottom: "177.77%" }}
-                        >
-                            {/* Use a regular img tag to avoid Next/Image remote domain configuration */}
-                            <img
-                                src={img.imageSrc}
-                                alt={img.imageName}
-                                className="object-contain w-full h-full"
-                                style={{
-                                    position: "absolute",
-                                    top: 0,
-                                    left: 0,
-                                }}
-                            />
-                        </div>
-                        <div className="p-3 flex flex-col gap-1">
-                            <span className="font-semibold text-base-content">
-                                {img.imageName}
-                            </span>
-                        </div>
+                {loading ? (
+                    <div className="flex flex-col items-center justify-center h-full">
+                        <span className="loading loading-spinner loading-lg text-primary"></span>
+                        <span className="mt-2 text-primary font-semibold">
+                            Loading Elaan...
+                        </span>
                     </div>
-                ))}
+                ) : (
+                    images.map((img, idx) => (
+                        <div
+                            key={idx}
+                            className="w-full mb-6 rounded-2xl shadow-lg bg-base-100 overflow-hidden flex flex-col border-4 border-primary"
+                            style={{ aspectRatio: "9/16", maxWidth: 360 }}
+                        >
+                            <div
+                                className="relative w-full h-0 flex items-center justify-center bg-base-100"
+                                style={{ paddingBottom: "177.77%" }}
+                            >
+                                {/* Use a regular img tag to avoid Next/Image remote domain configuration */}
+                                <img
+                                    src={img.imageSrc}
+                                    alt={img.imageName}
+                                    className="object-contain w-full h-full"
+                                    style={{
+                                        position: "absolute",
+                                        top: 0,
+                                        left: 0,
+                                    }}
+                                />
+                            </div>
+                            <div className="p-3 flex flex-col gap-1">
+                                <span className="font-semibold text-base-content">
+                                    {img.imageName}
+                                </span>
+                            </div>
+                        </div>
+                    ))
+                )}
             </div>
         </div>
     );
