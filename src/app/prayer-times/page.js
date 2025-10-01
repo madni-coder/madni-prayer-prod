@@ -229,12 +229,11 @@ export default function PrayerTimesPage() {
         const h = Math.floor(secs / 3600);
         const m = Math.floor((secs % 3600) / 60);
         const s = Math.floor(secs % 60);
-        if (h > 0)
-            return `${h}:${String(m).padStart(2, "0")}:${String(s).padStart(
-                2,
-                "0"
-            )}`;
-        return `${String(m).padStart(2, "0")}:${String(s).padStart(2, "0")}`;
+        // Always show hours, even if 0
+        return `${String(h).padStart(2, "0")}:${String(m).padStart(
+            2,
+            "0"
+        )}:${String(s).padStart(2, "0")}`;
     };
 
     useEffect(() => {
@@ -338,23 +337,39 @@ export default function PrayerTimesPage() {
                 const lat = pos.coords.latitude;
                 const lon = pos.coords.longitude;
                 let city = "";
+                let formattedDisplay = "";
                 try {
                     const geoRes = await fetch(
                         `https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${lat}&lon=${lon}`
                     );
                     if (geoRes.ok) {
                         const geoJson = await geoRes.json();
+                        const addr = geoJson?.address || {};
                         city =
-                            geoJson?.address?.city ||
-                            geoJson?.address?.town ||
-                            geoJson?.address?.village ||
-                            geoJson?.address?.municipality ||
-                            geoJson?.address?.state_district ||
-                            geoJson?.address?.state ||
+                            addr.city ||
+                            addr.town ||
+                            addr.village ||
+                            addr.municipality ||
+                            addr.state_district ||
+                            addr.state ||
                             "";
+                        const district =
+                            addr.district ||
+                            addr.county ||
+                            addr.state_district ||
+                            addr.suburb ||
+                            addr.block ||
+                            "";
+                        const state = addr.state || addr.region || "";
+                        const parts = [];
+                        if (city) parts.push(city);
+                        if (district && district !== city) parts.push(district);
+                        if (state && state !== city && state !== district)
+                            parts.push(state);
+                        formattedDisplay = parts.join(", ");
                     }
                 } catch (e) {
-                    // silent fail; city will fallback to API timezone later
+                    // silent
                 }
                 try {
                     const today = new Date();
@@ -362,11 +377,8 @@ export default function PrayerTimesPage() {
                     const m = String(today.getMonth() + 1).padStart(2, "0");
                     const d = String(today.getDate()).padStart(2, "0");
                     const dateStr = `${y}-${m}-${d}`;
-                    const cityParam = city
-                        ? `&city=${encodeURIComponent(city)}`
-                        : "";
                     const res = await fetch(
-                        `/api/api-prayerTimes?lat=${lat}&lon=${lon}&date=${dateStr}${cityParam}`
+                        `/api/api-prayerTimes?lat=${lat}&lon=${lon}&date=${dateStr}`
                     );
                     const json = await res.json();
                     if (!res.ok) {
@@ -376,7 +388,8 @@ export default function PrayerTimesPage() {
                         setLoading(false);
                         return;
                     }
-                    const loc =
+                    const fallbackLoc =
+                        formattedDisplay ||
                         city ||
                         json?.location?.name ||
                         json?.meta?.timezone ||
@@ -386,7 +399,7 @@ export default function PrayerTimesPage() {
                         json?.city ||
                         json?.address ||
                         "";
-                    setLocationName(loc);
+                    setLocationName(fallbackLoc);
                     const timings = json.timings || {};
                     const findTimingKey = (displayName) => {
                         const tokensMap = {
@@ -442,7 +455,7 @@ export default function PrayerTimesPage() {
     };
 
     // NEW: Fetch prayer times by coordinates (used for selected city from search)
-    const fetchPrayerTimesByCoords = async (lat, lon, cityName) => {
+    const fetchPrayerTimesByCoords = async (lat, lon, fullDisplayName) => {
         try {
             setLoading(true);
             const today = new Date();
@@ -451,9 +464,7 @@ export default function PrayerTimesPage() {
             const d = String(today.getDate()).padStart(2, "0");
             const dateStr = `${y}-${m}-${d}`;
             const res = await fetch(
-                `/api/api-prayerTimes?lat=${lat}&lon=${lon}&date=${dateStr}&city=${encodeURIComponent(
-                    cityName
-                )}`
+                `/api/api-prayerTimes?lat=${lat}&lon=${lon}&date=${dateStr}`
             );
             const json = await res.json();
             if (!res.ok) {
@@ -461,8 +472,9 @@ export default function PrayerTimesPage() {
                 alert("Failed to fetch prayer times for selected city.");
                 return;
             }
-            const loc = cityName || json?.location?.name || json?.city || "";
-            setLocationName(loc);
+            setLocationName(
+                fullDisplayName || json?.location?.name || json?.city || ""
+            );
             const timings = json.timings || {};
             const findTimingKey = (displayName) => {
                 const tokensMap = {
@@ -634,7 +646,7 @@ export default function PrayerTimesPage() {
                     <div className="flex items-center gap-1 sm:gap-2 text-xs sm:text-sm text-white">
                         <FaMapMarkerAlt className="w-4 h-4" />
                         <button
-                            className="underline hover:text-green-400 focus:outline-none"
+                            className="underline hover:text-green-400 focus:outline-none text-left"
                             onClick={() => setShowLocationModal(true)}
                             style={{
                                 background: "none",
@@ -644,7 +656,24 @@ export default function PrayerTimesPage() {
                             }}
                             aria-label="Select Location"
                         >
-                            {locationName || "Unknown location"}
+                            {locationName ? (
+                                <div className="text-left leading-tight">
+                                    <div className="font-medium text-white">
+                                        {locationName.split(",")[0]}
+                                    </div>
+                                    {locationName.split(",").length > 1 && (
+                                        <div className="text-[10px] sm:text-xs text-gray-300 mt-0.5">
+                                            {locationName
+                                                .split(",")
+                                                .slice(1, 3)
+                                                .join(",")
+                                                .trim()}
+                                        </div>
+                                    )}
+                                </div>
+                            ) : (
+                                "Unknown location"
+                            )}
                         </button>
                     </div>
                 </div>
@@ -691,20 +720,29 @@ export default function PrayerTimesPage() {
                                 </div>
                             )}
                             {!citySearching && cityResults.length > 0 && (
-                                <ul className="max-h-40 overflow-auto mb-2 border border-gray-700 rounded divide-y divide-gray-700">
+                                <ul className="max-h-60 overflow-auto mb-2 border border-gray-600 rounded-lg divide-y divide-gray-600 bg-[#1a1f2e] shadow-lg">
                                     {cityResults.map((r) => (
                                         <li
                                             key={`${r.place_id}`}
-                                            className={`px-2 py-1 text-xs cursor-pointer hover:bg-gray-700/40 ${
+                                            className={`px-3 py-2.5 text-sm cursor-pointer hover:bg-gray-600/50 transition-colors ${
                                                 selectedCityResult &&
                                                 selectedCityResult.place_id ===
                                                     r.place_id
-                                                    ? "bg-gray-700/60"
+                                                    ? "bg-green-500/20 border-l-2 border-green-500"
                                                     : ""
-                                            }`}
+                                            } text-gray-200`}
                                             onClick={() => handleSelectCity(r)}
                                         >
-                                            {r.display_name}
+                                            <div className="font-medium text-white">
+                                                {r.display_name.split(",")[0]}
+                                            </div>
+                                            <div className="text-xs text-gray-400 mt-0.5">
+                                                {r.display_name
+                                                    .split(",")
+                                                    .slice(1, 3)
+                                                    .join(",")
+                                                    .trim()}
+                                            </div>
                                         </li>
                                     ))}
                                 </ul>
@@ -731,9 +769,7 @@ export default function PrayerTimesPage() {
                                         fetchPrayerTimesByCoords(
                                             selectedCityResult.lat,
                                             selectedCityResult.lon,
-                                            selectedCityResult.display_name.split(
-                                                ","
-                                            )[0]
+                                            selectedCityResult.display_name
                                         );
                                     }}
                                 >
