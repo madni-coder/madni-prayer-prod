@@ -137,15 +137,6 @@ export default function PrayerTimesPage() {
             }
         }
 
-        // Ensure that if first prayer (Fajr) is logically after last (Isha), shift it to next day for correct next calculation
-        if (
-            dates[0] &&
-            dates[dates.length - 1] &&
-            dates[0] <= dates[dates.length - 1]
-        ) {
-            dates[0] = new Date(dates[0].getTime() + 24 * 60 * 60 * 1000);
-        }
-
         setPrayerDateTimes(dates);
     }, [prayerTimes]);
 
@@ -593,7 +584,7 @@ export default function PrayerTimesPage() {
             style={{ paddingTop: 0, marginTop: 0 }}
         >
             <button
-                className="flex items-center gap-2 text-lg text-primary hover:text-green-600 font-semibold"
+                className="flex items-center gap-2 text-lg text-primary hover:text-green-600 font-semibold md:text-xl lg:text-2xl md:mt-4 md:mb-2"
                 onClick={() => router.push("/")}
                 aria-label="Back to Home"
                 style={{ alignSelf: "flex-start", marginTop: 0, paddingTop: 0 }}
@@ -601,20 +592,20 @@ export default function PrayerTimesPage() {
                 <FaAngleLeft /> Back
             </button>
             <section
-                className="flex flex-col items-center justify-start w-full px-0 py-0 sm:px-0 sm:py-0 animate-fade-in bg-base-100"
+                className="flex flex-col items-center justify-start w-full px-0 py-0 sm:px-0 sm:py-0 md:px-8 md:py-4 lg:px-16 lg:py-8 animate-fade-in bg-base-100"
                 style={{ marginTop: 0, paddingTop: 0 }}
             >
                 <h2
-                    className="text-lg sm:text-2xl md:text-3xl font-bold text-primary mb-0 sm:mb-0"
+                    className="text-lg sm:text-2xl md:text-3xl lg:text-4xl font-bold text-primary mb-0 sm:mb-0 md:mb-2 lg:mb-4"
                     style={{ marginTop: 0, paddingTop: 0 }}
                 >
                     Prayer Times
                 </h2>
                 {/* Top Bar */}
-                <div className="w-full max-w-2xl flex flex-col sm:flex-row flex-wrap items-center justify-center gap-2 sm:gap-0 mb-0">
+                <div className="w-full max-w-2xl flex flex-col sm:flex-row flex-wrap items-center justify-center gap-2 sm:gap-0 md:gap-4 mb-0 md:mb-2 lg:mb-4">
                     {/* Hijri date removed as requested */}
-                    <div className="flex items-center gap-1 sm:gap-2 text-sm sm:text-sm text-white">
-                        <Calendar className="w-5 h-5 sm:w-5 sm:h-5" />
+                    <div className="flex items-center gap-1 sm:gap-2 md:gap-3 text-sm sm:text-sm md:text-base text-white">
+                        <Calendar className="w-5 h-5 sm:w-5 sm:h-5 md:w-6 md:h-6" />
                         <span>
                             {now.toLocaleDateString("en-US", {
                                 weekday: "short",
@@ -624,12 +615,12 @@ export default function PrayerTimesPage() {
                             })}
                         </span>
                     </div>
-                    <div className="flex items-center gap-1 sm:gap-2 text-sm sm:text-sm text-white">
-                        <FaClock className="w-4 h-4 mr-1" />
+                    <div className="flex items-center gap-1 sm:gap-2 md:gap-3 text-sm sm:text-sm md:text-base text-white">
+                        <FaClock className="w-4 h-4 mr-1 md:w-5 md:h-5" />
                         <span>Time: {formatTime(now)}</span>
                     </div>
-                    <div className="flex items-center gap-1 sm:gap-2 text-xs sm:text-sm text-white">
-                        <FaMapMarkerAlt className="w-4 h-4" />
+                    <div className="flex items-center gap-1 sm:gap-2 md:gap-3 text-xs sm:text-sm md:text-base text-white">
+                        <FaMapMarkerAlt className="w-4 h-4 md:w-5 md:h-5" />
                         <button
                             className="underline hover:text-green-400 focus:outline-none text-left"
                             onClick={() => setShowLocationModal(true)}
@@ -643,11 +634,11 @@ export default function PrayerTimesPage() {
                         >
                             {locationName ? (
                                 <div className="text-left leading-tight">
-                                    <div className="font-medium text-white">
+                                    <div className="font-medium text-white md:text-base lg:text-lg">
                                         {locationName.split(",")[0]}
                                     </div>
                                     {locationName.split(",").length > 1 && (
-                                        <div className="text-[10px] sm:text-xs text-gray-300 mt-0.5">
+                                        <div className="text-[10px] sm:text-xs md:text-sm text-gray-300 mt-0.5">
                                             {locationName
                                                 .split(",")
                                                 .slice(1, 3)
@@ -665,7 +656,7 @@ export default function PrayerTimesPage() {
                 {/* Location Modal */}
                 {showLocationModal && (
                     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-60">
-                        <div className="bg-[#181c27] rounded-xl shadow-lg p-6 w-[350px] max-w-full relative">
+                        <div className="bg-[#181c27] rounded-xl shadow-lg p-6 w-[350px] max-w-full md:w-[400px] lg:w-[480px] relative">
                             <button
                                 className="absolute top-3 right-3 text-gray-400 hover:text-white"
                                 onClick={() => setShowLocationModal(false)}
@@ -673,7 +664,7 @@ export default function PrayerTimesPage() {
                             >
                                 <X className="w-5 h-5" />
                             </button>
-                            <h3 className="text-white text-lg font-semibold mb-4">
+                            <h3 className="text-white text-lg md:text-xl font-semibold mb-4">
                                 Select Location
                             </h3>
                             <button
@@ -684,14 +675,14 @@ export default function PrayerTimesPage() {
                             </button>
                             <div className="flex items-center my-2">
                                 <div className="flex-grow h-px bg-gray-600" />
-                                <span className="mx-2 text-gray-400 text-xs">
+                                <span className="mx-2 text-gray-400 text-xs md:text-sm">
                                     OR
                                 </span>
                                 <div className="flex-grow h-px bg-gray-600" />
                             </div>
                             <input
                                 type="text"
-                                className="w-full bg-[#23283a] border border-gray-700 rounded px-3 py-2 text-white placeholder-gray-400 focus:outline-none focus:ring focus:border-green-500 mb-2"
+                                className="w-full bg-[#23283a] border border-gray-700 rounded px-3 py-2 text-white placeholder-gray-400 focus:outline-none focus:ring focus:border-green-500 mb-2 md:text-base"
                                 placeholder="Search city (e.g. Mumbai, Delhi)..."
                                 value={citySearch}
                                 onChange={(e) => {
@@ -700,7 +691,7 @@ export default function PrayerTimesPage() {
                             />
                             {/* NEW: suggestion list */}
                             {citySearching && (
-                                <div className="text-xs text-gray-400 mb-2">
+                                <div className="text-xs md:text-sm text-gray-400 mb-2">
                                     Searching...
                                 </div>
                             )}
@@ -709,7 +700,7 @@ export default function PrayerTimesPage() {
                                     {cityResults.map((r) => (
                                         <li
                                             key={`${r.place_id}`}
-                                            className={`px-3 py-2.5 text-sm cursor-pointer hover:bg-gray-600/50 transition-colors ${
+                                            className={`px-3 py-2.5 text-sm md:text-base cursor-pointer hover:bg-gray-600/50 transition-colors ${
                                                 selectedCityResult &&
                                                 selectedCityResult.place_id ===
                                                     r.place_id
@@ -718,10 +709,10 @@ export default function PrayerTimesPage() {
                                             } text-gray-200`}
                                             onClick={() => handleSelectCity(r)}
                                         >
-                                            <div className="font-medium text-white">
+                                            <div className="font-medium text-white md:text-base">
                                                 {r.display_name.split(",")[0]}
                                             </div>
-                                            <div className="text-xs text-gray-400 mt-0.5">
+                                            <div className="text-xs md:text-sm text-gray-400 mt-0.5">
                                                 {r.display_name
                                                     .split(",")
                                                     .slice(1, 3)
@@ -735,7 +726,7 @@ export default function PrayerTimesPage() {
                             {citySearch &&
                                 !citySearching &&
                                 cityResults.length === 0 && (
-                                    <div className="text-xs text-gray-500 mb-2">
+                                    <div className="text-xs md:text-sm text-gray-500 mb-2">
                                         No matches found.
                                     </div>
                                 )}
@@ -765,11 +756,11 @@ export default function PrayerTimesPage() {
                     </div>
                 )}
                 {/* Main Card */}
-                <div className="relative glass-card p-2 sm:p-4 md:p-6 max-w-full sm:max-w-2xl w-full flex flex-col md:flex-row gap-3 sm:gap-4 items-center md:items-center bg-base-200 border border-base-300 shadow-md overflow-visible md:pl-16 lg:pl-20">
+                <div className="relative glass-card p-2 sm:p-4 md:p-8 lg:p-10 max-w-full sm:max-w-2xl md:max-w-3xl lg:max-w-4xl w-full flex flex-col md:flex-row gap-3 sm:gap-4 md:gap-8 items-center md:items-center bg-base-200 border border-base-300 shadow-md overflow-visible md:pl-16 lg:pl-20">
                     {/* Circular Countdown */}
                     <div className="flex flex-col items-center justify-center w-full md:w-auto mb-2 md:mb-0 shrink-0 md:mr-4 lg:mr-6">
                         <div
-                            className="relative flex items-center justify-center w-[140px] sm:w-[110px] md:w-[140px] lg:w-[160px] aspect-square"
+                            className="relative flex items-center justify-center w-[140px] sm:w-[110px] md:w-[160px] lg:w-[200px] aspect-square"
                             style={{ minWidth: "100px", minHeight: "100px" }}
                         >
                             <svg
@@ -848,7 +839,7 @@ export default function PrayerTimesPage() {
                             </svg>
                             <div className="absolute inset-0 flex flex-col items-center justify-center z-10 w-full h-full">
                                 <span
-                                    className="text-warning font-semibold text-sm sm:text-sm md:text-base lg:text-lg mb-1"
+                                    className="text-warning font-semibold text-sm sm:text-sm md:text-lg lg:text-xl mb-1"
                                     style={{ lineHeight: 1 }}
                                 >
                                     {prayerTimes[currentIdx]?.displayName ||
@@ -870,7 +861,7 @@ export default function PrayerTimesPage() {
                         {prayerTimes.map((prayer) => (
                             <div
                                 key={prayer.name}
-                                className={`flex items-center justify-between px-3 py-3 rounded-lg mb-3 bg-base-100 border-l-4 ${
+                                className={`flex items-center justify-between px-3 py-3 md:px-6 md:py-4 rounded-lg mb-3 bg-base-100 border-l-4 ${
                                     prayer.name.startsWith("Fajr")
                                         ? "border-primary"
                                         : prayer.name.startsWith("Sun Rise")
@@ -887,22 +878,22 @@ export default function PrayerTimesPage() {
                                 } shadow-sm`}
                             >
                                 <span
-                                    className={`font-semibold text-base md:text-lg flex-1 truncate ${prayer.color}`}
+                                    className={`font-semibold text-base md:text-lg lg:text-xl flex-1 truncate ${prayer.color}`}
                                 >
                                     {prayer.displayName || "—"}
                                 </span>
-                                <span className="font-mono text-white text-base md:text-lg text-base-content/90 ml-2 flex-shrink-0">
+                                <span className="font-mono text-white text-base md:text-lg lg:text-xl text-base-content/90 ml-2 flex-shrink-0">
                                     {formatTo12Hour(prayer.time)}
                                 </span>
                                 <span className="ml-2 flex-shrink-0">
                                     {prayer.alert ? (
                                         <Bell
-                                            className="w-5 h-5 text-warning"
+                                            className="w-5 h-5 md:w-6 md:h-6 text-warning"
                                             title="Azan alert on"
                                         />
                                     ) : (
                                         <BellOff
-                                            className="w-5 h-5 text-base-content/30"
+                                            className="w-5 h-5 md:w-6 md:h-6 text-base-content/30"
                                             title="Azan alert off"
                                         />
                                     )}
