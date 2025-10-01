@@ -558,23 +558,8 @@ export default function PrayerTimesPage() {
                 });
                 if (!res.ok) throw new Error("City search failed");
                 const data = await res.json();
-                // filter to results that look like populated places (city / town / village / suburb / state capital etc.)
-                let filtered = (data || []).filter((r) =>
-                    [
-                        "city",
-                        "town",
-                        "village",
-                        "municipality",
-                        "suburb",
-                        "state",
-                        "district",
-                        "hamlet",
-                        "locality",
-                    ].includes(r?.type)
-                );
-                // fallback: if filtering removed all, show first few raw results
-                if (filtered.length === 0) filtered = data.slice(0, 8) || [];
-                setCityResults(filtered);
+                // Show all results from API instead of filtering
+                setCityResults(data || []);
             } catch (e) {
                 console.error(e);
                 setCityResults([]);
