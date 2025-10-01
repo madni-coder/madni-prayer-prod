@@ -1,6 +1,6 @@
 "use client";
-import React, { useEffect, useState } from "react";
-import { Bell, BellOff, Calendar, Moon } from "lucide-react";
+import React, { useEffect, useState, useRef } from "react";
+import { Bell, BellOff, Calendar, Moon, X } from "lucide-react";
 import { FaAngleLeft, FaMapMarkerAlt, FaClock } from "react-icons/fa";
 import { useRouter } from "next/navigation";
 
@@ -49,6 +49,27 @@ const initialPrayerTimes = [
     },
 ];
 
+// Helper to format time string to 12-hour format with AM/PM
+function formatTo12Hour(timeStr) {
+    if (!timeStr || timeStr === "—") return "—";
+    // remove parenthesis and trailing text
+    const cleaned = timeStr.replace(/\(.*?\)/, "").trim();
+    const m = cleaned.match(/(\d{1,2}):(\d{2})(?:\s*([AaPp][Mm]))?/);
+    if (!m) return timeStr;
+    let hh = parseInt(m[1], 10);
+    const mm = m[2];
+    let ampm = m[3];
+    if (!ampm) {
+        ampm = hh >= 12 ? "PM" : "AM";
+        if (hh === 0) hh = 12;
+        else if (hh > 12) hh -= 12;
+    } else {
+        ampm = ampm.toUpperCase();
+        if (hh === 0) hh = 12;
+    }
+    return `${hh}:${mm} ${ampm}`;
+}
+
 export default function PrayerTimesPage() {
     const router = useRouter();
     // Real-time clock state
@@ -60,6 +81,14 @@ export default function PrayerTimesPage() {
     const [prayerDateTimes, setPrayerDateTimes] = useState([]);
     const [currentIdx, setCurrentIdx] = useState(null);
     const [timeLeftSeconds, setTimeLeftSeconds] = useState(null);
+    const [showLocationModal, setShowLocationModal] = useState(false);
+    const [citySearch, setCitySearch] = useState("");
+    const [cityResults, setCityResults] = useState([]); // [{display_name, lat, lon}]
+    const [citySearching, setCitySearching] = useState(false);
+    const [selectedCityResult, setSelectedCityResult] = useState(null);
+    const citySearchTimeoutRef = useRef(null);
+    // prevent duplicate initial fetch (e.g., React 18 StrictMode)
+    const initialFetchDoneRef = useRef(false);
 
     useEffect(() => {
         const timer = setInterval(() => setNow(new Date()), 1000);
@@ -209,6 +238,8 @@ export default function PrayerTimesPage() {
     };
 
     useEffect(() => {
+        if (initialFetchDoneRef.current) return; // guard against second invocation
+        initialFetchDoneRef.current = true;
         const fetchPrayerTimesAndSetState = async () => {
             try {
                 const today = new Date();
@@ -280,7 +311,7 @@ export default function PrayerTimesPage() {
                         const apiVal = key ? cleaned(timings[key]) : null;
                         return {
                             ...p,
-                            time: apiVal || p.time,
+                            time: apiVal ? formatTo12Hour(apiVal) : p.time,
                             // only show a displayName once we have an API value
                             displayName: apiVal ? p.name : "",
                         };
@@ -294,6 +325,259 @@ export default function PrayerTimesPage() {
 
         fetchPrayerTimesAndSetState();
     }, []);
+
+    // Add handler for geolocation-based prayer times
+    const handleGetLocation = () => {
+        if (!navigator.geolocation) {
+            alert("Geolocation is not supported by your browser.");
+            return;
+        }
+        setLoading(true);
+        navigator.geolocation.getCurrentPosition(
+            async (pos) => {
+                const lat = pos.coords.latitude;
+                const lon = pos.coords.longitude;
+                let city = "";
+                try {
+                    const geoRes = await fetch(
+                        `https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${lat}&lon=${lon}`
+                    );
+                    if (geoRes.ok) {
+                        const geoJson = await geoRes.json();
+                        city =
+                            geoJson?.address?.city ||
+                            geoJson?.address?.town ||
+                            geoJson?.address?.village ||
+                            geoJson?.address?.municipality ||
+                            geoJson?.address?.state_district ||
+                            geoJson?.address?.state ||
+                            "";
+                    }
+                } catch (e) {
+                    // silent fail; city will fallback to API timezone later
+                }
+                try {
+                    const today = new Date();
+                    const y = today.getFullYear();
+                    const m = String(today.getMonth() + 1).padStart(2, "0");
+                    const d = String(today.getDate()).padStart(2, "0");
+                    const dateStr = `${y}-${m}-${d}`;
+                    const cityParam = city
+                        ? `&city=${encodeURIComponent(city)}`
+                        : "";
+                    const res = await fetch(
+                        `/api/api-prayerTimes?lat=${lat}&lon=${lon}&date=${dateStr}${cityParam}`
+                    );
+                    const json = await res.json();
+                    if (!res.ok) {
+                        alert(
+                            "Failed to fetch prayer times for your location."
+                        );
+                        setLoading(false);
+                        return;
+                    }
+                    const loc =
+                        city ||
+                        json?.location?.name ||
+                        json?.meta?.timezone ||
+                        (json?.data &&
+                            json.data.location &&
+                            json.data.location.name) ||
+                        json?.city ||
+                        json?.address ||
+                        "";
+                    setLocationName(loc);
+                    const timings = json.timings || {};
+                    const findTimingKey = (displayName) => {
+                        const tokensMap = {
+                            Fajr: ["fajr"],
+                            "Sun Rise": ["sunrise", "sun rise", "sun"],
+                            Zuhr: ["dhuhr", "zuhr", "zuhur"],
+                            Asr: ["asr"],
+                            Maghrib: ["maghrib"],
+                            Isha: ["isha", "isya"],
+                        };
+                        const candidates = Object.keys(timings || {});
+                        const tokens = tokensMap[displayName] || [
+                            displayName.toLowerCase(),
+                        ];
+                        for (const token of tokens) {
+                            const found = candidates.find((k) =>
+                                k.toLowerCase().includes(token)
+                            );
+                            if (found) return found;
+                        }
+                        const exact = candidates.find(
+                            (k) => k.toLowerCase() === displayName.toLowerCase()
+                        );
+                        return exact || null;
+                    };
+                    const cleaned = (val) =>
+                        typeof val === "string"
+                            ? val.replace(/\s*\(.*?\)/, "").trim()
+                            : val;
+                    setPrayerTimes((prev) =>
+                        prev.map((p) => {
+                            const key = findTimingKey(p.name);
+                            const apiVal = key ? cleaned(timings[key]) : null;
+                            return {
+                                ...p,
+                                time: apiVal ? formatTo12Hour(apiVal) : p.time,
+                                displayName: apiVal ? p.name : "",
+                            };
+                        })
+                    );
+                    setShowLocationModal(false);
+                    setLoading(false);
+                } catch (err) {
+                    alert("Error fetching prayer times for your location.");
+                    setLoading(false);
+                }
+            },
+            (err) => {
+                alert("Unable to retrieve your location.");
+                setLoading(false);
+            }
+        );
+    };
+
+    // NEW: Fetch prayer times by coordinates (used for selected city from search)
+    const fetchPrayerTimesByCoords = async (lat, lon, cityName) => {
+        try {
+            setLoading(true);
+            const today = new Date();
+            const y = today.getFullYear();
+            const m = String(today.getMonth() + 1).padStart(2, "0");
+            const d = String(today.getDate()).padStart(2, "0");
+            const dateStr = `${y}-${m}-${d}`;
+            const res = await fetch(
+                `/api/api-prayerTimes?lat=${lat}&lon=${lon}&date=${dateStr}&city=${encodeURIComponent(
+                    cityName
+                )}`
+            );
+            const json = await res.json();
+            if (!res.ok) {
+                setLoading(false);
+                alert("Failed to fetch prayer times for selected city.");
+                return;
+            }
+            const loc = cityName || json?.location?.name || json?.city || "";
+            setLocationName(loc);
+            const timings = json.timings || {};
+            const findTimingKey = (displayName) => {
+                const tokensMap = {
+                    Fajr: ["fajr"],
+                    "Sun Rise": ["sunrise", "sun rise", "sun"],
+                    Zuhr: ["dhuhr", "zuhr", "zuhur"],
+                    Asr: ["asr"],
+                    Maghrib: ["maghrib"],
+                    Isha: ["isha", "isya"],
+                };
+                const candidates = Object.keys(timings || {});
+                const tokens = tokensMap[displayName] || [
+                    displayName.toLowerCase(),
+                ];
+                for (const token of tokens) {
+                    const found = candidates.find((k) =>
+                        k.toLowerCase().includes(token)
+                    );
+                    if (found) return found;
+                }
+                const exact = candidates.find(
+                    (k) => k.toLowerCase() === displayName.toLowerCase()
+                );
+                return exact || null;
+            };
+            const cleaned = (val) =>
+                typeof val === "string"
+                    ? val.replace(/\s*\(.*?\)/, "").trim()
+                    : val;
+            setPrayerTimes((prev) =>
+                prev.map((p) => {
+                    const key = findTimingKey(p.name);
+                    const apiVal = key ? cleaned(timings[key]) : null;
+                    return {
+                        ...p,
+                        time: apiVal ? formatTo12Hour(apiVal) : p.time,
+                        displayName: apiVal ? p.name : "",
+                    };
+                })
+            );
+            setShowLocationModal(false);
+            setLoading(false);
+        } catch (e) {
+            console.error("City fetch error", e);
+            setLoading(false);
+            alert("Error fetching prayer times for selected city.");
+        }
+    };
+
+    // Prefill search box with current location when opening modal if empty
+    useEffect(() => {
+        if (showLocationModal) {
+            if (!citySearch && locationName) {
+                setCitySearch(locationName.split(",")[0]);
+            }
+        }
+    }, [showLocationModal, locationName]);
+
+    // NEW: Debounced search for Indian cities using Nominatim
+    useEffect(() => {
+        if (!showLocationModal) return; // only search while modal open
+        if (citySearchTimeoutRef.current) {
+            clearTimeout(citySearchTimeoutRef.current);
+        }
+        if (!citySearch || citySearch.trim().length < 2) {
+            setCityResults([]);
+            setSelectedCityResult(null);
+            return;
+        }
+        citySearchTimeoutRef.current = setTimeout(async () => {
+            try {
+                setCitySearching(true);
+                const q = encodeURIComponent(citySearch.trim());
+                const url = `https://nominatim.openstreetmap.org/search?format=jsonv2&limit=8&countrycodes=in&addressdetails=1&q=${q}`;
+                const res = await fetch(url, {
+                    headers: {
+                        "Accept-Language": "en",
+                        "User-Agent":
+                            "prayer-times-app/1.0 (+https://yourdomain.example)",
+                    },
+                });
+                if (!res.ok) throw new Error("City search failed");
+                const data = await res.json();
+                // filter to results that look like populated places (city / town / village / suburb / state capital etc.)
+                let filtered = (data || []).filter((r) =>
+                    [
+                        "city",
+                        "town",
+                        "village",
+                        "municipality",
+                        "suburb",
+                        "state",
+                        "district",
+                        "hamlet",
+                        "locality",
+                    ].includes(r?.type)
+                );
+                // fallback: if filtering removed all, show first few raw results
+                if (filtered.length === 0) filtered = data.slice(0, 8) || [];
+                setCityResults(filtered);
+            } catch (e) {
+                console.error(e);
+                setCityResults([]);
+            } finally {
+                setCitySearching(false);
+            }
+        }, 450); // debounce 450ms
+        return () => clearTimeout(citySearchTimeoutRef.current);
+    }, [citySearch, showLocationModal]);
+
+    // NEW: handler when selecting a city suggestion
+    const handleSelectCity = (result) => {
+        setSelectedCityResult(result);
+        setCitySearch(result.display_name.split(",")[0]);
+    };
 
     // Format time as HH:MM:SS AM/PM
     const formatTime = (date) =>
@@ -349,9 +633,116 @@ export default function PrayerTimesPage() {
                     </div>
                     <div className="flex items-center gap-1 sm:gap-2 text-xs sm:text-sm text-white">
                         <FaMapMarkerAlt className="w-4 h-4" />
-                        <span>{locationName || "Unknown location"}</span>
+                        <button
+                            className="underline hover:text-green-400 focus:outline-none"
+                            onClick={() => setShowLocationModal(true)}
+                            style={{
+                                background: "none",
+                                border: "none",
+                                padding: 0,
+                                margin: 0,
+                            }}
+                            aria-label="Select Location"
+                        >
+                            {locationName || "Unknown location"}
+                        </button>
                     </div>
                 </div>
+                {/* Location Modal */}
+                {showLocationModal && (
+                    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-60">
+                        <div className="bg-[#181c27] rounded-xl shadow-lg p-6 w-[350px] max-w-full relative">
+                            <button
+                                className="absolute top-3 right-3 text-gray-400 hover:text-white"
+                                onClick={() => setShowLocationModal(false)}
+                                aria-label="Close"
+                            >
+                                <X className="w-5 h-5" />
+                            </button>
+                            <h3 className="text-white text-lg font-semibold mb-4">
+                                Select Location
+                            </h3>
+                            <button
+                                className="w-full bg-green-500 hover:bg-green-600 text-white font-semibold py-2 rounded mb-4 transition-colors"
+                                onClick={handleGetLocation}
+                            >
+                                Get location
+                            </button>
+                            <div className="flex items-center my-2">
+                                <div className="flex-grow h-px bg-gray-600" />
+                                <span className="mx-2 text-gray-400 text-xs">
+                                    OR
+                                </span>
+                                <div className="flex-grow h-px bg-gray-600" />
+                            </div>
+                            <input
+                                type="text"
+                                className="w-full bg-[#23283a] border border-gray-700 rounded px-3 py-2 text-white placeholder-gray-400 focus:outline-none focus:ring focus:border-green-500 mb-2"
+                                placeholder="Search city (e.g. Mumbai, Delhi)..."
+                                value={citySearch}
+                                onChange={(e) => {
+                                    setCitySearch(e.target.value);
+                                }}
+                            />
+                            {/* NEW: suggestion list */}
+                            {citySearching && (
+                                <div className="text-xs text-gray-400 mb-2">
+                                    Searching...
+                                </div>
+                            )}
+                            {!citySearching && cityResults.length > 0 && (
+                                <ul className="max-h-40 overflow-auto mb-2 border border-gray-700 rounded divide-y divide-gray-700">
+                                    {cityResults.map((r) => (
+                                        <li
+                                            key={`${r.place_id}`}
+                                            className={`px-2 py-1 text-xs cursor-pointer hover:bg-gray-700/40 ${
+                                                selectedCityResult &&
+                                                selectedCityResult.place_id ===
+                                                    r.place_id
+                                                    ? "bg-gray-700/60"
+                                                    : ""
+                                            }`}
+                                            onClick={() => handleSelectCity(r)}
+                                        >
+                                            {r.display_name}
+                                        </li>
+                                    ))}
+                                </ul>
+                            )}
+                            {citySearch &&
+                                !citySearching &&
+                                cityResults.length === 0 && (
+                                    <div className="text-xs text-gray-500 mb-2">
+                                        No matches found.
+                                    </div>
+                                )}
+                            <div className="flex justify-end gap-2 mt-2">
+                                <button
+                                    className="px-4 py-2 rounded bg-gray-700 text-gray-300 hover:bg-gray-600"
+                                    onClick={() => setShowLocationModal(false)}
+                                >
+                                    Cancel
+                                </button>
+                                <button
+                                    className="px-4 py-2 rounded bg-green-500 text-white font-semibold hover:bg-green-600 disabled:opacity-40 disabled:cursor-not-allowed"
+                                    disabled={!selectedCityResult}
+                                    onClick={() => {
+                                        if (!selectedCityResult) return;
+                                        fetchPrayerTimesByCoords(
+                                            selectedCityResult.lat,
+                                            selectedCityResult.lon,
+                                            selectedCityResult.display_name.split(
+                                                ","
+                                            )[0]
+                                        );
+                                    }}
+                                >
+                                    {loading ? "Loading..." : "Save"}
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                )}
                 {/* Main Card */}
                 <div className="relative glass-card p-2 sm:p-4 md:p-6 max-w-full sm:max-w-2xl w-full flex flex-col md:flex-row gap-3 sm:gap-4 items-center md:items-center bg-base-200 border border-base-300 shadow-md overflow-visible md:pl-16 lg:pl-20">
                     {/* Circular Countdown */}
@@ -480,7 +871,7 @@ export default function PrayerTimesPage() {
                                     {prayer.displayName || "—"}
                                 </span>
                                 <span className="font-mono text-white text-base md:text-lg text-base-content/90 ml-2 flex-shrink-0">
-                                    {prayer.time}
+                                    {formatTo12Hour(prayer.time)}
                                 </span>
                                 <span className="ml-2 flex-shrink-0">
                                     {prayer.alert ? (

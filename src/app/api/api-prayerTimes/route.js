@@ -10,91 +10,82 @@ function dateToTimestamp(dateStr) {
     return Math.floor(d.getTime() / 1000);
 }
 
+// New API: GET /api/prayer-widget-proxy?lat=...&lon=...
 export async function GET(request) {
-    try {
-        const { searchParams } = new URL(request.url);
+    const { pathname, searchParams } = new URL(request.url);
+    if (pathname.endsWith("/prayer-widget-proxy")) {
+        // Proxy the IslamicFinder widget HTML
+        const lat = searchParams.get("lat") || DEFAULT_COORDS.lat;
+        const lon = searchParams.get("lon") || DEFAULT_COORDS.lon;
+        // Use the widget with coordinates if possible (IslamicFinder widget does not support direct lat/lon, so fallback to default)
+        const widgetUrl = `https://www.islamicfinder.org/prayer-widget/1275637/hanfi/6/0/18.0/18.0`;
+        const res = await fetch(widgetUrl);
+        const html = await res.text();
+        return new NextResponse(html, {
+            status: 200,
+            headers: { "Content-Type": "text/html; charset=utf-8" },
+        });
+    }
 
-        // Accept either: date=YYYY-MM-DD OR lat & lon. If neither, use default Bilaspur coords and today's date.
+    try {
         const date = searchParams.get("date");
         const latParam = searchParams.get("lat");
         const lonParam = searchParams.get("lon");
+        const cityParam = searchParams.get("city"); // optional city name passed from client reverse geocode
+        // Force Hanafi Asr method (school=1)
+        const school = 1;
 
         const coords = {
             lat: latParam ? parseFloat(latParam) : DEFAULT_COORDS.lat,
             lon: lonParam ? parseFloat(lonParam) : DEFAULT_COORDS.lon,
         };
 
-        let timestamp;
+        let dateStr;
         if (date) {
-            timestamp = dateToTimestamp(date);
-            if (!timestamp) {
-                return NextResponse.json(
-                    {
-                        ok: false,
-                        error: "Invalid date format. Use YYYY-MM-DD.",
-                    },
-                    { status: 400 }
-                );
-            }
+            // Convert YYYY-MM-DD to DD-MM-YYYY for Aladhan
+            const [y, m, d] = date.split("-");
+            dateStr = `${d}-${m}-${y}`;
         } else {
-            // use today's date (local) midnight
             const today = new Date();
             const y = today.getFullYear();
             const m = String(today.getMonth() + 1).padStart(2, "0");
             const d = String(today.getDate()).padStart(2, "0");
-            timestamp = dateToTimestamp(`${y}-${m}-${d}`);
+            dateStr = `${d}-${m}-${y}`;
         }
 
-        // Use IslamicFinder public widget API to fetch prayer timings. Proxy the response.
-        const apiUrl = `https://www.islamicfinder.org/prayer-widget/1275637/hanafi/6/0/18.0/18.0`;
-
+        // Call Aladhan API (adding school for Hanafi/Shafi Asr method)
+        const apiUrl = `https://api.aladhan.com/v1/timings/${dateStr}?latitude=${coords.lat}&longitude=${coords.lon}&school=${school}`;
         const res = await fetch(apiUrl);
-        if (!res.ok) {
-            const text = await res.text();
+        const data = await res.json();
+        if (!data || data.code !== 200) {
             return NextResponse.json(
-                { ok: false, error: "Upstream API error", details: text },
+                { ok: false, error: "Failed to fetch from Aladhan API" },
                 { status: 502 }
             );
         }
 
-        const html = await res.text();
-        // Extract prayer times from HTML using regex
-        // This is a simple example and may need adjustment based on actual HTML structure
-        const timings = {};
-        const regexMap = {
-            Fajr: /Fajr<[^>]*>\s*<[^>]*>(\d{1,2}:\d{2}\s*[AP]M)/i,
-            Sunrise:
-                /(Sunrise|Shuruq)[^<]*<[^>]*>\s*<[^>]*>(\d{1,2}:\d{2}\s*[AP]M)/i,
-            Dhuhr: /Dhuhr<[^>]*>\s*<[^>]*>(\d{1,2}:\d{2}\s*[AP]M)/i,
-            Asr: /Asr<[^>]*>\s*<[^>]*>(\d{1,2}:\d{2}\s*[AP]M)/i,
-            Maghrib: /Maghrib<[^>]*>\s*<[^>]*>(\d{1,2}:\d{2}\s*[AP]M)/i,
-            Isha: /Isha<[^>]*>\s*<[^>]*>(\d{1,2}:\d{2}\s*[AP]M)/i,
+        const timings = data.data.timings;
+        const location = {
+            name: cityParam || "Bilaspur, Chhattisgarh",
+            latitude: coords.lat,
+            longitude: coords.lon,
         };
-        for (const [key, regex] of Object.entries(regexMap)) {
-            const match = html.match(regex);
-            if (key === "Sunrise") {
-                timings[key] = match ? match[2] : null;
-            } else {
-                timings[key] = match ? match[1] : null;
-            }
-        }
 
-        const result = {
-            ok: true,
-            source: "islamicfinder.org",
-            location: {
-                name:
-                    searchParams.get("location") ||
-                    "Bilaspur, Chhattisgarh (default)",
-                latitude: coords.lat,
-                longitude: coords.lon,
+        return NextResponse.json(
+            {
+                ok: true,
+                source: "aladhan.com",
+                location: cityParam
+                    ? { ...location, city: cityParam }
+                    : location,
+                city: cityParam || null,
+                date: date || null,
+                school, // 0 Shafi, 1 Hanafi
+                timings,
+                raw: null,
             },
-            date: date || null,
-            timings,
-            raw: null, // Do not include raw HTML in response
-        };
-
-        return NextResponse.json(result, { status: 200 });
+            { status: 200 }
+        );
     } catch (err) {
         console.error("GET /api/api-prayerTimes error", err);
         return NextResponse.json(
