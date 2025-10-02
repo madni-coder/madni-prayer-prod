@@ -6,7 +6,6 @@ import {
     FaCog,
     FaPeopleArrows,
     FaClock,
-    FaHashtag,
     FaRegCompass,
     FaGift,
     FaMicrophone,
