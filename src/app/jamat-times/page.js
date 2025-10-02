@@ -513,10 +513,7 @@ export default function JamatTimesPage() {
                                 <p className="text-center text-white-1000 leading-relaxed max-w-sm text-xl">
                                     Please select a masjid to view jamat times
                                 </p>
-                                <div className="mt-4 flex items-center gap-2 text-xl text-white-500">
-                                    <div className="w-2 h-2 bg-primary rounded-full animate-pulse"></div>
-                                    <span>Choose from the dropdown above</span>
-                                </div>
+                                
                             </div>
                         )}
                     </div>
