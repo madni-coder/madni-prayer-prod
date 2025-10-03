@@ -18,8 +18,17 @@ const navLinks = [
 
 export default function TopNav() {
     const pathname = usePathname();
+    // Hide only on admin pages
+    const isAdmin = pathname.startsWith("/admin");
+    const isNotice = pathname.startsWith("/notice");
+    if (isAdmin) return null;
+
     return (
-        <nav className="sticky top-0 z-50 bg-base-100 backdrop-blur border-b border-base-300 shadow-sm">
+        <nav
+            className={`${
+                isNotice ? "relative w-full" : "sticky top-0 z-50"
+            } bg-base-100 backdrop-blur border-b border-base-300 shadow-sm`}
+        >
             <div className="max-w-5xl mx-auto flex items-center justify-between px-4 py-2">
                 <div className="flex items-center gap-2">
                     <Link href="/">
@@ -32,7 +41,7 @@ export default function TopNav() {
                         alt="Raah-e-Hidayat Logo"
                         width={40}
                         height={40}
-                        className="w-18 h-10 sm:w-10 sm:h-10 md:w-12 md:h-12 object-contain"
+                        className="w-auto h-auto object-contain"
                         priority
                     />
                 </div>
