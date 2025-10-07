@@ -3,18 +3,21 @@
 import { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
 import { RefreshCw, X, Pencil } from "lucide-react";
+import { useRouter } from "next/navigation";
 
 export default function Page() {
-    // Dynamic data state
-    const [masjids, setMasjids] = useState([]);
-    const [loading, setLoading] = useState(true);
-    const [error, setError] = useState(null);
+    const router = useRouter();
 
-    // Filters
+    // All state hooks at the top level - called unconditionally
+    const [loading, setLoading] = useState(true);
+    const [masjids, setMasjids] = useState([]);
+    const [error, setError] = useState(null);
     const [localityFilter, setLocalityFilter] = useState("All");
     const [addressFilter, setAddressFilter] = useState("All"); // colony
     const [searchQuery, setSearchQuery] = useState("");
     const [reloading, setReloading] = useState(false);
+    const [isAuthenticated, setIsAuthenticated] = useState(false);
+    const [authLoading, setAuthLoading] = useState(true);
 
     const fetchMasjids = useCallback(async () => {
         try {
@@ -32,9 +35,44 @@ export default function Page() {
         }
     }, []);
 
+    // Authentication check effect
     useEffect(() => {
-        fetchMasjids();
-    }, [fetchMasjids]);
+        const checkAuth = () => {
+            const authenticated =
+                typeof window !== "undefined" &&
+                localStorage.getItem("isAuthenticated") === "true";
+
+            if (!authenticated) {
+                router.push("/login");
+            } else {
+                setIsAuthenticated(true);
+            }
+            setAuthLoading(false);
+        };
+
+        checkAuth();
+    }, [router]);
+
+    // Fetch masjids effect - only run when authenticated
+    useEffect(() => {
+        if (isAuthenticated) {
+            fetchMasjids();
+        }
+    }, [fetchMasjids, isAuthenticated]);
+
+    // Show loading while checking authentication
+    if (authLoading) {
+        return (
+            <div className="min-h-screen flex items-center justify-center">
+                <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-blue-500"></div>
+            </div>
+        );
+    }
+
+    // Don't render main content if not authenticated
+    if (!isAuthenticated) {
+        return null;
+    }
 
     const handleReset = () => {
         setLocalityFilter("All");

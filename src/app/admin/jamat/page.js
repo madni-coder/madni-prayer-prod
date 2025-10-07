@@ -1,7 +1,8 @@
 "use client";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { FaPencilAlt, FaCheckCircle } from "react-icons/fa";
 import { X, RotateCcw } from "lucide-react";
+import { useRouter } from "next/navigation";
 
 const prayers = [
     { name: "Fajr", defaultTime: "5:00 am" },
@@ -12,7 +13,12 @@ const prayers = [
     { name: "Juma", defaultTime: "1:30 pm" }, // Added Juma below Isha
 ];
 
-export default function JamatTimeTable() {
+export default function JamatTimesPage() {
+    const router = useRouter();
+    const fetchedMasjidsRef = useRef(false);
+
+    // All state hooks at the top level - called unconditionally
+    const [loading, setLoading] = useState(true);
     const [colonies, setColonies] = useState([]);
     const [masjids, setMasjids] = useState([]);
     const [selectedColony, setSelectedColony] = useState("");
@@ -20,83 +26,118 @@ export default function JamatTimeTable() {
     const [times, setTimes] = useState(prayers.map((p) => p.defaultTime));
     const [editIdx, setEditIdx] = useState(null);
     const [editValue, setEditValue] = useState("");
-    const [loading, setLoading] = useState(true);
     const [error, setError] = useState("");
     const [saving, setSaving] = useState(false);
     const [saveMessage, setSaveMessage] = useState("");
+    const [isAuthenticated, setIsAuthenticated] = useState(false);
+    const [authLoading, setAuthLoading] = useState(true);
 
-    // Fetch colonies and masjids on component mount
+    // Authentication check effect
     useEffect(() => {
+        const checkAuth = () => {
+            const authenticated =
+                typeof window !== "undefined" &&
+                localStorage.getItem("isAuthenticated") === "true";
+
+            if (!authenticated) {
+                router.push("/login");
+            } else {
+                setIsAuthenticated(true);
+            }
+            setAuthLoading(false);
+        };
+
+        checkAuth();
+    }, [router]);
+
+    // Fetch colonies and masjids effect
+    useEffect(() => {
+        if (!isAuthenticated || fetchedMasjidsRef.current) return;
+        fetchedMasjidsRef.current = true; // de-dupe in StrictMode/dev and avoid loops
+        const ac = new AbortController();
+
         const fetchData = async () => {
+            setLoading(true);
+            setError("");
             try {
-                setLoading(true);
-
-                // Fetch masjids
-                const masjidsResponse = await fetch("/api/all-masjids");
-                if (masjidsResponse.ok) {
-                    const masjidsData = await masjidsResponse.json();
-                    setMasjids(masjidsData.data || []);
-
-                    // Extract unique colonies from masjids data
-                    const uniqueColonies = [
-                        ...new Set(
-                            masjidsData.data?.map((masjid) => masjid.colony) ||
-                                []
-                        ),
-                    ];
-                    setColonies(
-                        uniqueColonies.map((colony) => ({ name: colony }))
+                const url = `${window.location.origin}/api/all-masjids`;
+                const masjidsResponse = await fetch(url, {
+                    cache: "no-store",
+                    redirect: "follow",
+                    signal: ac.signal,
+                });
+                if (!masjidsResponse.ok) {
+                    throw new Error(
+                        `Failed to fetch all masjids: ${masjidsResponse.status}`
                     );
                 }
+                const masjidsData = await masjidsResponse.json();
+                setMasjids(masjidsData.data || []);
+                const uniqueColonies = [
+                    ...new Set(
+                        masjidsData.data
+                            ?.map((masjid) => masjid.colony)
+                            .filter(Boolean) || []
+                    ),
+                ];
+                setColonies(uniqueColonies.map((colony) => ({ name: colony })));
             } catch (error) {
-                console.error("Error fetching data:", error);
+                if (error.name !== "AbortError") {
+                    console.error("Error fetching data:", error);
+                    setError("Error fetching data");
+                }
             } finally {
                 setLoading(false);
             }
         };
 
         fetchData();
-    }, []);
+        return () => ac.abort();
+    }, [isAuthenticated]);
 
-    // Fetch jamat times when both colony and masjid are selected
+    // Fetch jamat times effect
     useEffect(() => {
-        const fetchJamatTimes = async () => {
-            if (!selectedMasjid) {
-                // Reset to default times when no masjid is selected
-                setTimes(prayers.map((p) => p.defaultTime));
-                return;
-            }
+        if (!isAuthenticated) return;
 
+        const fetchJamatTimes = async () => {
             setLoading(true);
             setError("");
-
+            if (!selectedMasjid) {
+                setTimes(prayers.map((p) => p.defaultTime));
+                setLoading(false);
+                return;
+            }
             try {
-                // Find the selected masjid data to get jamat times
                 const masjidData = masjids.find(
                     (m) => m.masjidName === selectedMasjid
                 );
-
                 if (masjidData) {
-                    // Map the masjid data to prayer times
                     const newTimes = prayers.map((prayer) => {
+                        let value;
                         switch (prayer.name) {
                             case "Fajr":
-                                return masjidData.fazar || prayer.defaultTime;
+                                value = masjidData.fazar; // backend field may be 'fazar'
+                                break;
                             case "Zuhar":
-                                return masjidData.zuhar || prayer.defaultTime;
+                                value = masjidData.zuhar;
+                                break;
                             case "Asr":
-                                return masjidData.asar || prayer.defaultTime;
+                                value = masjidData.asar;
+                                break;
                             case "Maghrib":
-                                return masjidData.maghrib || prayer.defaultTime;
+                                value = masjidData.maghrib;
+                                break;
                             case "Isha":
-                                return masjidData.isha || prayer.defaultTime;
+                                value = masjidData.isha;
+                                break;
                             case "Juma":
-                                return masjidData.juma || prayer.defaultTime;
+                                value = masjidData.juma;
+                                break;
                             default:
-                                return prayer.defaultTime;
+                                value = prayer.defaultTime;
                         }
+                        return normalizeTime(value, prayer.defaultTime);
                     });
-
                     setTimes(newTimes);
                 } else {
                     setError("Masjid data not found");
@@ -112,8 +153,21 @@ export default function JamatTimeTable() {
         };
 
         fetchJamatTimes();
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [selectedColony, selectedMasjid]);
+    }, [selectedColony, selectedMasjid, masjids, isAuthenticated]);
+
+    // Show loading spinner while checking authentication
+    if (authLoading) {
+        return (
+            <div className="min-h-screen flex items-center justify-center">
+                <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-blue-500"></div>
+            </div>
+        );
+    }
+
+    // Don't render main content if not authenticated
+    if (!isAuthenticated) {
+        return null;
+    }
 
     const handleTimeChange = (idx, value) => {
         setTimes((times) => times.map((t, i) => (i === idx ? value : t)));
@@ -181,13 +235,17 @@ export default function JamatTimeTable() {
                 }
             });
 
-            const response = await fetch("/api/api-jamatTimes", {
-                method: "PATCH",
-                headers: {
-                    "Content-Type": "application/json",
-                },
-                body: JSON.stringify(updateData),
-            });
+            const response = await fetch(
+                `${window.location.origin}/api/api-jamatTimes`,
+                {
+                    method: "PATCH",
+                    headers: {
+                        "Content-Type": "application/json",
+                    },
+                    body: JSON.stringify(updateData),
+                    cache: "no-store",
+                }
+            );
 
             if (response.ok) {
                 setSaveMessage("Jamat times saved successfully!");
@@ -202,7 +260,7 @@ export default function JamatTimeTable() {
                     )
                 );
             } else {
-                const errorData = await response.json();
+                const errorData = await response.json().catch(() => ({}));
                 setError(errorData.error || "Failed to save jamat times");
             }
         } catch (error) {
@@ -419,9 +477,20 @@ export default function JamatTimeTable() {
     );
 }
 
+// Normalize incoming time from API (supports 'HH:mm' or 'h:mm am/pm')
+function normalizeTime(value, fallback) {
+    if (!value) return fallback;
+    const s = String(value).trim().toLowerCase();
+    if (/^\d{1,2}:\d{2}\s?(am|pm)$/.test(s)) return s;
+    if (/^\d{1,2}:\d{2}$/.test(s)) return convertTo12(s);
+    return fallback;
+}
+
 // Helper to convert 12hr string to 24hr format for input value
 function convertTo24(timeStr) {
     // e.g. '6:10 am' => '06:10', '4:30 pm' => '16:30'
+    if (!timeStr) return "00:00";
+    if (/^\d{1,2}:\d{2}$/.test(timeStr)) return timeStr; // already 24h
     const [time, period] = timeStr.split(" ");
     let [h, m] = time.split(":");
     h = parseInt(h);
@@ -433,6 +502,7 @@ function convertTo24(timeStr) {
 // Helper to convert 24hr input value to 12hr string
 function convertTo12(timeStr) {
     // e.g. '06:10' => '6:10 am', '16:30' => '4:30 pm'
+    if (!timeStr) return "12:00 am";
     let [h, m] = timeStr.split(":");
     h = parseInt(h);
     const period = h >= 12 ? "pm" : "am";

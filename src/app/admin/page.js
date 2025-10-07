@@ -1,140 +1,171 @@
+"use client";
+
+import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
+import {
+    Clock,
+    Megaphone,
+    Gift,
+    Users,
+    BookOpen,
+    TrendingUp,
+} from "lucide-react";
+import Link from "next/link";
+
+const quickActions = [
+    {
+        title: "Jamat Times",
+        description: "Manage prayer schedules",
+        icon: Clock,
+        href: "/admin/jamat",
+        color: "bg-blue-500",
+        viewAllText: "View all",
+    },
+    {
+        title: "Notice",
+        description: "Manage announcements",
+        icon: Megaphone,
+        href: "/admin/notice",
+        color: "bg-green-500",
+        viewAllText: "View all",
+    },
+    {
+        title: "Rewards",
+        description: "Manage user rewards",
+        icon: Gift,
+        href: "/admin/rewards",
+        color: "bg-purple-500",
+        viewAllText: "View all",
+    },
+];
+
 export default function AdminDashboard() {
+    const router = useRouter();
+    const [loading, setLoading] = useState(true);
+
+    useEffect(() => {
+        // Check authentication on client side
+        const checkAuth = () => {
+            const isAuthenticated =
+                localStorage.getItem("isAuthenticated") === "true";
+            if (!isAuthenticated) {
+                router.push("/login");
+                return;
+            }
+            setLoading(false);
+        };
+
+        checkAuth();
+    }, [router]);
+
+    // Show loading while checking authentication
+    if (loading) {
+        return (
+            <div className="min-h-screen flex items-center justify-center">
+                <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-blue-500"></div>
+            </div>
+        );
+    }
+
     return (
         <div className="space-y-6">
             <div>
-                <h1 className="text-2xl font-bold text-gray-900">Dashboard</h1>
-                <p className="mt-1 text-sm text-gray-600">
+                <h1 className="text-3xl font-bold text-gray-900">Dashboard</h1>
+                <p className="mt-2 text-gray-600">
                     Welcome to the admin panel. Select an option from the
                     sidebar to get started.
                 </p>
             </div>
 
+            {/* Quick Actions Grid */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {/* Jamat Times Card */}
-                <div className="bg-white overflow-hidden shadow rounded-lg">
-                    <div className="p-5">
-                        <div className="flex items-center">
-                            <div className="flex-shrink-0">
-                                <svg
-                                    className="h-6 w-6 text-blue-600"
-                                    fill="none"
-                                    stroke="currentColor"
-                                    viewBox="0 0 24 24"
-                                >
-                                    <path
-                                        strokeLinecap="round"
-                                        strokeLinejoin="round"
-                                        strokeWidth={2}
-                                        d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
-                                    />
-                                </svg>
+                {quickActions.map((action, index) => (
+                    <div
+                        key={index}
+                        className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 hover:shadow-md transition-shadow duration-200"
+                    >
+                        <div className="flex items-center mb-4">
+                            <div className={`p-3 rounded-lg ${action.color}`}>
+                                <action.icon className="w-6 h-6 text-white" />
                             </div>
-                            <div className="ml-5 w-0 flex-1">
-                                <dl>
-                                    <dt className="text-sm font-medium text-gray-500 truncate">
-                                        Jamat Times
-                                    </dt>
-                                    <dd className="text-lg font-medium text-gray-900">
-                                        Manage prayer schedules
-                                    </dd>
-                                </dl>
+                            <div className="ml-4">
+                                <h3 className="text-lg font-semibold text-gray-900">
+                                    {action.title}
+                                </h3>
+                                <p className="text-sm text-gray-600">
+                                    {action.description}
+                                </p>
                             </div>
                         </div>
-                    </div>
-                    <div className="bg-gray-50 px-5 py-3">
-                        <div className="text-sm">
-                            <a
-                                href="/admin/jamat"
-                                className="font-medium text-blue-600 hover:text-blue-500"
+                        <Link
+                            href={action.href}
+                            className="inline-flex items-center text-sm font-medium text-blue-600 hover:text-blue-500"
+                        >
+                            {action.viewAllText}
+                            <svg
+                                className="ml-1 w-4 h-4"
+                                fill="none"
+                                stroke="currentColor"
+                                viewBox="0 0 24 24"
                             >
-                                View all
-                            </a>
+                                <path
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                    strokeWidth={2}
+                                    d="M9 5l7 7-7 7"
+                                />
+                            </svg>
+                        </Link>
+                    </div>
+                ))}
+            </div>
+
+            {/* Stats Overview */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-8">
+                <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+                    <div className="flex items-center">
+                        <div className="p-3 rounded-full bg-blue-100">
+                            <Users className="w-8 h-8 text-blue-600" />
+                        </div>
+                        <div className="ml-4">
+                            <p className="text-sm font-medium text-gray-600">
+                                Total Users
+                            </p>
+                            <p className="text-2xl font-bold text-gray-900">
+                                1,234
+                            </p>
                         </div>
                     </div>
                 </div>
 
-                {/* Notice Card */}
-                <div className="bg-white overflow-hidden shadow rounded-lg">
-                    <div className="p-5">
-                        <div className="flex items-center">
-                            <div className="flex-shrink-0">
-                                <svg
-                                    className="h-6 w-6 text-green-600"
-                                    fill="none"
-                                    stroke="currentColor"
-                                    viewBox="0 0 24 24"
-                                >
-                                    <path
-                                        strokeLinecap="round"
-                                        strokeLinejoin="round"
-                                        strokeWidth={2}
-                                        d="M11 5.882V19.24a1.76 1.76 0 01-3.417.592l-2.147-6.15M18 13a3 3 0 100-6M5.436 13.683A4.001 4.001 0 017 6h1.832c4.1 0 7.625-1.234 9.168-3v14c-1.543-1.766-5.067-3-9.168-3H7a3.988 3.988 0 01-1.564-.317z"
-                                    />
-                                </svg>
-                            </div>
-                            <div className="ml-5 w-0 flex-1">
-                                <dl>
-                                    <dt className="text-sm font-medium text-gray-500 truncate">
-                                        Notice
-                                    </dt>
-                                    <dd className="text-lg font-medium text-gray-900">
-                                        Manage announcements
-                                    </dd>
-                                </dl>
-                            </div>
+                <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+                    <div className="flex items-center">
+                        <div className="p-3 rounded-full bg-green-100">
+                            <BookOpen className="w-8 h-8 text-green-600" />
                         </div>
-                    </div>
-                    <div className="bg-gray-50 px-5 py-3">
-                        <div className="text-sm">
-                            <a
-                                href="/admin/notice"
-                                className="font-medium text-green-600 hover:text-green-500"
-                            >
-                                View all
-                            </a>
+                        <div className="ml-4">
+                            <p className="text-sm font-medium text-gray-600">
+                                Active Mosques
+                            </p>
+                            <p className="text-2xl font-bold text-gray-900">
+                                56
+                            </p>
                         </div>
                     </div>
                 </div>
 
-                {/* Rewards Card */}
-                <div className="bg-white overflow-hidden shadow rounded-lg">
-                    <div className="p-5">
-                        <div className="flex items-center">
-                            <div className="flex-shrink-0">
-                                <svg
-                                    className="h-6 w-6 text-purple-600"
-                                    fill="none"
-                                    stroke="currentColor"
-                                    viewBox="0 0 24 24"
-                                >
-                                    <path
-                                        strokeLinecap="round"
-                                        strokeLinejoin="round"
-                                        strokeWidth={2}
-                                        d="M12 8v13m0-13V6a2 2 0 112 2h-2zm0 0V5.5A2.5 2.5 0 109.5 8H12zm-7 4h14M5 12a2 2 0 110-4h14a2 2 0 110 4M5 12v7a2 2 0 002 2h10a2 2 0 002-2v-7"
-                                    />
-                                </svg>
-                            </div>
-                            <div className="ml-5 w-0 flex-1">
-                                <dl>
-                                    <dt className="text-sm font-medium text-gray-500 truncate">
-                                        Rewards
-                                    </dt>
-                                    <dd className="text-lg font-medium text-gray-900">
-                                        Manage reward system
-                                    </dd>
-                                </dl>
-                            </div>
+                <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+                    <div className="flex items-center">
+                        <div className="p-3 rounded-full bg-purple-100">
+                            <TrendingUp className="w-8 h-8 text-purple-600" />
                         </div>
-                    </div>
-                    <div className="bg-gray-50 px-5 py-3">
-                        <div className="text-sm">
-                            <a
-                                href="/admin/rewards"
-                                className="font-medium text-purple-600 hover:text-purple-500"
-                            >
-                                View all
-                            </a>
+                        <div className="ml-4">
+                            <p className="text-sm font-medium text-gray-600">
+                                Monthly Growth
+                            </p>
+                            <p className="text-2xl font-bold text-gray-900">
+                                12%
+                            </p>
                         </div>
                     </div>
                 </div>

@@ -1,11 +1,28 @@
 "use client";
 import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import SocialMediaImageUpload from "../../../components/SocialMediaImageUpload";
 
 export default function NoticeAdmin() {
+    const router = useRouter();
+    const [loading, setLoading] = useState(true);
     const [images, setImages] = useState([]);
-    const [loading, setLoading] = useState(false);
     const [error, setError] = useState(null);
+
+    useEffect(() => {
+        // Check authentication on client side
+        const checkAuth = () => {
+            const isAuthenticated =
+                localStorage.getItem("isAuthenticated") === "true";
+            if (!isAuthenticated) {
+                router.push("/login");
+                return;
+            }
+            setLoading(false);
+        };
+
+        checkAuth();
+    }, [router]);
 
     const fetchImages = async () => {
         setLoading(true);
@@ -28,6 +45,15 @@ export default function NoticeAdmin() {
     useEffect(() => {
         fetchImages();
     }, []);
+
+    // Show loading while checking authentication
+    if (loading) {
+        return (
+            <div className="min-h-screen flex items-center justify-center">
+                <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-blue-500"></div>
+            </div>
+        );
+    }
 
     return (
         <div className="space-y-6">
