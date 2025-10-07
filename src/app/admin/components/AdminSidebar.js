@@ -6,6 +6,11 @@ import { Clock, Megaphone, Gift, X, School, Coins, LogOut } from "lucide-react";
 
 const navigation = [
     {
+        name: "Dashboard  ",
+        href: "/admin",
+        icon: Gauge,
+    },
+    {
         name: "All  Masjid",
         href: "/admin/all-masjids",
         icon: School,
