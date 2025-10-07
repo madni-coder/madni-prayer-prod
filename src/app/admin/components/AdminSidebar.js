@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Clock, Megaphone, Gift, X, School, Coins, LogOut } from "lucide-react";
+import { Clock, Megaphone, Gift, X, School, Coins, LogOut,Gauge } from "lucide-react";
 
 const navigation = [
     {
