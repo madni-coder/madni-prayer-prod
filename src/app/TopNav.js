@@ -56,10 +56,11 @@ const navLinks = [
 
 export default function TopNav() {
     const pathname = usePathname();
-    // Hide only on admin pages
+    // Hide only on admin pages and login page
     const isAdmin = pathname.startsWith("/admin");
+    const isLogin = pathname === "/login" || pathname.startsWith("/login/");
     const isNotice = pathname.startsWith("/notice");
-    if (isAdmin) return null;
+    if (isAdmin || isLogin) return null;
 
     return (
         <nav

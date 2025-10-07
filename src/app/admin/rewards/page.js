@@ -1,4 +1,36 @@
+"use client";
+
+import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
+
 export default function RewardsAdmin() {
+    const router = useRouter();
+    const [loading, setLoading] = useState(true);
+
+    useEffect(() => {
+        // Check authentication on client side
+        const checkAuth = () => {
+            const isAuthenticated =
+                localStorage.getItem("isAuthenticated") === "true";
+            if (!isAuthenticated) {
+                router.push("/login");
+                return;
+            }
+            setLoading(false);
+        };
+
+        checkAuth();
+    }, [router]);
+
+    // Show loading while checking authentication
+    if (loading) {
+        return (
+            <div className="min-h-screen flex items-center justify-center">
+                <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-blue-500"></div>
+            </div>
+        );
+    }
+
     return (
         <div className="space-y-6">
             <div className="flex justify-between items-center">
