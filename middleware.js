@@ -5,18 +5,21 @@ export function middleware(req) {
     const requestOrigin = req.headers.get("origin") || "";
     const allowedOrigins = [
         "https://madni-prayer.vercel.app",
-        "http://tauri.localhost/",
+        "http://localhost:3000",
+        "http://tauri.localhost",
+        "tauri://localhost",
+        "null",
     ];
-    // If origin is allowed use it, otherwise fall back to Vercel (safe default)
-    const allowOrigin = allowedOrigins.includes(requestOrigin)
-        ? requestOrigin
-        : "https://madni-prayer.vercel.app";
+
+    // If origin is allowed use it, otherwise fall back to '*' (very permissive)
+    const isAllowed = allowedOrigins.includes(requestOrigin);
+    const allowOrigin = isAllowed && requestOrigin ? requestOrigin : "*";
 
     // Handle CORS preflight requests early
     if (req.method === "OPTIONS") {
         const headers = new Headers();
         headers.set("Access-Control-Allow-Origin", allowOrigin);
-        headers.set("Vary", "Origin");
+        if (allowOrigin !== "*") headers.set("Vary", "Origin");
         headers.set(
             "Access-Control-Allow-Methods",
             "GET,HEAD,POST,PUT,DELETE,OPTIONS"
@@ -26,8 +29,9 @@ export function middleware(req) {
             "Content-Type, Authorization, x-is-admin"
         );
         headers.set("Access-Control-Max-Age", "86400");
-        // Allow credentials when origin is explicit (not '*')
-        headers.set("Access-Control-Allow-Credentials", "true");
+        // If echoing a specific origin, allow credentials; otherwise don't set it
+        if (allowOrigin !== "*")
+            headers.set("Access-Control-Allow-Credentials", "true");
         return new NextResponse(null, { status: 204, headers });
     }
 
@@ -41,7 +45,26 @@ export function middleware(req) {
 
         if (!isAuthenticated) {
             // Redirect to login page if not authenticated
-            return NextResponse.redirect(new URL("/login", req.url));
+            const redirectRes = NextResponse.redirect(
+                new URL("/login", req.url)
+            );
+            // Attach CORS headers to redirect response
+            redirectRes.headers.set("Access-Control-Allow-Origin", allowOrigin);
+            if (allowOrigin !== "*") redirectRes.headers.set("Vary", "Origin");
+            redirectRes.headers.set(
+                "Access-Control-Allow-Methods",
+                "GET,HEAD,POST,PUT,DELETE,OPTIONS"
+            );
+            redirectRes.headers.set(
+                "Access-Control-Allow-Headers",
+                "Content-Type, Authorization, x-is-admin"
+            );
+            if (allowOrigin !== "*")
+                redirectRes.headers.set(
+                    "Access-Control-Allow-Credentials",
+                    "true"
+                );
+            return redirectRes;
         }
     }
 
@@ -50,7 +73,26 @@ export function middleware(req) {
         const isAuthenticated =
             req.cookies.get("isAuthenticated")?.value === "true";
         if (isAuthenticated) {
-            return NextResponse.redirect(new URL("/admin", req.url));
+            const redirectRes = NextResponse.redirect(
+                new URL("/admin", req.url)
+            );
+            // Attach CORS headers to redirect response
+            redirectRes.headers.set("Access-Control-Allow-Origin", allowOrigin);
+            if (allowOrigin !== "*") redirectRes.headers.set("Vary", "Origin");
+            redirectRes.headers.set(
+                "Access-Control-Allow-Methods",
+                "GET,HEAD,POST,PUT,DELETE,OPTIONS"
+            );
+            redirectRes.headers.set(
+                "Access-Control-Allow-Headers",
+                "Content-Type, Authorization, x-is-admin"
+            );
+            if (allowOrigin !== "*")
+                redirectRes.headers.set(
+                    "Access-Control-Allow-Credentials",
+                    "true"
+                );
+            return redirectRes;
         }
     }
 
@@ -66,9 +108,9 @@ export function middleware(req) {
         res.cookies.delete("is-admin");
     }
 
-    // Set CORS headers on all responses
+    // Set permissive CORS headers on all responses
     res.headers.set("Access-Control-Allow-Origin", allowOrigin);
-    res.headers.set("Vary", "Origin");
+    if (allowOrigin !== "*") res.headers.set("Vary", "Origin");
     res.headers.set(
         "Access-Control-Allow-Methods",
         "GET,HEAD,POST,PUT,DELETE,OPTIONS"
@@ -77,8 +119,8 @@ export function middleware(req) {
         "Access-Control-Allow-Headers",
         "Content-Type, Authorization, x-is-admin"
     );
-    // Only set credentials when origin is explicit
-    res.headers.set("Access-Control-Allow-Credentials", "true");
+    if (allowOrigin !== "*")
+        res.headers.set("Access-Control-Allow-Credentials", "true");
 
     return res;
 }
