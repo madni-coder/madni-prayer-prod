@@ -2,9 +2,14 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Clock, Megaphone, Gift, X ,School,Coins} from "lucide-react";
+import { Clock, Megaphone, Gift, X, School, Coins, LogOut,Gauge } from "lucide-react";
 
 const navigation = [
+    {
+        name: "Dashboard  ",
+        href: "/admin",
+        icon: Gauge,
+    },
     {
         name: "All  Masjid",
         href: "/admin/all-masjids",
@@ -29,10 +34,10 @@ const navigation = [
         name: "Durooj Sharif",
         href: "/admin/durood-sharif",
         icon: Coins,
-    }
+    },
 ];
 
-export default function AdminSidebar({ isOpen, onClose }) {
+export default function AdminSidebar({ isOpen, onClose, onLogout }) {
     const pathname = usePathname();
 
     return (
@@ -71,6 +76,17 @@ export default function AdminSidebar({ isOpen, onClose }) {
                             );
                         })}
                     </nav>
+
+                    {/* Logout button */}
+                    <div className="px-2 pb-4">
+                        <button
+                            onClick={onLogout}
+                            className="w-full flex items-center px-2 py-2 text-sm font-medium text-red-600 hover:bg-red-50 hover:text-red-700 rounded-md transition-colors duration-150"
+                        >
+                            <LogOut className="mr-3 flex-shrink-0 h-6 w-6" />
+                            Logout
+                        </button>
+                    </div>
                 </div>
             </div>
 
@@ -119,6 +135,20 @@ export default function AdminSidebar({ isOpen, onClose }) {
                             );
                         })}
                     </nav>
+
+                    {/* Mobile logout button */}
+                    <div className="px-2 pb-4">
+                        <button
+                            onClick={() => {
+                                onClose();
+                                onLogout();
+                            }}
+                            className="w-full flex items-center px-2 py-2 text-sm font-medium text-red-600 hover:bg-red-50 hover:text-red-700 rounded-md transition-colors duration-150"
+                        >
+                            <LogOut className="mr-3 flex-shrink-0 h-6 w-6" />
+                            Logout
+                        </button>
+                    </div>
                 </div>
             </div>
         </>

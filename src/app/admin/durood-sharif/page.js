@@ -4,10 +4,27 @@ import { FaBitcoin, FaMosque } from "react-icons/fa";
 import { useRouter } from "next/navigation";
 import fetchFromApi from '../../../utils/fetchFromApi';
 
-export default function DuroodSharifTable() {
+export default function DuroodSharifPage() {
     const router = useRouter();
+    const [loading, setLoading] = useState(true);
     const [search, setSearch] = useState("");
     const [users, setUsers] = useState([]);
+
+    useEffect(() => {
+        // Check authentication on client side
+        const checkAuth = () => {
+            const isAuthenticated =
+                localStorage.getItem("isAuthenticated") === "true";
+            if (!isAuthenticated) {
+                router.push("/login");
+                return;
+            }
+            setLoading(false);
+        };
+
+        checkAuth();
+    }, [router]);
+
     useEffect(() => {
         async function fetchUsers() {
             try {
@@ -20,12 +37,22 @@ export default function DuroodSharifTable() {
         }
         fetchUsers();
     }, []);
+
     const filtered = users.filter(
         (row) =>
             row["Full Name"].toLowerCase().includes(search.toLowerCase()) ||
             row["Address"].toLowerCase().includes(search.toLowerCase()) ||
             row["mobile number"].toLowerCase().includes(search.toLowerCase())
     );
+
+    // Show loading while checking authentication
+    if (loading) {
+        return (
+            <div className="min-h-screen flex items-center justify-center">
+                <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-blue-500"></div>
+            </div>
+        );
+    }
 
     return (
         <div className="bg-white rounded-xl shadow p-0 mt-8">

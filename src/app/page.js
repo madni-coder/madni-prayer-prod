@@ -9,6 +9,7 @@ import {
     FaRegCompass,
     FaGift,
     FaMicrophone,
+    FaUsers,
 } from "react-icons/fa";
 import Image from "next/image";
 
@@ -66,10 +67,10 @@ const sections = [
         desc: "View important updates and announcements.",
     },
     {
-        name: "Settings",
-        href: "/settings",
-        icon: <FaCog className="text-4xl text-slate-500" />,
-        desc: "Customize app preferences.",
+        name: "About Us",
+        href: "/aboutUs",
+        icon: <FaUsers className="text-4xl text-purple-500" />,
+        desc: "Learn more about our mission and team.",
     },
 ];
 
