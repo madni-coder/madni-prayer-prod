@@ -2,6 +2,7 @@
 import { useState, useEffect, useRef } from "react";
 import { FaPencilAlt, FaCheckCircle } from "react-icons/fa";
 import { X, RotateCcw } from "lucide-react";
+import fetchFromApi from '../../../utils/fetchFromApi';
 import { useRouter } from "next/navigation";
 
 const prayers = [
@@ -60,15 +61,23 @@ export default function JamatTimesPage() {
             setLoading(true);
             setError("");
             try {
-                const url = `${window.location.origin}/api/all-masjids`;
-                const masjidsResponse = await fetch(url, {
-                    cache: "no-store",
-                    redirect: "follow",
-                    signal: ac.signal,
-                });
-                if (!masjidsResponse.ok) {
-                    throw new Error(
-                        `Failed to fetch all masjids: ${masjidsResponse.status}`
+                setLoading(true);
+
+                // Fetch masjids
+                const masjidsResponse = await fetchFromApi("/api/all-masjids");
+                if (masjidsResponse.ok) {
+                    const masjidsData = await masjidsResponse.json();
+                    setMasjids(masjidsData.data || []);
+
+                    // Extract unique colonies from masjids data
+                    const uniqueColonies = [
+                        ...new Set(
+                            masjidsData.data?.map((masjid) => masjid.colony) ||
+                                []
+                        ),
+                    ];
+                    setColonies(
+                        uniqueColonies.map((colony) => ({ name: colony }))
                     );
                 }
                 const masjidsData = await masjidsResponse.json();
@@ -234,18 +243,13 @@ export default function JamatTimesPage() {
                         break;
                 }
             });
-
-            const response = await fetch(
-                `${window.location.origin}/api/api-jamatTimes`,
-                {
-                    method: "PATCH",
-                    headers: {
-                        "Content-Type": "application/json",
-                    },
-                    body: JSON.stringify(updateData),
-                    cache: "no-store",
-                }
-            );
+            const response = await fetchFromApi("/api/api-jamatTimes", {
+                method: "PATCH",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify(updateData),
+            });
 
             if (response.ok) {
                 setSaveMessage("Jamat times saved successfully!");
