@@ -5,7 +5,7 @@ export function middleware(req) {
     const requestOrigin = req.headers.get("origin") || "";
     const allowedOrigins = [
         "https://madni-prayer.vercel.app",
-        "http://localhost:3000",
+        "http://tauri.localhost/",
     ];
     // If origin is allowed use it, otherwise fall back to Vercel (safe default)
     const allowOrigin = allowedOrigins.includes(requestOrigin)
