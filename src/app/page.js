@@ -67,10 +67,10 @@ const sections = [
         desc: "View important updates and announcements.",
     },
     {
-        name: "Settings",
-        href: "/settings",
-        icon: <FaCog className="text-4xl text-slate-500" />,
-        desc: "Customize app preferences.",
+        name: "Contact Us",
+        href: "/contactUs",
+        icon: <span className="text-4xl">📞</span>,
+        desc: "Get in touch with our support team.",
     },
 ];
 
