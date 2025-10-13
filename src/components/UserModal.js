@@ -1,6 +1,7 @@
 "use client";
 import React, { useRef, useState, useEffect } from "react";
 import { X } from "lucide-react";
+import fetchFromApi from '../utils/fetchFromApi';
 
 export default function UserModal({
     open = false,
@@ -15,7 +16,7 @@ export default function UserModal({
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState(null);
     const [visible, setVisible] = useState(open);
-    const [step, setStep] = useState("mobile"); // 'mobile', 'details', 'registered', 'submitted'
+    const [step, setStep] = useState("mobile");
     const [savedMobile, setSavedMobile] = useState("");
     const [mobileValue, setMobileValue] = useState("");
 
@@ -53,11 +54,7 @@ export default function UserModal({
                     tasbihCount: tasbihCount,
                 };
             }
-            const res = await fetch(`/api/api-tasbihUsers`, {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify(payload),
-            });
+            const res = await fetchFromApi(`/api/api-tasbihUsers`, 'POST', payload);
             const data = await res.json();
             if (data.error === "NOT_REGISTERED") {
                 setStep("details");
@@ -70,7 +67,11 @@ export default function UserModal({
                 setStep("registered");
                 setError(null);
                 setLoading(false);
-                onSuccess(); // Call onSuccess for registered user
+                // Show the registered message briefly, then notify parent with mobile and close
+                const registeredMobile = mobileValue.trim();
+                setTimeout(() => {
+                    onSuccess({ mobile: registeredMobile });
+                }, 1500);
                 return;
             }
             if (res.status === 500) {
@@ -87,7 +88,11 @@ export default function UserModal({
             setStep("submitted");
             setError(null);
             setLoading(false);
-            onSuccess(); // Call onSuccess for new submission
+            // Delay notifying parent so the user can see the submitted message
+            const submittedMobile = savedMobile || mobileValue.trim();
+            setTimeout(() => {
+                onSuccess({ mobile: submittedMobile });
+            }, 1500);
             return;
         } catch (err) {
             setError("Something went wrong. Please try again.");

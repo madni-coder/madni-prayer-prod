@@ -53,8 +53,7 @@ export async function POST(req) {
                     fullName,
                     address,
                     mobileNumber,
-                    count:tasbihCount
-
+                    count: tasbihCount,
                 },
             });
         }
@@ -64,19 +63,29 @@ export async function POST(req) {
                     ok: false,
                     error: "NOT_REGISTERED",
                     message: "Its new user",
-                    count:tasbihCount
+                    count: tasbihCount,
                 },
                 { status: 404 }
             );
         }
 
+        // If user exists, increment their count
         if (existingUser) {
+            const updatedUser = await prisma.tasbihUser.update({
+                where: { id: existingUser.id },
+                data: {
+                    count:
+                        existingUser.count +
+                        (typeof tasbihCount === "number" ? tasbihCount : 0),
+                },
+            });
             return NextResponse.json(
                 {
                     ok: true,
                     error: "REGISTERED_USER",
-                    message: "You are already registered",
-                    count:tasbihCount
+                    message:
+                        "You are already registered. Durood count incremented.",
+                    data: updatedUser,
                 },
                 { status: 200 }
             );
@@ -100,7 +109,7 @@ export async function GET() {
             "Full Name": u.fullName,
             Address: u.address,
             "mobile number": u.mobileNumber,
-            "Tasbih Counts" :u.count
+            "Tasbih Counts": u.count,
         }));
         return NextResponse.json({ ok: true, data: filtered }, { status: 200 });
     } catch (err) {

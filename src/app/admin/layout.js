@@ -1,11 +1,26 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import AdminSidebar from "./components/AdminSidebar";
 import { Menu } from "lucide-react";
 
 export default function AdminLayout({ children }) {
     const [sidebarOpen, setSidebarOpen] = useState(false);
+    const router = useRouter();
+
+    const handleLogout = () => {
+        // Clear authentication from localStorage
+        localStorage.removeItem("isAuthenticated");
+        localStorage.removeItem("adminEmail");
+
+        // Clear authentication cookie
+        document.cookie =
+            "isAuthenticated=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT";
+
+        // Redirect to login page
+        router.push("/login");
+    };
 
     return (
         <div className="min-h-screen bg-gray-50">
@@ -21,6 +36,7 @@ export default function AdminLayout({ children }) {
             <AdminSidebar
                 isOpen={sidebarOpen}
                 onClose={() => setSidebarOpen(false)}
+                onLogout={handleLogout}
             />
 
             {/* Main content */}

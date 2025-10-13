@@ -6,10 +6,10 @@ import {
     FaCog,
     FaPeopleArrows,
     FaClock,
-    FaHashtag,
     FaRegCompass,
     FaGift,
     FaMicrophone,
+    FaUsers,
 } from "react-icons/fa";
 import Image from "next/image";
 
@@ -67,10 +67,12 @@ const sections = [
         desc: "View important updates and announcements.",
     },
     {
+
         name: "Contact Us",
         href: "/contactUs",
         icon: <span className="text-4xl">📞</span>,
         desc: "Get in touch with our support team.",
+
     },
 ];
 

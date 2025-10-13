@@ -4,7 +4,7 @@ import { RotateCw, Trash2 } from "lucide-react";
 import { PiHandTapLight } from "react-icons/pi";
 import UserModal from "../../components/UserModal";
 import { FaAngleLeft } from "react-icons/fa";
-
+import { useRouter } from "next/navigation";
 
 export default function Tasbih() {
     // Initialize count from localStorage
@@ -31,6 +31,8 @@ export default function Tasbih() {
         }
         return "";
     });
+
+    const router = useRouter();
 
     // Sync count to localStorage whenever it changes
     useEffect(() => {
@@ -81,15 +83,14 @@ export default function Tasbih() {
         <section className="flex flex-col items-center min-h-screen px-4 py-6 bg-base-100 text-base-content">
             {/* Header */}
             <button
-                               className="flex items-center gap-2 mb-4 text-lg text-primary hover:text-green-600 font-semibold"
-                               onClick={() => router.push("/")}
-                               aria-label="Back to Home"
-                               style={{ alignSelf: "flex-start" }}
-                           >
-                               <FaAngleLeft /> Back
-                           </button>
+                className="flex items-center gap-2 mb-4 text-lg text-primary hover:text-green-600 font-semibold"
+                onClick={() => router.push("/")}
+                aria-label="Back to Home"
+                style={{ alignSelf: "flex-start" }}
+            >
+                <FaAngleLeft /> Back
+            </button>
             <div className="w-full max-w-3xl flex items-center gap-2">
-              
                 <h2 className="flex-1 text-xl font-bold">Tasbih</h2>
 
                 <button
@@ -120,7 +121,11 @@ export default function Tasbih() {
                 aria-label="Tasbih tappable area"
             >
                 {/* Header row with label and reset button */}
-                <div className="w-full flex items-center justify-between mb-2">
+                <div
+                    className="w-full flex items-center justify-between mb-2"
+                    onPointerDown={(e) => e.stopPropagation()}
+                    onClick={(e) => e.stopPropagation()}
+                >
                     <p className="text-lg font-semibold">Tasbih Counter</p>
                     <button
                         aria-label="Reset"
@@ -226,13 +231,15 @@ export default function Tasbih() {
                         setSavedMobile(data.mobile);
                     }
                     setShowUserModal(false);
-                    // Add new entry to history
+                    // Capture current count for history, then reset counter
+                    const currentCount = count;
                     const newEntry = {
-                        count: count,
+                        count: currentCount,
                         date: new Date().toLocaleDateString(),
                         time: new Date().toLocaleTimeString(),
                     };
                     setHistory((prev) => [newEntry, ...prev]);
+                    setCount(0);
                 }}
                 tasbihCount={count}
                 savedMobile={savedMobile}
