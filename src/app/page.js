@@ -67,10 +67,12 @@ const sections = [
         desc: "View important updates and announcements.",
     },
     {
-        name: "About Us",
-        href: "/aboutUs",
-        icon: <FaUsers className="text-4xl text-purple-500" />,
-        desc: "Learn more about our mission and team.",
+
+        name: "Contact Us",
+        href: "/contactUs",
+        icon: <span className="text-4xl">📞</span>,
+        desc: "Get in touch with our support team.",
+
     },
 ];
 
