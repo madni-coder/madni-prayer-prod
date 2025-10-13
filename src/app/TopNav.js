@@ -11,20 +11,12 @@ import {
     FaRegCompass,
     FaGift,
     FaMicrophone,
-    FaUsers,
+    FaRegIdBadge,
 } from "react-icons/fa";
 
 const navLinks = [
 
-    { name: "Home", href: "/" },
-    { name: "Jamat Times", href: "/jamat-times" },
-    { name: "Quran", href: "/quran" },
-    { name: "Prayer Times", href: "/prayer-times" },
-    { name: "Qibla", href: "/qibla" },
-    { name: "Tasbih", href: "/tasbih" },
-    { name: "Rewards", href: "/rewards" },
-    { name: "Aelaan Naama", href: "/notice" },
-    { name: "Contact Us", href: "/contactUs" },
+   
 
     { name: "Home", href: "/", icon: <FaHome className="text-lg" /> },
     {
@@ -62,7 +54,11 @@ const navLinks = [
         href: "/notice",
         icon: <FaMicrophone className="text-lg" />,
     },
-  
+    {
+        name: "Contact Us",
+        href: "/contactUs",
+        icon: <FaRegIdBadge className="text-lg" />,
+    },
 
 ];
 
