@@ -127,6 +127,9 @@ export function middleware(req) {
 
 export const config = {
     matcher: [
+        "/api/:path*",
+        "/admin/:path*",
+        "/login",
         "/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)).*)",
     ],
 };

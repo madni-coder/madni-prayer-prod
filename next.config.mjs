@@ -4,18 +4,23 @@ const isTauri = process.env.TAURI_BUILD === "1";
 const nextConfig = {
     ...(isTauri
         ? { output: "export", trailingSlash: true, distDir: "out" }
-        : {}),
+        : { trailingSlash: false }),
 
     images: { unoptimized: isTauri },
 
+    skipTrailingSlashRedirect: true,
+
     async rewrites() {
-        return [
-          {
-            source: '/api/:path*',
-            destination: 'https://madni-prayer.vercel.app/:path*',
-          },
-        ]
-      },
+        if (isTauri) {
+            return [
+                {
+                    source: '/api/:path*',
+                    destination: 'https://madni-prayer.vercel.app/api/:path*',
+                },
+            ];
+        }
+        return [];
+    },
 };
 
 export default nextConfig;
