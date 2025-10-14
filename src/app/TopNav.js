@@ -76,7 +76,7 @@ export default function TopNav() {
                 <div className="flex items-center gap-2">
                     <Link href="/">
                         <img
-                            src="/log1o.png"
+                            src="/logo.png"
                             alt="Raah-e-Hidayat Logo"
                             className="w-30 h-auto object-contain"
                         />
