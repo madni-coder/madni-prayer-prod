@@ -41,7 +41,7 @@ const navLinks = [
                 alt="Tasbih"
                 width={18}
                 height={18}
-                className="w-4 h-4 object-cover"
+                className="w-6 h-6 object-cover"
             />
         ),
     },

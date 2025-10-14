@@ -98,7 +98,7 @@ export default function Qibla() {
             <h2 className="text-2xl md:text-3xl font-bold text-primary mb-4">
                 Qibla Direction
             </h2>
-            <div className="glass-card p-6 max-w-2xl w-full text-center bg-base-200 text-base-content">
+            <div className="glass-card p-6 max-w-2xl  text-center text-base-content">
                 <div className="flex flex-col items-center mb-6">
                     <div
                         className="compass-container"
@@ -369,64 +369,8 @@ export default function Qibla() {
                     {`${Math.round(angle % 360)}°`}
                 </div>
                 {/* Manual fallback for desktops/laptops without sensors */}
-                {useManual && (
-                    <div className="mt-4 text-center">
-                        <p className="text-sm mb-2">
-                            Device orientation not available — use the slider to
-                            simulate heading
-                        </p>
-                        <div
-                            style={{
-                                display: "flex",
-                                alignItems: "center",
-                                justifyContent: "center",
-                                gap: 12,
-                            }}
-                        >
-                            <input
-                                type="range"
-                                min={0}
-                                max={359}
-                                value={Math.round(deviceHeading)}
-                                onChange={(e) =>
-                                    setDeviceHeading(Number(e.target.value))
-                                }
-                                style={{ width: 240 }}
-                            />
-                            <input
-                                type="number"
-                                min={0}
-                                max={359}
-                                value={Math.round(deviceHeading)}
-                                onChange={(e) => {
-                                    let v = Number(e.target.value);
-                                    if (isNaN(v)) v = 0;
-                                    v = ((v % 360) + 360) % 360;
-                                    setDeviceHeading(v);
-                                }}
-                                style={{
-                                    width: 72,
-                                    padding: 6,
-                                    borderRadius: 6,
-                                }}
-                            />
-                        </div>
-                        <button
-                            className="btn btn-ghost btn-sm mt-3"
-                            onClick={() => setUseManual(false)}
-                        >
-                            Try enabling device orientation again
-                        </button>
-                    </div>
-                )}
-                <div>
-                    <p className="text-lg mb-2">
-                        Compass-based Qibla, GPS, and prayer duas.
-                    </p>
-                </div>
-                <p className="text-sm text-base-content/60">
-                    (Feature coming soon)
-                </p>
+              
+                
             </div>
         </section>
     );
