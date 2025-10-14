@@ -246,7 +246,7 @@ export default function Tasbih() {
             />
 
             {/* Durood history list */}
-            <div className="w-full max-w-3xl mt-6 card bg-base-200 shadow-md rounded-2xl p-6">
+            <div className="w-full max-w-3xl mt-6 mb-14 card bg-base-200 shadow-md rounded-2xl p-6">
                 <h3 className="text-lg font-bold mb-4 text-primary">
                     Durood History
                 </h3>
@@ -307,7 +307,7 @@ export default function Tasbih() {
 
             {/* Delete confirmation modal */}
             {deleteIndex !== null && (
-                <div className="fixed inset-0 flex items-center justify-center bg-black/40 z-50">
+                <div className="fixed inset-0 flex items-center justify-center bg-black/40 z-50 ">
                     <div className="modal modal-open">
                         <div className="modal-box text-center">
                             <h3 className="font-bold text-lg">Delete Entry</h3>
