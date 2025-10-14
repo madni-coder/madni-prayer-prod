@@ -1,11 +1,15 @@
 @import "tailwindcss";
 @plugin "daisyui" {
-    themes: light --default, forest;
+    themes: forest --default;
 }
 
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+:root {
+    color-scheme: dark;
+}
 
 /* Prevent horizontal overflow */
 html,
@@ -41,28 +45,4 @@ pre,
 code {
     word-wrap: break-word;
     overflow-wrap: break-word;
-}
-
-:root {
-    --foreground-rgb: 0, 0, 0;
-    --background-start-rgb: 214, 219, 220;
-    --background-end-rgb: 255, 255, 255;
-}
-
-@media (prefers-color-scheme: dark) {
-    :root {
-        --foreground-rgb: 255, 255, 255;
-        --background-start-rgb: 0, 0, 0;
-        --background-end-rgb: 0, 0, 0;
-    }
-}
-
-body {
-    color: rgb(var(--foreground-rgb));
-    background: linear-gradient(
-            to bottom,
-            transparent,
-            rgb(var(--background-end-rgb))
-        )
-        rgb(var(--background-start-rgb));
 }
