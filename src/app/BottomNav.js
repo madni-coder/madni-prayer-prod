@@ -1,6 +1,7 @@
 "use client";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useState } from "react";
 import {
     FaQuran,
     FaRegCompass,
@@ -26,43 +27,72 @@ const items = [
 
 export default function BottomNav() {
     const pathname = usePathname();
+    const [activeRipple, setActiveRipple] = useState(null);
 
     // Hide on admin pages
     if (pathname.startsWith("/admin")) return null;
 
+    const handleItemClick = (itemName) => {
+        setActiveRipple(itemName);
+        setTimeout(() => setActiveRipple(null), 600);
+    };
+
+    const isActive = (href) => {
+        if (href === "/") {
+            return pathname === "/";
+        }
+        return pathname.startsWith(href);
+    };
+
     return (
         <nav
-            className="md:hidden sticky bottom-0 inset-x-0 z-50 flex px-2 py-2 h-16 bg-white/95 dark:bg-neutral-900/95 border-t border-gray-200 dark:border-gray-700 backdrop-blur-lg shadow-lg"
+            className="md:hidden fixed bottom-0 left-0 right-0 z-50 flex px-2 py-2 h-16 bg-white/95 dark:bg-neutral-900/95 border-t border-gray-200 dark:border-gray-700 backdrop-blur-lg shadow-lg"
             role="navigation"
             aria-label="Bottom Navigation"
-            style={{ position: "sticky", bottom: 0 }}
+            style={{ position: "fixed", bottom: 0, left: 0, right: 0 }}
         >
             {items.map((item) => {
                 const ActiveIcon = item.icon;
-                const active = pathname === item.href;
+                const active = isActive(item.href);
+                const hasRipple = activeRipple === item.name;
                 return (
                     <Link
                         key={item.name}
                         href={item.href}
-                        className={`flex flex-col justify-center items-center flex-1 text-xs font-medium gap-1 py-1 px-1 rounded-lg transition-all duration-200 ${
+                        onClick={() => handleItemClick(item.name)}
+                        className={`relative overflow-hidden flex flex-col justify-center items-center flex-1 text-xs font-medium gap-1 py-1 px-1 rounded-lg transition-all duration-300 ${
                             active
-                                ? "text-primary bg-primary/10 scale-95"
-                                : "text-gray-600 dark:text-gray-400 hover:text-primary active:scale-95"
-                        }`}
+                                ? "text-green-400 bg-green-400/10 scale-95 shadow-lg"
+                                : "text-gray-600 dark:text-gray-400 hover:text-green-400 hover:bg-green-400/5 active:scale-95 hover:shadow-md"
+                        } ${hasRipple ? "animate-pulse" : ""}`}
                         aria-label={item.name}
                     >
+                        {/* Ripple Effect */}
+                        {hasRipple && (
+                            <div className="absolute inset-0 bg-green-400/20 rounded-lg animate-ping" />
+                        )}
+
                         <ActiveIcon
-                            className={`text-xl transition-all duration-200 ${
-                                active ? "scale-110 text-primary" : "scale-100"
-                            }`}
+                            className={`text-xl transition-all duration-300 transform ${
+                                active
+                                    ? "scale-110 text-green-400 drop-shadow-sm"
+                                    : "scale-100 hover:scale-105 hover:text-green-400"
+                            } ${hasRipple ? "animate-bounce" : ""}`}
                         />
                         <span
-                            className={`leading-none text-[10px] font-medium truncate transition-all duration-200 ${
-                                active ? "text-primary" : ""
-                            }`}
+                            className={`leading-none text-[10px] font-medium truncate transition-all duration-300 ${
+                                active
+                                    ? "text-green-400 font-semibold"
+                                    : "hover:text-green-400"
+                            } ${hasRipple ? "animate-pulse" : ""}`}
                         >
                             {item.name}
                         </span>
+
+                        {/* Active indicator */}
+                        {active && (
+                            <div className="absolute bottom-0 left-1/2 transform -translate-x-1/2 w-6 h-0.5 bg-green-400 rounded-full animate-fadeIn" />
+                        )}
                     </Link>
                 );
             })}
