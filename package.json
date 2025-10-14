@@ -3,7 +3,7 @@
     "version": "0.1.0",
     "private": true,
     "scripts": {
-        "dev": "next dev --turbopack",
+        "dev": "NEXT_DISABLE_TURBOPACK=1 next dev",
         "move-api": "if [ -d 'src/utils/api' ]; then rm -rf src/app/api && mv src/utils/api src/app/api; fi",
         "move-api-back": "if [ -d 'src/app/api' ]; then rm -rf src/utils/api && mv src/app/api src/utils/api; fi",
         "build": "npm run move-api && prisma generate && next build",

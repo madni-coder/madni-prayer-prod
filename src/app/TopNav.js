@@ -15,9 +15,6 @@ import {
 } from "react-icons/fa";
 
 const navLinks = [
-
-   
-
     { name: "Home", href: "/", icon: <FaHome className="text-lg" /> },
     {
         name: "Jamat Times",
@@ -59,7 +56,6 @@ const navLinks = [
         href: "/contactUs",
         icon: <FaRegIdBadge className="text-lg" />,
     },
-
 ];
 
 export default function TopNav() {
@@ -79,18 +75,12 @@ export default function TopNav() {
             <div className="max-w-5xl mx-auto flex items-center justify-between px-4 py-2">
                 <div className="flex items-center gap-2">
                     <Link href="/">
-                        <span className="font-bold text-xl text-primary tracking-wide cursor-pointer">
-                            RAAH-E-HIDAYAT{" "}
-                        </span>
+                        <img
+                            src="/log1o.png"
+                            alt="Raah-e-Hidayat Logo"
+                            className="w-30 h-auto object-contain"
+                        />
                     </Link>
-                    <Image
-                        src="/logo.png"
-                        alt="Raah-e-Hidayat Logo"
-                        width={40}
-                        height={40}
-                        className="w-auto h-auto object-contain"
-                        priority
-                    />
                 </div>
                 <ul className="hidden lg:flex items-center gap-1 xl:gap-2">
                     {navLinks.map((link) => (
