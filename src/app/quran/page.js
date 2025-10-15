@@ -1,11 +1,15 @@
 "use client";
 import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { FaAngleLeft } from "react-icons/fa";
-import fetchFromApi from "../../utils/fetchFromApi";
 
-// Check if running in Tauri environment
-const isTauri = typeof window !== "undefined" && window.__TAURI__;
+// Detect Tauri environment
+const isTauri = typeof window !== "undefined" && !!window.__TAURI__;
+// Detect mobile browsers to avoid in-iframe PDF fallback with "Open" button
+const isMobile =
+    typeof navigator !== "undefined" &&
+    /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini|Mobi/i.test(
+        navigator.userAgent
+    );
 
 // Sample Surah data (in real app, fetch from API or static JSON)
 const surahs = [
@@ -71,7 +75,7 @@ const paras = paraNames.map((p, i) => ({
 // GET API function referencing route.js
 async function getPara() {
     try {
-        const res = await fetchFromApi("/api/api-quran");
+        const res = await fetch("/api/api-quran", { method: "GET" });
         if (!res.ok) throw new Error("Failed to fetch para files");
         const data = await res.json();
         // Return files array as in route.js
@@ -82,7 +86,6 @@ async function getPara() {
 }
 
 export default function Quran() {
-    const router = useRouter();
     const [search, setSearch] = useState("");
     const [view, setView] = useState("para"); // "para" is now default
     const [files, setFiles] = useState([]); // store API files
@@ -114,35 +117,36 @@ export default function Quran() {
         // Use fileUrl from API
         const urlBase = file.fileUrl;
 
-        // If running in Tauri (Android/iOS/Desktop app), always open in external browser/viewer
+        // If running in Tauri, open externally using plugin-shell
         if (isTauri) {
             try {
-                const { open } = await import("@tauri-apps/plugin-shell");
-                await open(urlBase);
-                return;
-            } catch (error) {
-                console.error("Failed to open URL in Tauri:", error);
-                // Fallback: try window.open
+                const shell = await import("@tauri-apps/plugin-shell");
+                if (shell && shell.open) {
+                    await shell.open(urlBase);
+                    return;
+                }
+            } catch (err) {
+                console.error(
+                    "Tauri open failed, falling back to window.open",
+                    err
+                );
                 window.open(urlBase, "_blank", "noopener,noreferrer");
                 return;
             }
-        }
-
-        const url = `${urlBase}#toolbar=0&navpanes=0&scrollbar=0`;
-
-        // If on a mobile device (web browser), open the PDF in a new tab/window instead of embedding
-        const ua =
-            typeof navigator !== "undefined" ? navigator.userAgent || "" : "";
-        const isMobile = /Mobi|Android|iPhone|iPad|iPod|Windows Phone/i.test(
-            ua
-        );
-        if (isMobile) {
-            // Open the raw file URL in a new tab (avoid fragment which some browsers ignore for direct open)
+            // if dynamic import didn't work, still try window.open as fallback
             window.open(urlBase, "_blank", "noopener,noreferrer");
             return;
         }
 
-        // Desktop web browser: show the in-app iframe reader
+        // On mobile browsers, navigate directly to the PDF to avoid the in-iframe "Open" button
+        if (isMobile) {
+            // Open in the same tab so users see the PDF immediately
+            window.location.href = urlBase;
+            return;
+        }
+
+        // Web: open in-app iframe reader
+        const url = `${urlBase}#toolbar=0&navpanes=0&scrollbar=0`;
         setCurrentPara(p.number);
         setIsIframeLoading(true);
         setReaderUrl(url);
@@ -174,15 +178,7 @@ export default function Quran() {
     );
 
     return (
-        <section className="flex flex-col items-center justify-center min-h-screen px-4 animate-fade-in bg-base-100">
-            <button
-                className="flex items-center gap-2 mb-4 text-lg text-primary hover:text-green-600 font-semibold"
-                onClick={() => router.push("/")}
-                aria-label="Back to Home"
-                style={{ alignSelf: "flex-start" }}
-            >
-                <FaAngleLeft /> Back
-            </button>
+        <section className="flex flex-col items-center justify-center min-h-[70vh] px-4 animate-fade-in bg-base-100">
             <h2 className="text-2xl md:text-3xl font-bold text-primary mb-4">
                 Quran
             </h2>
@@ -320,6 +316,11 @@ export default function Quran() {
                                 </div>
                             </header>
                             <main className="relative flex-1 overflow-hidden bg-base-100">
+                                {isIframeLoading && (
+                                    <div className="absolute inset-0 z-20 flex items-center justify-center bg-white/80">
+                                        <div className="loader border-4 border-t-primary rounded-full w-12 h-12 animate-spin" />
+                                    </div>
+                                )}
                                 <iframe
                                     src={readerUrl}
                                     className="w-full h-full min-h-0"

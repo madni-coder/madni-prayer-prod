@@ -1,255 +1,156 @@
 "use client";
 
-import { useState, useRef, useCallback, useEffect } from "react";
-import { Upload, Trash2, Download } from "lucide-react";
-import fetchFromApi from '../utils/fetchFromApi';
+import { useState, useRef } from "react";
+import { Upload, X, Smartphone } from "lucide-react";
 
-export default function SocialMediaImageUpload({ onUpload, onUploadComplete }) {
-    const [images, setImages] = useState([]);
+export default function SocialMediaImageUpload({ onUploadComplete }) {
+    const [selectedFile, setSelectedFile] = useState(null);
+    const [previewUrl, setPreviewUrl] = useState(null);
+    const [uploading, setUploading] = useState(false);
+    const [error, setError] = useState(null);
     const fileInputRef = useRef(null);
-    const previewUrlsRef = useRef(new Set());
 
-    const uploadImageToApi = async (file) => {
+    const handleFileSelect = (event) => {
+        const file = event.target.files[0];
+        if (file) {
+            setSelectedFile(file);
+            const url = URL.createObjectURL(file);
+            setPreviewUrl(url);
+            setError(null);
+        }
+    };
+
+    const handleUploadClick = () => {
+        fileInputRef.current?.click();
+    };
+
+    const handleCancel = () => {
+        setSelectedFile(null);
+        setPreviewUrl(null);
+        setError(null);
+        if (fileInputRef.current) {
+            fileInputRef.current.value = "";
+        }
+    };
+
+    const handleUpload = async () => {
+        if (!selectedFile) return;
+
+        setUploading(true);
+        setError(null);
+
         try {
             const formData = new FormData();
-            formData.append("image", file);
-            formData.append("imageName", file.name);
+            formData.append("image", selectedFile);
 
-            const response = await fetchFromApi("/api/api-notice", 'POST', formData);
+            const response = await fetch("/api/api-notice", {
+                method: "POST",
+                body: formData,
+            });
 
             if (!response.ok) {
-                const errorText = await response.text();
-                return { error: errorText };
+                const errorData = await response.json().catch(() => ({}));
+                throw new Error(errorData.error || "Upload failed");
             }
 
-            const data = await response.json();
-            return data;
+            const result = await response.json();
+
+            // Reset form after successful upload
+            handleCancel();
+
+            // Notify parent component to refresh images
+            if (onUploadComplete) {
+                onUploadComplete();
+            }
         } catch (err) {
-            return { error: err.message };
+            setError(err.message || "Upload failed");
+        } finally {
+            setUploading(false);
         }
     };
-
-    const handleFileSelect = useCallback(
-        async (e) => {
-            const files = Array.from(e.target.files);
-            const validFiles = files.filter(
-                (file) =>
-                    file &&
-                    (file.type === "image/jpeg" ||
-                        file.type === "image/jpg" ||
-                        file.type === "image/png")
-            );
-
-            if (validFiles.length === 0) return;
-
-            // Call onUpload for each valid file
-            if (onUpload) {
-                validFiles.forEach((file) => onUpload(file));
-            }
-
-            // Immediately create previews and show them
-            const previews = validFiles.map((file) => {
-                const url = URL.createObjectURL(file);
-                previewUrlsRef.current.add(url);
-                return {
-                    id: Date.now() + Math.random(),
-                    file,
-                    src: url,
-                    name: file.name,
-                    cropped: false,
-                    croppedSrc: null,
-                };
-            });
-
-            setImages((prev) => [...prev, ...previews]);
-
-            // Upload each image to API and update the preview when server returns image
-            for (const file of validFiles) {
-                const result = await uploadImageToApi(file);
-                if (result && result.imageSrc) {
-                    setImages((prev) =>
-                        prev.map((img) => {
-                            // match by name and size to identify the preview
-                            if (
-                                img.file &&
-                                img.file.name === file.name &&
-                                img.file.size === file.size
-                            ) {
-                                // revoke the preview blob url if any
-                                if (img.src && img.src.startsWith("blob:")) {
-                                    try {
-                                        URL.revokeObjectURL(img.src);
-                                        previewUrlsRef.current.delete(img.src);
-                                    } catch (e) {}
-                                }
-
-                                return {
-                                    ...img,
-                                    src: result.imageSrc,
-                                    name: result.imageName || img.name,
-                                };
-                            }
-                            return img;
-                        })
-                    );
-
-                    // After successful upload, call onUploadComplete if provided
-                    if (typeof onUploadComplete === "function") {
-                        try {
-                            onUploadComplete();
-                        } catch (err) {
-                            // swallow callback errors to avoid breaking UI
-                            console.error(
-                                "onUploadComplete callback error:",
-                                err
-                            );
-                        }
-                    }
-                } else {
-                    console.error(
-                        "Failed to upload",
-                        file.name,
-                        result && result.error
-                    );
-                }
-            }
-
-            // Reset file input
-            e.target.value = "";
-        },
-        [onUpload, onUploadComplete]
-    );
-
-    const handleChange = (e) => {
-        const file = e.target.files[0];
-        if (file && onUpload) {
-            onUpload(file);
-        }
-    };
-
-    const removeImage = (index) => {
-        setImages((prev) => {
-            const img = prev[index];
-            if (img) {
-                if (img.src && img.src.startsWith("blob:")) {
-                    try {
-                        URL.revokeObjectURL(img.src);
-                        previewUrlsRef.current.delete(img.src);
-                    } catch (e) {}
-                }
-                if (img.croppedSrc && img.croppedSrc.startsWith("blob:")) {
-                    try {
-                        URL.revokeObjectURL(img.croppedSrc);
-                        previewUrlsRef.current.delete(img.croppedSrc);
-                    } catch (e) {}
-                }
-            }
-            return prev.filter((_, i) => i !== index);
-        });
-    };
-
-    const downloadImage = (image) => {
-        const link = document.createElement("a");
-        link.download = `cropped-${image.name}`;
-        link.href = image.croppedSrc || image.src;
-        link.click();
-    };
-
-    // Cleanup blob URLs on unmount
-    useEffect(() => {
-        return () => {
-            previewUrlsRef.current.forEach((url) => {
-                try {
-                    URL.revokeObjectURL(url);
-                } catch (e) {}
-            });
-            previewUrlsRef.current.clear();
-        };
-    }, []);
 
     return (
-        <div className="w-full max-w-6xl mx-auto p-6">
-            {/* Header */}
-            <div className="flex items-center justify-between mb-6">
-                <div className="flex items-center gap-3">
-                    <div className="p-2 bg-blue-100 rounded-lg">
-                        <Upload className="w-6 h-6 text-blue-600" />
+        <div className="w-full">
+            <h3 className="text-lg font-medium text-gray-900 mb-4">
+                Upload New Image
+            </h3>
+
+            {!selectedFile ? (
+                // File selection button
+                <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center">
+                    <input
+                        type="file"
+                        ref={fileInputRef}
+                        onChange={handleFileSelect}
+                        accept="image/*"
+                        className="hidden"
+                    />
+                    <Upload className="mx-auto h-12 w-12 text-gray-400" />
+                    <div className="mt-4">
+                        <button
+                            onClick={handleUploadClick}
+                            className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors"
+                        >
+                            Upload Image
+                        </button>
                     </div>
-                    <div>
-                        <h2 className="text-xl font-semibold text-gray-900">
-                            Announcment Media Images
-                        </h2>
-                        <p className="text-sm text-gray-500">
-                            Use the action buttons on each image to download or
-                            remove it.
-                        </p>
+                    <p className="mt-2 text-sm text-gray-500">
+                        Select an image file to upload
+                    </p>
+                    <div className="mt-3 p-3 bg-green-50 border border-green-200 rounded-lg">
+                        <div className="flex items-center gap-2">
+                            <Smartphone className="h-4 w-4 text-green-600" />
+                            <p className="text-sm text-yellow-800 font-medium ">
+                                Upload only 9:16 ratio / Portrait size image for
+                                better view experience
+                            </p>
+                        </div>
                     </div>
                 </div>
-                <button
-                    onClick={() => fileInputRef.current?.click()}
-                    className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center gap-2"
-                >
-                    <Upload className="w-4 h-4" />
-                    Upload Images
-                </button>
-            </div>
-
-            {/* Upload Counter */}
-            <div className="mb-4">
-                <span className="text-sm text-gray-600">
-                    Images uploaded ({images.length})
-                </span>
-            </div>
-
-            {/* Images Grid */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4 mb-6">
-                {images.map((image, index) => (
-                    <div key={image.id} className="relative group">
-                        <div className="bg-gray-100 rounded-lg overflow-hidden">
+            ) : (
+                // Preview container with cancel and upload buttons
+                <div className="border rounded-lg p-4 bg-gray-50">
+                    <div className="flex items-start space-x-4">
+                        <div className="flex-shrink-0">
                             <img
-                                src={image.croppedSrc || image.src}
-                                alt={image.name}
-                                className="w-full h-full object-cover"
+                                src={previewUrl}
+                                alt="Preview"
+                                className="h-24 w-24 object-cover rounded-lg"
                             />
                         </div>
+                        <div className="flex-grow">
+                            <p className="text-sm text-gray-500">
+                                Size:{" "}
+                                {(selectedFile.size / 1024 / 1024).toFixed(2)}{" "}
+                                MB
+                            </p>
 
-                        {/* Image Actions */}
-                        <div className="absolute inset-0 bg-black bg-opacity-50 opacity-0 group-hover:opacity-100 transition-opacity rounded-lg flex items-center justify-center">
-                            <div className="flex gap-2">
+                            {error && (
+                                <p className="text-sm text-red-500 mt-2">
+                                    {error}
+                                </p>
+                            )}
+
+                            <div className="flex space-x-3 mt-4">
                                 <button
-                                    onClick={() => downloadImage(image)}
-                                    className="p-2 bg-green-600 text-white rounded-full hover:bg-green-700 transition-colors"
-                                    title="Download Image"
+                                    onClick={handleCancel}
+                                    disabled={uploading}
+                                    className="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed"
                                 >
-                                    <Download className="w-4 h-4" />
+                                    Cancel
                                 </button>
                                 <button
-                                    onClick={() => removeImage(index)}
-                                    className="p-2 bg-red-600 text-white rounded-full hover:bg-red-700 transition-colors"
-                                    title="Remove Image"
+                                    onClick={handleUpload}
+                                    disabled={uploading}
+                                    className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
                                 >
-                                    <Trash2 className="w-4 h-4" />
+                                    {uploading ? "Uploading..." : "Upload"}
                                 </button>
                             </div>
                         </div>
-
-                        {/* Image Name */}
-                        <p className="mt-2 text-xs text-gray-600 truncate text-center">
-                            {image.name}
-                        </p>
                     </div>
-                ))}
-            </div>
-
-            {/* Hidden File Input */}
-            <input
-                ref={fileInputRef}
-                type="file"
-                multiple
-                accept=".jpeg,.jpg,.png"
-                onChange={handleFileSelect}
-                className="hidden"
-            />
+                </div>
+            )}
         </div>
     );
 }

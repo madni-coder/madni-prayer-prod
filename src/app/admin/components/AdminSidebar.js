@@ -2,7 +2,16 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Clock, Megaphone, Gift, X, School, Coins, LogOut,Gauge } from "lucide-react";
+import {
+    Clock,
+    Megaphone,
+    Gift,
+    X,
+    School,
+    Coins,
+    LogOut,
+    Gauge,
+} from "lucide-react";
 
 const navigation = [
     {
@@ -52,7 +61,12 @@ export default function AdminSidebar({ isOpen, onClose, onLogout }) {
                     </div>
                     <nav className="mt-8 flex-1 px-2 space-y-1">
                         {navigation.map((item) => {
-                            const isActive = pathname.startsWith(item.href);
+                            let isActive;
+                            if (item.href === "/admin") {
+                                isActive = pathname === "/admin";
+                            } else {
+                                isActive = pathname.startsWith(item.href);
+                            }
                             return (
                                 <Link
                                     key={item.name}
@@ -110,7 +124,12 @@ export default function AdminSidebar({ isOpen, onClose, onLogout }) {
                     </div>
                     <nav className="flex-1 px-2 py-4 space-y-1 overflow-y-auto">
                         {navigation.map((item) => {
-                            const isActive = pathname.startsWith(item.href);
+                            let isActive;
+                            if (item.href === "/admin") {
+                                isActive = pathname === "/admin";
+                            } else {
+                                isActive = pathname.startsWith(item.href);
+                            }
                             return (
                                 <Link
                                     key={item.name}

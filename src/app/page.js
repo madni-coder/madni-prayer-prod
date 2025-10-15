@@ -8,8 +8,9 @@ import {
     FaRegCompass,
     FaGift,
     FaMicrophone,
-    FaPhoneSquare
+    FaPhoneSquare,
 } from "react-icons/fa";
+import { Megaphone } from "lucide-react";
 import Image from "next/image";
 
 const sections = [
@@ -17,25 +18,21 @@ const sections = [
         name: "Jamat Times",
         href: "/jamat-times",
         icon: <FaPeopleArrows className="text-2xl text-pink-500" />,
-        desc: "View local mosque prayer schedules.",
     },
     {
         name: "Qibla Finder",
         href: "/qibla",
         icon: <FaRegCompass className="text-2xl text-blue-400" />,
-        desc: "Find the direction of the Qibla.",
     },
     {
         name: "Quran",
         href: "/quran",
         icon: <FaQuran className="text-2xl text-green-400" />,
-        desc: "Read, listen, and search the Holy Quran.",
     },
     {
         name: "Prayer Times",
         href: "/prayer-times",
         icon: <FaClock className="text-2xl text-yellow-500" />,
-        desc: "Get accurate daily prayer times.",
     },
 
     {
@@ -47,30 +44,25 @@ const sections = [
                 alt="Tasbih Counter"
                 width={24}
                 height={24}
-                className="w-13 h-13 object-cover"
+                className="w- h-8 object-cover"
             />
         ),
-        desc: "A digital tasbih to track your dhikr.",
     },
 
     {
         name: "Rewards",
         href: "/rewards",
         icon: <FaGift className="text-2xl text-pink-500" />,
-        desc: "Track your spiritual achievements and milestones.",
     },
     {
         name: "Aelaan Naama",
         href: "/notice",
-        icon: <FaMicrophone className="text-2xl text-blue-400" />,
-        desc: "View important updates and announcements.",
+        icon: <Megaphone className="text-3xl text-blue-400" />,
     },
     {
         name: "Contact Us",
         href: "/contactUs",
-        icon: <FaPhoneSquare className="text-3xl text-orange-400"/>,
-
-        desc: "Get in touch with our support team.",
+        icon: <FaPhoneSquare className="text-3xl text-orange-400" />,
     },
 ];
 

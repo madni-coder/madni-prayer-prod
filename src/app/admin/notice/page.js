@@ -2,13 +2,16 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import SocialMediaImageUpload from "../../../components/SocialMediaImageUpload";
-import fetchFromApi from '../../../utils/fetchFromApi';
+import fetchFromApi from "../../../utils/fetchFromApi";
+import { Pencil, Trash } from "lucide-react";
 
 export default function NoticeAdmin() {
     const router = useRouter();
     const [loading, setLoading] = useState(true);
     const [images, setImages] = useState([]);
     const [error, setError] = useState(null);
+    const [showDeleteModal, setShowDeleteModal] = useState(false);
+    const [imageToDelete, setImageToDelete] = useState(null);
 
     useEffect(() => {
         // Check authentication on client side
@@ -41,6 +44,43 @@ export default function NoticeAdmin() {
         } finally {
             setLoading(false);
         }
+    };
+
+    const handleDelete = async (imageId) => {
+        setImageToDelete(imageId);
+        setShowDeleteModal(true);
+    };
+
+    const confirmDelete = async () => {
+        if (!imageToDelete) return;
+
+        setLoading(true);
+        setError(null);
+        setShowDeleteModal(false);
+
+        try {
+            const res = await fetch("/api/api-notice", {
+                method: "DELETE",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ imageId: imageToDelete }),
+            });
+            if (!res.ok) {
+                const errBody = await res.json().catch(() => ({}));
+                throw new Error(errBody.error || res.statusText);
+            }
+            // Remove deleted image from state
+            setImages((prev) => prev.filter((img) => img.id !== imageToDelete));
+        } catch (err) {
+            setError(err.message || String(err));
+        } finally {
+            setLoading(false);
+            setImageToDelete(null);
+        }
+    };
+
+    const cancelDelete = () => {
+        setShowDeleteModal(false);
+        setImageToDelete(null);
     };
 
     useEffect(() => {
@@ -107,42 +147,79 @@ export default function NoticeAdmin() {
 
                 {!loading && images.length > 0 && (
                     <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
-                        {images.map((img) => (
+                        {images.map((img, index) => (
                             <div
-                                key={img.imageName}
-                                className="border rounded overflow-hidden"
+                                key={img.id || index}
+                                className="border rounded overflow-hidden relative"
                             >
+                                {/* Edit and Delete Icons */}
+                                <div className="absolute top-2 right-2 flex space-x-2 z-10">
+                                    <button
+                                        className="bg-white rounded-full p-1 shadow hover:bg-gray-100"
+                                        title="Delete"
+                                        onClick={() =>
+                                            handleDelete(img.id || index)
+                                        }
+                                    >
+                                        <Trash
+                                            size={18}
+                                            className="text-red-600"
+                                        />
+                                    </button>
+                                </div>
                                 {img.imageSrc ? (
                                     // eslint-disable-next-line @next/next/no-img-element
-                                    <div
-                                        style={{ aspectRatio: "9 / 16" }}
-                                        className="w-full"
-                                    >
+                                    <div className="w-full">
                                         <img
                                             src={
                                                 img.imageSrcPortrait ||
                                                 img.imageSrc
                                             }
-                                            alt={img.imageName}
-                                            className="w-full h-full object-cover"
+                                            alt={`Image ${index + 1}`}
+                                            className="w-full h-auto object-contain"
                                         />
                                     </div>
                                 ) : (
-                                    <div
-                                        style={{ aspectRatio: "9 / 16" }}
-                                        className="w-full bg-gray-100 flex items-center justify-center text-sm text-gray-500"
-                                    >
+                                    <div className="w-full h-32 bg-gray-100 flex items-center justify-center text-sm text-gray-500">
                                         No preview
                                     </div>
                                 )}
-                                <div className="p-2 text-xs text-gray-700 truncate">
-                                    {img.imageName}
+                                <div className="p-1 text-xs text-gray-700 truncate">
+                                    Image {index + 1}
                                 </div>
                             </div>
                         ))}
                     </div>
                 )}
             </div>
+
+            {/* Delete Confirmation Modal */}
+            {showDeleteModal && (
+                <div className="fixed inset-0 flex items-center justify-center z-50">
+                    <div className="bg-white p-6 rounded shadow-lg border">
+                        <h2 className="text-lg font-medium text-gray-900 mb-4">
+                            Confirm Delete
+                        </h2>
+                        <p className="text-sm text-gray-600 mb-4">
+                            Are you sure you want to delete this image?
+                        </p>
+                        <div className="flex justify-end space-x-2">
+                            <button
+                                onClick={cancelDelete}
+                                className="px-3 py-1 bg-gray-300 text-gray-700 rounded hover:bg-gray-400"
+                            >
+                                Cancel
+                            </button>
+                            <button
+                                onClick={confirmDelete}
+                                className="px-3 py-1 bg-red-600 text-white rounded hover:bg-red-700"
+                            >
+                                Delete
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 }

@@ -10,14 +10,19 @@ export async function POST(request) {
     try {
         const formData = await request.formData();
         const imageFile = formData.get("image");
-        const imageName = formData.get("imageName");
 
-        if (!imageFile || !imageName) {
+        if (!imageFile) {
             return NextResponse.json(
-                { error: "Image and image name are required" },
+                { error: "Image file is required" },
                 { status: 400 }
             );
         }
+
+        // Generate simple timestamp-based filename to avoid special characters
+        const fileExtension = imageFile.name
+            ? imageFile.name.split(".").pop()
+            : "jpg";
+        const fileName = `image_${Date.now()}.${fileExtension}`;
 
         // Read the image file as ArrayBuffer
         const arrayBuffer = await imageFile.arrayBuffer();
@@ -27,7 +32,7 @@ export async function POST(request) {
         // Upload to Supabase storage bucket 'notice'
         const { data, error } = await supabase.storage
             .from("notice")
-            .upload(imageName, buffer, {
+            .upload(fileName, buffer, {
                 contentType: mimeType,
                 upsert: true,
             });
@@ -39,17 +44,15 @@ export async function POST(request) {
         // Get public URL
         const { data: publicUrlData } = supabase.storage
             .from("notice")
-            .getPublicUrl(imageName);
+            .getPublicUrl(fileName);
         const imageSrc = publicUrlData?.publicUrl || null;
 
         // Create a portrait variant URL by appending transformation query params
-        // Frontend can use imageSrcPortrait to show portrait-oriented previews
-        // Use 9:16 ratio (width : height = 9 : 16) e.g. 900x1600
         const imageSrcPortrait = imageSrc
             ? `${imageSrc}?width=900&height=1600&fit=crop`
             : null;
 
-        return NextResponse.json({ imageName, imageSrc, imageSrcPortrait });
+        return NextResponse.json({ fileName, imageSrc, imageSrcPortrait });
     } catch (err) {
         return NextResponse.json(
             { error: err.message || String(err) },
@@ -90,6 +93,7 @@ export async function GET() {
                 : null;
 
             return {
+                id: file.name, // Use filename as id for deletion
                 imageName: file.name,
                 imageSrc: publicUrl,
                 imageSrcPortrait,
@@ -97,6 +101,30 @@ export async function GET() {
         });
 
         return NextResponse.json({ images });
+    } catch (err) {
+        return NextResponse.json(
+            { error: err.message || String(err) },
+            { status: 500 }
+        );
+    }
+}
+
+export async function DELETE(request) {
+    try {
+        const { imageId } = await request.json();
+        if (!imageId) {
+            return NextResponse.json(
+                { error: "Image ID is required" },
+                { status: 400 }
+            );
+        }
+        const { error } = await supabase.storage
+            .from("notice")
+            .remove([imageId]);
+        if (error) {
+            return NextResponse.json({ error: error.message }, { status: 500 });
+        }
+        return NextResponse.json({ success: true });
     } catch (err) {
         return NextResponse.json(
             { error: err.message || String(err) },
