@@ -12,6 +12,11 @@ const isMobile =
         navigator.userAgent
     );
 
+// Base URL of deployed site for API calls when running inside Tauri (static build has no Next API)
+const REMOTE_API_BASE =
+    (typeof process !== "undefined" && process.env.NEXT_PUBLIC_REMOTE_API_BASE) ||
+    "https://madni-prayer.vercel.app";
+
 // Sample Surah data (in real app, fetch from API or static JSON)
 const surahs = [
     { number: 1, name: "Al-Fatiha", arabic: "الفاتحة", ayahs: 7 },
@@ -75,13 +80,32 @@ const paras = paraNames.map((p, i) => ({
 
 // GET API function referencing route.js
 async function getPara() {
+    // Prefer deployed API when running inside Tauri (no local Next API in static bundle)
+    const endpoint = isTauri
+        ? `${REMOTE_API_BASE}/api/api-quran`
+        : "/api/api-quran";
     try {
-        const res = await fetch("/api/api-quran", { method: "GET" });
+        const res = await fetch(endpoint, { method: "GET" });
         if (!res.ok) throw new Error("Failed to fetch para files");
         const data = await res.json();
         // Return files array as in route.js
         return data.files;
     } catch (err) {
+        // Fallback: try remote API if relative failed
+        if (!isTauri) {
+            try {
+                const res2 = await fetch(
+                    `${REMOTE_API_BASE}/api/api-quran`,
+                    { method: "GET" }
+                );
+                if (res2.ok) {
+                    const data2 = await res2.json();
+                    return data2.files;
+                }
+            } catch (_) {
+                // ignore
+            }
+        }
         throw new Error(err.message);
     }
 }
@@ -119,7 +143,7 @@ export default function Quran() {
         // Use fileUrl from API
         const urlBase = file.fileUrl;
 
-        // If running in Tauri, open externally using plugin-shell
+        // If running in Tauri (desktop or mobile), try opening externally using plugin-shell
         if (isTauri) {
             try {
                 const shell = await import("@tauri-apps/plugin-shell");
@@ -128,21 +152,19 @@ export default function Quran() {
                     return;
                 }
             } catch (err) {
-                console.error(
-                    "Tauri open failed, falling back to window.open",
-                    err
-                );
+                console.error("Tauri open failed", err);
+                // Fallbacks if plugin is not available or permission denied
+                if (isMobile) {
+                    window.location.href = urlBase;
+                    return;
+                }
                 window.open(urlBase, "_blank", "noopener,noreferrer");
                 return;
             }
-            // if dynamic import didn't work, still try window.open as fallback
-            window.open(urlBase, "_blank", "noopener,noreferrer");
-            return;
         }
 
-        // On mobile browsers, navigate directly to the PDF to avoid the in-iframe "Open" button
+        // Non-Tauri mobile: navigate directly to the PDF
         if (isMobile) {
-            // Open in the same tab so users see the PDF immediately
             window.location.href = urlBase;
             return;
         }

@@ -132,7 +132,7 @@ export default function AdminDashboard() {
                                 Total Users
                             </p>
                             <p className="text-2xl font-bold text-gray-900">
-                                1,234
+                                00
                             </p>
                         </div>
                     </div>
@@ -148,7 +148,7 @@ export default function AdminDashboard() {
                                 Active Mosques
                             </p>
                             <p className="text-2xl font-bold text-gray-900">
-                                56
+                                00
                             </p>
                         </div>
                     </div>
@@ -164,7 +164,7 @@ export default function AdminDashboard() {
                                 Monthly Growth
                             </p>
                             <p className="text-2xl font-bold text-gray-900">
-                                12%
+                                0%
                             </p>
                         </div>
                     </div>
