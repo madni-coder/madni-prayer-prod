@@ -1,6 +1,7 @@
 "use client";
 import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import { FaAngleLeft } from "react-icons/fa";
 
 // Detect Tauri environment
 const isTauri = typeof window !== "undefined" && !!window.__TAURI__;
@@ -93,6 +94,7 @@ export default function Quran() {
     const [currentPara, setCurrentPara] = useState(null);
     const [readerUrl, setReaderUrl] = useState("");
     const [isIframeLoading, setIsIframeLoading] = useState(true);
+    const router = useRouter();
 
     // keyboard handlers for reader modal + lock body scroll while open
     useEffect(() => {
@@ -178,9 +180,18 @@ export default function Quran() {
     );
 
     return (
-        <section className="flex flex-col items-center justify-center min-h-[70vh] px-4 animate-fade-in bg-base-100">
+        <section className="flex flex-col items-center justify-center min-h-[70vh] px-4 pb-20 animate-fade-in bg-base-100">
+            <div style={{ alignSelf: "flex-start" }}>
+                <button
+                    className="flex items-center gap-2 mb-4 text-lg text-primary hover:text-green-600 font-semibold"
+                    onClick={() => router.push("/")}
+                    aria-label="Back to Home"
+                >
+                    <FaAngleLeft /> Back
+                </button>
+            </div>
             <h2 className="text-2xl md:text-3xl font-bold text-primary mb-4">
-                Quran
+                Quran Sharif 
             </h2>
             <div className="glass-card p-6 max-w-2xl w-full bg-base-200 text-base-content">
                 {/* Toggle buttons for Surah/Para */}
@@ -272,11 +283,8 @@ export default function Quran() {
                                           {p.arabic}
                                       </span>
                                       <div className="w-full flex justify-between items-end mt-auto">
-                                          <span className="text-xs text-primary">
-                                              {p.ruku}
-                                          </span>
-                                          <span className="bg-primary text-primary-content text-xs px-2 py-1 rounded-full ml-1">
-                                              Total Ruku
+                                          <span className="text-xs text-primary font-semibold">
+                                              Ruku: {p.ruku}
                                           </span>
                                           {/* Decorative corner, optional */}
                                           <span

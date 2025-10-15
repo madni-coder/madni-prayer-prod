@@ -78,7 +78,7 @@ export default function TopNav() {
                         <img
                             src="/logo.png"
                             alt="Raah-e-Hidayat Logo"
-                            className="w-30 h-auto object-contain"
+                            className="w-30 h-auto object-contain mt-5"
                         />
                     </Link>
                 </div>

@@ -3,7 +3,7 @@ import React, { useState, useEffect } from "react";
 import { MapPin } from "lucide-react";
 import { FaAngleLeft } from "react-icons/fa";
 import { useRouter } from "next/navigation";
-import fetchFromApi from '../../utils/fetchFromApi';
+import fetchFromApi from "../../utils/fetchFromApi";
 
 function DigitalClock() {
     const [time, setTime] = useState(new Date());
@@ -296,7 +296,7 @@ export default function JamatTimesPage() {
     }
 
     return (
-        <div className="min-h-screen flex flex-col items-center justify-center bg-base-200">
+        <div className="min-h-screen flex flex-col items-center justify-center bg-base-200 pb-12">
             <button
                 className="flex items-center gap-2 mb-4 text-lg text-primary hover:text-green-600 font-semibold"
                 onClick={() => router.push("/")}
@@ -311,7 +311,7 @@ export default function JamatTimesPage() {
                 </div>
             </div>
 
-            <div className="w-full max-w-md mt-8">
+            <div className="w-full max-w-md mt-8 mb-12 p-4">
                 <div className="flex justify-start mb-8 ml-8">
                     <button
                         onClick={handleAutoLocate}
@@ -487,8 +487,8 @@ export default function JamatTimesPage() {
                     </div>
                 )}
 
-                <div className="card bg-base-100 shadow-xl">
-                    <div className="card-body p-4">
+                <div className="card bg-base-100 shadow-xl mb-8">
+                    <div className="card-body p-6">
                         {selectedMasjidData ? (
                             getJamatTimes().map((prayer) => (
                                 <div
@@ -514,7 +514,6 @@ export default function JamatTimesPage() {
                                 <p className="text-center text-white-1000 leading-relaxed max-w-sm text-xl">
                                     Please select a masjid to view jamat times
                                 </p>
-                                
                             </div>
                         )}
                     </div>
