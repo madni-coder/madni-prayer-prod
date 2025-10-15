@@ -10,7 +10,7 @@ export default function AdminLogin() {
     const [loading, setLoading] = useState(false);
     const router = useRouter();
 
-    const ADMIN_EMAIL = "raahehidayat@gmail.com";
+    const ADMIN_EMAIL = "raahehidayatindia@gmail.com";
     const ADMIN_PASSWORD = "hidayat0909";
 
     // Check if already authenticated on component mount

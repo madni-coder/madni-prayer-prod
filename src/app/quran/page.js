@@ -2,7 +2,10 @@
 import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { FaAngleLeft } from "react-icons/fa";
-import fetchFromApi from '../../utils/fetchFromApi';
+import fetchFromApi from "../../utils/fetchFromApi";
+
+// Check if running in Tauri environment
+const isTauri = typeof window !== "undefined" && window.__TAURI__;
 
 // Sample Surah data (in real app, fetch from API or static JSON)
 const surahs = [
@@ -104,17 +107,30 @@ export default function Quran() {
     }, [showReader]);
 
     // Open reader modal for a para
-    const openReader = (p) => {
+    const openReader = async (p) => {
         // Find file for this para from API response
         const file = files.find((f) => f.id === p.number);
         if (!file) return;
         // Use fileUrl from API
         const urlBase = file.fileUrl;
+
+        // If running in Tauri (Android/iOS/Desktop app), always open in external browser/viewer
+        if (isTauri) {
+            try {
+                const { open } = await import("@tauri-apps/plugin-shell");
+                await open(urlBase);
+                return;
+            } catch (error) {
+                console.error("Failed to open URL in Tauri:", error);
+                // Fallback: try window.open
+                window.open(urlBase, "_blank", "noopener,noreferrer");
+                return;
+            }
+        }
+
         const url = `${urlBase}#toolbar=0&navpanes=0&scrollbar=0`;
 
-        // If on a mobile device, open the PDF in a new tab/window instead of embedding
-        // Many mobile browsers show a centered 'Open' button when trying to embed PDFs; opening
-        // in a new tab provides a better direct experience for mobile users.
+        // If on a mobile device (web browser), open the PDF in a new tab/window instead of embedding
         const ua =
             typeof navigator !== "undefined" ? navigator.userAgent || "" : "";
         const isMobile = /Mobi|Android|iPhone|iPad|iPod|Windows Phone/i.test(
@@ -126,7 +142,7 @@ export default function Quran() {
             return;
         }
 
-        // Desktop: show the in-app iframe reader
+        // Desktop web browser: show the in-app iframe reader
         setCurrentPara(p.number);
         setIsIframeLoading(true);
         setReaderUrl(url);
