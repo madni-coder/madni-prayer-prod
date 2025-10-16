@@ -72,13 +72,13 @@ export default function TopNav() {
                 isNotice ? "relative w-full" : "sticky top-0 z-50"
             } bg-base-100 backdrop-blur border-b border-base-300 shadow-sm`}
         >
-            <div className="max-w-5xl mx-auto flex items-center justify-between px-4 py-2">
+            <div className="max-w-5xl mx-auto flex items-center justify-between px-4 py-2 mt-10">
                 <div className="flex items-center gap-2">
                     <Link href="/">
                         <img
                             src="/logo.png"
                             alt="Raah-e-Hidayat Logo"
-                            className="w-30 h-auto object-contain mt-5"
+                            className="w-30 h-auto object-contain"
                         />
                     </Link>
                 </div>

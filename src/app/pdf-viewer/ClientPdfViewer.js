@@ -44,20 +44,7 @@ export default function ClientPdfViewer({ file: fileProp }) {
         <div className="w-full h-screen flex flex-col bg-base-100">
             <header className="flex items-center justify-between p-3 bg-base-200 border-b">
                 <div className="font-semibold">PDF Viewer</div>
-                <div>
-                    {loading ? (
-                        <span className="text-sm">Loading...</span>
-                    ) : (
-                        <a
-                            className="btn btn-sm btn-ghost"
-                            href={url}
-                            target="_blank"
-                            rel="noreferrer"
-                        >
-                            Open in new tab
-                        </a>
-                    )}
-                </div>
+                
             </header>
             <main className="flex-1 relative">
                 {loading && (

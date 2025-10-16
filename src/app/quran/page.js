@@ -144,7 +144,6 @@ export default function Quran() {
     const [currentPara, setCurrentPara] = useState(null);
     const [currentTitle, setCurrentTitle] = useState("");
     const [readerUrl, setReaderUrl] = useState("");
-    const [isIframeLoading, setIsIframeLoading] = useState(true);
     const router = useRouter();
 
     // keyboard handlers for reader modal + lock body scroll while open
@@ -188,7 +187,6 @@ export default function Quran() {
             const finalUrl = isTauri ? proxied : viewer;
             setCurrentPara(surah.number);
             setCurrentTitle(`${surah.number}. ${surah.name}`);
-            setIsIframeLoading(true);
             setReaderUrl(finalUrl);
             setShowReader(true);
         } catch (error) {
@@ -220,7 +218,6 @@ export default function Quran() {
         const finalUrl = isTauri ? proxiedFinal : viewer;
         setCurrentPara(p.number);
         setCurrentTitle(`Para ${p.number}`);
-        setIsIframeLoading(true);
         setReaderUrl(finalUrl);
         setShowReader(true);
     };
@@ -379,7 +376,7 @@ export default function Quran() {
                 {showReader && (
                     <div className="fixed inset-0 z-50 bg-black bg-opacity-80">
                         <div className="flex flex-col h-screen w-screen">
-                            <header className="flex items-center justify-between px-4 py-3 bg-base-200 border-b border-base-300">
+                            <header className="flex items-center justify-between px-10 py-10 bg-base-200 border-b border-base-300">
                                 <div>
                                     <span className="font-semibold text-lg">
                                         {currentTitle ||
@@ -396,18 +393,12 @@ export default function Quran() {
                                 </div>
                             </header>
                             <main className="relative flex-1 overflow-hidden bg-base-100">
-                                {isIframeLoading && (
-                                    <div className="absolute inset-0 z-20 flex items-center justify-center bg-white/80">
-                                        <div className="loader border-4 border-t-primary rounded-full w-12 h-12 animate-spin" />
-                                    </div>
-                                )}
                                 <iframe
                                     src={readerUrl}
                                     className="w-full h-full min-h-0"
                                     title={`${
                                         currentTitle || `Para ${currentPara}`
                                     } preview`}
-                                    onLoad={() => setIsIframeLoading(false)}
                                 />
                             </main>
                         </div>
