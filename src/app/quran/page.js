@@ -14,14 +14,15 @@ const isMobile =
 
 // Base URL of deployed site for API calls when running inside Tauri (static build has no Next API)
 const REMOTE_API_BASE =
-    (typeof process !== "undefined" && process.env.NEXT_PUBLIC_REMOTE_API_BASE) ||
+    (typeof process !== "undefined" &&
+        process.env.NEXT_PUBLIC_REMOTE_API_BASE) ||
     "https://madni-prayer.vercel.app";
 
 // Sample Surah data (in real app, fetch from API or static JSON)
 const surahs = [
-    { number: 1, name: "Al-Fatiha", arabic: "الفاتحة", ayahs: 7 },
-    { number: 2, name: "Al-Baqarah", arabic: "البقرة", ayahs: 286 },
-    { number: 3, name: "Al-Imran", arabic: "آل عمران", ayahs: 200 },
+    { number: 1, name: "Surah Yaseen", arabic: "يسٓ", ayahs: 83 },
+    { number: 2, name: "Surah Baqrah", arabic: "البقرة", ayahs: 286 },
+    { number: 3, name: "Surah Muzammil", arabic: "المزمل", ayahs: 200 },
     // ...add more or fetch dynamically
 ];
 
@@ -94,13 +95,44 @@ async function getPara() {
         // Fallback: try remote API if relative failed
         if (!isTauri) {
             try {
+                const res2 = await fetch(`${REMOTE_API_BASE}/api/api-quran`, {
+                    method: "GET",
+                });
+                if (res2.ok) {
+                    const data2 = await res2.json();
+                    return data2.files;
+                }
+            } catch (_) {
+                // ignore
+            }
+        }
+        throw new Error(err.message);
+    }
+}
+
+// GET Surah PDF function for Supabase
+async function getSurahPdf(surahName) {
+    const endpoint = isTauri
+        ? `${REMOTE_API_BASE}/api/api-quran`
+        : "/api/api-quran";
+    try {
+        const res = await fetch(`${endpoint}?surah=${surahName}`, {
+            method: "GET",
+        });
+        if (!res.ok) throw new Error("Failed to fetch surah PDF");
+        const data = await res.json();
+        return data.fileUrl;
+    } catch (err) {
+        // Fallback: try remote API if relative failed
+        if (!isTauri) {
+            try {
                 const res2 = await fetch(
-                    `${REMOTE_API_BASE}/api/api-quran`,
+                    `${REMOTE_API_BASE}/api/api-quran?surah=${surahName}`,
                     { method: "GET" }
                 );
                 if (res2.ok) {
                     const data2 = await res2.json();
-                    return data2.files;
+                    return data2.fileUrl;
                 }
             } catch (_) {
                 // ignore
@@ -134,6 +166,50 @@ export default function Quran() {
             document.body.style.overflow = prevOverflow;
         };
     }, [showReader]);
+
+    // Open reader modal for a surah
+    const openSurahReader = async (surah) => {
+        try {
+            const surahFileName = surah.name;
+            const fileUrl = await getSurahPdf(surahFileName);
+
+            // If running in Tauri (desktop or mobile), try opening externally using plugin-shell
+            if (isTauri) {
+                try {
+                    const shell = await import("@tauri-apps/plugin-shell");
+                    if (shell && shell.open) {
+                        await shell.open(fileUrl);
+                        return;
+                    }
+                } catch (err) {
+                    console.error("Tauri open failed", err);
+                    // Fallbacks if plugin is not available or permission denied
+                    if (isMobile) {
+                        window.location.href = fileUrl;
+                        return;
+                    }
+                    window.open(fileUrl, "_blank", "noopener,noreferrer");
+                    return;
+                }
+            }
+
+            // Non-Tauri mobile: navigate directly to the PDF
+            if (isMobile) {
+                window.location.href = fileUrl;
+                return;
+            }
+
+            // Web: open in-app iframe reader
+            const url = `${fileUrl}#toolbar=0&navpanes=0&scrollbar=0`;
+            setCurrentPara(surah.number);
+            setIsIframeLoading(true);
+            setReaderUrl(url);
+            setShowReader(true);
+        } catch (error) {
+            console.error("Error opening surah:", error);
+            alert("Error loading surah PDF");
+        }
+    };
 
     // Open reader modal for a para
     const openReader = async (p) => {
@@ -213,7 +289,7 @@ export default function Quran() {
                 </button>
             </div>
             <h2 className="text-2xl md:text-3xl font-bold text-primary mb-4">
-                Quran Sharif 
+                Quran Sharif
             </h2>
             <div className="glass-card p-6 max-w-2xl w-full bg-base-200 text-base-content">
                 {/* Toggle buttons for Surah/Para */}
@@ -255,6 +331,7 @@ export default function Quran() {
                               <div
                                   key={s.number}
                                   className="neumorph-card p-4 flex flex-col items-center transition hover:scale-105 active:scale-95 hover:shadow-lg active:shadow-md cursor-pointer bg-base-100 border border-base-300"
+                                  onClick={() => openSurahReader(s)}
                               >
                                   <span className="text-lg font-bold text-primary">
                                       {s.number}. {s.name}
