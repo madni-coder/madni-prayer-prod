@@ -1,4 +1,4 @@
-const isTauri = process.env.TAURI_BUILD === "1";
+const isTauri = process.env.NEXT_PUBLIC_TAURI_BUILD === "1";
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {

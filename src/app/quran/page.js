@@ -4,19 +4,10 @@ import { useRouter } from "next/navigation";
 import { FaAngleLeft } from "react-icons/fa";
 
 // Detect Tauri environment
-const isTauri = typeof window !== "undefined" && !!window.__TAURI__;
-// Detect mobile browsers to avoid in-iframe PDF fallback with "Open" button
-const isMobile =
-    typeof navigator !== "undefined" &&
-    /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini|Mobi/i.test(
-        navigator.userAgent
-    );
+const isTauri = process.env.NEXT_PUBLIC_TAURI_BUILD === "1";
 
 // Base URL of deployed site for API calls when running inside Tauri (static build has no Next API)
-const REMOTE_API_BASE =
-    (typeof process !== "undefined" &&
-        process.env.NEXT_PUBLIC_REMOTE_API_BASE) ||
-    "https://madni-prayer.vercel.app";
+const REMOTE_API_BASE = process.env.NEXT_PUBLIC_API_BASE_URL;
 
 // Sample Surah data (in real app, fetch from API or static JSON)
 const surahs = [
@@ -116,6 +107,7 @@ async function getSurahPdf(surahName) {
         ? `${REMOTE_API_BASE}/api/api-quran`
         : "/api/api-quran";
     try {
+        // encode surahName to safely include spaces/special characters
         const res = await fetch(`${endpoint}?surah=${surahName}`, {
             method: "GET",
         });
@@ -127,7 +119,9 @@ async function getSurahPdf(surahName) {
         if (!isTauri) {
             try {
                 const res2 = await fetch(
-                    `${REMOTE_API_BASE}/api/api-quran?surah=${surahName}`,
+                    `${REMOTE_API_BASE}/api/api-quran?surah=${encodeURIComponent(
+                        surahName
+                    )}`,
                     { method: "GET" }
                 );
                 if (res2.ok) {
@@ -148,6 +142,7 @@ export default function Quran() {
     const [files, setFiles] = useState([]); // store API files
     const [showReader, setShowReader] = useState(false);
     const [currentPara, setCurrentPara] = useState(null);
+    const [currentTitle, setCurrentTitle] = useState("");
     const [readerUrl, setReaderUrl] = useState("");
     const [isIframeLoading, setIsIframeLoading] = useState(true);
     const router = useRouter();
@@ -173,37 +168,28 @@ export default function Quran() {
             const surahFileName = surah.name;
             const fileUrl = await getSurahPdf(surahFileName);
 
-            // If running in Tauri (desktop or mobile), try opening externally using plugin-shell
-            if (isTauri) {
-                try {
-                    const shell = await import("@tauri-apps/plugin-shell");
-                    if (shell && shell.open) {
-                        await shell.open(fileUrl);
-                        return;
-                    }
-                } catch (err) {
-                    console.error("Tauri open failed", err);
-                    // Fallbacks if plugin is not available or permission denied
-                    if (isMobile) {
-                        window.location.href = fileUrl;
-                        return;
-                    }
-                    window.open(fileUrl, "_blank", "noopener,noreferrer");
-                    return;
-                }
-            }
+            // In-app PDF.js viewer (mobile & desktop web)
+            const proxied = isTauri
+                ? `${REMOTE_API_BASE}/api/pdf-proxy?url=${encodeURIComponent(
+                      fileUrl
+                  )}`
+                : `/api/pdf-proxy?url=${encodeURIComponent(fileUrl)}`;
+            const viewer = isTauri
+                ? `${REMOTE_API_BASE}/pdf-viewer?file=${encodeURIComponent(
+                      proxied
+                  )}`
+                : `/pdf-viewer?file=${encodeURIComponent(proxied)}`;
+            // Debug/logging to help diagnose APK/webview issues
+            console.log("PDF viewer URLs", { proxied, viewer });
 
-            // Non-Tauri mobile: navigate directly to the PDF
-            if (isMobile) {
-                window.location.href = fileUrl;
-                return;
-            }
-
-            // Web: open in-app iframe reader
-            const url = `${fileUrl}#toolbar=0&navpanes=0&scrollbar=0`;
+            // On static/Tauri builds the Next API routes may not behave the same
+            // inside the embedded webview; prefer loading the proxied PDF URL
+            // directly into the iframe when running in Tauri.
+            const finalUrl = isTauri ? proxied : viewer;
             setCurrentPara(surah.number);
+            setCurrentTitle(`${surah.number}. ${surah.name}`);
             setIsIframeLoading(true);
-            setReaderUrl(url);
+            setReaderUrl(finalUrl);
             setShowReader(true);
         } catch (error) {
             console.error("Error opening surah:", error);
@@ -219,37 +205,23 @@ export default function Quran() {
         // Use fileUrl from API
         const urlBase = file.fileUrl;
 
-        // If running in Tauri (desktop or mobile), try opening externally using plugin-shell
-        if (isTauri) {
-            try {
-                const shell = await import("@tauri-apps/plugin-shell");
-                if (shell && shell.open) {
-                    await shell.open(urlBase);
-                    return;
-                }
-            } catch (err) {
-                console.error("Tauri open failed", err);
-                // Fallbacks if plugin is not available or permission denied
-                if (isMobile) {
-                    window.location.href = urlBase;
-                    return;
-                }
-                window.open(urlBase, "_blank", "noopener,noreferrer");
-                return;
-            }
-        }
-
-        // Non-Tauri mobile: navigate directly to the PDF
-        if (isMobile) {
-            window.location.href = urlBase;
-            return;
-        }
-
-        // Web: open in-app iframe reader
-        const url = `${urlBase}#toolbar=0&navpanes=0&scrollbar=0`;
+        const proxied = `/api/pdf-proxy?url=${encodeURIComponent(urlBase)}`;
+        const proxiedFinal = isTauri
+            ? `${REMOTE_API_BASE}/api/pdf-proxy?url=${encodeURIComponent(
+                  urlBase
+              )}`
+            : proxied;
+        const viewer = isTauri
+            ? `${REMOTE_API_BASE}/pdf-viewer?file=${encodeURIComponent(
+                  proxiedFinal
+              )}`
+            : `/pdf-viewer?file=${encodeURIComponent(proxiedFinal)}`;
+        console.log("PDF viewer URLs", { proxied: proxiedFinal, viewer });
+        const finalUrl = isTauri ? proxiedFinal : viewer;
         setCurrentPara(p.number);
+        setCurrentTitle(`Para ${p.number}`);
         setIsIframeLoading(true);
-        setReaderUrl(url);
+        setReaderUrl(finalUrl);
         setShowReader(true);
     };
 
@@ -410,7 +382,8 @@ export default function Quran() {
                             <header className="flex items-center justify-between px-4 py-3 bg-base-200 border-b border-base-300">
                                 <div>
                                     <span className="font-semibold text-lg">
-                                        Para {currentPara ?? 2}
+                                        {currentTitle ||
+                                            `Para ${currentPara ?? 2}`}
                                     </span>
                                 </div>
                                 <div>
@@ -431,7 +404,9 @@ export default function Quran() {
                                 <iframe
                                     src={readerUrl}
                                     className="w-full h-full min-h-0"
-                                    title={`Para ${currentPara} preview`}
+                                    title={`${
+                                        currentTitle || `Para ${currentPara}`
+                                    } preview`}
                                     onLoad={() => setIsIframeLoading(false)}
                                 />
                             </main>

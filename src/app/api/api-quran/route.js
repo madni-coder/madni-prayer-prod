@@ -2,7 +2,7 @@ import prisma from "../../../../lib/prisma";
 import { createClient } from "@supabase/supabase-js";
 
 // Required for static export
-export const dynamic = "force-static";
+// export const dynamic = "force-static";
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
 const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
@@ -21,12 +21,13 @@ export async function GET(request) {
         // If surah parameter is provided, handle surah PDF request
         if (surahName) {
             // Use hardcoded Supabase storage URL
-            const fileUrl = `https://xpljikgqqsznwwpxhajx.supabase.co//storage/v1/object/public/Quran/${surahName}.pdf`;
+            const fileUrl = `${supabaseUrl}/storage/v1/object/public/Quran/${surahName}.pdf`;
 
             return Response.json({
                 success: true,
                 fileUrl: fileUrl,
                 fileName: `${surahName}.pdf`,
+                test: true
             });
         }
 
