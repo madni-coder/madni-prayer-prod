@@ -59,7 +59,7 @@ const navLinks = [
 ];
 
 export default function TopNav() {
-    const pathname = usePathname();
+    const pathname = usePathname() || "";
     const [forceHidden, setForceHidden] = React.useState(false);
 
     // Hide nav when the Quran reader modal marks the body
@@ -84,6 +84,24 @@ export default function TopNav() {
     const isPdfViewer = pathname.startsWith("/pdf-viewer");
     if (isAdmin || isLogin || isPdfViewer || forceHidden) return null;
 
+    // New: control mobile nav open state for 3D animation
+    const [mobileOpen, setMobileOpen] = React.useState(false);
+
+    // Close mobile nav when route changes
+    React.useEffect(() => {
+        setMobileOpen(false);
+    }, [pathname]);
+
+    // Close on Escape
+    React.useEffect(() => {
+        if (!mobileOpen) return;
+        const onKey = (e) => {
+            if (e.key === "Escape") setMobileOpen(false);
+        };
+        document.addEventListener("keydown", onKey);
+        return () => document.removeEventListener("keydown", onKey);
+    }, [mobileOpen]);
+
     return (
         <nav
             data-app-top-nav
@@ -101,6 +119,7 @@ export default function TopNav() {
                         />
                     </Link>
                 </div>
+
                 <ul className="hidden lg:flex items-center gap-1 xl:gap-2">
                     {navLinks.map((link) => (
                         <li key={link.name} className="relative group">
@@ -128,11 +147,19 @@ export default function TopNav() {
                         </li>
                     ))}
                 </ul>
-                {/* Mobile dropdown */}
-                <div className="md:hidden dropdown dropdown-end">
-                    <label
-                        tabIndex={0}
-                        className="btn btn-circle btn-ghost hover:bg-primary hover:text-primary-content transition-all duration-300 transform hover:scale-110 hover:rotate-180"
+
+                {/* Mobile dropdown - replaced with controlled 3D animated menu */}
+                <div
+                    className="md:hidden relative"
+                    // perspective for 3D effect
+                    style={{ perspective: 1000 }}
+                >
+                    <button
+                        type="button"
+                        aria-expanded={mobileOpen}
+                        aria-controls="mobile-nav"
+                        onClick={() => setMobileOpen((s) => !s)}
+                        className="btn btn-circle btn-ghost hover:bg-primary hover:text-primary-content transition-all duration-300 transform"
                     >
                         <svg
                             width="24"
@@ -141,47 +168,69 @@ export default function TopNav() {
                             stroke="currentColor"
                             strokeWidth="2"
                             viewBox="0 0 24 24"
-                            className="transition-transform duration-300"
+                            className={`transition-transform duration-500 transform ${
+                                mobileOpen ? "rotate-180 scale-110" : ""
+                            }`}
                         >
                             <path d="M4 6h16M4 12h16M4 18h16" />
                         </svg>
-                    </label>
-                    <ul
-                        tabIndex={0}
-                        className="dropdown-content menu p-3 shadow-2xl bg-base-100 rounded-2xl w-52 mt-2 border border-base-300 backdrop-blur-sm animate-in slide-in-from-top-2 duration-300 max-h-[calc(100vh-200px)] z-40"
+                    </button>
+
+                    {/* Animated menu panel */}
+                    <div
+                        id="mobile-nav"
+                        role="menu"
+                        className="origin-top-right absolute right-0 mt-2 w-52 rounded-2xl border border-base-300 bg-base-100 shadow-2xl z-40 overflow-hidden"
+                        style={{
+                            // use preserve-3d/backface-visibility and a short transform transition
+                            transformStyle: "preserve-3d",
+                            backfaceVisibility: "hidden",
+                            transition: "transform .35s",
+                            // dynamic open/closed states
+                            transform: mobileOpen
+                                ? "rotateX(0deg) translateY(0) translateZ(0) scale(1)"
+                                : "rotateX(-18deg) translateY(-8px) translateZ(-30px) scale(0.98)",
+                            opacity: mobileOpen ? 1 : 0,
+                            pointerEvents: mobileOpen ? "auto" : "none",
+                        }}
                     >
-                        {navLinks.map((link, index) => (
-                            <li
-                                key={link.name}
-                                className="relative group"
-                                style={{ animationDelay: `${index * 50}ms` }}
-                            >
-                                <a
-                                    href={link.href}
-                                    className={`text-base-content hover:bg-primary hover:text-primary-content transition-all duration-300 transform hover:scale-105 hover:translate-x-2 rounded-xl py-3 px-4 mb-1 relative overflow-hidden
-                                        ${
-                                            pathname === link.href
-                                                ? "bg-primary text-primary-content font-bold shadow-md"
-                                                : ""
-                                        }
-                                        animate-in slide-in-from-left-2 duration-300
-                                    `}
+                        <ul className="menu p-3 max-h-[calc(100vh-200px)]">
+                            {navLinks.map((link, index) => (
+                                <li
+                                    key={link.name}
+                                    className="relative group"
+                                    style={{
+                                        // subtle stagger using transitionDelay per item
+                                        transition:
+                                            "transform 360ms ease, opacity 300ms ease",
+                                        transform: mobileOpen
+                                            ? "translateZ(0) translateX(0)"
+                                            : "translateZ(-20px) translateX(-6px)",
+                                        opacity: mobileOpen ? 1 : 0,
+                                        transitionDelay: `${index * 40}ms`,
+                                    }}
                                 >
-                                    <span className="relative z-10 flex items-center gap-3">
-                                        {link.icon}
-                                        {link.name}
-                                    </span>
-                                    {/* Animated background effect */}
-                                    <div className="absolute inset-0 bg-gradient-to-r from-primary/20 to-primary/10 transform -translate-x-full group-hover:translate-x-0 transition-transform duration-500"></div>
-                                </a>
-                                {/* Mobile hover label */}
-                                <div className="absolute left-full top-1/2 transform -translate-y-1/2 ml-2 bg-primary text-primary-content px-3 py-1 rounded-lg text-sm opacity-0 group-hover:opacity-100 transition-all duration-200 pointer-events-none whitespace-nowrap shadow-lg scale-95 group-hover:scale-100">
-                                    {link.name}
-                                    <div className="absolute left-0 top-1/2 transform -translate-y-1/2 -translate-x-1 w-2 h-2 bg-primary rotate-45"></div>
-                                </div>
-                            </li>
-                        ))}
-                    </ul>
+                                    <a
+                                        href={link.href}
+                                        className={`text-base-content hover:bg-primary hover:text-primary-content transition-all duration-300 transform hover:scale-105 hover:translate-x-2 rounded-xl py-3 px-4 mb-1 relative overflow-hidden
+                                            ${
+                                                pathname === link.href
+                                                    ? "bg-primary text-primary-content font-bold shadow-md"
+                                                    : ""
+                                            }`}
+                                        onClick={() => setMobileOpen(false)}
+                                    >
+                                        <span className="relative z-10 flex items-center gap-3">
+                                            {link.icon}
+                                            {link.name}
+                                        </span>
+                                        {/* Animated background effect */}
+                                        <div className="absolute inset-0 bg-gradient-to-r from-primary/20 to-primary/10 transform -translate-x-full group-hover:translate-x-0 transition-transform duration-500"></div>
+                                    </a>
+                                </li>
+                            ))}
+                        </ul>
+                    </div>
                 </div>
             </div>
         </nav>

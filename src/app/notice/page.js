@@ -28,7 +28,7 @@ export default function NoticeFeed() {
     }, []);
 
     return (
-        <div className="min-h-screen flex flex-col items-center bg-base-200 pt-6 pb-24">
+        <div className="min-h-screen relative -z-10 flex flex-col items-center bg-base-200 pt-6 pb-24">
             <button
                 className="flex items-center gap-2 mb-4 text-lg text-primary hover:text-green-600 font-semibold"
                 onClick={() => router.push("/")}
