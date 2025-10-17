@@ -122,14 +122,6 @@ export default function NoticeAdmin() {
                     <h2 className="text-lg font-medium text-gray-900">
                         Uploaded Images
                     </h2>
-                    <div className="flex items-center space-x-2">
-                        <button
-                            onClick={fetchImages}
-                            className="px-3 py-1 bg-blue-600 text-white rounded hover:bg-blue-700"
-                        >
-                            Refresh
-                        </button>
-                    </div>
                 </div>
 
                 {loading && (
