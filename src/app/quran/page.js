@@ -119,9 +119,12 @@ export default function Quran() {
         window.addEventListener("keydown", onKey);
         const prevOverflow = document.body.style.overflow;
         document.body.style.overflow = "hidden";
+        // mark body so global CSS can hide fixed bottom nav
+        document.body.classList.add("bottom-nav-hidden");
         return () => {
             window.removeEventListener("keydown", onKey);
             document.body.style.overflow = prevOverflow;
+            document.body.classList.remove("bottom-nav-hidden");
         };
     }, [showReader]);
 
@@ -141,6 +144,7 @@ export default function Quran() {
                       proxied
                   )}`
                 : `/pdf-viewer?file=${encodeURIComponent(proxied)}`;
+                
             console.log("PDF viewer URLs", { proxied, viewer });
             const finalUrl = viewer;
             setCurrentPara(surah.number);
@@ -326,9 +330,9 @@ export default function Quran() {
                 </div>
                 {/* In-app full-window reader modal (mobile/tablet/web responsive) */}
                 {showReader && (
-                    <div className="fixed inset-0 z-50 bg-black bg-opacity-80">
+                    <div className="fixed inset-0 z-[120] bg-black bg-opacity-80">
                         <div className="flex flex-col h-screen w-screen">
-                            <header className="flex items-center justify-between px-6 py-6 bg-base-200 border-b border-base-300 ">
+                            <header className="flex items-center justify-between px-10 py-10 bg-base-200 border-b border-base-300 ">
                                 <div>
                                     <span className="font-semibold text-lg">
                                         {currentTitle ||

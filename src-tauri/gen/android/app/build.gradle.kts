@@ -85,3 +85,35 @@ dependencies {
 }
 
 apply(from = "tauri.build.gradle.kts")
+
+// Copy src-tauri/logo.png into Android mipmap launcher icons so the APK uses the
+// project's logo as the app icon. This runs before preBuild and will overwrite
+// existing launcher icons in the generated project.
+tasks.register("copyTauriIcon") {
+    doLast {
+        val srcIcon = file("../../../logo.png")
+        val resDir = file("src/main/res")
+        if (!srcIcon.exists()) {
+            logger.warn("Tauri logo not found at ${'$'}{srcIcon.path} - skipping icon copy")
+            return@doLast
+        }
+
+        val densities = listOf("mipmap-mdpi", "mipmap-hdpi", "mipmap-xhdpi", "mipmap-xxhdpi", "mipmap-xxxhdpi")
+        densities.forEach { d ->
+            val dir = File(resDir, d)
+            if (!dir.exists()) dir.mkdirs()
+
+            val targets = listOf("ic_launcher.png", "ic_launcher_round.png", "ic_launcher_foreground.png")
+            targets.forEach { name ->
+                try {
+                    val dest = File(dir, name)
+                    srcIcon.copyTo(dest, overwrite = true)
+                } catch (e: Exception) {
+                    logger.warn("Failed to copy icon to ${'$'}d/${'$'}name: ${'$'}{e.message}")
+                }
+            }
+        }
+    }
+}
+
+tasks.matching { it.name == "preBuild" }.configureEach { dependsOn("copyTauriIcon") }

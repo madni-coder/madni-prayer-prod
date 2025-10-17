@@ -60,14 +60,33 @@ const navLinks = [
 
 export default function TopNav() {
     const pathname = usePathname();
+    const [forceHidden, setForceHidden] = React.useState(false);
+
+    // Hide nav when the Quran reader modal marks the body
+    React.useEffect(() => {
+        if (typeof document === "undefined") return;
+        const update = () =>
+            setForceHidden(
+                document.body?.classList?.contains("bottom-nav-hidden")
+            );
+        update();
+        const observer = new MutationObserver(update);
+        observer.observe(document.body, {
+            attributes: true,
+            attributeFilter: ["class"],
+        });
+        return () => observer.disconnect();
+    }, []);
     // Hide only on admin pages and login page
     const isAdmin = pathname.startsWith("/admin");
     const isLogin = pathname === "/login" || pathname.startsWith("/login/");
     const isNotice = pathname.startsWith("/notice");
-    if (isAdmin || isLogin) return null;
+    const isPdfViewer = pathname.startsWith("/pdf-viewer");
+    if (isAdmin || isLogin || isPdfViewer || forceHidden) return null;
 
     return (
         <nav
+            data-app-top-nav
             className={`${
                 isNotice ? "relative w-full" : "sticky top-0 z-50"
             } bg-base-100 backdrop-blur border-b border-base-300 shadow-sm`}

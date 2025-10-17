@@ -1,6 +1,7 @@
 "use client";
 import React, { useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
+import QuranLoader from "../../components/QuranLoader";
 
 export default function ClientPdfViewer({ file: fileProp }) {
     const searchParams = useSearchParams?.();
@@ -8,6 +9,9 @@ export default function ClientPdfViewer({ file: fileProp }) {
     const file = fileProp || paramFile || "";
 
     const [loading, setLoading] = useState(true);
+    const [loadingProgress, setLoadingProgress] = useState(0);
+    const [currentPage, setCurrentPage] = useState(0);
+    const [totalPages, setTotalPages] = useState(0);
     const [err, setErr] = useState(null);
     const [url, setUrl] = useState("");
     const [pages, setPages] = useState([]);
@@ -15,6 +19,9 @@ export default function ClientPdfViewer({ file: fileProp }) {
     useEffect(() => {
         setErr(null);
         setLoading(true);
+        setLoadingProgress(0);
+        setCurrentPage(0);
+        setTotalPages(0);
         if (!file) {
             setUrl("");
             setLoading(false);
@@ -35,11 +42,14 @@ export default function ClientPdfViewer({ file: fileProp }) {
         async function renderAllPages() {
             setErr(null);
             setLoading(true);
+            setLoadingProgress(0);
             setPages([]);
             try {
                 const pdfjsPath = "/pdfjs/pdf.min.mjs";
                 const workerPath = "/pdfjs/pdf.worker.min.mjs";
 
+                // Loading PDF library - 10%
+                setLoadingProgress(10);
                 const pdfjsModule = await import(
                     /* webpackIgnore: true */ pdfjsPath
                 );
@@ -47,6 +57,8 @@ export default function ClientPdfViewer({ file: fileProp }) {
                 if (pdfjsLib.GlobalWorkerOptions)
                     pdfjsLib.GlobalWorkerOptions.workerSrc = workerPath;
 
+                // Fetching PDF - 20%
+                setLoadingProgress(20);
                 const resp = await fetch(url, {
                     method: "GET",
                     credentials: "same-origin",
@@ -55,12 +67,19 @@ export default function ClientPdfViewer({ file: fileProp }) {
                     throw new Error("Failed to fetch PDF: " + resp.status);
                 const arrayBuffer = await resp.arrayBuffer();
 
+                // Loading PDF document - 30%
+                setLoadingProgress(30);
                 const loadingTask = pdfjsLib.getDocument({ data: arrayBuffer });
                 const pdf = await loadingTask.promise;
                 if (cancelled) return;
 
                 const created = [];
-                for (let i = 1; i <= pdf.numPages; i++) {
+                const totalPagesCount = pdf.numPages;
+                setTotalPages(totalPagesCount);
+
+                // Rendering pages - 40% to 100%
+                for (let i = 1; i <= totalPagesCount; i++) {
+                    setCurrentPage(i);
                     const page = await pdf.getPage(i);
                     const viewport = page.getViewport({ scale: 1.5 });
                     const canvas = document.createElement("canvas");
@@ -70,6 +89,10 @@ export default function ClientPdfViewer({ file: fileProp }) {
                     await page.render({ canvasContext: ctx, viewport }).promise;
                     if (cancelled) return;
                     created.push(canvas.toDataURL("image/png"));
+
+                    // Update progress based on pages rendered (40% + 60% based on progress)
+                    const pageProgress = (i / totalPagesCount) * 60;
+                    setLoadingProgress(40 + pageProgress);
                 }
 
                 setPages(created);
@@ -78,6 +101,7 @@ export default function ClientPdfViewer({ file: fileProp }) {
                 setErr(e.message || String(e));
             } finally {
                 setLoading(false);
+                setLoadingProgress(100);
             }
         }
 
@@ -98,11 +122,26 @@ export default function ClientPdfViewer({ file: fileProp }) {
 
     return (
         <div className="w-full min-h-screen bg-base-100 text-base-content p-4">
-            {loading && (
-                <div className="flex items-center justify-center h-48">
-                    <div className="loader border-4 border-t-primary rounded-full w-12 h-12 animate-spin" />
-                </div>
-            )}
+            <QuranLoader
+                isVisible={loading}
+                progress={loadingProgress}
+                title={
+                    loadingProgress < 30
+                        ? "Loading Quran PDF..."
+                        : loadingProgress < 40
+                        ? "Preparing Document..."
+                        : "Rendering Pages..."
+                }
+                subtitle={
+                    loadingProgress < 30
+                        ? "Please wait while we fetch the PDF file"
+                        : loadingProgress < 40
+                        ? "Processing the document for viewing"
+                        : totalPages > 0
+                        ? `Rendering page ${currentPage} of ${totalPages}`
+                        : "Preparing pages for rendering..."
+                }
+            />
 
             {err ? (
                 <div className="p-6 text-center">

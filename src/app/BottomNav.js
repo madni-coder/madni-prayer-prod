@@ -1,7 +1,7 @@
 "use client";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
     FaQuran,
     FaRegCompass,
@@ -28,9 +28,31 @@ const items = [
 export default function BottomNav() {
     const pathname = usePathname();
     const [activeRipple, setActiveRipple] = useState(null);
+    const [forceHidden, setForceHidden] = useState(false);
+
+    // Hide nav when the Quran reader modal marks the body
+    useEffect(() => {
+        if (typeof document === "undefined") return;
+        const update = () =>
+            setForceHidden(
+                document.body?.classList?.contains("bottom-nav-hidden")
+            );
+        update();
+        const observer = new MutationObserver(update);
+        observer.observe(document.body, {
+            attributes: true,
+            attributeFilter: ["class"],
+        });
+        return () => observer.disconnect();
+    }, []);
 
     // Hide on admin pages
-    if (pathname.startsWith("/admin")) return null;
+    if (
+        pathname.startsWith("/admin") ||
+        pathname.startsWith("/pdf-viewer") ||
+        forceHidden
+    )
+        return null;
 
     const handleItemClick = (itemName) => {
         setActiveRipple(itemName);
@@ -46,6 +68,7 @@ export default function BottomNav() {
 
     return (
         <nav
+            data-app-bottom-nav
             className="md:hidden fixed bottom-0 left-0 right-0 z-50 flex px-2 py-2 h-16 bg-white/95 dark:bg-neutral-900/95 border-t border-gray-200 dark:border-gray-700 backdrop-blur-lg shadow-lg"
             role="navigation"
             aria-label="Bottom Navigation"

@@ -45,3 +45,27 @@ code {
     word-wrap: break-word;
     overflow-wrap: break-word;
 }
+
+/* Hide app navs when the Quran reader overlay is open */
+body.bottom-nav-hidden [data-app-bottom-nav],
+body.bottom-nav-hidden [data-app-top-nav] {
+    display: none !important;
+}
+
+/* Also hide on dedicated pdf viewer route by matching an attribute
+   that we can set on the root HTML when needed; as a fallback the
+   JS route checks already handle it. Left here for robustness. */
+html[data-hide-navs="1"] [data-app-bottom-nav],
+html[data-hide-navs="1"] [data-app-top-nav] {
+    display: none !important;
+}
+
+/* Shimmer animation for loader */
+@keyframes shimmer {
+    0% {
+        transform: translateX(-100%);
+    }
+    100% {
+        transform: translateX(100%);
+    }
+}
