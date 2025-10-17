@@ -7,9 +7,10 @@ export default function ClientPdfViewer({ file: fileProp }) {
     const paramFile = searchParams ? searchParams.get("file") : null;
     const file = fileProp || paramFile || "";
 
-    const [url, setUrl] = useState("");
     const [loading, setLoading] = useState(true);
     const [err, setErr] = useState(null);
+    const [url, setUrl] = useState("");
+    const [pages, setPages] = useState([]);
 
     useEffect(() => {
         setErr(null);
@@ -20,17 +21,72 @@ export default function ClientPdfViewer({ file: fileProp }) {
             return;
         }
         try {
-            // file is expected to be an encoded URL (possibly proxied). Decode once.
             const decoded = decodeURIComponent(file);
             setUrl(decoded);
         } catch (e) {
-            // Fallback: use as-is
             setUrl(file);
-        } finally {
-            // allow iframe to load
-            setTimeout(() => setLoading(false), 150);
         }
     }, [file]);
+
+    useEffect(() => {
+        if (!url) return;
+        let cancelled = false;
+
+        async function renderAllPages() {
+            setErr(null);
+            setLoading(true);
+            setPages([]);
+            try {
+                const pdfjsPath = "/pdfjs/pdf.min.mjs";
+                const workerPath = "/pdfjs/pdf.worker.min.mjs";
+
+                const pdfjsModule = await import(
+                    /* webpackIgnore: true */ pdfjsPath
+                );
+                const pdfjsLib = pdfjsModule.default || pdfjsModule;
+                if (pdfjsLib.GlobalWorkerOptions)
+                    pdfjsLib.GlobalWorkerOptions.workerSrc = workerPath;
+
+                const resp = await fetch(url, {
+                    method: "GET",
+                    credentials: "same-origin",
+                });
+                if (!resp.ok)
+                    throw new Error("Failed to fetch PDF: " + resp.status);
+                const arrayBuffer = await resp.arrayBuffer();
+
+                const loadingTask = pdfjsLib.getDocument({ data: arrayBuffer });
+                const pdf = await loadingTask.promise;
+                if (cancelled) return;
+
+                const created = [];
+                for (let i = 1; i <= pdf.numPages; i++) {
+                    const page = await pdf.getPage(i);
+                    const viewport = page.getViewport({ scale: 1.5 });
+                    const canvas = document.createElement("canvas");
+                    canvas.width = Math.floor(viewport.width);
+                    canvas.height = Math.floor(viewport.height);
+                    const ctx = canvas.getContext("2d");
+                    await page.render({ canvasContext: ctx, viewport }).promise;
+                    if (cancelled) return;
+                    created.push(canvas.toDataURL("image/png"));
+                }
+
+                setPages(created);
+            } catch (e) {
+                console.error("PDF render error:", e);
+                setErr(e.message || String(e));
+            } finally {
+                setLoading(false);
+            }
+        }
+
+        renderAllPages();
+
+        return () => {
+            cancelled = true;
+        };
+    }, [url]);
 
     if (!file) {
         return (
@@ -41,30 +97,36 @@ export default function ClientPdfViewer({ file: fileProp }) {
     }
 
     return (
-        <div className="w-full h-screen flex flex-col bg-base-100">
-            <header className="flex items-center justify-between p-3 bg-base-200 border-b">
-                <div className="font-semibold">PDF Viewer</div>
-                
-            </header>
-            <main className="flex-1 relative">
-                {loading && (
-                    <div className="absolute inset-0 flex items-center justify-center bg-white/80 z-10">
-                        <div className="loader border-4 border-t-primary rounded-full w-12 h-12 animate-spin" />
-                    </div>
-                )}
-                {err ? (
-                    <div className="p-6 text-center text-error">
-                        {String(err)}
-                    </div>
-                ) : (
-                    <iframe
-                        src={url}
-                        className="w-full h-full"
-                        title="PDF Viewer"
-                        onError={() => setErr("Failed to load PDF preview")}
-                    />
-                )}
-            </main>
+        <div className="w-full min-h-screen bg-base-100 text-base-content p-4">
+            {loading && (
+                <div className="flex items-center justify-center h-48">
+                    <div className="loader border-4 border-t-primary rounded-full w-12 h-12 animate-spin" />
+                </div>
+            )}
+
+            {err ? (
+                <div className="p-6 text-center">
+                    <a
+                        className="btn"
+                        href={url}
+                        target="_blank"
+                        rel="noreferrer"
+                    >
+                        Open PDF
+                    </a>
+                </div>
+            ) : (
+                <div className="flex flex-col items-stretch">
+                    {pages.map((dataUrl, idx) => (
+                        <img
+                            key={idx}
+                            src={dataUrl}
+                            alt={`page-${idx + 1}`}
+                            className="w-full h-auto mb-4"
+                        />
+                    ))}
+                </div>
+            )}
         </div>
     );
 }
