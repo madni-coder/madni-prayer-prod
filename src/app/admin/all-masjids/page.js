@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
 import { RefreshCw, X, Pencil } from "lucide-react";
-import fetchFromApi from '../../../utils/fetchFromApi';
+import fetchFromApi from "../../../utils/fetchFromApi";
 import { useRouter } from "next/navigation";
 
 export default function Page() {
@@ -13,9 +13,8 @@ export default function Page() {
     const [loading, setLoading] = useState(true);
     const [masjids, setMasjids] = useState([]);
     const [error, setError] = useState(null);
-    const [localityFilter, setLocalityFilter] = useState("All");
-    const [addressFilter, setAddressFilter] = useState("All"); // colony
     const [searchQuery, setSearchQuery] = useState("");
+    const [colonySearch, setColonySearch] = useState(""); // new state for colony search
     const [reloading, setReloading] = useState(false);
     const [isAuthenticated, setIsAuthenticated] = useState(false);
     const [authLoading, setAuthLoading] = useState(true);
@@ -76,46 +75,21 @@ export default function Page() {
     }
 
     const handleReset = () => {
-        setLocalityFilter("All");
-        setAddressFilter("All");
         setSearchQuery("");
+        setColonySearch(""); // reset colony search
     };
 
     const clearSearch = () => setSearchQuery("");
-    const clearAddressFilter = () => setAddressFilter("All");
-    const clearLocalityFilter = () => setLocalityFilter("All");
-
-    // Build dynamic options
-    const colonyOptions = [
-        "All",
-        ...Array.from(
-            new Set(
-                masjids
-                    .map((m) => m.colony)
-                    .filter((v) => v && v.trim().length > 0)
-            )
-        ),
-    ];
-    const localityOptions = [
-        "All",
-        ...Array.from(
-            new Set(
-                masjids
-                    .map((m) => m.locality)
-                    .filter((v) => v && v.trim().length > 0)
-            )
-        ),
-    ];
+    const clearColonySearch = () => setColonySearch("");
 
     const filteredMasjids = masjids.filter((m) => {
-        const matchesLocality =
-            localityFilter === "All" || m.locality === localityFilter;
-        const matchesColony =
-            addressFilter === "All" || m.colony === addressFilter;
         const matchesSearch = (m.masjidName || "")
             .toLowerCase()
             .includes(searchQuery.toLowerCase());
-        return matchesLocality && matchesColony && matchesSearch;
+        const matchesColonySearch = (m.colony || "")
+            .toLowerCase()
+            .includes(colonySearch.toLowerCase());
+        return matchesSearch && matchesColonySearch;
     });
 
     return (
@@ -157,7 +131,7 @@ export default function Page() {
 
             {/* Filters */}
             <div className="bg-white p-4 rounded-lg shadow-sm mb-6">
-                <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                     <div>
                         <label className="block text-sm font-medium text-gray-700 mb-1">
                             Masjid Name
@@ -186,53 +160,20 @@ export default function Page() {
                             Colony Address
                         </label>
                         <div className="relative">
-                            <select
-                                value={addressFilter}
+                            <input
+                                type="text"
+                                placeholder="Search colony address"
+                                value={colonySearch}
                                 onChange={(e) =>
-                                    setAddressFilter(e.target.value)
+                                    setColonySearch(e.target.value)
                                 }
-                                className="w-full px-3 py-2 pr-8 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-black appearance-none"
-                            >
-                                {colonyOptions.map((c) => (
-                                    <option key={c} value={c}>
-                                        {c}
-                                    </option>
-                                ))}
-                            </select>
-                            {addressFilter !== "All" && (
+                                className="w-full px-3 py-2 pr-8 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-black"
+                            />
+                            {colonySearch && (
                                 <button
-                                    onClick={clearAddressFilter}
+                                    onClick={clearColonySearch}
                                     className="absolute right-2 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
-                                    title="Clear address filter"
-                                >
-                                    <X size={16} />
-                                </button>
-                            )}
-                        </div>
-                    </div>
-                    <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">
-                            Locality
-                        </label>
-                        <div className="relative">
-                            <select
-                                value={localityFilter}
-                                onChange={(e) =>
-                                    setLocalityFilter(e.target.value)
-                                }
-                                className="w-full px-3 py-2 pr-8 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-black appearance-none"
-                            >
-                                {localityOptions.map((l) => (
-                                    <option key={l} value={l}>
-                                        {l}
-                                    </option>
-                                ))}
-                            </select>
-                            {localityFilter !== "All" && (
-                                <button
-                                    onClick={clearLocalityFilter}
-                                    className="absolute right-2 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
-                                    title="Clear locality filter"
+                                    title="Clear colony search"
                                 >
                                     <X size={16} />
                                 </button>
@@ -255,10 +196,9 @@ export default function Page() {
             <div className="bg-white rounded-lg shadow-sm overflow-hidden">
                 {/* Table Header */}
                 <div className="bg-yellow-600 text-white">
-                    <div className="grid grid-cols-10 gap-4 px-6 py-4 font-medium">
+                    <div className="grid grid-cols-8 gap-4 px-6 py-4 font-medium">
                         <div className="col-span-2">Masjid</div>
                         <div className="col-span-2">Colony Address</div>
-                        <div className="col-span-2">Locality</div>
                         <div>Role</div>
                         <div>Name</div>
                         <div>Mobile Number</div>
@@ -276,7 +216,7 @@ export default function Page() {
                     {filteredMasjids.map((m) => (
                         <div
                             key={m.id}
-                            className="grid grid-cols-10 gap-4 px-6 py-4 hover:bg-gray-50 transition-colors"
+                            className="grid grid-cols-8 gap-4 px-6 py-4 hover:bg-gray-50 transition-colors"
                         >
                             <div className="col-span-2 flex items-center space-x-3">
                                 <div className="w-10 h-10 bg-gray-200 rounded-full flex items-center justify-center">
@@ -291,11 +231,6 @@ export default function Page() {
                             <div className="col-span-2">
                                 <div className="text-sm text-gray-900">
                                     {m.colony || "-"}
-                                </div>
-                            </div>
-                            <div className="col-span-2">
-                                <div className="text-sm text-gray-900">
-                                    {m.locality || "-"}
                                 </div>
                             </div>
                             <div>

@@ -2,9 +2,25 @@ import { NextResponse } from "next/server";
 // Importing Supabase client library
 import { createClient } from "@supabase/supabase-js";
 
+// Ensure this route runs in the Node.js runtime (Buffer, Node streams, etc.)
+export const runtime = "nodejs";
+
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+// Prefer server-side service role key for write/delete operations; fallback to anon for local read-only
+const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+const supabaseKey =
+    supabaseServiceKey || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 const supabase = createClient(supabaseUrl, supabaseKey);
+
+// Quick sanity log for missing env vars (helps diagnose 500s during runtime)
+if (!supabaseUrl || !supabaseKey) {
+    console.error("Supabase environment variables are missing:", {
+        NEXT_PUBLIC_SUPABASE_URL: !!supabaseUrl,
+        SUPABASE_SERVICE_ROLE_KEY: !!supabaseServiceKey,
+        NEXT_PUBLIC_SUPABASE_ANON_KEY:
+            !!process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
+    });
+}
 
 export async function POST(request) {
     try {

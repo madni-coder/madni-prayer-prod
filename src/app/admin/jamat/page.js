@@ -2,7 +2,7 @@
 import { useState, useEffect, useRef } from "react";
 import { FaPencilAlt, FaCheckCircle } from "react-icons/fa";
 import { X, RotateCcw } from "lucide-react";
-import fetchFromApi from '../../../utils/fetchFromApi';
+import fetchFromApi from "../../../utils/fetchFromApi";
 import { useRouter } from "next/navigation";
 
 const prayers = [
@@ -32,6 +32,7 @@ export default function JamatTimesPage() {
     const [saveMessage, setSaveMessage] = useState("");
     const [isAuthenticated, setIsAuthenticated] = useState(false);
     const [authLoading, setAuthLoading] = useState(true);
+    const [colonySearch, setColonySearch] = useState(""); // add for colony search
 
     // Authentication check effect
     useEffect(() => {
@@ -294,40 +295,45 @@ export default function JamatTimesPage() {
     return (
         <div className="min-h-screen bg-white flex flex-col items-center py-10">
             <div className="flex gap-4 mb-8 w-full max-w-5xl items-center px-4">
-                {/* Colony Dropdown (DaisyUI) */}
-                <div className="dropdown flex-1 relative">
-                    <label
-                        tabIndex={0}
-                        className="btn w-full bg-white border text-gray-500 justify-between text-lg h-14"
-                    >
-                        {loading
-                            ? "Loading..."
-                            : selectedColony || "Select Colony"}
-                    </label>
-                    {selectedColony && (
+                {/* Colony Search Input */}
+                <div className="flex-1 relative">
+                    <input
+                        type="text"
+                        placeholder="Search or enter colony"
+                        value={colonySearch}
+                        onChange={(e) => {
+                            setColonySearch(e.target.value);
+                            setSelectedColony(e.target.value);
+                        }}
+                        className="input w-full bg-white border text-gray-800 text-lg h-14 pr-10"
+                        list="colony-list"
+                    />
+                    {colonySearch && (
                         <button
-                            onClick={handleClearColony}
-                            className="absolute right-2 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 z-20"
+                            onClick={() => {
+                                setColonySearch("");
+                                setSelectedColony("");
+                            }}
+                            className="absolute right-1 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 z-20"
+                            title="Clear colony"
                         >
                             <X size={20} />
                         </button>
                     )}
-                    <ul
-                        tabIndex={0}
-                        className="dropdown-content menu p-2 shadow bg-base-100 rounded-box w-full z-10"
-                    >
-                        {colonies.map((colony) => (
-                            <li key={colony.id || colony.name || colony}>
-                                <a
-                                    onClick={() =>
-                                        setSelectedColony(colony.name || colony)
-                                    }
-                                >
-                                    {colony.name || colony}
-                                </a>
-                            </li>
-                        ))}
-                    </ul>
+                    <datalist id="colony-list">
+                        {colonies
+                            .filter((colony) =>
+                                (colony.name || colony)
+                                    .toLowerCase()
+                                    .includes(colonySearch.toLowerCase())
+                            )
+                            .map((colony) => (
+                                <option
+                                    key={colony.name || colony}
+                                    value={colony.name || colony}
+                                />
+                            ))}
+                    </datalist>
                 </div>
                 {/* Masjid Dropdown (DaisyUI) */}
                 <div className="dropdown flex-1 relative">
