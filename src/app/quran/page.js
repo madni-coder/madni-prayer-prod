@@ -70,9 +70,7 @@ const paras = paraNames.map((p, i) => ({
     ruku: p.ruku,
 }));
 
-// GET API function referencing route.js
 async function getPara() {
-    // Prefer deployed API when running inside Tauri (no local Next API in static bundle)
     const endpoint = isTauri
         ? `${REMOTE_API_BASE}/api/api-quran`
         : "/api/api-quran";
@@ -80,34 +78,17 @@ async function getPara() {
         const res = await fetch(endpoint, { method: "GET" });
         if (!res.ok) throw new Error("Failed to fetch para files");
         const data = await res.json();
-        // Return files array as in route.js
         return data.files;
     } catch (err) {
-        // Fallback: try remote API if relative failed
-        if (!isTauri) {
-            try {
-                const res2 = await fetch(`${REMOTE_API_BASE}/api/api-quran`, {
-                    method: "GET",
-                });
-                if (res2.ok) {
-                    const data2 = await res2.json();
-                    return data2.files;
-                }
-            } catch (_) {
-                // ignore
-            }
-        }
         throw new Error(err.message);
     }
 }
 
-// GET Surah PDF function for Supabase
 async function getSurahPdf(surahName) {
     const endpoint = isTauri
         ? `${REMOTE_API_BASE}/api/api-quran`
         : "/api/api-quran";
     try {
-        // encode surahName to safely include spaces/special characters
         const res = await fetch(`${endpoint}?surah=${surahName}`, {
             method: "GET",
         });
@@ -115,23 +96,6 @@ async function getSurahPdf(surahName) {
         const data = await res.json();
         return data.fileUrl;
     } catch (err) {
-        // Fallback: try remote API if relative failed
-        if (!isTauri) {
-            try {
-                const res2 = await fetch(
-                    `${REMOTE_API_BASE}/api/api-quran?surah=${encodeURIComponent(
-                        surahName
-                    )}`,
-                    { method: "GET" }
-                );
-                if (res2.ok) {
-                    const data2 = await res2.json();
-                    return data2.fileUrl;
-                }
-            } catch (_) {
-                // ignore
-            }
-        }
         throw new Error(err.message);
     }
 }
@@ -167,7 +131,6 @@ export default function Quran() {
             const surahFileName = surah.name;
             const fileUrl = await getSurahPdf(surahFileName);
 
-            // In-app PDF.js viewer (mobile & desktop web)
             const proxied = isTauri
                 ? `${REMOTE_API_BASE}/api/pdf-proxy?url=${encodeURIComponent(
                       fileUrl
@@ -178,13 +141,8 @@ export default function Quran() {
                       proxied
                   )}`
                 : `/pdf-viewer?file=${encodeURIComponent(proxied)}`;
-            // Debug/logging to help diagnose APK/webview issues
             console.log("PDF viewer URLs", { proxied, viewer });
-
-            // On static/Tauri builds the Next API routes may not behave the same
-            // inside the embedded webview; prefer loading the proxied PDF URL
-            // directly into the iframe when running in Tauri.
-            const finalUrl = isTauri ? proxied : viewer;
+            const finalUrl = viewer;
             setCurrentPara(surah.number);
             setCurrentTitle(`${surah.number}. ${surah.name}`);
             setReaderUrl(finalUrl);
@@ -195,12 +153,9 @@ export default function Quran() {
         }
     };
 
-    // Open reader modal for a para
     const openReader = async (p) => {
-        // Find file for this para from API response
         const file = files.find((f) => f.id === p.number);
         if (!file) return;
-        // Use fileUrl from API
         const urlBase = file.fileUrl;
 
         const proxied = `/api/pdf-proxy?url=${encodeURIComponent(urlBase)}`;
@@ -215,7 +170,7 @@ export default function Quran() {
               )}`
             : `/pdf-viewer?file=${encodeURIComponent(proxiedFinal)}`;
         console.log("PDF viewer URLs", { proxied: proxiedFinal, viewer });
-        const finalUrl = isTauri ? proxiedFinal : viewer;
+        const finalUrl = viewer;
         setCurrentPara(p.number);
         setCurrentTitle(`Para ${p.number}`);
         setReaderUrl(finalUrl);
@@ -232,7 +187,6 @@ export default function Quran() {
             });
     }, []);
 
-    // Filter logic for Surah and Para
     const filteredSurahs = surahs.filter(
         (s) =>
             s.name.toLowerCase().includes(search.toLowerCase()) ||
@@ -314,8 +268,6 @@ export default function Quran() {
                               </div>
                           ))
                         : filteredParas.map((p) => {
-                              // Find file for this para
-                              const file = files.find((f) => f.id === p.number);
                               return (
                                   <div
                                       key={p.number}
@@ -376,7 +328,7 @@ export default function Quran() {
                 {showReader && (
                     <div className="fixed inset-0 z-50 bg-black bg-opacity-80">
                         <div className="flex flex-col h-screen w-screen">
-                            <header className="flex items-center justify-between px-10 py-10 bg-base-200 border-b border-base-300">
+                            <header className="flex items-center justify-between px-6 py-6 bg-base-200 border-b border-base-300 ">
                                 <div>
                                     <span className="font-semibold text-lg">
                                         {currentTitle ||

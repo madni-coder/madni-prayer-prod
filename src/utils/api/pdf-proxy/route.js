@@ -13,6 +13,17 @@ function isAllowedUrl(url) {
     }
 }
 
+function corsHeaders(origin) {
+    return {
+        "access-control-allow-origin": origin || "*",
+        "access-control-allow-methods": "GET, HEAD, OPTIONS",
+        "access-control-allow-headers":
+            "*, Authorization, Range, If-Range, Content-Type",
+        "access-control-expose-headers":
+            "Content-Length, Content-Range, Accept-Ranges, ETag, Last-Modified, Content-Type, Cache-Control",
+    };
+}
+
 async function proxy(request) {
     const { searchParams } = new URL(request.url);
     const target = searchParams.get("url");
@@ -61,6 +72,11 @@ async function proxy(request) {
         outHeaders.set("cache-control", "public, max-age=31536000, immutable");
     }
 
+    // CORS headers for WebView
+    const origin = request.headers.get("origin") || "*";
+    const ch = corsHeaders(origin);
+    for (const [k, v] of Object.entries(ch)) outHeaders.set(k, v);
+
     return new Response(upstream.body, {
         status: upstream.status,
         statusText: upstream.statusText,
@@ -81,4 +97,12 @@ export async function GET(request) {
 
 export async function HEAD(request) {
     return GET(request);
+}
+
+export async function OPTIONS(request) {
+    const origin = request.headers.get("origin") || "*";
+    return new Response(undefined, {
+        status: 204,
+        headers: corsHeaders(origin),
+    });
 }
