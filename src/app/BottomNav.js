@@ -46,14 +46,6 @@ export default function BottomNav() {
         return () => observer.disconnect();
     }, []);
 
-    // Hide on admin pages
-    if (
-        pathname.startsWith("/admin") ||
-        pathname.startsWith("/pdf-viewer") ||
-        forceHidden
-    )
-        return null;
-
     const handleItemClick = (itemName) => {
         setActiveRipple(itemName);
         setTimeout(() => setActiveRipple(null), 600);
@@ -65,6 +57,14 @@ export default function BottomNav() {
         }
         return pathname.startsWith(href);
     };
+
+    // Hide on admin pages
+    if (
+        pathname.startsWith("/admin") ||
+        pathname.startsWith("/pdf-viewer") ||
+        forceHidden
+    )
+        return null;
 
     return (
         <nav

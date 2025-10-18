@@ -77,12 +77,6 @@ export default function TopNav() {
         });
         return () => observer.disconnect();
     }, []);
-    // Hide only on admin pages and login page
-    const isAdmin = pathname.startsWith("/admin");
-    const isLogin = pathname === "/login" || pathname.startsWith("/login/");
-    const isNotice = pathname.startsWith("/notice");
-    const isPdfViewer = pathname.startsWith("/pdf-viewer");
-    if (isAdmin || isLogin || isPdfViewer || forceHidden) return null;
 
     // New: control mobile nav open state for 3D animation
     const [mobileOpen, setMobileOpen] = React.useState(false);
@@ -101,6 +95,13 @@ export default function TopNav() {
         document.addEventListener("keydown", onKey);
         return () => document.removeEventListener("keydown", onKey);
     }, [mobileOpen]);
+
+    // Hide only on admin pages and login page
+    const isAdmin = pathname.startsWith("/admin");
+    const isLogin = pathname === "/login" || pathname.startsWith("/login/");
+    const isNotice = pathname.startsWith("/notice");
+    const isPdfViewer = pathname.startsWith("/pdf-viewer");
+    if (isAdmin || isLogin || isPdfViewer || forceHidden) return null;
 
     return (
         <nav
