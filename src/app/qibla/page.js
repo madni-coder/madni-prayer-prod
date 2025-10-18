@@ -1,89 +1,70 @@
 "use client";
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useState } from "react";
 import { FaAngleLeft } from "react-icons/fa";
 import { useRouter } from "next/navigation";
 
 export default function Qibla() {
     const router = useRouter();
-    const needleRef = useRef(null);
-    const [angle, setAngle] = useState(270);
-    const [deviceHeading, setDeviceHeading] = useState(0);
-    const [location, setLocation] = useState(null);
-    const [error, setError] = useState(null);
-    const [isLoading, setIsLoading] = useState(true);
-    const [isSensorAvailable, setIsSensorAvailable] = useState(false);
-    const [useManual, setUseManual] = useState(false);
-
+    const [deviceHeading, setDeviceHeading] = useState(null);
+    const normalize = (n) => ((n % 360) + 360) % 360;
     useEffect(() => {
-        let raf;
-        let currentAngle = angle;
-        let targetAngle = 270;
-
-        function animate() {
-            currentAngle += (targetAngle - currentAngle) * 0.05;
-            setAngle(currentAngle);
-            if (needleRef.current) {
-                needleRef.current.style.transform = `rotate(${currentAngle}deg)`;
+        let mounted = true;
+        const handleOrientation = (e) => {
+            let heading = null;
+            if (typeof e.webkitCompassHeading === "number") {
+                heading = e.webkitCompassHeading;
+            } else if (typeof e.alpha === "number") {
+                const screenAngle =
+                    (window.screen &&
+                    window.screen.orientation &&
+                    typeof window.screen.orientation.angle === "number"
+                        ? window.screen.orientation.angle
+                        : window.orientation) || 0;
+                const alpha = e.alpha || 0;
+                heading = 360 - (alpha + screenAngle);
             }
-            raf = requestAnimationFrame(animate);
+            if (heading != null && mounted) {
+                setDeviceHeading(normalize(heading));
+            }
+        };
+        if (typeof DeviceOrientationEvent !== "undefined") {
+            if (
+                typeof DeviceOrientationEvent.requestPermission === "function"
+            ) {
+                DeviceOrientationEvent.requestPermission()
+                    .then((perm) => {
+                        if (perm === "granted") {
+                            window.addEventListener(
+                                "deviceorientation",
+                                handleOrientation,
+                                true
+                            );
+                        }
+                    })
+                    .catch(() => {});
+            } else {
+                const evtName =
+                    "ondeviceorientationabsolute" in window
+                        ? "deviceorientationabsolute"
+                        : "deviceorientation";
+                window.addEventListener(evtName, handleOrientation, true);
+            }
         }
 
-        let interval = setInterval(() => {
-            targetAngle = 270 + (Math.random() * 20 - 10);
-        }, 3000);
-
-        animate();
-
         return () => {
-            clearInterval(interval);
-            cancelAnimationFrame(raf);
-        };
-    }, [angle]);
-
-    useEffect(() => {
-        let seenEvent = false;
-        const handleOrientation = (event) => {
-            if (typeof event.alpha === "number") {
-                seenEvent = true;
-                setIsSensorAvailable(true);
-                setDeviceHeading(event.alpha || 0);
-            }
-        };
-
-        // Listen briefly to detect if a sensor exists and emits events
-        window.addEventListener("deviceorientationabsolute", handleOrientation);
-        window.addEventListener("deviceorientation", handleOrientation);
-
-        const fallbackTimer = setTimeout(() => {
-            if (!seenEvent) {
-                setIsSensorAvailable(false);
-                setUseManual(true);
-            }
-        }, 2500);
-
-        return () => {
+            mounted = false;
+            window.removeEventListener(
+                "deviceorientation",
+                handleOrientation,
+                true
+            );
             window.removeEventListener(
                 "deviceorientationabsolute",
-                handleOrientation
+                handleOrientation,
+                true
             );
-            window.removeEventListener("deviceorientation", handleOrientation);
-            clearTimeout(fallbackTimer);
         };
     }, []);
-
-    function handleCompassClick(e) {
-        const rect = e.currentTarget.getBoundingClientRect();
-        const centerX = rect.left + rect.width / 2;
-        const centerY = rect.top + rect.height / 2;
-        const x = e.clientX - centerX;
-        const y = e.clientY - centerY;
-        let newTarget = (Math.atan2(y, x) * 180) / Math.PI + 90;
-        if (newTarget < 0) newTarget += 360;
-        setAngle(newTarget);
-        if (needleRef.current) {
-            needleRef.current.style.transform = `rotate(${newTarget}deg)`;
-        }
-    }
 
     return (
         <section className="flex flex-col items-center justify-center min-h-[70vh] px-4 animate-fade-in bg-base-100">
@@ -126,9 +107,7 @@ export default function Qibla() {
                                 justifyContent: "center",
                                 alignItems: "center",
                                 border: "8px solid #d4af37",
-                                cursor: "pointer",
                             }}
-                            onClick={handleCompassClick}
                         >
                             <div
                                 className="compass-face"
@@ -142,10 +121,13 @@ export default function Qibla() {
                                     display: "flex",
                                     justifyContent: "center",
                                     alignItems: "center",
+                                    transform: deviceHeading
+                                        ? `rotate(${-deviceHeading}deg)`
+                                        : "rotate(0deg)",
+                                    transition: "transform 180ms ease-out",
                                     boxShadow: "inset 0 0 30px rgba(0,0,0,0.7)",
                                 }}
                             >
-                                {/* Decoration Circles */}
                                 <div
                                     style={{
                                         position: "absolute",
@@ -173,7 +155,6 @@ export default function Qibla() {
                                         borderRadius: "50%",
                                     }}
                                 />
-                                {/* Directions */}
                                 <div
                                     className="direction north"
                                     style={{
@@ -270,9 +251,7 @@ export default function Qibla() {
                                         🕋
                                     </span>
                                 </div>
-                                {/* Needle as a clock-like arrow from center */}
                                 <div
-                                    ref={needleRef}
                                     className="needle"
                                     style={{
                                         position: "absolute",
@@ -283,17 +262,16 @@ export default function Qibla() {
                                         transformOrigin: "bottom center",
                                         zIndex: 5,
                                         pointerEvents: "none",
-                                        transform: `rotate(${angle}deg)`,
+                                        transform: "rotate(270deg)",
                                     }}
                                 >
-                                    {/* Arrow shaft */}
                                     <div
                                         style={{
                                             position: "absolute",
                                             left: -4,
-                                            top: -90, // reduced length
+                                            top: -90,
                                             width: 10,
-                                            height: 90, // reduced from 130 to 90
+                                            height: 90,
                                             background:
                                                 "linear-gradient(90deg, #ff4d4d 60%, #d4af37 100%)",
                                             borderRadius: 7,
@@ -302,12 +280,11 @@ export default function Qibla() {
                                             alignItems: "center",
                                         }}
                                     />
-                                    {/* Arrow head */}
                                     <div
                                         style={{
                                             position: "absolute",
                                             left: -8,
-                                            top: -105, // move arrow head accordingly
+                                            top: -105,
                                             width: 0,
                                             height: 0,
                                             borderLeft: "18px solid #ff4d4d",
@@ -319,7 +296,6 @@ export default function Qibla() {
                                         }}
                                     />
                                 </div>
-                                {/* Center Point */}
                                 <div
                                     className="center-point"
                                     style={{
@@ -337,40 +313,10 @@ export default function Qibla() {
                                         transform: "translate(-50%, -50%)",
                                     }}
                                 />
-                                {/* Qibla label */}
-
-                                <style>{`
-                                    @keyframes pulse {
-                                        0% { transform: translateY(-50%) scale(1);}
-                                        50% { transform: translateY(-50%) scale(1.05);}
-                                        100% { transform: translateY(-50%) scale(1);}
-                                    }
-                                `}</style>
                             </div>
                         </div>
                     </div>
                 </div>
-                <div
-                    className="degree-display"
-                    style={{
-                        display: "inline-block",
-                        margin: "0 auto 12px auto",
-                        color: "#fff",
-                        fontSize: 24,
-                        fontWeight: "bold",
-                        background: "rgba(60,60,60,0.7)",
-                        padding: "6px 24px",
-                        borderRadius: 18,
-                        boxShadow: "0 2px 12px rgba(0,0,0,0.25)",
-                        position: "relative",
-                        top: 0,
-                    }}
-                >
-                    {`${Math.round(angle % 360)}°`}
-                </div>
-                {/* Manual fallback for desktops/laptops without sensors */}
-              
-                
             </div>
         </section>
     );
