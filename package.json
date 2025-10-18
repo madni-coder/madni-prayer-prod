@@ -6,8 +6,9 @@
         "dev": "npm run move-api && NEXT_DISABLE_TURBOPACK=1 next dev",
         "move-api": "if [ -d 'src/utils/api' ]; then rm -rf src/app/api && mv src/utils/api src/app/api; fi",
         "move-api-back": "if [ -d 'src/app/api' ]; then rm -rf src/utils/api && mv src/app/api src/utils/api; fi",
+        "delete:build": "rm -rf .next && rm -rf out",
         "build": "npm run move-api && prisma generate && next build",
-        "build:tauri": "npm run move-api-back && prisma generate && next build",
+        "build:tauri": "npm run delete:build && npm run move-api-back && prisma generate && next build",
         "start": "next start",
         "lint": "eslint",
         "db:generate": "prisma generate",
@@ -38,6 +39,7 @@
         "eslint": "^9",
         "eslint-config-next": "15.5.0",
         "prisma": "^6.16.2",
-        "tailwindcss": "^4"
+        "tailwindcss": "^4",
+        "typescript": "5.9.3"
     }
 }

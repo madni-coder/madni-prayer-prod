@@ -1,89 +1,128 @@
 "use client";
-import React, { useEffect, useRef, useState } from "react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import { FaAngleLeft } from "react-icons/fa";
 import { useRouter } from "next/navigation";
 
 export default function Qibla() {
     const router = useRouter();
     const needleRef = useRef(null);
-    const [angle, setAngle] = useState(270);
-    const [deviceHeading, setDeviceHeading] = useState(0);
-    const [location, setLocation] = useState(null);
-    const [error, setError] = useState(null);
-    const [isLoading, setIsLoading] = useState(true);
+    const [angle, setAngle] = useState(270); // Fixed to west
+    const [deviceHeading, setDeviceHeading] = useState(null);
+    const [bearing, setBearing] = useState(null);
     const [isSensorAvailable, setIsSensorAvailable] = useState(false);
     const [useManual, setUseManual] = useState(false);
 
-    useEffect(() => {
-        let raf;
-        let currentAngle = angle;
-        let targetAngle = 270;
+    const normalize = useCallback((n) => ((n % 360) + 360) % 360, []);
 
-        function animate() {
-            currentAngle += (targetAngle - currentAngle) * 0.05;
-            setAngle(currentAngle);
-            if (needleRef.current) {
-                needleRef.current.style.transform = `rotate(${currentAngle}deg)`;
+    const computeBearing = useCallback(
+        (lat1, lon1, lat2, lon2) => {
+            const toRad = (d) => (d * Math.PI) / 180;
+            const toDeg = (r) => (r * 180) / Math.PI;
+            const φ1 = toRad(lat1);
+            const φ2 = toRad(lat2);
+            const λ1 = toRad(lon1);
+            const λ2 = toRad(lon2);
+            const y = Math.sin(λ2 - λ1) * Math.cos(φ2);
+            const x =
+                Math.cos(φ1) * Math.sin(φ2) -
+                Math.sin(φ1) * Math.cos(φ2) * Math.cos(λ2 - λ1);
+            return normalize(toDeg(Math.atan2(y, x)));
+        },
+        [normalize]
+    );
+
+    useEffect(() => {
+        const kaaba = { lat: 21.422487, lon: 39.826206 };
+        if (navigator.geolocation && !bearing) {
+            const onSuccess = (pos) => {
+                const { latitude, longitude } = pos.coords;
+                const b = computeBearing(
+                    latitude,
+                    longitude,
+                    kaaba.lat,
+                    kaaba.lon
+                );
+                setBearing(b);
+            };
+            const onError = () => setBearing(0);
+            navigator.geolocation.getCurrentPosition(onSuccess, onError, {
+                enableHighAccuracy: true,
+                timeout: 5000,
+                maximumAge: 60000,
+            });
+        } else if (!bearing) {
+            setBearing(0);
+        }
+    }, [bearing, computeBearing]);
+
+    // Add device orientation listener to update deviceHeading
+    useEffect(() => {
+        let mounted = true;
+        const handleOrientation = (e) => {
+            let heading = null;
+            // iOS Safari provides webkitCompassHeading
+            if (typeof e.webkitCompassHeading === "number") {
+                heading = e.webkitCompassHeading;
+            } else if (typeof e.alpha === "number") {
+                // e.alpha may be relative; adjust by screen orientation angle if available
+                const screenAngle =
+                    (window.screen &&
+                        window.screen.orientation &&
+                        window.screen.orientation.angle) ||
+                    window.orientation ||
+                    0;
+                heading = e.alpha - screenAngle;
             }
-            raf = requestAnimationFrame(animate);
+            if (heading != null && mounted) {
+                setIsSensorAvailable(true);
+                setDeviceHeading(normalize(heading));
+            }
+        };
+
+        // feature detection + iOS permission flow
+        if (typeof DeviceOrientationEvent !== "undefined") {
+            if (
+                typeof DeviceOrientationEvent.requestPermission === "function"
+            ) {
+                DeviceOrientationEvent.requestPermission()
+                    .then((perm) => {
+                        if (perm === "granted") {
+                            window.addEventListener(
+                                "deviceorientation",
+                                handleOrientation,
+                                true
+                            );
+                        } else {
+                            setIsSensorAvailable(false);
+                        }
+                    })
+                    .catch(() => setIsSensorAvailable(false));
+            } else {
+                // prefer absolute event if available
+                const evtName =
+                    "ondeviceorientationabsolute" in window
+                        ? "deviceorientationabsolute"
+                        : "deviceorientation";
+                window.addEventListener(evtName, handleOrientation, true);
+            }
+        } else {
+            setIsSensorAvailable(false);
         }
 
-        let interval = setInterval(() => {
-            targetAngle = 270 + (Math.random() * 20 - 10);
-        }, 3000);
-
-        animate();
-
         return () => {
-            clearInterval(interval);
-            cancelAnimationFrame(raf);
-        };
-    }, [angle]);
-
-    useEffect(() => {
-        let seenEvent = false;
-        const handleOrientation = (event) => {
-            if (typeof event.alpha === "number") {
-                seenEvent = true;
-                setIsSensorAvailable(true);
-                setDeviceHeading(event.alpha || 0);
-            }
-        };
-
-        // Listen briefly to detect if a sensor exists and emits events
-        window.addEventListener("deviceorientationabsolute", handleOrientation);
-        window.addEventListener("deviceorientation", handleOrientation);
-
-        const fallbackTimer = setTimeout(() => {
-            if (!seenEvent) {
-                setIsSensorAvailable(false);
-                setUseManual(true);
-            }
-        }, 2500);
-
-        return () => {
+            mounted = false;
+            window.removeEventListener(
+                "deviceorientation",
+                handleOrientation,
+                true
+            );
             window.removeEventListener(
                 "deviceorientationabsolute",
-                handleOrientation
+                handleOrientation,
+                true
             );
-            window.removeEventListener("deviceorientation", handleOrientation);
-            clearTimeout(fallbackTimer);
         };
-    }, []);
-
-    function handleCompassClick(e) {
-        const rect = e.currentTarget.getBoundingClientRect();
-        const centerX = rect.left + rect.width / 2;
-        const centerY = rect.top + rect.height / 2;
-        const x = e.clientX - centerX;
-        const y = e.clientY - centerY;
-        let newTarget = (Math.atan2(y, x) * 180) / Math.PI + 90;
-        if (newTarget < 0) newTarget += 360;
-        setAngle(newTarget);
-        if (needleRef.current) {
-            needleRef.current.style.transform = `rotate(${newTarget}deg)`;
-        }
-    }
+    }, [normalize]);
 
     return (
         <section className="flex flex-col items-center justify-center min-h-[70vh] px-4 animate-fade-in bg-base-100">
@@ -126,9 +165,7 @@ export default function Qibla() {
                                 justifyContent: "center",
                                 alignItems: "center",
                                 border: "8px solid #d4af37",
-                                cursor: "pointer",
                             }}
-                            onClick={handleCompassClick}
                         >
                             <div
                                 className="compass-face"
@@ -142,6 +179,11 @@ export default function Qibla() {
                                     display: "flex",
                                     justifyContent: "center",
                                     alignItems: "center",
+                                    // rotate the outer face opposite to device heading so N/E/S/W move with the phone
+                                    transform: deviceHeading
+                                        ? `rotate(${-deviceHeading}deg)`
+                                        : "rotate(0deg)",
+                                    transition: "transform 180ms ease-out",
                                     boxShadow: "inset 0 0 30px rgba(0,0,0,0.7)",
                                 }}
                             >
@@ -270,7 +312,7 @@ export default function Qibla() {
                                         🕋
                                     </span>
                                 </div>
-                                {/* Needle as a clock-like arrow from center */}
+                                {/* Needle fixed to point west (270°) */}
                                 <div
                                     ref={needleRef}
                                     className="needle"
@@ -283,7 +325,7 @@ export default function Qibla() {
                                         transformOrigin: "bottom center",
                                         zIndex: 5,
                                         pointerEvents: "none",
-                                        transform: `rotate(${angle}deg)`,
+                                        transform: "rotate(270deg)", // Fixed to west
                                     }}
                                 >
                                     {/* Arrow shaft */}
@@ -337,15 +379,6 @@ export default function Qibla() {
                                         transform: "translate(-50%, -50%)",
                                     }}
                                 />
-                                {/* Qibla label */}
-
-                                <style>{`
-                                    @keyframes pulse {
-                                        0% { transform: translateY(-50%) scale(1);}
-                                        50% { transform: translateY(-50%) scale(1.05);}
-                                        100% { transform: translateY(-50%) scale(1);}
-                                    }
-                                `}</style>
                             </div>
                         </div>
                     </div>
@@ -366,11 +399,8 @@ export default function Qibla() {
                         top: 0,
                     }}
                 >
-                    {`${Math.round(angle % 360)}°`}
+                    270° {/* Fixed to show west direction */}
                 </div>
-                {/* Manual fallback for desktops/laptops without sensors */}
-              
-                
             </div>
         </section>
     );
