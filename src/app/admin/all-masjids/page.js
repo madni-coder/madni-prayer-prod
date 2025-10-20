@@ -92,6 +92,18 @@ export default function Page() {
         return matchesSearch && matchesColonySearch;
     });
 
+    // Helper to display 'Not Added' when a value is empty or only whitespace
+    const displayOrNotAdded = (val) => {
+        if (val === null || val === undefined)
+            return <span className="text-red-600">Not Added</span>;
+        const s = String(val).trim();
+        return s.length === 0 ? (
+            <span className="text-red-600">Not Added</span>
+        ) : (
+            val
+        );
+    };
+
     return (
         <div className="p-6 bg-gray-50 min-h-screen">
             {/* Header */}
@@ -117,12 +129,6 @@ export default function Page() {
                     </Link>
                 </div>
             </div>
-
-            {error && (
-                <div className="mb-4 p-3 bg-red-100 border border-red-300 text-red-700 text-sm rounded">
-                    {error}
-                </div>
-            )}
             {loading && (
                 <div className="mb-4 p-3 bg-gray-100 border border-gray-300 text-gray-600 text-sm rounded">
                     Loading masjids...
@@ -235,17 +241,17 @@ export default function Page() {
                             </div>
                             <div>
                                 <div className="text-sm text-gray-900">
-                                    {m.role || "-"}
+                                    {displayOrNotAdded(m.role)}
                                 </div>
                             </div>
                             <div>
                                 <div className="text-sm text-gray-900">
-                                    {m.name || "-"}
+                                    {displayOrNotAdded(m.name)}
                                 </div>
                             </div>
                             <div>
                                 <div className="text-sm text-gray-900">
-                                    {m.mobile || "-"}
+                                    {displayOrNotAdded(m.mobile)}
                                 </div>
                             </div>
                             <div>

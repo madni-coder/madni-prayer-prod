@@ -3,7 +3,7 @@ import { useState } from "react";
 import { FaCheckCircle } from "react-icons/fa";
 import { useRouter } from "next/navigation";
 import { ArrowLeft, Plus } from "lucide-react";
-import fetchFromApi from '../../../../utils/fetchFromApi';
+import fetchFromApi from "../../../../utils/fetchFromApi";
 
 const prayers = [
     { name: "Fajr", defaultTime: "5:00 am" },
@@ -22,6 +22,10 @@ export default function AddMasjidPage() {
     const [role, setRole] = useState("");
     const [name, setName] = useState("");
     const [mobile, setMobile] = useState("");
+    // add per-role mobile cache
+    const [roleMobiles, setRoleMobiles] = useState({});
+    // add per-role name cache
+    const [roleNames, setRoleNames] = useState({});
     const [pasteMapUrl, setPasteMapUrl] = useState("");
     const [times, setTimes] = useState(prayers.map((p) => p.defaultTime));
     const [editIdx, setEditIdx] = useState(null);
@@ -89,6 +93,33 @@ export default function AddMasjidPage() {
         }
     };
 
+    // new handler to load/save per-role mobiles and names
+    const handleRoleChange = (e) => {
+        const newRole = e.target.value;
+        setRole(newRole);
+        // load saved mobile and name for this role if available
+        setMobile(roleMobiles[newRole] || "");
+        setName(roleNames[newRole] || "");
+    };
+
+    const handleMobileChange = (e) => {
+        const val = e.target.value;
+        setMobile(val);
+        // save mobile under current role so selecting role later shows it
+        if (role) {
+            setRoleMobiles((prev) => ({ ...prev, [role]: val }));
+        }
+    };
+
+    // new handler to persist name per selected role
+    const handleNameChange = (e) => {
+        const val = e.target.value;
+        setName(val);
+        if (role) {
+            setRoleNames((prev) => ({ ...prev, [role]: val }));
+        }
+    };
+
     return (
         <div className="min-h-screen bg-white flex flex-col items-center py-10">
             <div className="w-full max-w-5xl flex items-center mb-4">
@@ -111,7 +142,8 @@ export default function AddMasjidPage() {
                     >
                         <div className="mb-4">
                             <label className="block text-gray-700 mb-2">
-                                Masjid Name
+                                Masjid Name{" "}
+                                <span className="text-red-600">*</span>
                             </label>
                             <input
                                 type="text"
@@ -123,7 +155,7 @@ export default function AddMasjidPage() {
                         </div>
                         <div className="mb-4">
                             <label className="block text-gray-700 mb-2">
-                                Colony
+                                Colony <span className="text-red-600">*</span>
                             </label>
                             <input
                                 type="text"
@@ -135,7 +167,7 @@ export default function AddMasjidPage() {
                         </div>
                         <div className="mb-4">
                             <label className="block text-gray-700 mb-2">
-                                Locality
+                                Locality <span className="text-red-600">*</span>
                             </label>
                             <input
                                 type="text"
@@ -151,7 +183,7 @@ export default function AddMasjidPage() {
                             <select
                                 className="input input-bordered w-full bg-white text-black border-gray-300 rounded-full"
                                 value={role}
-                                onChange={(e) => setRole(e.target.value)}
+                                onChange={handleRoleChange}
                             >
                                 <option value="">Select Role</option>
                                 <option value="mutawalli">Mutawalli</option>
@@ -160,33 +192,71 @@ export default function AddMasjidPage() {
                                 <option value="other">Other</option>
                             </select>
                         </div>
+
+                        {/* Name field: show selected role as a badge ahead of the input and persist per-role name */}
                         <div className="mb-4">
                             <label className="block text-gray-700 mb-2">
                                 Name
                             </label>
-                            <input
-                                type="text"
-                                className="input input-bordered w-full bg-white text-black border-gray-300 rounded-full"
-                                value={name}
-                                onChange={(e) => setName(e.target.value)}
-                            />
+                            <div className="flex">
+                                {role && (
+                                    <div className="px-3 py-2 bg-gray-100 border border-r-0 border-gray-300 rounded-l-full text-gray-700 text-sm flex items-center">
+                                        {role.charAt(0).toUpperCase() +
+                                            role.slice(1)}
+                                    </div>
+                                )}
+                                <input
+                                    type="text"
+                                    className={
+                                        "input input-bordered w-full bg-white text-black border-gray-300 " +
+                                        (role
+                                            ? "rounded-r-full"
+                                            : "rounded-full")
+                                    }
+                                    value={name}
+                                    onChange={handleNameChange}
+                                    placeholder={
+                                        role ? `Enter ${role} name` : "Name"
+                                    }
+                                />
+                            </div>
                         </div>
+
+                        {/* Mobile field: show selected role as a badge ahead of the input and persist per-role mobile */}
                         <div className="mb-4">
                             <label className="block text-gray-700 mb-2">
                                 Mobile Number
                             </label>
-                            <input
-                                type="number"
-                                className="input input-bordered w-full bg-white text-black border-gray-300 rounded-full"
-                                value={mobile}
-                                onChange={(e) => setMobile(e.target.value)}
-                                minLength={10}
-                                maxLength={15}
-                            />
+                            <div className="flex">
+                                {role && (
+                                    <div className="px-3 py-2 bg-gray-100 border border-r-0 border-gray-300 rounded-l-full text-gray-700 text-sm flex items-center">
+                                        {role.charAt(0).toUpperCase() +
+                                            role.slice(1)}
+                                    </div>
+                                )}
+                                <input
+                                    type="tel"
+                                    className={
+                                        "input input-bordered w-full bg-white text-black border-gray-300 " +
+                                        (role
+                                            ? "rounded-r-full"
+                                            : "rounded-full")
+                                    }
+                                    value={mobile}
+                                    onChange={handleMobileChange}
+                                    minLength={10}
+                                    maxLength={15}
+                                    placeholder={
+                                        role
+                                            ? `Enter ${role} mobile number`
+                                            : "Mobile number"
+                                    }
+                                />
+                            </div>
                         </div>
                         <div className="mb-4">
                             <label className="block text-gray-700 mb-2">
-                                Paste Map URL
+                                Paste Map URL of Masjid Location
                             </label>
                             <input
                                 type="text"
@@ -214,7 +284,7 @@ export default function AddMasjidPage() {
                                     disabled={submitting}
                                     className="btn w-full mt-4 bg-green-500 hover:bg-green-600 text-white rounded-none disabled:opacity-60"
                                 >
-                                    {submitting ? "Saving..." : "Add Masjid"}
+                                    {submitting ? "Saving..." : "Submit Masjid Info & Jamat Times"}
                                 </button>
                             )}
                     </form>

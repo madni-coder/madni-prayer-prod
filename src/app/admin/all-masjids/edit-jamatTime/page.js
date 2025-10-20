@@ -279,7 +279,7 @@ function EditJamatTimePage() {
                                 disabled={submitting}
                                 className="btn w-full mt-4 bg-blue-500 hover:bg-blue-600 text-white rounded-none disabled:opacity-60"
                             >
-                                {submitting ? "Updating..." : "Update Masjid"}
+                                {submitting ? "Updating..." : "Update Masjid Info Or Jamat Times"}
                             </button>
                         )}
                     </form>
