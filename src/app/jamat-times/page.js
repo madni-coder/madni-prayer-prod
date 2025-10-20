@@ -255,6 +255,7 @@ export default function JamatTimesPage() {
             setColonySuggestionsVisible(false);
         }
     };
+    
 
     const getMapUrl = () => {
         if (!selectedMasjidData) return "";
