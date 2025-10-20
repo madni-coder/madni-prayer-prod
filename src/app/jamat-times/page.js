@@ -1,6 +1,6 @@
 "use client";
 import React, { useState, useEffect } from "react";
-import { MapPin } from "lucide-react";
+import { MapPin, Save, Check } from "lucide-react";
 import { FaAngleLeft, FaMosque, FaTimes } from "react-icons/fa";
 import { useRouter } from "next/navigation";
 import fetchFromApi from "../../utils/fetchFromApi";
@@ -63,10 +63,26 @@ export default function JamatTimesPage() {
     const [autoLocating, setAutoLocating] = useState(false);
     const [userCoords, setUserCoords] = useState(null);
     const [mapEmbedUrl, setMapEmbedUrl] = useState(null);
+    const [savedMasjid, setSavedMasjid] = useState(null);
+    const [hasLoadedSavedMasjid, setHasLoadedSavedMasjid] = useState(false);
+    const [showNotification, setShowNotification] = useState(false);
+    const [notificationMessage, setNotificationMessage] = useState("");
+    const [notificationType, setNotificationType] = useState("success"); // success or error
 
     useEffect(() => {
+        loadSavedMasjid();
         fetchMasjids();
     }, []);
+
+    // Auto-populate selected masjid when saved data is loaded (only once on initial load)
+    useEffect(() => {
+        if (savedMasjid && !hasLoadedSavedMasjid) {
+            setSelectedMasjid(savedMasjid.masjidName || "");
+            setSelectedColony(savedMasjid.colony || "");
+            setSelectedMasjidData(savedMasjid);
+            setHasLoadedSavedMasjid(true);
+        }
+    }, [savedMasjid, hasLoadedSavedMasjid]);
 
     const handleAutoLocate = () => {
         if (!navigator.geolocation) {
@@ -110,6 +126,63 @@ export default function JamatTimesPage() {
             console.error("Error fetching masjids:", err);
         } finally {
             setLoading(false);
+        }
+    };
+
+    const showToast = (message, type = "success") => {
+        setNotificationMessage(message);
+        setNotificationType(type);
+        setShowNotification(true);
+        setTimeout(() => {
+            setShowNotification(false);
+        }, 4000); // Auto-hide after 4 seconds
+    };
+
+    const loadSavedMasjid = () => {
+        try {
+            const saved = localStorage.getItem("savedMasjidData");
+            console.log("📖 Loading saved masjid from localStorage:", saved);
+            if (saved) {
+                const parsedData = JSON.parse(saved);
+                console.log("✅ Parsed saved masjid data:", parsedData);
+                setSavedMasjid(parsedData);
+            } else {
+                console.log("ℹ️ No saved masjid found in localStorage");
+            }
+        } catch (err) {
+            console.error("❌ Error loading saved masjid:", err);
+        }
+    };
+
+    const saveMasjidToLocalStorage = () => {
+        if (!selectedMasjidData) return;
+
+        const dataToSave = {
+            masjidName: selectedMasjidData.masjidName,
+            colony: selectedMasjidData.colony,
+            locality: selectedMasjidData.locality || "",
+            fazar: selectedMasjidData.fazar,
+            zuhar: selectedMasjidData.zuhar,
+            asar: selectedMasjidData.asar,
+            maghrib: selectedMasjidData.maghrib,
+            isha: selectedMasjidData.isha,
+            juma: selectedMasjidData.juma,
+            mapUrl:
+                selectedMasjidData.mapUrl ||
+                selectedMasjidData.map_url ||
+                selectedMasjidData.map ||
+                "",
+            savedAt: new Date().toISOString(),
+        };
+
+        try {
+            localStorage.setItem("savedMasjidData", JSON.stringify(dataToSave));
+            console.log("💾 Masjid saved to localStorage:", dataToSave);
+            setSavedMasjid(dataToSave);
+            showToast("✅ Masjid saved successfully!");
+        } catch (err) {
+            console.error("❌ Error saving masjid:", err);
+            showToast("❌ Failed to save masjid. Please try again.", "error");
         }
     };
 
@@ -255,7 +328,6 @@ export default function JamatTimesPage() {
             setColonySuggestionsVisible(false);
         }
     };
-    
 
     const getMapUrl = () => {
         if (!selectedMasjidData) return "";
@@ -606,7 +678,53 @@ export default function JamatTimesPage() {
                         )}
                     </div>
                 </div>
-
+                {selectedMasjidData && (
+                    <div className="mt-6 mb-8 text-center">
+                        <p className="text-sm text-gray-600 dark:text-gray-400 mb-4 font-medium">
+                            {savedMasjid?.masjidName ===
+                                selectedMasjidData.masjidName &&
+                            savedMasjid?.colony === selectedMasjidData.colony
+                                ? ""
+                                : "Save this masjid details permanently to view jamat times"}
+                        </p>
+                        <button
+                            type="button"
+                            onClick={saveMasjidToLocalStorage}
+                            disabled={
+                                savedMasjid?.masjidName ===
+                                    selectedMasjidData.masjidName &&
+                                savedMasjid?.colony ===
+                                    selectedMasjidData.colony
+                            }
+                            className={`group relative inline-flex items-center gap-3 px-3 py-2 rounded-xl font-bold text-lg shadow-lg transition-all duration-300 transform overflow-hidden ${
+                                savedMasjid?.masjidName ===
+                                    selectedMasjidData.masjidName &&
+                                savedMasjid?.colony ===
+                                    selectedMasjidData.colony
+                                    ? "bg-green-500 text-white cursor-not-allowed opacity-80"
+                                    : "bg-gradient-to-r from-primary via-primary to-primary/90 hover:from-primary/90 hover:via-primary hover:to-primary text-white hover:scale-105 hover:shadow-xl active:scale-95"
+                            }`}
+                        >
+                            <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-1000"></div>
+                            {savedMasjid?.masjidName ===
+                                selectedMasjidData.masjidName &&
+                            savedMasjid?.colony ===
+                                selectedMasjidData.colony ? (
+                                <Check className="w-6 h-6 relative z-10" />
+                            ) : (
+                                <Save className="w-6 h-6 relative z-10 group-hover:rotate-12 transition-transform duration-300" />
+                            )}
+                            <span className="relative z-10">
+                                {savedMasjid?.masjidName ===
+                                    selectedMasjidData.masjidName &&
+                                savedMasjid?.colony ===
+                                    selectedMasjidData.colony
+                                    ? "Already Saved"
+                                    : "Save This Masjid"}
+                            </span>
+                        </button>
+                    </div>
+                )}
                 {selectedMasjidData && (
                     <div className="mt-4 mb-8 text-center">
                         <button
@@ -620,7 +738,10 @@ export default function JamatTimesPage() {
                                         "noopener,noreferrer"
                                     );
                                 } else {
-                                    alert("Map not available for this masjid.");
+                                    showToast(
+                                        "Map not available for this masjid.",
+                                        "error"
+                                    );
                                 }
                             }}
                             className="inline-flex items-center gap-2 px-4 py-3 rounded-md bg-primary/20 hover:bg-primary/30 text-primary transition font-semibold"
@@ -630,7 +751,53 @@ export default function JamatTimesPage() {
                         </button>
                     </div>
                 )}
+
+                {/* Toast Notification */}
+                {showNotification && (
+                    <div
+                        className={`fixed bottom-18 right-4 z-[9999] max-w-md animate-slide-in-bottom ${
+                            notificationType === "success"
+                                ? "bg-green-500"
+                                : "bg-red-500"
+                        } text-white px-6 py-4 rounded-lg shadow-2xl flex items-start gap-3 border-2 border-white/20`}
+                        style={{
+                            animation: "slideInBottom 0.3s ease-out",
+                        }}
+                    >
+                        <div className="flex-shrink-0 mt-0.5">
+                            {notificationType === "success" ? (
+                                <Check className="w-6 h-6" />
+                            ) : (
+                                <FaTimes className="w-6 h-6" />
+                            )}
+                        </div>
+                        <div className="flex-1">
+                            <p className="text-sm font-medium leading-relaxed">
+                                {notificationMessage}
+                            </p>
+                        </div>
+                        <button
+                            onClick={() => setShowNotification(false)}
+                            className="flex-shrink-0 ml-2 hover:bg-white/20 rounded-full p-1 transition"
+                        >
+                            <FaTimes className="w-4 h-4" />
+                        </button>
+                    </div>
+                )}
             </div>
+
+            <style jsx>{`
+                @keyframes slideInBottom {
+                    from {
+                        transform: translateY(100%);
+                        opacity: 0;
+                    }
+                    to {
+                        transform: translateY(0);
+                        opacity: 1;
+                    }
+                }
+            `}</style>
         </div>
     );
 }
