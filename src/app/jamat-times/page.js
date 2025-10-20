@@ -183,11 +183,21 @@ export default function JamatTimesPage() {
         ...new Set(masjids.map((m) => m.colony || "").filter(Boolean)),
     ];
 
+    // derived exact-match flags to avoid showing dropdown when an exact item is selected
+    const selectedMasjidExact = masjids.some(
+        (m) => m.masjidName === selectedMasjid
+    );
+    const selectedColonyExact = colonies.includes(selectedColony);
+
     // dropdown flags
+    // keep the ">= 4" check as requested, but allow showing the dropdown even when there are no matches
+    // so we can display a themed "No Match Found" message
     const showMasjidDropdown =
-        masjidSuggestionsVisible || selectedMasjid.trim().length >= 4;
+        masjidSuggestionsVisible ||
+        (selectedMasjid.trim().length >= 4 && !selectedMasjidExact);
     const showColonyDropdown =
-        colonySuggestionsVisible || selectedColony.trim().length >= 4;
+        colonySuggestionsVisible ||
+        (selectedColony.trim().length >= 4 && !selectedColonyExact);
 
     const selectColony = (colony) => {
         setSelectedColony(colony);
@@ -444,14 +454,14 @@ export default function JamatTimesPage() {
                                                 </div>
                                             </li>
                                         ))
-                                    ) : (
+                                    ) : selectedMasjid.trim().length >= 4 ? (
                                         <li
                                             key="no-match"
-                                            className="px-3 py-2 text-center text-sm text-white opacity-70 cursor-default"
+                                            className="px-3 py-2 text-center text-sm text-primary opacity-80 cursor-default"
                                         >
                                             No Match Found
                                         </li>
-                                    )}
+                                    ) : null}
                                 </ul>
                             )}
                         </div>
@@ -532,14 +542,14 @@ export default function JamatTimesPage() {
                                                 </div>
                                             </li>
                                         ))
-                                    ) : (
+                                    ) : selectedColony.trim().length >= 4 ? (
                                         <li
                                             key="no-match"
-                                            className="px-3 py-2 text-center text-sm text-white opacity-70 cursor-default"
+                                            className="px-3 py-2 text-center text-sm text-primary opacity-80 cursor-default"
                                         >
                                             No Match Found
                                         </li>
-                                    )}
+                                    ) : null}
                                 </ul>
                             )}
                         </div>
