@@ -1,7 +1,7 @@
 "use client";
 import React, { useState, useEffect } from "react";
 import { MapPin } from "lucide-react";
-import { FaAngleLeft } from "react-icons/fa";
+import { FaAngleLeft, FaMosque, FaTimes } from "react-icons/fa";
 import { useRouter } from "next/navigation";
 import fetchFromApi from "../../utils/fetchFromApi";
 
@@ -162,7 +162,32 @@ export default function JamatTimesPage() {
         }
     };
 
-    const colonies = [...new Set(masjids.map((m) => m.colony))];
+    // clear helpers for the small X buttons
+    const clearMasjid = (e) => {
+        e.preventDefault();
+        setSelectedMasjid("");
+        setSelectedMasjidData(null);
+        setFilteredMasjids([]);
+        setMasjidSuggestionsVisible(false);
+        setMasjidHighlight(-1);
+    };
+    const clearColony = (e) => {
+        e.preventDefault();
+        setSelectedColony("");
+        setFilteredColonies([]);
+        setColonySuggestionsVisible(false);
+        setColonyHighlight(-1);
+    };
+
+    const colonies = [
+        ...new Set(masjids.map((m) => m.colony || "").filter(Boolean)),
+    ];
+
+    // dropdown flags
+    const showMasjidDropdown =
+        masjidSuggestionsVisible || selectedMasjid.trim().length >= 4;
+    const showColonyDropdown =
+        colonySuggestionsVisible || selectedColony.trim().length >= 4;
 
     const selectColony = (colony) => {
         setSelectedColony(colony);
@@ -239,7 +264,6 @@ export default function JamatTimesPage() {
 
     const getJamatTimes = () => {
         if (!selectedMasjidData) return [];
-
         return [
             {
                 name: "Fajr",
@@ -305,10 +329,18 @@ export default function JamatTimesPage() {
             >
                 <FaAngleLeft /> Back
             </button>
+
             <div className="sticky top-0 left-0 w-full z-10 flex justify-center bg-base-200/80 backdrop-blur-sm py-2">
                 <div className="w-full max-w-xs sm:max-w-sm md:max-w-md">
                     <DigitalClock />
                 </div>
+            </div>
+
+            <div className="bg-white backdrop-blur-sm p-3 md:p-4 rounded-lg shadow-sm max-w-2xl mx-4 sm:mx-auto">
+                <h2 className="text-base md:text-lg font-extrabold text-primary text-center leading-tight">
+                    Currently this app shows Jamat Times of Bilaspur Zone (C.G)
+                    Only
+                </h2>
             </div>
 
             <div className="w-full max-w-md mt-8 mb-12 p-4">
@@ -340,18 +372,19 @@ export default function JamatTimesPage() {
                             className="w-full"
                             style={{ height: 300, border: 0 }}
                             loading="lazy"
-                        ></iframe>
+                        />
                     </div>
                 )}
 
                 <div className="flex flex-col gap-2 mb-6 ml-4 mr-4">
+                    {/* Masjid search */}
                     <div className="w-full">
                         <h3 className="text-lg font-bold text-primary mb-3 flex items-center gap-2">
-                            🕌 Search by Masjid
+                            🕌 Search By Masjid Name
                         </h3>
                         <div className="relative">
                             <input
-                                className="select select-primary select-lg w-full"
+                                className="input input-primary input-lg w-full pr-10"
                                 value={selectedMasjid}
                                 onChange={handleMasjidChange}
                                 onKeyDown={handleMasjidKeyDown}
@@ -372,10 +405,22 @@ export default function JamatTimesPage() {
                                 placeholder="Search For Masjid"
                                 aria-autocomplete="list"
                             />
-                            {masjidSuggestionsVisible &&
-                                filteredMasjids.length > 0 && (
-                                    <ul className="absolute left-0 right-0 mt-1 z-50 max-h-44 overflow-auto bg-base-100 border border-primary/20 rounded-md shadow-lg">
-                                        {filteredMasjids.map((m, idx) => (
+                            {selectedMasjid.length > 0 && (
+                                <button
+                                    type="button"
+                                    onMouseDown={(ev) => ev.preventDefault()}
+                                    onClick={clearMasjid}
+                                    className="absolute right-2 top-1/2 -translate-y-1/2 transform text-primary bg-primary/10 hover:bg-primary/20 rounded-full p-1 z-50"
+                                    aria-label="Clear masjid"
+                                >
+                                    <FaTimes className="w-4 h-4" />
+                                </button>
+                            )}
+
+                            {showMasjidDropdown && (
+                                <ul className="absolute left-0 right-0 mt-1 z-50 max-h-44 overflow-auto bg-base-100 border border-primary/20 rounded-md shadow-lg">
+                                    {filteredMasjids.length > 0 ? (
+                                        filteredMasjids.map((m, idx) => (
                                             <li
                                                 key={m.id}
                                                 className={`px-3 py-2 cursor-pointer hover:bg-primary/10 ${
@@ -398,12 +443,21 @@ export default function JamatTimesPage() {
                                                         : ""}
                                                 </div>
                                             </li>
-                                        ))}
-                                    </ul>
-                                )}
+                                        ))
+                                    ) : (
+                                        <li
+                                            key="no-match"
+                                            className="px-3 py-2 text-center text-sm text-white opacity-70 cursor-default"
+                                        >
+                                            No Match Found
+                                        </li>
+                                    )}
+                                </ul>
+                            )}
                         </div>
                     </div>
 
+                    {/* OR separator */}
                     <div className="flex items-center justify-center py-2">
                         <div className="flex items-center gap-4 w-full">
                             <div className="flex-1 h-px bg-gradient-to-r from-transparent to-primary/30"></div>
@@ -416,13 +470,14 @@ export default function JamatTimesPage() {
                         </div>
                     </div>
 
+                    {/* Colony search */}
                     <div className="w-full">
                         <h3 className="text-lg font-bold text-primary mb-3 flex items-center gap-2">
-                            🏘️ Search by Colony
+                            🏘️ Search By Colony Name
                         </h3>
                         <div className="relative">
                             <input
-                                className="select select-primary select-lg w-full"
+                                className="input input-primary input-lg w-full pr-10"
                                 value={selectedColony}
                                 onChange={handleColonyChange}
                                 onKeyDown={handleColonyKeyDown}
@@ -443,10 +498,23 @@ export default function JamatTimesPage() {
                                 placeholder="Search by colony"
                                 aria-autocomplete="list"
                             />
-                            {colonySuggestionsVisible &&
-                                filteredColonies.length > 0 && (
-                                    <ul className="absolute left-0 right-0 mt-1 z-50 max-h-44 overflow-auto bg-base-100 border border-primary/20 rounded-md shadow-lg">
-                                        {filteredColonies.map((c, idx) => (
+
+                            {selectedColony.length > 0 && (
+                                <button
+                                    type="button"
+                                    onMouseDown={(ev) => ev.preventDefault()}
+                                    onClick={clearColony}
+                                    className="absolute right-2 top-1/2 -translate-y-1/2 transform text-primary bg-primary/10 hover:bg-primary/20 rounded-full p-1 z-50"
+                                    aria-label="Clear colony"
+                                >
+                                    <FaTimes className="w-4 h-4" />
+                                </button>
+                            )}
+
+                            {showColonyDropdown && (
+                                <ul className="absolute left-0 right-0 mt-1 z-50 max-h-44 overflow-auto bg-base-100 border border-primary/20 rounded-md shadow-lg">
+                                    {filteredColonies.length > 0 ? (
+                                        filteredColonies.map((c, idx) => (
                                             <li
                                                 key={c}
                                                 className={`px-3 py-2 cursor-pointer hover:bg-primary/10 ${
@@ -463,9 +531,17 @@ export default function JamatTimesPage() {
                                                     {c}
                                                 </div>
                                             </li>
-                                        ))}
-                                    </ul>
-                                )}
+                                        ))
+                                    ) : (
+                                        <li
+                                            key="no-match"
+                                            className="px-3 py-2 text-center text-sm text-white opacity-70 cursor-default"
+                                        >
+                                            No Match Found
+                                        </li>
+                                    )}
+                                </ul>
+                            )}
                         </div>
                     </div>
                 </div>
@@ -473,6 +549,7 @@ export default function JamatTimesPage() {
                 <h1 className="text-2xl font-bold mb-2 text-center">
                     Jamat Time In
                 </h1>
+
                 {selectedMasjidData && (
                     <div className="text-center mb-4 p-3 bg-primary/10 rounded-lg border border-primary/20">
                         <div className="text-xl font-semibold text-primary">
@@ -506,14 +583,14 @@ export default function JamatTimesPage() {
                         ) : (
                             <div className="flex flex-col items-center justify-center py-12 px-6">
                                 <div className="w-20 h-20 mb-6 rounded-full bg-primary/10 flex items-center justify-center">
-                                    <MapPin className="w-10 h-10 text-primary" />
+                                    <FaMosque
+                                        className="w-10 h-10 text-primary"
+                                        aria-hidden="true"
+                                    />
                                 </div>
-                                <h3 className="text-xl font-semibold text-center mb-3 text-primary">
-                                    Select a Masjid
+                                <h3 className="text-2xl font-semibold text-center mb-3 text-primary">
+                                    Select A Masjid To View Jamat Time
                                 </h3>
-                                <p className="text-center text-white-1000 leading-relaxed max-w-sm text-xl">
-                                    Please select a masjid to view jamat times
-                                </p>
                             </div>
                         )}
                     </div>
