@@ -1,9 +1,10 @@
 "use client";
 import { useState, useEffect, useCallback, Suspense } from "react";
+import { useRef } from "react";
 import { FaCheckCircle } from "react-icons/fa";
 import { useRouter, useSearchParams } from "next/navigation";
 import { ArrowLeft, Pencil } from "lucide-react";
-import fetchFromApi from '../../../../utils/fetchFromApi';
+import fetchFromApi from "../../../../utils/fetchFromApi";
 
 const prayers = [
     { name: "Fajr", defaultTime: "5:00 am" },
@@ -51,7 +52,7 @@ function EditJamatTimePage() {
     const fetchMasjidData = useCallback(async () => {
         try {
             console.log("Fetching masjid data for ID:", masjidId);
-            const res = await fetchFromApi(`/api/all-masjids/${masjidId}`);
+            const res = await fetchFromApi(`/api/all-masjids?id=${masjidId}`);
             console.log("Response status:", res.status);
             const data = await res.json();
             console.log("Response data:", data);
@@ -83,13 +84,21 @@ function EditJamatTimePage() {
         }
     }, [masjidId]);
 
+    // Keep a ref to ensure we only fetch once per mount lifecycle.
+    // React Strict Mode in development can mount/unmount twice which may
+    // trigger duplicate network calls; this guard prevents that.
+    const hasFetchedRef = useRef(false);
+
     useEffect(() => {
-        if (masjidId) {
-            fetchMasjidData();
-        } else {
+        if (!masjidId) {
             setError("No masjid ID provided");
             setLoading(false);
+            return;
         }
+
+        if (hasFetchedRef.current) return;
+        hasFetchedRef.current = true;
+        fetchMasjidData();
     }, [masjidId, fetchMasjidData]);
 
     const handleTimeChange = (idx, value) => {
@@ -132,7 +141,11 @@ function EditJamatTimePage() {
                 juma: times[5],
             };
 
-            const res = await fetchFromApi(`/api/all-masjids`, 'PATCH', payload);
+            const res = await fetchFromApi(
+                `/api/all-masjids`,
+                "PATCH",
+                payload
+            );
 
             const data = await res.json();
             if (!res.ok) {
@@ -279,7 +292,9 @@ function EditJamatTimePage() {
                                 disabled={submitting}
                                 className="btn w-full mt-4 bg-blue-500 hover:bg-blue-600 text-white rounded-none disabled:opacity-60"
                             >
-                                {submitting ? "Updating..." : "Update Masjid Info Or Jamat Times"}
+                                {submitting
+                                    ? "Updating..."
+                                    : "Update Masjid Info Or Jamat Times"}
                             </button>
                         )}
                     </form>

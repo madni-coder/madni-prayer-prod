@@ -167,11 +167,7 @@ export default function JamatTimesPage() {
             maghrib: selectedMasjidData.maghrib,
             isha: selectedMasjidData.isha,
             juma: selectedMasjidData.juma,
-            mapUrl:
-                selectedMasjidData.mapUrl ||
-                selectedMasjidData.map_url ||
-                selectedMasjidData.map ||
-                "",
+            pasteMapUrl: selectedMasjidData.pasteMapUrl || "",
             savedAt: new Date().toISOString(),
         };
 
@@ -331,24 +327,14 @@ export default function JamatTimesPage() {
 
     const getMapUrl = () => {
         if (!selectedMasjidData) return "";
-        return (
-            selectedMasjidData.mapUrl ||
-            selectedMasjidData.map_url ||
-            selectedMasjidData.map ||
-            encodeURI(
-                `https://www.google.com/maps/search/?api=1&query=${
-                    selectedMasjidData.masjidName
-                } ${selectedMasjidData.colony} ${
-                    selectedMasjidData.locality || ""
-                }`
-            )
-        );
+        // Only return the stored map URL from API data
+        return selectedMasjidData.pasteMapUrl || "";
     };
 
     const handleLink = async () => {
         const httpUrl = getMapUrl();
         if (!httpUrl) {
-            showToast("Map not available for this masjid.", "error");
+            showToast("Location is not added for this masjid.", "error");
             return;
         }
 
