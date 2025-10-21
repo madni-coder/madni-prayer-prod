@@ -255,32 +255,84 @@ export default function Tasbih() {
                         No history yet. Register your durood to see it here.
                     </div>
                 ) : (
-                    <table className="table w-full text-primary text-l">
-                        <thead>
-                            <tr>
-                                <th>Counts</th>
-                                <th>Date</th>
-                                <th>Time</th>
-                                <th>Action</th>
-                            </tr>
-                        </thead>
-                        <tbody>
+                    <>
+                        {/* Desktop / Tablet: scrollable fixed table to avoid layout shift */}
+                        <div className="hidden md:block w-full overflow-x-auto">
+                            <table className="table table-fixed w-full text-primary text-l">
+                                <thead>
+                                    <tr>
+                                        <th className="w-24">Counts</th>
+                                        <th className="w-40">Date</th>
+                                        <th className="w-36">Time</th>
+                                        <th className="w-20">Action</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {history.map((item, idx) => (
+                                        <tr key={idx}>
+                                            <td className="align-middle">
+                                                {item.count
+                                                    .toString()
+                                                    .padStart(2, "0")}
+                                            </td>
+                                            <td className="align-middle">
+                                                {item.date}
+                                            </td>
+                                            <td className="align-middle">
+                                                {new Date(
+                                                    `1970-01-01T${item.time}`
+                                                ).toLocaleTimeString([], {
+                                                    hour: "2-digit",
+                                                    minute: "2-digit",
+                                                    hour12: true,
+                                                })}
+                                            </td>
+                                            <td className="align-middle">
+                                                <button
+                                                    className="btn btn-ghost btn-square"
+                                                    onClick={() =>
+                                                        setDeleteIndex(idx)
+                                                    }
+                                                    aria-label="Delete entry"
+                                                >
+                                                    <Trash2 className="h-5 w-5 text-red-500" />
+                                                </button>
+                                            </td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
+                        </div>
+
+                        {/* Mobile: stacked cards for each history row to avoid narrow columns and right overflow */}
+                        <div className="md:hidden flex flex-col gap-3">
                             {history.map((item, idx) => (
-                                <tr key={idx}>
-                                    <td>
-                                        {item.count.toString().padStart(2, "0")}
-                                    </td>
-                                    <td>{item.date}</td>
-                                    <td>
-                                        {new Date(
-                                            `1970-01-01T${item.time}`
-                                        ).toLocaleTimeString([], {
-                                            hour: "2-digit",
-                                            minute: "2-digit",
-                                            hour12: true,
-                                        })}
-                                    </td>
-                                    <td>
+                                <div
+                                    key={idx}
+                                    className="w-full bg-base-100 rounded-lg p-3 flex items-center justify-between border"
+                                >
+                                    <div className="flex items-center gap-3">
+                                        <div className="font-mono text-lg text-primary w-12 text-center">
+                                            {item.count
+                                                .toString()
+                                                .padStart(2, "0")}
+                                        </div>
+                                        <div className="flex flex-col text-sm text-primary/90">
+                                            <span className="font-semibold">
+                                                {item.date}
+                                            </span>
+                                            <span className="text-xs text-primary/70">
+                                                {new Date(
+                                                    `1970-01-01T${item.time}`
+                                                ).toLocaleTimeString([], {
+                                                    hour: "2-digit",
+                                                    minute: "2-digit",
+                                                    hour12: true,
+                                                })}
+                                            </span>
+                                        </div>
+                                    </div>
+                                    <div>
                                         <button
                                             className="btn btn-ghost btn-square"
                                             onClick={() => setDeleteIndex(idx)}
@@ -288,11 +340,11 @@ export default function Tasbih() {
                                         >
                                             <Trash2 className="h-5 w-5 text-red-500" />
                                         </button>
-                                    </td>
-                                </tr>
+                                    </div>
+                                </div>
                             ))}
-                        </tbody>
-                    </table>
+                        </div>
+                    </>
                 )}
                 {history.length > 0 && (
                     <div className="mt-4 text-right text-lg font-bold text-primary">

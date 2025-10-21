@@ -65,7 +65,7 @@ export async function POST(req) {
                     message: "Its new user",
                     count: tasbihCount,
                 },
-                { status: 404 }
+                { status: 200 }
             );
         }
 

@@ -3,7 +3,7 @@ import React, { useEffect, useState, useRef } from "react";
 import { Bell, BellOff, Calendar, Moon, X } from "lucide-react";
 import { FaAngleLeft, FaMapMarkerAlt, FaClock } from "react-icons/fa";
 import { useRouter } from "next/navigation";
-import fetchFromApi from '../../utils/fetchFromApi';
+import fetchFromApi from "../../utils/fetchFromApi";
 
 const initialPrayerTimes = [
     {
@@ -18,7 +18,7 @@ const initialPrayerTimes = [
         displayName: "",
         time: "—",
         alert: false,
-        color: "text-secondary text-base md:text-md",
+        color: "text-error text-base md:text-md",
     },
     {
         name: "Zuhr",
@@ -39,7 +39,7 @@ const initialPrayerTimes = [
         displayName: "",
         time: "—",
         alert: true,
-        color: "text-success text-base md:text-md",
+        color: "text-white text-base md:text-md",
     },
     {
         name: "Isha",
@@ -87,7 +87,10 @@ export default function PrayerTimesPage() {
     const [cityResults, setCityResults] = useState([]); // [{display_name, lat, lon}]
     const [citySearching, setCitySearching] = useState(false);
     const [selectedCityResult, setSelectedCityResult] = useState(null);
+    const [suppressSearchAfterSelect, setSuppressSearchAfterSelect] =
+        useState(false);
     const citySearchTimeoutRef = useRef(null);
+    const LS_KEY = "prayer_saved_city";
     // prevent duplicate initial fetch (e.g., React 18 StrictMode)
     const initialFetchDoneRef = useRef(false);
 
@@ -231,6 +234,22 @@ export default function PrayerTimesPage() {
     useEffect(() => {
         if (initialFetchDoneRef.current) return; // guard against second invocation
         initialFetchDoneRef.current = true;
+
+        // If a city is already saved in localStorage, skip the default fetch
+        // to avoid briefly rendering the default city (e.g. Bilaspur).
+        try {
+            const raw = localStorage.getItem(LS_KEY);
+            if (raw) {
+                const obj = JSON.parse(raw);
+                if (obj && obj.lat && obj.lon) {
+                    // saved city exists; do not run the default fetch
+                    return;
+                }
+            }
+        } catch (e) {
+            // ignore localStorage read/parse errors and proceed with default fetch
+        }
+
         const fetchPrayerTimesAndSetState = async () => {
             try {
                 const today = new Date();
@@ -239,7 +258,9 @@ export default function PrayerTimesPage() {
                 const d = String(today.getDate()).padStart(2, "0");
                 const dateStr = `${y}-${m}-${d}`;
 
-                const res = await fetchFromApi(`/api/api-prayerTimes?date=${dateStr}`);
+                const res = await fetchFromApi(
+                    `/api/api-prayerTimes?date=${dateStr}`
+                );
                 const json = await res.json();
 
                 if (!res.ok) {
@@ -507,6 +528,22 @@ export default function PrayerTimesPage() {
                     };
                 })
             );
+            // persist saved city (overwrite any previous)
+            try {
+                const saved = {
+                    lat: String(lat),
+                    lon: String(lon),
+                    display_name:
+                        fullDisplayName ||
+                        json?.location?.name ||
+                        json?.city ||
+                        "",
+                };
+                localStorage.setItem(LS_KEY, JSON.stringify(saved));
+            } catch (e) {
+                // localStorage may be unavailable or quota exceeded; ignore
+                console.warn("Could not persist saved city", e);
+            }
             setShowLocationModal(false);
             setLoading(false);
         } catch (e) {
@@ -515,15 +552,44 @@ export default function PrayerTimesPage() {
             alert("Error fetching prayer times for selected city.");
         }
     };
+    // On mount, load saved city (if any) and fetch prayer times for it so the app
+    // always shows the saved city's prayer times.
+    useEffect(() => {
+        try {
+            const raw = localStorage.getItem(LS_KEY);
+            if (!raw) return;
+            const obj = JSON.parse(raw);
+            if (obj && obj.lat && obj.lon) {
+                // call the same handler used by Save; it will update UI and persist (again).
+                fetchPrayerTimesByCoords(
+                    obj.lat,
+                    obj.lon,
+                    obj.display_name || ""
+                );
+            }
+        } catch (e) {
+            // ignore parse errors or localStorage errors
+        }
+        // run only once
+    }, []);
 
     // Prefill search box with current location when opening modal if empty
+    // REPLACED: keep the search input empty by default and clear previous results/selection
     useEffect(() => {
         if (showLocationModal) {
-            if (!citySearch && locationName) {
-                setCitySearch(locationName.split(",")[0]);
-            }
+            // keep input empty by default
+            setCitySearch("");
+            // clear any previous results / selection so dropdown won't show
+            setSelectedCityResult(null);
+            setCityResults([]);
+            setCitySearching(false);
+        } else {
+            // reset transient modal state when it's closed
+            setSelectedCityResult(null);
+            setCityResults([]);
+            setCitySearching(false);
         }
-    }, [showLocationModal, locationName]);
+    }, [showLocationModal]);
 
     // NEW: Debounced search for Indian cities using Nominatim
     useEffect(() => {
@@ -536,6 +602,21 @@ export default function PrayerTimesPage() {
             setSelectedCityResult(null);
             return;
         }
+
+        // If user has selected a suggestion and we populated the input
+        // with that exact short name, suppress re-running the search so
+        // the dropdown doesn't re-render again until user types.
+        if (
+            suppressSearchAfterSelect &&
+            selectedCityResult &&
+            citySearch.trim() === selectedCityResult.display_name.split(",")[0]
+        ) {
+            // ensure results are hidden and not searching
+            setCityResults([]);
+            setCitySearching(false);
+            return;
+        }
+
         citySearchTimeoutRef.current = setTimeout(async () => {
             try {
                 setCitySearching(true);
@@ -545,7 +626,7 @@ export default function PrayerTimesPage() {
                     headers: {
                         "Accept-Language": "en",
                         "User-Agent":
-                        "prayer-times-app/1.0 (+https://yourdomain.example)",
+                            "prayer-times-app/1.0 (+https://yourdomain.example)",
                     },
                 });
                 if (!res.ok) throw new Error("City search failed");
@@ -560,12 +641,21 @@ export default function PrayerTimesPage() {
             }
         }, 450); // debounce 450ms
         return () => clearTimeout(citySearchTimeoutRef.current);
-    }, [citySearch, showLocationModal]);
+    }, [
+        citySearch,
+        showLocationModal,
+        suppressSearchAfterSelect,
+        selectedCityResult,
+    ]);
 
     // NEW: handler when selecting a city suggestion
     const handleSelectCity = (result) => {
+        // mark selection, populate the short name into input,
+        // hide dropdown and suppress further automatic search for that text
         setSelectedCityResult(result);
         setCitySearch(result.display_name.split(",")[0]);
+        setCityResults([]); // hide the list immediately
+        setSuppressSearchAfterSelect(true);
     };
 
     // Format time as HH:MM:SS AM/PM
@@ -616,9 +706,9 @@ export default function PrayerTimesPage() {
                             })}
                         </span>
                     </div>
-                    <div className="flex items-center gap-1 sm:gap-2 md:gap-3 text-sm sm:text-sm md:text-base text-white">
+                    <div className="flex items-center gap-1 sm:gap-2 md:gap-3 text-sm sm:text-sm md:text-base text-primary">
                         <FaClock className="w-4 h-4 mr-1 md:w-5 md:h-5" />
-                        <span>Time: {formatTime(now)}</span>
+                        <span>Current Time: {formatTime(now)}</span>
                     </div>
                     <div className="flex items-center gap-1 sm:gap-2 md:gap-3 text-xs sm:text-sm md:text-base text-white">
                         <FaMapMarkerAlt className="w-4 h-4 md:w-5 md:h-5" />
@@ -634,12 +724,12 @@ export default function PrayerTimesPage() {
                             aria-label="Select Location"
                         >
                             {locationName ? (
-                                <div className="text-left leading-tight">
+                                <div className="text-left leading-tight text-lg">
                                     <div className="font-medium text-white md:text-base lg:text-lg">
                                         {locationName.split(",")[0]}
                                     </div>
                                     {locationName.split(",").length > 1 && (
-                                        <div className="text-[10px] sm:text-xs md:text-sm text-gray-300 mt-0.5">
+                                        <div className="text-[10px] sm:text-xs md:text-sm text-white-300 mt-0.5 mb-2">
                                             {locationName
                                                 .split(",")
                                                 .slice(1, 3)
@@ -649,7 +739,7 @@ export default function PrayerTimesPage() {
                                     )}
                                 </div>
                             ) : (
-                                "Unknown location"
+                                "Loading Location....."
                             )}
                         </button>
                     </div>
@@ -681,15 +771,38 @@ export default function PrayerTimesPage() {
                                 </span>
                                 <div className="flex-grow h-px bg-gray-600" />
                             </div>
-                            <input
-                                type="text"
-                                className="w-full bg-[#23283a] border border-gray-700 rounded px-3 py-2 text-white placeholder-gray-400 focus:outline-none focus:ring focus:border-green-500 mb-2 md:text-base"
-                                placeholder="Search city (e.g. Mumbai, Delhi)..."
-                                value={citySearch}
-                                onChange={(e) => {
-                                    setCitySearch(e.target.value);
-                                }}
-                            />
+                            <div className="relative mb-2">
+                                <input
+                                    type="text"
+                                    className="w-full bg-[#23283a] border border-gray-700 rounded px-3 py-2 text-white placeholder-gray-400 focus:outline-none focus:ring focus:border-green-500 md:text-base pr-8"
+                                    placeholder="Search For Any City"
+                                    value={citySearch}
+                                    onChange={(e) => {
+                                        // user typed -> clear any prior selection and resume searching
+                                        setCitySearch(e.target.value);
+                                        if (selectedCityResult)
+                                            setSelectedCityResult(null);
+                                        if (suppressSearchAfterSelect)
+                                            setSuppressSearchAfterSelect(false);
+                                    }}
+                                />
+                                {/* X icon to clear input */}
+                                {citySearch && (
+                                    <button
+                                        type="button"
+                                        className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 hover:text-red-500 p-1 rounded focus:outline-none"
+                                        aria-label="Clear search"
+                                        onClick={() => {
+                                            setCitySearch("");
+                                            setSelectedCityResult(null);
+                                            setSuppressSearchAfterSelect(false);
+                                        }}
+                                        tabIndex={0}
+                                    >
+                                        <X className="w-4 h-4" />
+                                    </button>
+                                )}
+                            </div>
                             {/* NEW: suggestion list */}
                             {citySearching && (
                                 <div className="text-xs md:text-sm text-gray-400 mb-2">
@@ -726,7 +839,9 @@ export default function PrayerTimesPage() {
                             )}
                             {citySearch &&
                                 !citySearching &&
-                                cityResults.length === 0 && (
+                                cityResults.length === 0 &&
+                                !selectedCityResult &&
+                                !suppressSearchAfterSelect && (
                                     <div className="text-xs md:text-sm text-gray-500 mb-2">
                                         No matches found.
                                     </div>
@@ -866,13 +981,13 @@ export default function PrayerTimesPage() {
                                     prayer.name.startsWith("Fajr")
                                         ? "border-primary"
                                         : prayer.name.startsWith("Sun Rise")
-                                        ? "border-secondary"
+                                        ? "border-error"
                                         : prayer.name.startsWith("Zuhr")
                                         ? "border-accent"
                                         : prayer.name.startsWith("Asr")
                                         ? "border-warning"
                                         : prayer.name.startsWith("Maghrib")
-                                        ? "border-green-500"
+                                        ? "border-white-500"
                                         : prayer.name.startsWith("Isha")
                                         ? "border-blue-500"
                                         : "border-base-300"
