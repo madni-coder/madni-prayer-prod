@@ -24,7 +24,7 @@ export default function ContactUs() {
     };
 
     return (
-        <main className="flex min-h-screen flex-col items-center justify-center bg-[#1a2332] text-gray-100 p-4 sm:p-6">
+        <main className="flex min-h-screen flex-col items-center justify-center bg-[#1a2332] text-gray-100 p-4 sm:p-6 mb-[64px]">
             <header className="text-center mb-8">
                 <h1 className="text-3xl md:text-4xl font-extrabold tracking-tight text-green-400 mb-2">
                     Contact Us

@@ -345,6 +345,71 @@ export default function JamatTimesPage() {
         );
     };
 
+    const handleLink = async () => {
+        const httpUrl = getMapUrl();
+        if (!httpUrl) {
+            showToast("Map not available for this masjid.", "error");
+            return;
+        }
+
+        // Build a text query for deep links
+        const placeQuery = encodeURIComponent(
+            `${selectedMasjidData?.masjidName || ""} ${
+                selectedMasjidData?.colony || ""
+            } ${selectedMasjidData?.locality || ""}`.trim()
+        );
+
+        try {
+            const isTauri = process.env.NEXT_PUBLIC_TAURI_BUILD;
+
+            if (isTauri) {
+                const { openUrl } = await import("@tauri-apps/plugin-opener");
+                let isiOS = false;
+                let isAndroid = false;
+                try {
+                    const os = await import("@tauri-apps/plugin-os");
+                    const platform = await os.platform();
+                    isiOS = platform === "ios";
+                    isAndroid = platform === "android";
+                } catch (_) {}
+
+                if (isiOS) {
+                    const iosGmaps = `comgooglemaps://?q=${placeQuery}`;
+                    try {
+                        await openUrl(iosGmaps);
+                        return;
+                    } catch (_) {
+                        // Fall through to HTTPS
+                    }
+                } else if (isAndroid) {
+                    const androidGeo = `geo:0,0?q=${placeQuery}`;
+                    try {
+                        await openUrl(androidGeo);
+                        return;
+                    } catch (_) {
+                        try {
+                            await openUrl(`google.navigation:q=${placeQuery}`);
+                            return;
+                        } catch (_) {}
+                    }
+                }
+
+                await openUrl(httpUrl);
+                return;
+            }
+
+            window.open(httpUrl, "_blank", "noopener,noreferrer");
+        } catch (e) {
+            console.error("Failed to open map via opener:", e);
+            try {
+                window.open(httpUrl, "_blank", "noopener,noreferrer");
+            } catch (err) {
+                console.error("Fallback open failed:", err);
+                showToast("Unable to open the map on this device.", "error");
+            }
+        }
+    };
+
     const getJamatTimes = () => {
         if (!selectedMasjidData) return [];
         return [
@@ -729,21 +794,7 @@ export default function JamatTimesPage() {
                     <div className="mt-4 mb-8 text-center">
                         <button
                             type="button"
-                            onClick={() => {
-                                const url = getMapUrl();
-                                if (url) {
-                                    window.open(
-                                        url,
-                                        "_blank",
-                                        "noopener,noreferrer"
-                                    );
-                                } else {
-                                    showToast(
-                                        "Map not available for this masjid.",
-                                        "error"
-                                    );
-                                }
-                            }}
+                            onClick={handleLink}
                             className="inline-flex items-center gap-2 px-4 py-3 rounded-md bg-primary/20 hover:bg-primary/30 text-primary transition font-semibold"
                         >
                             <MapPin className="w-5 h-5" />
