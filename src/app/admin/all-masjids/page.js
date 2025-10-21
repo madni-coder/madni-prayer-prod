@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
-import { RefreshCw, X, Pencil } from "lucide-react";
+import { RefreshCw, X, Pencil, Copy, Check } from "lucide-react";
 import fetchFromApi from "../../../utils/fetchFromApi";
 import { useRouter } from "next/navigation";
 
@@ -18,6 +18,19 @@ export default function Page() {
     const [reloading, setReloading] = useState(false);
     const [isAuthenticated, setIsAuthenticated] = useState(false);
     const [authLoading, setAuthLoading] = useState(true);
+    // Copy state and handler for mobile numbers (hooks must be top-level)
+    const [copiedId, setCopiedId] = useState(null);
+
+    const handleCopy = async (mobile, id) => {
+        if (!mobile) return;
+        try {
+            await navigator.clipboard.writeText(String(mobile));
+            setCopiedId(id);
+            setTimeout(() => setCopiedId(null), 2000);
+        } catch (e) {
+            console.error("Failed to copy mobile number:", e);
+        }
+    };
 
     const fetchMasjids = useCallback(async () => {
         try {
@@ -202,12 +215,13 @@ export default function Page() {
             <div className="bg-white rounded-lg shadow-sm overflow-hidden">
                 {/* Table Header */}
                 <div className="bg-yellow-600 text-white">
-                    <div className="grid grid-cols-8 gap-4 px-6 py-4 font-medium">
-                        <div className="col-span-2">Masjid</div>
+                    <div className="grid grid-cols-9 gap-4 px-6 py-4 font-medium">
+                        <div className="col-span-2">Masjid Names</div>
                         <div className="col-span-2">Colony Address</div>
                         <div>Role</div>
                         <div>Name</div>
                         <div>Mobile Number</div>
+                        <div>Location URL exists</div>
                         <div>Actions</div>
                     </div>
                 </div>
@@ -222,7 +236,7 @@ export default function Page() {
                     {filteredMasjids.map((m) => (
                         <div
                             key={m.id}
-                            className="grid grid-cols-8 gap-4 px-6 py-4 hover:bg-gray-50 transition-colors"
+                            className="grid grid-cols-9 gap-4 px-6 py-4 hover:bg-gray-50 transition-colors"
                         >
                             <div className="col-span-2 flex items-center space-x-3">
                                 <div className="w-10 h-10 bg-gray-200 rounded-full flex items-center justify-center">
@@ -251,7 +265,46 @@ export default function Page() {
                             </div>
                             <div>
                                 <div className="text-sm text-gray-900">
-                                    {displayOrNotAdded(m.mobile)}
+                                    {/* Show mobile and a copy button that copies only the mobile number */}
+                                    {m.mobile &&
+                                    String(m.mobile).trim().length > 0 ? (
+                                        <div className="flex items-center">
+                                            <span>{m.mobile}</span>
+                                            <button
+                                                onClick={() =>
+                                                    handleCopy(m.mobile, m.id)
+                                                }
+                                                className="ml-2 p-1 text-gray-500 hover:text-gray-700 rounded-md"
+                                                title="Copy mobile number"
+                                            >
+                                                <Copy size={16} />
+                                            </button>
+                                            {copiedId === m.id && (
+                                                <Check
+                                                    size={16}
+                                                    className="ml-2 text-green-600"
+                                                />
+                                            )}
+                                        </div>
+                                    ) : (
+                                        <span className="text-red-600">
+                                            Not Added
+                                        </span>
+                                    )}
+                                </div>
+                            </div>
+                            <div>
+                                <div className="text-sm">
+                                    {m.pasteMapUrl &&
+                                    String(m.pasteMapUrl).trim().length > 0 ? (
+                                        <span className="text-green-600 font-medium">
+                                            YES
+                                        </span>
+                                    ) : (
+                                        <span className="text-red-600 font-medium">
+                                            NO
+                                        </span>
+                                    )}
                                 </div>
                             </div>
                             <div>

@@ -145,13 +145,31 @@ export async function PATCH(request) {
     }
 }
 
-// GET: List all masjids (basic filters by colony / masjidName optional)
+// GET: List all masjids (basic filters by colony / masjidName optional) OR get single masjid by id
 export async function GET(request) {
     try {
         const { searchParams } = new URL(request.url);
+        const id = searchParams.get("id");
         const colony = searchParams.get("colony");
         const masjid = searchParams.get("masjid");
 
+        // If id is provided, fetch single masjid
+        if (id) {
+            const singleMasjid = await prisma.allMasjid.findUnique({
+                where: { id: parseInt(id) },
+            });
+
+            if (!singleMasjid) {
+                return NextResponse.json(
+                    { error: "Masjid not found" },
+                    { status: 404 }
+                );
+            }
+
+            return NextResponse.json(singleMasjid, { status: 200 });
+        }
+
+        // Otherwise, list all masjids with optional filters
         const where = {};
         if (colony) where.colony = { contains: colony, mode: "insensitive" };
         if (masjid)
