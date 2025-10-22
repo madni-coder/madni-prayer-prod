@@ -466,7 +466,7 @@ const RewardsPage = () => {
             </p>
             <div className="flex justify-center mb-4">
                 <button
-                    className="btn btn-primary px-6 py-2 rounded-lg font-semibold text-white shadow"
+                    className="btn btn-primary px-6 py-2 rounded-lg font-semibold text-white shadow mb-20"
                     onClick={() => router.push("/tasbih")}
                     aria-label="Go to Tasbih page to register"
                 >
