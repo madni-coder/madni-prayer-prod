@@ -287,9 +287,13 @@ export default function JamatTimesPage() {
     const handleReset = () => {
         setSelectedColony("");
         setSelectedMasjid("");
+        setColonySearch(""); // clear search input
         setTimes(prayers.map((p) => p.defaultTime));
         setEditIdx(null);
+        setEditValue(""); // clear any in-progress edit value
         setError("");
+        setSaveMessage(""); // clear any save message
+        setSaving(false); // ensure saving flag is reset
     };
 
     return (

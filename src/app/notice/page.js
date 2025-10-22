@@ -28,15 +28,20 @@ export default function NoticeFeed() {
     }, []);
 
     return (
-        <div className="min-h-screen relative -z-10 flex flex-col items-center bg-base-200 pt-6 pb-24">
-            <button
-                className="flex items-center gap-2 mb-4 text-lg text-primary hover:text-green-600 font-semibold"
-                onClick={() => router.push("/")}
-                aria-label="Back to Home"
-                style={{ alignSelf: "flex-start" }}
-            >
-                <FaAngleLeft /> Back
-            </button>
+        <div className="min-h-screen relative flex flex-col items-center bg-base-200 pt-6 pb-24">
+            <div className="w-full max-w-xs mx-auto">
+                <button
+                    type="button"
+                    className="flex items-center gap-2 mb-4 text-lg text-primary hover:text-green-600 font-semibold cursor-pointer z-10"
+                    onClick={(e) => {
+                        e.preventDefault();
+                        router.push("/");
+                    }}
+                    aria-label="Back to Home"
+                >
+                    <FaAngleLeft /> Back
+                </button>
+            </div>
             <div className="w-full max-w-xs mx-auto space-y-6 pb-4">
                 {error && (
                     <div className="text-sm text-error p-3">Error: {error}</div>
