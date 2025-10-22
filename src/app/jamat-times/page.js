@@ -472,7 +472,7 @@ export default function JamatTimesPage() {
 
             <div className="bg-white backdrop-blur-sm p-3 md:p-4 rounded-lg shadow-sm max-w-2xl mx-4 sm:mx-auto">
                 <h2 className="text-base md:text-lg font-extrabold text-primary text-center leading-tight">
-                    Currently this app shows Jamat Times of Bilaspur Zone (C.G)
+                    Currently this app shows Jamat Times of Bilaspur Dist (C.G)
                     Only
                 </h2>
             </div>
