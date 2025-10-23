@@ -15,7 +15,7 @@ import Image from "next/image";
 
 const sections = [
     {
-        name: "Jamat Times",
+        name: "Jama'at Times",
         href: "/jamat-times",
         icon: <FaPeopleArrows className="text-2xl text-pink-500" />,
     },

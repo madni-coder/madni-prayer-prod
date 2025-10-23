@@ -21,7 +21,7 @@ const items = [
     { name: "Home", href: "/", icon: FaHome },
     { name: "Prayer Times", href: "/prayer-times", icon: FaClock },
     { name: "Tasbih", href: "/tasbih", icon: FaSpinner },
-    { name: "Jamat Times", href: "/jamat-times", icon: FaPeopleArrows },
+    { name: "Jama'at Times", href: "/jamat-times", icon: FaPeopleArrows },
     { name: "Elan Nama", href: "/notice", icon: FaMicrophone },
 ];
 

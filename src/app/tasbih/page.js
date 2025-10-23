@@ -17,6 +17,7 @@ export default function Tasbih() {
     });
     const [showResetConfirm, setShowResetConfirm] = useState(false);
     const [showUserModal, setShowUserModal] = useState(false);
+    const [showLimitReached, setShowLimitReached] = useState(false);
     const [history, setHistory] = useState(() => {
         if (typeof window !== "undefined") {
             const saved = localStorage.getItem("duroodHistory");
@@ -31,6 +32,7 @@ export default function Tasbih() {
         }
         return "";
     });
+    const [showHiddenMessage, setShowHiddenMessage] = useState(false);
 
     const router = useRouter();
 
@@ -48,12 +50,18 @@ export default function Tasbih() {
         }
     }, [history]);
 
-    // shared increment handler (1..100 then wrap to 0)
+    // shared increment handler (1..10000 then show popup)
     const increment = useCallback(() => {
-        setCount((c) => (c + 1) % 101);
+        setCount((c) => {
+            if (c >= 10000) {
+                setShowLimitReached(true);
+                return c;
+            }
+            return c + 1;
+        });
     }, []);
 
-    // determine which tick is active (one-based count -> zero-based index)
+    // determine which tick is active (scale count to 100 ticks)
     const activeTick = count > 0 ? (count - 1) % 100 : -1;
 
     // helper to render 100 tick marks around a circle
@@ -101,6 +109,32 @@ export default function Tasbih() {
                     Submit Durood Sharif
                 </button>
             </div>
+
+            {/* Hidden Message Revealer */}
+            <div className="w-full max-w-3xl mt-2">
+                <div className="text-center">
+                    <button
+                        className="text-xs text-primary/60 hover:text-primary underline"
+                        onClick={() => setShowHiddenMessage(!showHiddenMessage)}
+                    >
+                        {showHiddenMessage
+                            ? "Hide Message"
+                            : "Click to view important message"}
+                    </button>
+                    {showHiddenMessage && (
+                        <div className="mt-2 p-3 bg-warning/10 border border-warning/30 rounded-lg text-sm text-warning-content">
+                            <p className="font-medium text-base-content">
+                                Baraye maherbani agar durood sharif submit
+                                karein toh fake counts, fake taps krke submit na
+                                karein, ye galat or najayaz tarika hai, apse guzarish hy ki
+                                jab tasbih par tap karein toh kuch padh kar hi
+                                karein.
+                            </p>
+                        </div>
+                    )}
+                </div>
+            </div>
+
             {/* Card */}
             {/* Make this entire card respond to pointer and keyboard so taps anywhere increment the counter */}
             <div
@@ -165,7 +199,6 @@ export default function Tasbih() {
                             <div className="text-4xl md:text-5xl font-extrabold text-primary">
                                 {count.toString().padStart(2, "0")}
                             </div>
-                            <div className="text-sm text-muted">/100</div>
                         </div>
                     </div>
                 </div>
@@ -187,6 +220,40 @@ export default function Tasbih() {
                     <div className="text-xl font-bold">Tap Anywhere</div>
                 </div>
             </div>
+
+            {/* Limit reached modal */}
+            {showLimitReached && (
+                <div className="fixed inset-0 flex items-center justify-center bg-black/40 z-50">
+                    <div className="modal modal-open">
+                        <div className="modal-box text-center">
+                            <h3 className="font-bold text-lg text-primary">
+                                🎉 Congratulations!
+                            </h3>
+                            <p className="py-4">
+                                You have reached the maximum count of 10,000!
+                                Please reset the counter to continue.
+                            </p>
+                            <div className="modal-action justify-center">
+                                <button
+                                    className="btn btn-primary"
+                                    onClick={() => {
+                                        setCount(0);
+                                        setShowLimitReached(false);
+                                    }}
+                                >
+                                    Reset Counter
+                                </button>
+                                <button
+                                    className="btn btn-ghost"
+                                    onClick={() => setShowLimitReached(false)}
+                                >
+                                    Close
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
 
             {/* Reset confirmation modal */}
             {showResetConfirm && (

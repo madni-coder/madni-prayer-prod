@@ -17,57 +17,44 @@ const surahs = [
     // ...add more or fetch dynamically
 ];
 
-// Static Para (Juz) data: 1-30 with custom names, Arabic, and Total Ruku (from screenshot)
+// Static Para (Juz) data: 1-30 with custom names and Arabic only (ruku removed)
 const paraNames = [
-    { name: "Alif Laam Meem", arabic: "ٱلۤمّ", ruku: 17 },
-    { name: "Sayaqool", arabic: "سَيَقُولُ", ruku: 16 },
-    { name: "Tilka’r Rusul", arabic: "تِلْكَ ٱلرُّسُلُ", ruku: 17 },
-    { name: "Lan Tanaaloo", arabic: "لَن تَنَالُواْ", ruku: 14 },
-    { name: "Wa’l Mohsanat", arabic: "وَٱلْمُحْصَنَاتُ", ruku: 17 },
-    {
-        name: "Ya Ayyuha’lladhina Aamanu",
-        arabic: "لَا يُحِبُّ ٱللهُ",
-        ruku: 16,
-    },
-    { name: "Wa Iza Sami‘u", arabic: "وَإِذَا سَمِعُواْ", ruku: 19 },
-    { name: "Wa Lau Annana", arabic: "وَلَوْ أَنَّنَا", ruku: 17 },
-    { name: "Qad Aflaha", arabic: "قَالَ ٱلْمَلَأُ", ruku: 18 },
-    { name: "Wa A‘lamu", arabic: "وَٱعْلَمُواْ", ruku: 17 },
-    {
-        name: "Ya Ayyuha’lladhina Aamanu La Tattakhizu",
-        arabic: "يتعذرون",
-        ruku: 16,
-    },
-    { name: "Wa Mamin Daabbah", arabic: "وَمَا مِن دَآبَّةٍ", ruku: 17 },
-    { name: "Wa Ma Ubrioo", arabic: "وَمَآ أُبَرِّئُ", ruku: 19 },
-    { name: "Rubama", arabic: "رُّبَمَا", ruku: 16 },
-    { name: "Subhanalladhi", arabic: "سُبْحَٰنَ ٱلَّذِى", ruku: 15 },
-    { name: "Qala Alam", arabic: "قَالَ أَلَمْ", ruku: 16 },
-    { name: "Iqtarabat", arabic: "ٱقْتَرَبَتْ", ruku: 16 },
-    { name: "Qadd Aflaha", arabic: "قَدْ أَفْلَحَ", ruku: 17 },
-    {
-        name: "Wa Qala’lladhina La Yarjuna",
-        arabic: "وَقَالَ ٱلَّذِينَ ",
-        ruku: 19,
-    },
-    { name: "A‘mman Khalaq", arabic: "أَمَّنْ خَلَقَ", ruku: 19 },
-    { name: "Utlu Ma Oohiya", arabic: "ٱتْلُ مَآ أُوحِىَ", ruku: 18 },
-    { name: "Wa Manyaqnut", arabic: "وَمَن يَقْنُتْ", ruku: 17 },
-    { name: "Wa Mali", arabic: "وَمَا لِىَ", ruku: 16 },
-    { name: "Faman Azlam", arabic: "فَمَنْ أَظْلَمُ", ruku: 19 },
-    { name: "Elahe Yuruddu", arabic: "إِلَيْهِ يُرَدُّ", ruku: 17 },
-    { name: "Ha’a Meem", arabic: "حم", ruku: 19 },
-    { name: "Qala Fama Khatbukum", arabic: "قَالَ فَمَا خَطْبُكُم", ruku: 20 },
-    { name: "Qadd Sami‘a’llahu", arabic: "قَدْ سَمِعَ ٱللَّهُ", ruku: 20 },
-    { name: "Tabarakalladhi", arabic: "تَبَارَكَ ٱلَّذِى", ruku: 24 },
-    { name: "‘Amma Yatasa’aloon", arabic: "عَمَّ ", ruku: 39 },
+    { name: "Alif Laam Meem", arabic: "ٱلۤمّ" },
+    { name: "Sayaqool", arabic: "سَيَقُولُ" },
+    { name: "Tilka’r Rusul", arabic: "تِلْكَ ٱلرُّسُلُ" },
+    { name: "Lan Tanaaloo", arabic: "لَن تَنَالُواْ" },
+    { name: "Wa’l Mohsanat", arabic: "وَٱلْمُحْصَنَاتُ" },
+    { name: "Ya Ayyuha’lladhina Aamanu", arabic: "لَا يُحِبُّ ٱللهُ" },
+    { name: "Wa Iza Sami‘u", arabic: "وَإِذَا سَمِعُواْ" },
+    { name: "Wa Lau Annana", arabic: "وَلَوْ أَنَّنَا" },
+    { name: "Qad Aflaha", arabic: "قَالَ ٱلْمَلَأُ" },
+    { name: "Wa A‘lamu", arabic: "وَٱعْلَمُواْ" },
+    { name: "Ya Ayyuha’lladhina Aamanu La Tattakhizu", arabic: "يتعذرون" },
+    { name: "Wa Mamin Daabbah", arabic: "وَمَا مِن دَآبَّةٍ" },
+    { name: "Wa Ma Ubrioo", arabic: "وَمَآ أُبَرِّئُ" },
+    { name: "Rubama", arabic: "رُّبَمَا" },
+    { name: "Subhanalladhi", arabic: "سُبْحَٰنَ ٱلَّذِى" },
+    { name: "Qala Alam", arabic: "قَالَ أَلَمْ" },
+    { name: "Iqtarabat", arabic: "ٱقْتَرَبَتْ" },
+    { name: "Qadd Aflaha", arabic: "قَدْ أَفْلَحَ" },
+    { name: "Wa Qala’lladhina La Yarjuna", arabic: "وَقَالَ ٱلَّذِينَ " },
+    { name: "A‘mman Khalaq", arabic: "أَمَّنْ خَلَقَ" },
+    { name: "Utlu Ma Oohiya", arabic: "ٱتْلُ مَآ أُوحِىَ" },
+    { name: "Wa Manyaqnut", arabic: "وَمَن يَقْنُتْ" },
+    { name: "Wa Mali", arabic: "وَمَا لِىَ" },
+    { name: "Faman Azlam", arabic: "فَمَنْ أَظْلَمُ" },
+    { name: "Elahe Yuruddu", arabic: "إِلَيْهِ يُرَدُّ" },
+    { name: "Ha’a Meem", arabic: "حم" },
+    { name: "Qala Fama Khatbukum", arabic: "قَالَ فَمَا خَطْبُكُم" },
+    { name: "Qadd Sami‘a’llahu", arabic: "قَدْ سَمِعَ ٱللَّهُ" },
+    { name: "Tabarakalladhi", arabic: "تَبَارَكَ ٱلَّذِى" },
+    { name: "‘Amma Yatasa’aloon", arabic: "عَمَّ " },
 ];
 
 const paras = paraNames.map((p, i) => ({
     number: i + 1,
     name: p.name,
     arabic: p.arabic,
-    ruku: p.ruku,
 }));
 
 async function getPara() {
@@ -144,7 +131,7 @@ export default function Quran() {
                       proxied
                   )}`
                 : `/pdf-viewer?file=${encodeURIComponent(proxied)}`;
-                
+
             console.log("PDF viewer URLs", { proxied, viewer });
             const finalUrl = viewer;
             setCurrentPara(surah.number);
@@ -306,10 +293,7 @@ export default function Quran() {
                                       >
                                           {p.arabic}
                                       </span>
-                                      <div className="w-full flex justify-between items-end mt-auto">
-                                          <span className="text-xs text-primary font-semibold">
-                                              Ruku: {p.ruku}
-                                          </span>
+                                      <div className="w-full flex justify-end items-end mt-auto">
                                           {/* Decorative corner, optional */}
                                           <span
                                               className="text-xs text-primary"
