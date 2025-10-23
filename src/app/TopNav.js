@@ -17,7 +17,7 @@ import {
 const navLinks = [
     { name: "Home", href: "/", icon: <FaHome className="text-lg" /> },
     {
-        name: "Jamat Times",
+        name: "Jama'at Times",
         href: "/jamat-times",
         icon: <FaPeopleArrows className="text-lg" />,
     },
