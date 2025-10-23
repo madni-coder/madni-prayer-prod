@@ -1,0 +1,95 @@
+/* TipTap Editor Styles */
+.ProseMirror {
+    outline: none;
+    color: black;
+   
+}
+
+.ProseMirror h1 {
+    font-size: 2em;
+    font-weight: bold;
+   
+}
+
+.ProseMirror h2 {
+    font-size: 1.5em;
+    font-weight: bold;
+    margin-top: 0.5em;
+    margin-bottom: 0.5em;
+}
+
+.ProseMirror h3 {
+    font-size: 1.25em;
+    font-weight: bold;
+    margin-top: 0.5em;
+    margin-bottom: 0.5em;
+}
+
+.ProseMirror p {
+    margin-top: 0.5em;
+    margin-bottom: 0.5em;
+}
+
+.ProseMirror ul,
+.ProseMirror ol {
+    padding-left: 1.5em;
+    margin-top: 0.5em;
+    margin-bottom: 0.5em;
+}
+
+.ProseMirror ul {
+    list-style-type: disc;
+}
+
+.ProseMirror ol {
+    list-style-type: decimal;
+}
+
+.ProseMirror blockquote {
+    border-left: 4px solid #d1d5db;
+    padding-left: 1em;
+    margin-left: 0;
+    margin-top: 0.5em;
+    margin-bottom: 0.5em;
+    color: #6b7280;
+    font-style: italic;
+}
+
+.ProseMirror hr {
+    border: none;
+    border-top: 2px solid #d1d5db;
+    margin: 1em 0;
+}
+
+.ProseMirror strong {
+    font-weight: bold;
+}
+
+.ProseMirror em {
+    font-style: italic;
+}
+
+.ProseMirror s {
+    text-decoration: line-through;
+}
+
+.ProseMirror code {
+    background-color: #f3f4f6;
+    padding: 0.2em 0.4em;
+    border-radius: 0.25em;
+    font-family: monospace;
+}
+
+.ProseMirror pre {
+    background-color: #1f2937;
+    color: #f9fafb;
+    padding: 1em;
+    border-radius: 0.5em;
+    overflow-x: auto;
+}
+
+.ProseMirror pre code {
+    background-color: transparent;
+    padding: 0;
+    color: inherit;
+}
