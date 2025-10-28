@@ -85,7 +85,11 @@ const RewardsPage = () => {
                 const res = await fetch("/api/api-rewards", { method: "GET" });
                 if (res.ok) {
                     const data = await res.json();
-                    setRewardList(Array.isArray(data) ? data : []);
+                    // Ensure we only keep top 10 by position (ascending)
+                    const list = Array.isArray(data) ? data : [];
+                    // keep the full normalized list in state; we'll select best per position
+                    list.sort((a, b) => (a.position ?? 0) - (b.position ?? 0));
+                    setRewardList(list);
                 }
             } catch (err) {
                 setRewardList([]);
@@ -94,8 +98,58 @@ const RewardsPage = () => {
         fetchRewards();
     }, []);
 
-    // Split winners: position 1 for announcement, rest for table
-    const goldWinner = rewardList.find((r) => r.position === 1);
+    // Build an explicit positions 1..10 list so we always show slots by position
+    // If a particular position is not present in the fetched data, we show a placeholder
+    const positionsList = React.useMemo(() => {
+        // create a map from position -> user for fast lookup
+        const map = new Map();
+        // Accept positions whether they are number or numeric-strings. Coerce safely.
+        // Keep the "best" item for each position: prefer higher counts, break ties by newer createdAt.
+        (rewardList || []).forEach((u) => {
+            const posNum =
+                u?.position !== undefined && u?.position !== null
+                    ? Number(u.position)
+                    : NaN;
+            if (Number.isNaN(posNum) || posNum < 1) return;
+
+            const candidate = { ...u, position: posNum };
+            const existing = map.get(posNum);
+            if (!existing) {
+                map.set(posNum, candidate);
+                return;
+            }
+
+            // Compare counts (coerced to number)
+            const existingCounts = Number(existing.counts || 0);
+            const candCounts = Number(candidate.counts || 0);
+            if (candCounts > existingCounts) {
+                map.set(posNum, candidate);
+                return;
+            }
+
+            if (candCounts === existingCounts) {
+                // prefer newer createdAt if available
+                const existingTime = existing.createdAt
+                    ? Date.parse(existing.createdAt)
+                    : 0;
+                const candTime = candidate.createdAt
+                    ? Date.parse(candidate.createdAt)
+                    : 0;
+                if (candTime >= existingTime) {
+                    map.set(posNum, candidate);
+                }
+            }
+            // otherwise keep existing
+        });
+        // build array for positions 1..10
+        return Array.from({ length: 10 }, (_, i) => {
+            const pos = i + 1;
+            return map.get(pos) || { position: pos, empty: true };
+        });
+    }, [rewardList]);
+
+    // goldWinner is the user placed at position 1 (if any)
+    const goldWinner = positionsList.find((p) => p.position === 1 && !p.empty);
 
     return (
         <div className="min-h-screen flex flex-col items-center justify-center bg-base-200">
@@ -295,70 +349,75 @@ const RewardsPage = () => {
                         No winners found.
                     </div>
                 ) : (
-                    rewardList
-                        .sort((a, b) => a.position - b.position)
-                        .map((user, idx) => {
-                            let rankDisplay = null;
-                            if (idx === 0) rankDisplay = medalSVG[0];
-                            else if (idx === 1) rankDisplay = medalSVG[1];
-                            else if (idx === 2) rankDisplay = medalSVG[2];
-                            else
-                                rankDisplay = (
-                                    <span
-                                        style={{
-                                            fontWeight: 700,
-                                            fontSize: 16,
-                                            color: "var(--theme-rank-color, #FFD700)",
-                                        }}
-                                    >
-                                        {idx + 1}
-                                    </span>
-                                );
-                            return (
-                                <div
-                                    key={user.id || idx}
-                                    className="flex items-center py-2 border-b last:border-b-0 border-base-300"
+                    positionsList.map((user, idx) => {
+                        // idx corresponds to position - 1
+                        const pos = idx + 1;
+                        let rankDisplay = null;
+                        if (pos === 1) rankDisplay = medalSVG[0];
+                        else if (pos === 2) rankDisplay = medalSVG[1];
+                        else if (pos === 3) rankDisplay = medalSVG[2];
+                        else
+                            rankDisplay = (
+                                <span
+                                    style={{
+                                        fontWeight: 700,
+                                        fontSize: 16,
+                                        color: "var(--theme-rank-color, #FFD700)",
+                                    }}
                                 >
-                                    <div
-                                        style={{
-                                            width: 48,
-                                            textAlign: "center",
-                                        }}
-                                    >
-                                        {rankDisplay}
-                                    </div>
-                                    <div
-                                        style={{
-                                            flex: 1,
-                                            fontWeight: 500,
-                                            fontSize: 15,
-                                        }}
-                                    >
-                                        {user.fullName}
-                                    </div>
-                                    <div
-                                        style={{
-                                            flex: 1,
-                                            fontWeight: 400,
-                                            fontSize: 14,
-                                            color: "#888",
-                                        }}
-                                    >
-                                        {user.address || "-"}
-                                    </div>
-                                    <div
-                                        style={{
-                                            fontWeight: 600,
-                                            fontSize: 15,
-                                            minWidth: 100,
-                                            textAlign: "right",
-                                        }}
-                                    >
-                                        00
-                                    </div>
-                                </div>
+                                    {pos}
+                                </span>
                             );
-                        })
+                        return (
+                            <div
+                                key={user.id || `pos-${pos}`}
+                                className="flex items-center py-2 border-b last:border-b-0 border-base-300"
+                            >
+                                <div
+                                    style={{
+                                        width: 48,
+                                        textAlign: "center",
+                                    }}
+                                >
+                                    {rankDisplay}
+                                </div>
+                                <div
+                                    style={{
+                                        flex: 1,
+                                        fontWeight: 500,
+                                        fontSize: 15,
+                                    }}
+                                >
+                                    {user.empty ? "-" : user.fullName}
+                                </div>
+                                <div
+                                    style={{
+                                        flex: 1,
+                                        fontWeight: 400,
+                                        fontSize: 14,
+                                        color: "#888",
+                                    }}
+                                >
+                                    {user.empty ? "-" : user.address || "-"}
+                                </div>
+                                <div
+                                    style={{
+                                        fontWeight: 600,
+                                        fontSize: 15,
+                                        minWidth: 100,
+                                        textAlign: "right",
+                                    }}
+                                >
+                                    {user.empty
+                                        ? "--"
+                                        : String(user.counts ?? 0).padStart(
+                                              2,
+                                              "0"
+                                          )}
+                                </div>
+                            </div>
+                        );
+                    })
                 )}
             </div>
 

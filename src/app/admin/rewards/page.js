@@ -1,11 +1,15 @@
 "use client";
 import { useState, useEffect } from "react";
+import fetchFromApi from "../../../utils/fetchFromApi";
 
 export default function RewardsPage() {
     const [fullName, setFullName] = useState("");
     const [address, setAddress] = useState("");
     const [areaMasjid, setAreaMasjid] = useState("");
     const [position, setPosition] = useState("");
+    const [winnersCount, setWinnersCount] = useState(0);
+    const [winners, setWinners] = useState([]); // array of { fullName,address,areaMasjid,position }
+    const [allTasbihUsers, setAllTasbihUsers] = useState([]);
     const [selectedPositions, setSelectedPositions] = useState([]);
     const [success, setSuccess] = useState(false);
     const [error, setError] = useState("");
@@ -20,38 +24,99 @@ export default function RewardsPage() {
         }
     }, [success]);
 
+    // Fetch tasbih users once on mount so we can autofill winners
+    useEffect(() => {
+        async function loadUsers() {
+            try {
+                const res = await fetchFromApi("/api/api-tasbihUsers");
+                const json = await res.json();
+                if (json.ok && Array.isArray(json.data)) {
+                    // sort desc by Tasbih Counts
+                    const sorted = [...json.data].sort((a, b) => {
+                        const aCount = Number(a["Tasbih Counts"] || 0);
+                        const bCount = Number(b["Tasbih Counts"] || 0);
+                        return bCount - aCount;
+                    });
+                    setAllTasbihUsers(sorted);
+                }
+            } catch (e) {
+                // ignore, keep users empty
+                setAllTasbihUsers([]);
+            }
+        }
+        loadUsers();
+    }, []);
+
     const handleSubmit = async (e) => {
         e.preventDefault();
         setSuccess(false);
         setError("");
         try {
-            const res = await fetch("/api/api-rewards", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({
-                    fullName,
-                    address,
-                    areaMasjid,
-                    position,
-                }),
-            });
-            const data = await res.json();
-            if (res.ok) {
+            // If winners array is present (autofill), submit them all
+            if (winners && winners.length > 0) {
+                const results = [];
+                for (const w of winners) {
+                    const res = await fetch("/api/api-rewards", {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({
+                            fullName: w.fullName,
+                            address: w.address,
+                            areaMasjid: w.areaMasjid,
+                            position: w.position,
+                        }),
+                    });
+                    const data = await res.json().catch(() => ({}));
+                    if (!res.ok) {
+                        throw new Error(
+                            data.error || "One of the submissions failed"
+                        );
+                    }
+                    results.push({ ...w });
+                }
+                // all succeeded
                 setSuccess(true);
-                setSubmissions([
-                    ...submissions,
-                    { fullName, address, areaMasjid, position },
+                setSubmissions([...submissions, ...results]);
+                setSelectedPositions([
+                    ...selectedPositions,
+                    ...results.map((r) => r.position),
                 ]);
-                setSelectedPositions([...selectedPositions, position]);
+                // clear form and winners
                 setFullName("");
                 setAddress("");
                 setAreaMasjid("");
                 setPosition("");
+                setWinners([]);
+                setWinnersCount(0);
             } else {
-                setError(data.error || "Submission failed");
+                const res = await fetch("/api/api-rewards", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({
+                        fullName,
+                        address,
+                        areaMasjid,
+                        position,
+                    }),
+                });
+                const data = await res.json();
+                if (res.ok) {
+                    setSuccess(true);
+                    setSubmissions([
+                        ...submissions,
+                        { fullName, address, areaMasjid, position },
+                    ]);
+                    setSelectedPositions([...selectedPositions, position]);
+                    setFullName("");
+                    setAddress("");
+                    setAreaMasjid("");
+                    setPosition("");
+                } else {
+                    setError(data.error || "Submission failed");
+                }
             }
         } catch (err) {
-            setError("Network error");
+            setError(err.message || "Network error");
         }
     };
 
@@ -203,9 +268,10 @@ export default function RewardsPage() {
                             }
                         />
                     </div>
+                    {/* New dropdown: number of winners to autofill */}
                     <div style={{ marginBottom: "1.5rem" }}>
                         <label
-                            htmlFor="position"
+                            htmlFor="winnersCount"
                             style={{
                                 display: "block",
                                 marginBottom: "0.5rem",
@@ -214,14 +280,29 @@ export default function RewardsPage() {
                                 fontSize: "1rem",
                             }}
                         >
-                            Position
+                            Number of winners to autofill
                         </label>
                         <select
-                            id="position"
-                            value={position}
-                            onChange={(e) =>
-                                setPosition(Number(e.target.value))
-                            }
+                            id="winnersCount"
+                            value={winnersCount}
+                            onChange={(e) => {
+                                const n = Number(e.target.value);
+                                setWinnersCount(n);
+                                // take top n users and map to winner entries
+                                if (n > 0 && allTasbihUsers.length > 0) {
+                                    const top = allTasbihUsers
+                                        .slice(0, n)
+                                        .map((u, i) => ({
+                                            fullName: u["Full Name"] || "",
+                                            address: u["Address"] || "",
+                                            areaMasjid: u["Area Masjid"] || "",
+                                            position: i + 1,
+                                        }));
+                                    setWinners(top);
+                                } else {
+                                    setWinners([]);
+                                }
+                            }}
                             style={{
                                 width: "100%",
                                 padding: "0.75rem",
@@ -239,21 +320,141 @@ export default function RewardsPage() {
                                 (e.target.style.borderColor = "#b7e4c7")
                             }
                         >
-                            <option value="">Select position</option>
-                            {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
-                                .filter(
-                                    (pos) =>
-                                        !selectedPositions.includes(
-                                            String(pos)
-                                        ) && !selectedPositions.includes(pos)
-                                )
-                                .map((pos) => (
-                                    <option key={pos} value={pos}>
-                                        {pos}
-                                    </option>
-                                ))}
+                            <option value={0}>No autofill</option>
+                            {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((n) => (
+                                <option key={n} value={n}>
+                                    {n}
+                                </option>
+                            ))}
                         </select>
                     </div>
+
+                    {/* Render one or more autofilled winner entries when winnersCount > 0 */}
+                    {winners.length > 0 && (
+                        <div style={{ marginBottom: "1.5rem" }}>
+                            <h3 style={{ color: "#205c3b", marginBottom: 8 }}>
+                                Autofilled winners (editable)
+                            </h3>
+                            {winners.map((w, idx) => (
+                                <div
+                                    key={idx}
+                                    style={{
+                                        marginBottom: 12,
+                                        padding: 12,
+                                        border: "1px solid #f0f0f0",
+                                        borderRadius: 8,
+                                    }}
+                                >
+                                    <div style={{ marginBottom: 8 }}>
+                                        <label
+                                            style={{
+                                                display: "block",
+                                                color: "#205c3b",
+                                                fontSize: 14,
+                                            }}
+                                        >
+                                            Full Name
+                                        </label>
+                                        <input
+                                            value={w.fullName}
+                                            onChange={(e) => {
+                                                const copy = [...winners];
+                                                copy[idx] = {
+                                                    ...copy[idx],
+                                                    fullName: e.target.value,
+                                                };
+                                                setWinners(copy);
+                                            }}
+                                            style={{
+                                                width: "100%",
+                                                padding: 8,
+                                            }}
+                                        />
+                                    </div>
+                                    <div style={{ marginBottom: 8 }}>
+                                        <label
+                                            style={{
+                                                display: "block",
+                                                color: "#205c3b",
+                                                fontSize: 14,
+                                            }}
+                                        >
+                                            Address
+                                        </label>
+                                        <input
+                                            value={w.address}
+                                            onChange={(e) => {
+                                                const copy = [...winners];
+                                                copy[idx] = {
+                                                    ...copy[idx],
+                                                    address: e.target.value,
+                                                };
+                                                setWinners(copy);
+                                            }}
+                                            style={{
+                                                width: "100%",
+                                                padding: 8,
+                                            }}
+                                        />
+                                    </div>
+                                    <div style={{ marginBottom: 8 }}>
+                                        <label
+                                            style={{
+                                                display: "block",
+                                                color: "#205c3b",
+                                                fontSize: 14,
+                                            }}
+                                        >
+                                            Area Masjid Name
+                                        </label>
+                                        <input
+                                            value={w.areaMasjid}
+                                            onChange={(e) => {
+                                                const copy = [...winners];
+                                                copy[idx] = {
+                                                    ...copy[idx],
+                                                    areaMasjid: e.target.value,
+                                                };
+                                                setWinners(copy);
+                                            }}
+                                            style={{
+                                                width: "100%",
+                                                padding: 8,
+                                            }}
+                                        />
+                                    </div>
+                                    <div>
+                                        <label
+                                            style={{
+                                                display: "block",
+                                                color: "#205c3b",
+                                                fontSize: 14,
+                                            }}
+                                        >
+                                            Position
+                                        </label>
+                                        <input
+                                            type="number"
+                                            min={1}
+                                            max={10}
+                                            value={w.position}
+                                            onChange={(e) => {
+                                                const copy = [...winners];
+                                                copy[idx] = {
+                                                    ...copy[idx],
+                                                    position: Number(
+                                                        e.target.value
+                                                    ),
+                                                };
+                                                setWinners(copy);
+                                            }}
+                                            style={{ width: 120, padding: 8 }}
+                                        />
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    )}
                     <button
                         type="submit"
                         style={{

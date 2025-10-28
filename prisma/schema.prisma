@@ -65,6 +65,7 @@ model Reward {
   fullName   String
   address    String
   areaMasjid String
+  counts     Int      @default(0)
   position   Int
   createdAt  DateTime @default(now())
 
