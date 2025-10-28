@@ -20,6 +20,9 @@ export default function Page() {
     const [authLoading, setAuthLoading] = useState(true);
     // Copy state and handler for mobile numbers (hooks must be top-level)
     const [copiedId, setCopiedId] = useState(null);
+    // Pagination state: theme-friendly UI at bottom after 15 entries
+    const [currentPage, setCurrentPage] = useState(1);
+    const PAGE_SIZE = 15;
 
     const handleCopy = async (mobile, id) => {
         if (!mobile) return;
@@ -73,6 +76,11 @@ export default function Page() {
         }
     }, [fetchMasjids, isAuthenticated]);
 
+    // Reset to first page when filters or masjids change
+    useEffect(() => {
+        setCurrentPage(1);
+    }, [searchQuery, colonySearch, masjids]);
+
     // Show loading while checking authentication
     if (authLoading) {
         return (
@@ -104,6 +112,14 @@ export default function Page() {
             .includes(colonySearch.toLowerCase());
         return matchesSearch && matchesColonySearch;
     });
+
+    const totalPages = Math.max(
+        1,
+        Math.ceil(filteredMasjids.length / PAGE_SIZE)
+    );
+    const startIndex = (currentPage - 1) * PAGE_SIZE;
+    const endIndex = startIndex + PAGE_SIZE;
+    const paginatedMasjids = filteredMasjids.slice(startIndex, endIndex);
 
     // Helper to display 'Not Added' when a value is empty or only whitespace
     const displayOrNotAdded = (val) => {
@@ -215,7 +231,8 @@ export default function Page() {
             <div className="bg-white rounded-lg shadow-sm overflow-hidden">
                 {/* Table Header */}
                 <div className="bg-yellow-600 text-white">
-                    <div className="grid grid-cols-9 gap-4 px-6 py-4 font-medium">
+                    <div className="grid grid-cols-10 gap-4 px-6 py-4 font-medium">
+                        <div className="">No.</div>
                         <div className="col-span-2">Masjid Names</div>
                         <div className="col-span-2">Colony Address</div>
                         <div>Role</div>
@@ -233,11 +250,14 @@ export default function Page() {
                             No masjids found.
                         </div>
                     )}
-                    {filteredMasjids.map((m) => (
+                    {paginatedMasjids.map((m, idx) => (
                         <div
                             key={m.id}
-                            className="grid grid-cols-9 gap-4 px-6 py-4 hover:bg-gray-50 transition-colors"
+                            className="grid grid-cols-10 gap-4 px-6 py-4 hover:bg-gray-50 transition-colors"
                         >
+                            <div className="flex items-center justify-center text-sm text-gray-700">
+                                {startIndex + idx + 1}
+                            </div>
                             <div className="col-span-2 flex items-center space-x-3">
                                 <div className="w-10 h-10 bg-gray-200 rounded-full flex items-center justify-center">
                                     <span className="text-lg">🕌</span>
@@ -323,6 +343,94 @@ export default function Page() {
                     ))}
                 </div>
             </div>
+            {/* Pagination controls - show only when more than one page (i.e., > PAGE_SIZE entries) */}
+            {filteredMasjids.length > PAGE_SIZE && (
+                <div className="mt-4 flex items-center justify-between px-2">
+                    <div className="text-sm text-gray-600 dark:text-gray-300">
+                        Showing{" "}
+                        {Math.min(startIndex + 1, filteredMasjids.length)}-
+                        {Math.min(endIndex, filteredMasjids.length)} of{" "}
+                        {filteredMasjids.length}
+                    </div>
+                    <nav
+                        className="flex items-center space-x-2"
+                        aria-label="Pagination"
+                    >
+                        <button
+                            onClick={() =>
+                                setCurrentPage((p) => Math.max(1, p - 1))
+                            }
+                            disabled={currentPage === 1}
+                            className={`px-3 py-1 rounded-md border text-sm transition-colors disabled:opacity-50 ${"bg-white text-gray-700 border-gray-300 hover:bg-gray-100 dark:bg-gray-800 dark:text-gray-200 dark:border-gray-700 dark:hover:bg-gray-700"}`}
+                        >
+                            Prev
+                        </button>
+
+                        {/* Page numbers: show a compact set when many pages */}
+                        <div className="flex items-center space-x-1">
+                            {Array.from({ length: totalPages }).map((_, i) => {
+                                const pageNum = i + 1;
+                                // display a few pages around current page, plus first/last
+                                const shouldShow =
+                                    totalPages <= 7 ||
+                                    pageNum === 1 ||
+                                    pageNum === totalPages ||
+                                    (pageNum >= currentPage - 1 &&
+                                        pageNum <= currentPage + 1);
+                                if (!shouldShow) {
+                                    // show ellipsis placeholder when skipping
+                                    const isLeftEllipsis =
+                                        pageNum === 2 && currentPage > 3;
+                                    const isRightEllipsis =
+                                        pageNum === totalPages - 1 &&
+                                        currentPage < totalPages - 2;
+                                    if (isLeftEllipsis || isRightEllipsis) {
+                                        return (
+                                            <span
+                                                key={`ell-${pageNum}`}
+                                                className="px-2 text-sm text-gray-500 dark:text-gray-400"
+                                            >
+                                                …
+                                            </span>
+                                        );
+                                    }
+                                    return null;
+                                }
+                                return (
+                                    <button
+                                        key={pageNum}
+                                        onClick={() => setCurrentPage(pageNum)}
+                                        aria-current={
+                                            pageNum === currentPage
+                                                ? "page"
+                                                : undefined
+                                        }
+                                        className={`px-3 py-1 rounded-md text-sm border transition-colors ${
+                                            pageNum === currentPage
+                                                ? "bg-blue-600 text-white border-blue-600"
+                                                : "bg-white text-gray-700 border-gray-300 hover:bg-gray-100 dark:bg-gray-800 dark:text-gray-200 dark:border-gray-700 dark:hover:bg-gray-700"
+                                        }`}
+                                    >
+                                        {pageNum}
+                                    </button>
+                                );
+                            })}
+                        </div>
+
+                        <button
+                            onClick={() =>
+                                setCurrentPage((p) =>
+                                    Math.min(totalPages, p + 1)
+                                )
+                            }
+                            disabled={currentPage === totalPages}
+                            className={`px-3 py-1 rounded-md border text-sm transition-colors disabled:opacity-50 ${"bg-white text-gray-700 border-gray-300 hover:bg-gray-100 dark:bg-gray-800 dark:text-gray-200 dark:border-gray-700 dark:hover:bg-gray-700"}`}
+                        >
+                            Next
+                        </button>
+                    </nav>
+                </div>
+            )}
         </div>
     );
 }

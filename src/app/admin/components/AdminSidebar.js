@@ -34,11 +34,7 @@ const navigation = [
         href: "/admin/notice",
         icon: Megaphone,
     },
-    {
-        name: "Rewards",
-        href: "/admin/rewards",
-        icon: Gift,
-    },
+   
     {
         name: "Durooj Sharif",
         href: "/admin/durood-sharif",

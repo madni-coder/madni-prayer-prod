@@ -9,6 +9,7 @@ export default function DuroodSharifPage() {
     const [loading, setLoading] = useState(true);
     const [search, setSearch] = useState("");
     const [users, setUsers] = useState([]);
+    const [currentPage, setCurrentPage] = useState(1);
     const [isPublishing, setIsPublishing] = useState(false);
     const [publishStatus, setPublishStatus] = useState(null);
 
@@ -61,6 +62,24 @@ export default function DuroodSharifPage() {
             row["Full Name"].toLowerCase().includes(search.toLowerCase()) ||
             row["Address"].toLowerCase().includes(search.toLowerCase()) ||
             row["mobile number"].toLowerCase().includes(search.toLowerCase())
+    );
+
+    // Pagination
+    const PAGE_SIZE = 15;
+    const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
+    // Keep current page in range when filtered changes
+    useEffect(() => {
+        setCurrentPage((p) => Math.min(p, totalPages));
+    }, [totalPages]);
+
+    useEffect(() => {
+        // whenever search changes, go back to page 1 for UX
+        setCurrentPage(1);
+    }, [search]);
+
+    const paginated = filtered.slice(
+        (currentPage - 1) * PAGE_SIZE,
+        currentPage * PAGE_SIZE
     );
 
     // Show loading while checking authentication
@@ -164,21 +183,12 @@ export default function DuroodSharifPage() {
                                 setIsPublishing(false);
                             }
                         }}
-                        className="bg-green-500 hover:bg-green-600 text-white font-semibold py-2 px-4 rounded-md"
+                        className="bg-purple-500 hover:bg-green-600 text-white font-semibold py-2 px-4 rounded-md"
                         disabled={isPublishing || filtered.length === 0}
                         title="Publish top 10 results to rewards API"
                     >
                         {isPublishing ? "Publishing..." : "Publish Results"}
                     </button>
-                    {publishStatus && (
-                        <div className="mt-2 text-sm text-gray-700">
-                            Published: {publishStatus.ok} — Failed:{" "}
-                            {publishStatus.fail}
-                            {publishStatus.error && (
-                                <span> — {publishStatus.error}</span>
-                            )}
-                        </div>
-                    )}
                 </div>
             </div>
             <table className="table w-full">
@@ -205,7 +215,7 @@ export default function DuroodSharifPage() {
                     </tr>
                 </thead>
                 <tbody>
-                    {filtered.map((row, idx) => (
+                    {paginated.map((row, idx) => (
                         <tr
                             key={idx}
                             className="border-b last:border-b-0 hover:bg-gray-50"
@@ -237,6 +247,103 @@ export default function DuroodSharifPage() {
                     ))}
                 </tbody>
             </table>
+            {/* Pagination controls - show only when more than one page */}
+            {filtered.length > PAGE_SIZE && (
+                <div className="p-4 flex items-center justify-center">
+                    <nav
+                        className="inline-flex items-center space-x-2"
+                        aria-label="Pagination"
+                    >
+                        <button
+                            onClick={() =>
+                                setCurrentPage((p) => Math.max(1, p - 1))
+                            }
+                            disabled={currentPage === 1}
+                            className={`px-3 py-1 rounded-md border transition-colors disabled:opacity-50 disabled:cursor-not-allowed bg-white text-black border-gray-200 hover:bg-gray-50 dark:bg-gray-800 dark:text-white dark:border-gray-700 dark:hover:bg-gray-700`}
+                        >
+                            Prev
+                        </button>
+
+                        {/* Simple page number window: show up to 7 numbers around current page */}
+                        {(() => {
+                            const pages = [];
+                            const windowSize = 7;
+                            let start = Math.max(
+                                1,
+                                currentPage - Math.floor(windowSize / 2)
+                            );
+                            let end = start + windowSize - 1;
+                            if (end > totalPages) {
+                                end = totalPages;
+                                start = Math.max(1, end - windowSize + 1);
+                            }
+                            for (let p = start; p <= end; p++) {
+                                pages.push(
+                                    <button
+                                        key={p}
+                                        onClick={() => setCurrentPage(p)}
+                                        aria-current={
+                                            p === currentPage
+                                                ? "page"
+                                                : undefined
+                                        }
+                                        className={`px-3 py-1 rounded-md border transition-colors ${
+                                            p === currentPage
+                                                ? "bg-[#5fb923] text-white border-[#5fb923]"
+                                                : "bg-white text-black border-gray-200 hover:bg-gray-50 dark:bg-gray-800 dark:text-white dark:border-gray-700 dark:hover:bg-gray-700"
+                                        }`}
+                                    >
+                                        {p}
+                                    </button>
+                                );
+                            }
+                            // if start > 1, show leading first and ellipsis
+                            if (start > 1) {
+                                pages.unshift(
+                                    <React.Fragment key="lead">
+                                        <button
+                                            onClick={() => setCurrentPage(1)}
+                                            className="px-3 py-1 rounded-md border bg-white text-black border-gray-200 hover:bg-gray-50 dark:bg-gray-800 dark:text-white dark:border-gray-700 dark:hover:bg-gray-700"
+                                        >
+                                            1
+                                        </button>
+                                        <span className="px-2">...</span>
+                                    </React.Fragment>
+                                );
+                            }
+                            if (end < totalPages) {
+                                pages.push(
+                                    <React.Fragment key="trail">
+                                        <span className="px-2">...</span>
+                                        <button
+                                            onClick={() =>
+                                                setCurrentPage(totalPages)
+                                            }
+                                            className="px-3 py-1 rounded-md border bg-white text-black border-gray-200 hover:bg-gray-50 dark:bg-gray-800 dark:text-white dark:border-gray-700 dark:hover:bg-gray-700"
+                                        >
+                                            {totalPages}
+                                        </button>
+                                    </React.Fragment>
+                                );
+                            }
+
+                            return pages;
+                        })()}
+
+                        <button
+                            onClick={() =>
+                                setCurrentPage((p) =>
+                                    Math.min(totalPages, p + 1)
+                                )
+                            }
+                            disabled={currentPage === totalPages}
+                            className={`px-3 py-1 rounded-md border transition-colors disabled:opacity-50 disabled:cursor-not-allowed bg-white text-black border-gray-200 hover:bg-gray-50 dark:bg-gray-800 dark:text-white dark:border-gray-700 dark:hover:bg-gray-700`}
+                        >
+                            Next
+                        </button>
+                    </nav>
+                </div>
+            )}
         </div>
     );
 }

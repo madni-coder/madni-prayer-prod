@@ -317,21 +317,13 @@ const RewardsPage = () => {
                         marginBottom: 8,
                     }}
                 >
-                    You have earned Gold Medal on this level!
+                    You have achieved 1st Rank on reciting durood sharif
                 </div>
             </div>
 
-            <div className="flex justify-center gap-2 mb-3">
-                {medalSVG.map((svg, idx) => (
-                    <span key={idx}>{svg}</span>
-                ))}
-            </div>
-            <div className="text-center font-semibold text-2xl mb-1">
-                Durood Sharif
-            </div>
-
-            <div className="text-center text-sm text-yellow-400 mb-3 mt-1">
-                Winners of the week
+          
+            <div className="text-center text-xxl text-yellow-400 mb-3 mt-1">
+               Top 10 Winners of this week
             </div>
 
             <div className="bg-base-200 rounded-xl p-2 w-full max-w-md">
