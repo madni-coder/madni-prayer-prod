@@ -9,16 +9,16 @@ import {
 import { useRouter } from "next/navigation";
 
 const demoData = [
-    { firstName: "Dorcius", lastName: "dorlensley", xp: 956 },
-    { firstName: "Dorcius", lastName: "dorlensley", xp: 639 },
-    { firstName: "Dorcius", lastName: "dorlensley", xp: 444 },
-    { firstName: "Dorcius", lastName: "dorlensley", xp: 321 },
-    { firstName: "Dorcius", lastName: "dorlensley", xp: 231 },
-    { firstName: "Dorcius", lastName: "dorlensley", xp: 109 },
-    { firstName: "Dorcius", lastName: "dorlensley", xp: 108 },
-    { firstName: "Dorcius", lastName: "dorlensley", xp: 108 },
-    { firstName: "Dorcius", lastName: "dorlensley", xp: 108 },
-    { firstName: "Dorcius", lastName: "dorlensley", xp: 108 },
+    { firstName: "Name", lastName: "surname", xp: 956 },
+    { firstName: "Name", lastName: "surname", xp: 639 },
+    { firstName: "Name", lastName: "surname", xp: 444 },
+    { firstName: "Name", lastName: "surname", xp: 321 },
+    { firstName: "Name", lastName: "surname", xp: 231 },
+    { firstName: "Name", lastName: "surname", xp: 109 },
+    { firstName: "Name", lastName: "surname", xp: 108 },
+    { firstName: "Name", lastName: "surname", xp: 108 },
+    { firstName: "Name", lastName: "surname", xp: 108 },
+    { firstName: "Name", lastName: "surname", xp: 108 },
 ];
 
 const medalSVG = [

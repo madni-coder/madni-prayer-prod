@@ -1,95 +1,256 @@
 "use client";
+import { useState } from "react";
 
-import { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
+export default function RewardsPage() {
+    const [fullName, setFullName] = useState("");
+    const [address, setAddress] = useState("");
+    const [areaMasjid, setAreaMasjid] = useState("");
+    const [position, setPosition] = useState(1);
+    const [success, setSuccess] = useState(false);
+    const [error, setError] = useState("");
+    const [submissions, setSubmissions] = useState([]);
 
-export default function RewardsAdmin() {
-    const router = useRouter();
-    const [loading, setLoading] = useState(true);
-
-    useEffect(() => {
-        // Check authentication on client side
-        const checkAuth = () => {
-            const isAuthenticated =
-                localStorage.getItem("isAuthenticated") === "true";
-            if (!isAuthenticated) {
-                router.push("/login");
-                return;
+    const handleSubmit = async (e) => {
+        e.preventDefault();
+        setSuccess(false);
+        setError("");
+        try {
+            const res = await fetch("/api/api-rewards", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ fullName, address, areaMasjid, position }),
+            });
+            const data = await res.json();
+            if (res.ok) {
+                setSuccess(true);
+                setSubmissions([
+                    ...submissions,
+                    { fullName, address, areaMasjid, position },
+                ]);
+                setFullName("");
+                setAddress("");
+                setAreaMasjid("");
+                setPosition(1);
+            } else {
+                setError(data.error || "Submission failed");
             }
-            setLoading(false);
-        };
-
-        checkAuth();
-    }, [router]);
-
-    // Show loading while checking authentication
-    if (loading) {
-        return (
-            <div className="min-h-screen flex items-center justify-center">
-                <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-blue-500"></div>
-            </div>
-        );
-    }
+        } catch (err) {
+            setError("Network error");
+        }
+    };
 
     return (
-        <div className="space-y-6">
-            <div className="flex justify-between items-center">
-                <div>
-                    <h1 className="text-2xl font-bold text-gray-900">
-                        Rewards Management
-                    </h1>
-                    <p className="mt-1 text-sm text-gray-600">
-                        Manage reward points and incentive programs
-                    </p>
+        <div
+            style={{
+                maxWidth: 400,
+                margin: "3rem auto",
+                padding: "2rem",
+                border: "1px solid #e0e0e0",
+                borderRadius: 12,
+                background: "#fff",
+                boxShadow: "0 2px 8px rgba(0,0,0,0.04)",
+            }}
+        >
+            <h2
+                style={{
+                    textAlign: "center",
+                    marginBottom: "2rem",
+                    color: "#205c3b",
+                    fontWeight: 700,
+                    fontSize: "1.5rem",
+                }}
+            >
+                Announce Winner of This Week
+            </h2>
+            <form onSubmit={handleSubmit}>
+                <div style={{ marginBottom: "1.5rem" }}>
+                    <label
+                        htmlFor="fullName"
+                        style={{
+                            display: "block",
+                            marginBottom: "0.5rem",
+                            color: "#205c3b",
+                            fontWeight: 500,
+                            fontSize: "1rem",
+                        }}
+                    >
+                        Full Name
+                    </label>
+                    <input
+                        id="fullName"
+                        type="text"
+                        value={fullName}
+                        onChange={(e) => setFullName(e.target.value)}
+                        required
+                        placeholder="Enter full name"
+                        style={{
+                            width: "100%",
+                            padding: "0.75rem",
+                            fontSize: "1rem",
+                            border: "1px solid #b7e4c7",
+                            borderRadius: 6,
+                            outline: "none",
+                            color: "#000", // Make input text black
+                        }}
+                        onFocus={(e) =>
+                            (e.target.style.borderColor = "#205c3b")
+                        }
+                        onBlur={(e) => (e.target.style.borderColor = "#b7e4c7")}
+                    />
                 </div>
-                <button className="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-md text-sm font-medium">
-                    Add Reward
+                <div style={{ marginBottom: "1.5rem" }}>
+                    <label
+                        htmlFor="address"
+                        style={{
+                            display: "block",
+                            marginBottom: "0.5rem",
+                            color: "#205c3b",
+                            fontWeight: 500,
+                            fontSize: "1rem",
+                        }}
+                    >
+                        Address
+                    </label>
+                    <input
+                        id="address"
+                        type="text"
+                        value={address}
+                        onChange={(e) => setAddress(e.target.value)}
+                        required
+                        placeholder="Enter address"
+                        style={{
+                            width: "100%",
+                            padding: "0.75rem",
+                            fontSize: "1rem",
+                            border: "1px solid #b7e4c7",
+                            borderRadius: 6,
+                            outline: "none",
+                            color: "#000", // Make input text black
+                        }}
+                        onFocus={(e) =>
+                            (e.target.style.borderColor = "#205c3b")
+                        }
+                        onBlur={(e) => (e.target.style.borderColor = "#b7e4c7")}
+                    />
+                </div>
+                <div style={{ marginBottom: "1.5rem" }}>
+                    <label
+                        htmlFor="areaMasjid"
+                        style={{
+                            display: "block",
+                            marginBottom: "0.5rem",
+                            color: "#205c3b",
+                            fontWeight: 500,
+                            fontSize: "1rem",
+                        }}
+                    >
+                        Area Masjid Name
+                    </label>
+                    <input
+                        id="areaMasjid"
+                        type="text"
+                        value={areaMasjid}
+                        onChange={(e) => setAreaMasjid(e.target.value)}
+                        required
+                        placeholder="Enter area masjid"
+                        style={{
+                            width: "100%",
+                            padding: "0.75rem",
+                            fontSize: "1rem",
+                            border: "1px solid #b7e4c7",
+                            borderRadius: 6,
+                            outline: "none",
+                            color: "#000", // Make input text black
+                        }}
+                        onFocus={(e) =>
+                            (e.target.style.borderColor = "#205c3b")
+                        }
+                        onBlur={(e) => (e.target.style.borderColor = "#b7e4c7")}
+                    />
+                </div>
+                <div style={{ marginBottom: "1.5rem" }}>
+                    <label
+                        htmlFor="position"
+                        style={{
+                            display: "block",
+                            marginBottom: "0.5rem",
+                            color: "#205c3b",
+                            fontWeight: 500,
+                            fontSize: "1rem",
+                        }}
+                    >
+                        Position
+                    </label>
+                    <select
+                        id="position"
+                        value={position}
+                        onChange={(e) => setPosition(Number(e.target.value))}
+                        required
+                        style={{
+                            width: "100%",
+                            padding: "0.75rem",
+                            fontSize: "1rem",
+                            border: "1px solid #b7e4c7",
+                            borderRadius: 6,
+                            outline: "none",
+                            color: "#000",
+                            background: "#fff",
+                        }}
+                        onFocus={(e) =>
+                            (e.target.style.borderColor = "#205c3b")
+                        }
+                        onBlur={(e) => (e.target.style.borderColor = "#b7e4c7")}
+                    >
+                        <option value={1}>1</option>
+                        <option value={2}>2</option>
+                        <option value={3}>3</option>
+                    </select>
+                </div>
+                <button
+                    type="submit"
+                    style={{
+                        width: "100%",
+                        padding: "0.9rem",
+                        background: "#205c3b",
+                        color: "white",
+                        border: "none",
+                        borderRadius: 6,
+                        fontWeight: 600,
+                        fontSize: "1.1rem",
+                        cursor: "pointer",
+                        transition: "background 0.2s",
+                    }}
+                    onMouseOver={(e) => (e.target.style.background = "purple")}
+                    onMouseOut={(e) => (e.target.style.background = "green")}
+                >
+                    Submit
                 </button>
-            </div>
-
-            <div className="bg-white shadow overflow-hidden sm:rounded-md">
-                <div className="px-4 py-5 sm:p-6">
-                    <div className="text-center py-12">
-                        <svg
-                            className="mx-auto h-12 w-12 text-gray-400"
-                            fill="none"
-                            stroke="currentColor"
-                            viewBox="0 0 24 24"
-                        >
-                            <path
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                strokeWidth={2}
-                                d="M12 8v13m0-13V6a2 2 0 112 2h-2zm0 0V5.5A2.5 2.5 0 109.5 8H12zm-7 4h14M5 12a2 2 0 110-4h14a2 2 0 110 4M5 12v7a2 2 0 002 2h10a2 2 0 002-2v-7"
-                            />
-                        </svg>
-                        <h3 className="mt-2 text-sm font-medium text-gray-900">
-                            No rewards
-                        </h3>
-                        <p className="mt-1 text-sm text-gray-500">
-                            Get started by creating your first reward program.
-                        </p>
-                        <div className="mt-6">
-                            <button className="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-purple-600 hover:bg-purple-700">
-                                <svg
-                                    className="-ml-1 mr-2 h-5 w-5"
-                                    fill="none"
-                                    stroke="currentColor"
-                                    viewBox="0 0 24 24"
-                                >
-                                    <path
-                                        strokeLinecap="round"
-                                        strokeLinejoin="round"
-                                        strokeWidth={2}
-                                        d="M12 6v6m0 0v6m0-6h6m-6 0H6"
-                                    />
-                                </svg>
-                                Add Reward
-                            </button>
-                        </div>
+                {success && (
+                    <div
+                        style={{
+                            marginTop: "1.5rem",
+                            color: "#205c3b",
+                            textAlign: "center",
+                            fontWeight: 500,
+                        }}
+                    >
+                        Submission successful!
                     </div>
-                </div>
-            </div>
+                )}
+                {error && (
+                    <div
+                        style={{
+                            marginTop: "1.5rem",
+                            color: "red",
+                            textAlign: "center",
+                            fontWeight: 500,
+                        }}
+                    >
+                        {error}
+                    </div>
+                )}
+            </form>
+        
         </div>
     );
 }

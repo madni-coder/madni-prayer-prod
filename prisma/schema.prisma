@@ -60,3 +60,14 @@ model FileTable {
   fileUrl String
 }
 
+model Reward {
+  id         Int      @id @default(autoincrement())
+  fullName   String
+  address    String
+  areaMasjid String
+  position   Int
+  createdAt  DateTime @default(now())
+
+  @@map("rewards")
+}
+

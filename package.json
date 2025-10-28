@@ -7,7 +7,7 @@
         "move-api": "if [ -d 'src/utils/api' ]; then rm -rf src/app/api && mv src/utils/api src/app/api; fi",
         "move-api-back": "if [ -d 'src/app/api' ]; then rm -rf src/utils/api && mv src/app/api src/utils/api; fi",
         "delete:build": "rm -rf .next && rm -rf out",
-        "build": "npm run move-api && prisma generate && next build",
+        "build": "npm run move-api && prisma generate && prisma migrate && next build",
         "build:tauri": "npm run delete:build && npm run move-api-back && prisma generate && next build",
         "start": "next start",
         "lint": "eslint",
