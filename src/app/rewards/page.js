@@ -8,19 +8,6 @@ import {
 } from "react-icons/fa";
 import { useRouter } from "next/navigation";
 
-const demoData = [
-    { firstName: "Name", lastName: "surname", xp: 956 },
-    { firstName: "Name", lastName: "surname", xp: 639 },
-    { firstName: "Name", lastName: "surname", xp: 444 },
-    { firstName: "Name", lastName: "surname", xp: 321 },
-    { firstName: "Name", lastName: "surname", xp: 231 },
-    { firstName: "Name", lastName: "surname", xp: 109 },
-    { firstName: "Name", lastName: "surname", xp: 108 },
-    { firstName: "Name", lastName: "surname", xp: 108 },
-    { firstName: "Name", lastName: "surname", xp: 108 },
-    { firstName: "Name", lastName: "surname", xp: 108 },
-];
-
 const medalSVG = [
     // Gold
     <svg key="gold" width="28" height="28" viewBox="0 0 28 28">
@@ -90,6 +77,25 @@ const medalSVG = [
 const RewardsPage = () => {
     const router = useRouter();
     const [showModal, setShowModal] = useState(false);
+    const [rewardList, setRewardList] = useState([]);
+
+    React.useEffect(() => {
+        async function fetchRewards() {
+            try {
+                const res = await fetch("/api/api-rewards", { method: "GET" });
+                if (res.ok) {
+                    const data = await res.json();
+                    setRewardList(Array.isArray(data) ? data : []);
+                }
+            } catch (err) {
+                setRewardList([]);
+            }
+        }
+        fetchRewards();
+    }, []);
+
+    // Split winners: position 1 for announcement, rest for table
+    const goldWinner = rewardList.find((r) => r.position === 1);
 
     return (
         <div className="min-h-screen flex flex-col items-center justify-center bg-base-200">
@@ -232,8 +238,23 @@ const RewardsPage = () => {
                         marginBottom: 4,
                     }}
                 >
-                    MOHAMMAD ALI
+                    {goldWinner ? goldWinner.fullName : "No winner"}
                 </div>
+                {/* Theme-based address for gold winner */}
+                {goldWinner && goldWinner.address && (
+                    <div
+                        className="mx-auto mb-2 px-4 py-2 rounded-lg font-semibold text-base"
+                        style={{
+                            background:
+                                "linear-gradient(90deg, #FFD700 60%, #FFFBEA 100%)",
+                            color: "#7C5E00",
+                            maxWidth: "80%",
+                            boxShadow: "0 2px 8px rgba(255,215,0,0.08)",
+                        }}
+                    >
+                        {goldWinner.address}
+                    </div>
+                )}
                 <div
                     style={{
                         color: "#fff",
@@ -245,7 +266,7 @@ const RewardsPage = () => {
                     You have earned Gold Medal on this level!
                 </div>
             </div>
-          
+
             <div className="flex justify-center gap-2 mb-3">
                 {medalSVG.map((svg, idx) => (
                     <span key={idx}>{svg}</span>
@@ -262,63 +283,83 @@ const RewardsPage = () => {
             <div className="bg-base-200 rounded-xl p-2 w-full max-w-md">
                 {/* Label Row */}
                 <div className="flex items-center py-2 border-b border-yellow-100 font-semibold text-xs text-yellow-400 uppercase tracking-wide">
-                    <div style={{ width: 28, textAlign: "center" }}>Medals</div>
-                    <div style={{ width: 36, margin: "0 12px" }}></div>
-                    <div style={{ flex: 1 }}>Names</div>
-                    <div style={{ minWidth: 60, textAlign: "right" }}>
-                        Durood Counts
-                    </div>
+                    <div style={{ width: 48, textAlign: "center" }}>Rank</div>
+                    <div style={{ width: 16 }}></div>
+                    <div style={{ flex: 1, textAlign: "left" }}>Names</div>
+                    <div style={{ flex: 1, textAlign: "left" }}>Address</div>
+                    <div style={{ textAlign: "right" }}>Durood Counts</div>
                 </div>
                 {/* Data Rows */}
-                {demoData.map((user, idx) => (
-                    <div
-                        key={idx}
-                        className="flex items-center py-2 border-b last:border-b-0 border-base-300"
-                    >
-                        <div style={{ width: 28, textAlign: "center" }}>
-                            {idx < 3 ? (
-                                medalSVG[idx]
-                            ) : (
-                                <span style={{ fontWeight: 600, fontSize: 16 }}>
-                                    {idx + 1}
-                                </span>
-                            )}
-                        </div>
-                        <div
-                            style={{
-                                width: 36,
-                                height: 36,
-                                borderRadius: "50%",
-                                background: "#fff",
-                                margin: "0 12px",
-                                display: "flex",
-                                alignItems: "center",
-                                justifyContent: "center",
-                                color: "#5a3fa0",
-                                fontWeight: 700,
-                                fontSize: 16,
-                            }}
-                        >
-                            {user.firstName[0]}
-                            {user.lastName[0]}
-                        </div>
-                        <div style={{ flex: 1 }}>
-                            <div style={{ fontWeight: 500, fontSize: 15 }}>
-                                {user.firstName} {user.lastName}
-                            </div>
-                        </div>
-                        <div
-                            style={{
-                                fontWeight: 600,
-                                fontSize: 15,
-                                minWidth: 60,
-                                textAlign: "right",
-                            }}
-                        >
-                            {user.xp}
-                        </div>
+                {rewardList.length === 0 ? (
+                    <div className="text-center py-4 text-base-content/60">
+                        No winners found.
                     </div>
-                ))}
+                ) : (
+                    rewardList
+                        .sort((a, b) => a.position - b.position)
+                        .map((user, idx) => {
+                            let rankDisplay = null;
+                            if (idx === 0) rankDisplay = medalSVG[0];
+                            else if (idx === 1) rankDisplay = medalSVG[1];
+                            else if (idx === 2) rankDisplay = medalSVG[2];
+                            else
+                                rankDisplay = (
+                                    <span
+                                        style={{
+                                            fontWeight: 700,
+                                            fontSize: 16,
+                                            color: "var(--theme-rank-color, #FFD700)",
+                                        }}
+                                    >
+                                        {idx + 1}
+                                    </span>
+                                );
+                            return (
+                                <div
+                                    key={user.id || idx}
+                                    className="flex items-center py-2 border-b last:border-b-0 border-base-300"
+                                >
+                                    <div
+                                        style={{
+                                            width: 48,
+                                            textAlign: "center",
+                                        }}
+                                    >
+                                        {rankDisplay}
+                                    </div>
+                                    <div
+                                        style={{
+                                            flex: 1,
+                                            fontWeight: 500,
+                                            fontSize: 15,
+                                        }}
+                                    >
+                                        {user.fullName}
+                                    </div>
+                                    <div
+                                        style={{
+                                            flex: 1,
+                                            fontWeight: 400,
+                                            fontSize: 14,
+                                            color: "#888",
+                                        }}
+                                    >
+                                        {user.address || "-"}
+                                    </div>
+                                    <div
+                                        style={{
+                                            fontWeight: 600,
+                                            fontSize: 15,
+                                            minWidth: 100,
+                                            textAlign: "right",
+                                        }}
+                                    >
+                                        00
+                                    </div>
+                                </div>
+                            );
+                        })
+                )}
             </div>
 
             {/* Decorative Roadmap UI moved below winners list */}
@@ -335,9 +376,9 @@ const RewardsPage = () => {
                                 </div>
                             </div>
                             <div>
-                               <div className="font-semibold">
+                                <div className="font-semibold">
                                     Register for Weekly Durood Sharif
-                                </div> 
+                                </div>
                                 <div className="text-sm text-base-content/60">
                                     Begin the registration flow — quick and
                                     secure
@@ -385,7 +426,8 @@ const RewardsPage = () => {
                                     Click on Submit Durood Sharif button
                                 </div>
                                 <div className="text-sm text-base-content/60">
-                                    Recite Durood and Tap the submit button to open the form
+                                    Recite Durood and Tap the submit button to
+                                    open the form
                                 </div>
                             </div>
                         </div>
@@ -435,7 +477,6 @@ const RewardsPage = () => {
                         <h3 className="text-lg font-bold mb-4 text-center text-gray-200">
                             Register for Weekly Durood
                         </h3>
-                       
                     </div>
                 </div>
             )}
@@ -461,8 +502,9 @@ const RewardsPage = () => {
           animation: modalPop 0.3s;
         }
       `}</style>
-        <p className="text-center text-xl font-bold mb-2">
-                Click Register button below to participate For Weekly Durood Sharif
+            <p className="text-center text-xl font-bold mb-2">
+                Click Register button below to participate For Weekly Durood
+                Sharif
             </p>
             <div className="flex justify-center mb-4">
                 <button
@@ -474,7 +516,6 @@ const RewardsPage = () => {
                 </button>
             </div>
         </div>
-        
     );
 };
 

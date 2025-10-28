@@ -11,11 +11,7 @@ export async function POST(request) {
     }
 
     // Validate position is one of 1, 2, 3
-    if (![1, 2, 3].includes(Number(position))) {
-        return new Response(JSON.stringify({ error: "Invalid position" }), {
-            status: 400,
-        });
-    }
+  
 
     const reward = {
         fullName,
@@ -41,7 +37,7 @@ export async function POST(request) {
 
 export async function GET() {
     try {
-        const rewards = await prisma.rewards.findMany();
+        const rewards = await prisma.reward.findMany();
         return new Response(JSON.stringify(rewards), { status: 200 });
     } catch (error) {
         return new Response(JSON.stringify({ error: error.message }), {
