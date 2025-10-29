@@ -1,7 +1,13 @@
 "use client";
+import React, { useState, useEffect } from "react";
+import { Trash2 } from "lucide-react";
+import { FaBitcoin, FaMosque } from "react-icons/fa";
+import { useRouter } from "next/navigation";
+import fetchFromApi from "../../../utils/fetchFromApi";
+
 const ToastContext = React.createContext(null);
 
-export function ToastProvider({ children }) {
+function ToastProvider({ children }) {
     const [toast, setToast] = useState(null);
     const showToast = (message, type = "success") => {
         setToast({ message, type });
@@ -22,7 +28,6 @@ export function ToastProvider({ children }) {
         </ToastContext.Provider>
     );
 }
-import React, { useState, useEffect } from "react";
 // Theme-based Yes/No confirmation modal
 function ConfirmModal({ open, title, message, onConfirm, onCancel }) {
     if (!open) return null;
@@ -53,10 +58,6 @@ function ConfirmModal({ open, title, message, onConfirm, onCancel }) {
         </div>
     );
 }
-import { Trash2 } from "lucide-react";
-import { FaBitcoin, FaMosque } from "react-icons/fa";
-import { useRouter } from "next/navigation";
-import fetchFromApi from "../../../utils/fetchFromApi";
 
 function ClearWinnerListButton() {
     const [loading, setLoading] = useState(false);
@@ -66,17 +67,18 @@ function ClearWinnerListButton() {
     const handleClear = async () => {
         setLoading(true);
         try {
-            // Fetch all users from the API
+            // 1) Fetch all users from the API and update their weekly counts (move to lifetime)
             const resUsers = await fetch("/api/api-tasbihUsers");
             const jsonUsers = await resUsers.json();
             if (!jsonUsers.ok || !Array.isArray(jsonUsers.data))
                 throw new Error("Failed to fetch users");
-            let errorCount = 0;
+
+            let userErrorCount = 0;
             for (const user of jsonUsers.data) {
                 const mobileNumber = user["mobile number"];
                 const weeklyCounts = Number(user["weekly counts"] || 0);
                 if (!mobileNumber || weeklyCounts === 0) continue;
-                // Call a custom API to add weeklyCounts to count and reset weeklyCounts
+                // Call API to add weeklyCounts to lifetime count and reset weeklyCounts
                 const res = await fetch("/api/api-tasbihUsers", {
                     method: "DELETE",
                     headers: { "Content-Type": "application/json" },
@@ -85,21 +87,41 @@ function ClearWinnerListButton() {
                         addWeeklyToCount: true,
                     }),
                 });
-                if (!res.ok) errorCount++;
+                if (!res.ok) userErrorCount++;
             }
-            if (errorCount === 0) {
+
+            // 2) Clear the winners (rewards) list by calling the rewards DELETE endpoint
+            const resClearRewards = await fetch("/api/api-rewards", {
+                method: "DELETE",
+            });
+            const clearedRewardsOk = resClearRewards.ok;
+
+            // Build user-visible message depending on outcomes
+            if (userErrorCount === 0 && clearedRewardsOk) {
                 showToast(
-                    "Weekly counts added to lifetime counts and cleared for all users.",
+                    "Weekly counts moved to lifetime and winners list cleared.",
                     "success"
                 );
-            } else {
+            } else if (!clearedRewardsOk && userErrorCount === 0) {
+                const txt = await resClearRewards.text();
                 showToast(
-                    `Some users failed to update (${errorCount}).`,
+                    `Users updated but clearing winners failed: ${txt}`,
+                    "error"
+                );
+            } else if (clearedRewardsOk && userErrorCount > 0) {
+                showToast(
+                    `Winners cleared but ${userErrorCount} users failed to update.`,
+                    "error"
+                );
+            } else {
+                const txt = await resClearRewards.text().catch(() => "");
+                showToast(
+                    `Failed to clear winners and ${userErrorCount} users failed to update. ${txt}`,
                     "error"
                 );
             }
         } catch (e) {
-            showToast(e.message, "error");
+            showToast(e.message || String(e), "error");
         } finally {
             setLoading(false);
             setShowConfirm(false);
