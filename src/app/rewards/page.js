@@ -98,58 +98,29 @@ const RewardsPage = () => {
         fetchRewards();
     }, []);
 
-    // Build an explicit positions 1..10 list so we always show slots by position
-    // If a particular position is not present in the fetched data, we show a placeholder
+    // If position is missing, show top 10 users by weeklyCounts
     const positionsList = React.useMemo(() => {
-        // create a map from position -> user for fast lookup
-        const map = new Map();
-        // Accept positions whether they are number or numeric-strings. Coerce safely.
-        // Keep the "best" item for each position: prefer higher counts, break ties by newer createdAt.
-        (rewardList || []).forEach((u) => {
-            const posNum =
-                u?.position !== undefined && u?.position !== null
-                    ? Number(u.position)
-                    : NaN;
-            if (Number.isNaN(posNum) || posNum < 1) return;
-
-            const candidate = { ...u, position: posNum };
-            const existing = map.get(posNum);
-            if (!existing) {
-                map.set(posNum, candidate);
-                return;
-            }
-
-            // Compare counts (coerced to number)
-            const existingCounts = Number(existing.counts || 0);
-            const candCounts = Number(candidate.counts || 0);
-            if (candCounts > existingCounts) {
-                map.set(posNum, candidate);
-                return;
-            }
-
-            if (candCounts === existingCounts) {
-                // prefer newer createdAt if available
-                const existingTime = existing.createdAt
-                    ? Date.parse(existing.createdAt)
-                    : 0;
-                const candTime = candidate.createdAt
-                    ? Date.parse(candidate.createdAt)
-                    : 0;
-                if (candTime >= existingTime) {
-                    map.set(posNum, candidate);
-                }
-            }
-            // otherwise keep existing
+        if (!rewardList || rewardList.length === 0)
+            return Array.from({ length: 10 }, (_, i) => ({ empty: true }));
+        // Sort by weeklyCounts descending, then by createdAt descending
+        const sorted = [...rewardList].sort((a, b) => {
+            const aCount = Number(a.weeklyCounts ?? 0);
+            const bCount = Number(b.weeklyCounts ?? 0);
+            if (bCount !== aCount) return bCount - aCount;
+            const aTime = a.createdAt ? Date.parse(a.createdAt) : 0;
+            const bTime = b.createdAt ? Date.parse(b.createdAt) : 0;
+            return bTime - aTime;
         });
-        // build array for positions 1..10
-        return Array.from({ length: 10 }, (_, i) => {
-            const pos = i + 1;
-            return map.get(pos) || { position: pos, empty: true };
-        });
+        // Take top 10
+        const top10 = sorted.slice(0, 10);
+        // Fill up to 10 slots
+        while (top10.length < 10) top10.push({ empty: true });
+        return top10;
     }, [rewardList]);
 
-    // goldWinner is the user placed at position 1 (if any)
-    const goldWinner = positionsList.find((p) => p.position === 1 && !p.empty);
+    // goldWinner is the top user (first in sorted list)
+    const goldWinner =
+        positionsList[0] && !positionsList[0].empty ? positionsList[0] : null;
 
     return (
         <div className="min-h-screen flex flex-col items-center justify-center bg-base-200">
@@ -321,9 +292,8 @@ const RewardsPage = () => {
                 </div>
             </div>
 
-          
             <div className="text-center text-xxl text-yellow-400 mb-3 mt-1">
-               Top 10 Winners of this week
+                Top 10 Winners of this week
             </div>
 
             <div className="bg-base-200 rounded-xl p-2 w-full max-w-md">
@@ -402,10 +372,9 @@ const RewardsPage = () => {
                                 >
                                     {user.empty
                                         ? "--"
-                                        : String(user.counts ?? 0).padStart(
-                                              2,
-                                              "0"
-                                          )}
+                                        : String(
+                                              user.weeklyCounts ?? 0
+                                          ).padStart(2, "0")}
                                 </div>
                             </div>
                         );

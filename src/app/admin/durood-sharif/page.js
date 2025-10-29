@@ -102,10 +102,10 @@ export default function DuroodSharifPage() {
         fetchUsers();
     }, []);
 
-    // Sort users by Tasbih Counts (durood counts) in descending order and assign TOP rank
+    // Sort users by weekly counts (durood counts for this week) in descending order and assign TOP rank
     const sortedUsers = [...users].sort((a, b) => {
-        const aCount = Number(a["Tasbih Counts"] || 0);
-        const bCount = Number(b["Tasbih Counts"] || 0);
+        const aCount = Number(a["weekly counts"] || 0);
+        const bCount = Number(b["weekly counts"] || 0);
         return bCount - aCount;
     });
 

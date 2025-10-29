@@ -81,8 +81,8 @@ export async function POST(request) {
 
 export async function GET() {
     try {
-        const rewards = await prisma.reward.findMany();
-        return new Response(JSON.stringify(rewards), { status: 200 });
+        const TasbihUsers = await prisma.tasbihUser.findMany();
+        return new Response(JSON.stringify(TasbihUsers), { status: 200 });
     } catch (error) {
         return new Response(JSON.stringify({ error: error.message }), {
             status: 500,

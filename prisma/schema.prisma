@@ -40,8 +40,8 @@ model TasbihUser {
   fullName    String
   address     String
   mobileNumber String
-    weeklyCounts Int     @default(0)
-  count        Int     @default(0)
+  weeklyCounts BigInt     @default(0)
+  count        BigInt     @default(0)
   createdAt   DateTime @default(now())
 
   @@map("tasbih_users")
