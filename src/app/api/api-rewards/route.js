@@ -17,14 +17,24 @@ export async function POST(request) {
         // If payload is an array, perform a bulk insert using createMany with only allowed fields.
         if (Array.isArray(payload)) {
             const dataToInsert = payload.map((item) => {
-                const { fullName, address, areaMasjid, position, counts } =
-                    item || {};
+                const {
+                    fullName,
+                    address,
+                    areaMasjid,
+                    position,
+                    counts,
+                    weeklyCounts,
+                } = item || {};
                 return {
                     fullName: fullName || "",
                     address: address || "",
                     areaMasjid: areaMasjid || "",
                     position: position !== undefined ? Number(position) : 0,
                     counts: counts !== undefined ? Number(counts) : 0,
+                    weeklyCounts:
+                        weeklyCounts !== undefined
+                            ? BigInt(weeklyCounts)
+                            : BigInt(0),
                 };
             });
 
@@ -52,7 +62,14 @@ export async function POST(request) {
         }
 
         // Otherwise assume single object
-        const { fullName, address, areaMasjid, position } = payload || {};
+        const {
+            fullName,
+            address,
+            areaMasjid,
+            position,
+            counts,
+            weeklyCounts,
+        } = payload || {};
         if (!fullName || !address || !areaMasjid || position === undefined) {
             return new Response(JSON.stringify({ error: "Missing fields" }), {
                 status: 400,
@@ -65,8 +82,11 @@ export async function POST(request) {
                 address,
                 areaMasjid,
                 position: Number(position),
-                counts:
-                    payload.counts !== undefined ? Number(payload.counts) : 0,
+                counts: counts !== undefined ? Number(counts) : 0,
+                weeklyCounts:
+                    weeklyCounts !== undefined
+                        ? BigInt(weeklyCounts)
+                        : BigInt(0),
             },
         });
         return new Response(JSON.stringify({ success: true, data: created }), {
@@ -81,8 +101,12 @@ export async function POST(request) {
 
 export async function GET() {
     try {
-        const TasbihUsers = await prisma.tasbihUser.findMany();
-        return new Response(JSON.stringify(TasbihUsers), { status: 200 });
+        const rewards = await prisma.reward.findMany();
+        // Serialize BigInt values to string
+        const safeJson = JSON.stringify(rewards, (key, value) =>
+            typeof value === "bigint" ? value.toString() : value
+        );
+        return new Response(safeJson, { status: 200 });
     } catch (error) {
         return new Response(JSON.stringify({ error: error.message }), {
             status: 500,
@@ -94,7 +118,10 @@ export async function DELETE() {
     try {
         await prisma.reward.deleteMany({});
         return new Response(
-            JSON.stringify({ success: true, message: "All Winners list deleted." }),
+            JSON.stringify({
+                success: true,
+                message: "All Winners list deleted.",
+            }),
             { status: 200 }
         );
     } catch (error) {

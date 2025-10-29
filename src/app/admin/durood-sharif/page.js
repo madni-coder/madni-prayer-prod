@@ -203,6 +203,9 @@ export default function DuroodSharifPage() {
                                             counts: Number(
                                                 row["Tasbih Counts"] || 0
                                             ),
+                                            weeklyCounts: Number(
+                                                row["weekly counts"] || 0
+                                            ),
                                         })
                                     );
                                     const res = await fetch(

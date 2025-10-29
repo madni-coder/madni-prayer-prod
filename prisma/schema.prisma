@@ -40,7 +40,7 @@ model TasbihUser {
   fullName    String
   address     String
   mobileNumber String
-   weeklyCounts BigInt     @default(0)
+  weeklyCounts BigInt     @default(0)
   count        BigInt     @default(0)
   createdAt   DateTime @default(now())
 
@@ -67,6 +67,7 @@ model Reward {
   address    String
   areaMasjid String
   counts     Int      @default(0)
+  weeklyCounts BigInt @default(0)
   position   Int
   createdAt  DateTime @default(now())
 
