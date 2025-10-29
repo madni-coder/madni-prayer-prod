@@ -3,6 +3,7 @@ export async function DELETE(req) {
         const body = await req.json();
         const mobileNumber =
             body["mobile number"] ?? body.mobileNumber ?? body.mobile;
+        const addWeeklyToCount = body.addWeeklyToCount === true;
         if (!mobileNumber || typeof mobileNumber !== "string") {
             return NextResponse.json(
                 {
@@ -24,10 +25,31 @@ export async function DELETE(req) {
                 { status: 404 }
             );
         }
-        const updatedUser = await prisma.tasbihUser.update({
-            where: { id: existingUser.id },
-            data: { weeklyCounts: 0 },
-        });
+        let updatedUser;
+        if (addWeeklyToCount) {
+            // Add weeklyCounts to count, then reset weeklyCounts
+            const prevCount =
+                typeof existingUser.count === "bigint"
+                    ? Number(existingUser.count)
+                    : existingUser.count;
+            const prevWeeklyCounts =
+                typeof existingUser.weeklyCounts === "bigint"
+                    ? Number(existingUser.weeklyCounts)
+                    : existingUser.weeklyCounts;
+            updatedUser = await prisma.tasbihUser.update({
+                where: { id: existingUser.id },
+                data: {
+                    count: prevCount + prevWeeklyCounts,
+                    weeklyCounts: 0,
+                },
+            });
+        } else {
+            // Just reset weeklyCounts
+            updatedUser = await prisma.tasbihUser.update({
+                where: { id: existingUser.id },
+                data: { weeklyCounts: 0 },
+            });
+        }
         // Convert BigInt fields to Number before returning
         const safeUser = {
             ...updatedUser,
@@ -43,7 +65,9 @@ export async function DELETE(req) {
         return NextResponse.json(
             {
                 ok: true,
-                message: "Weekly counts erased.",
+                message: addWeeklyToCount
+                    ? "Weekly counts added to lifetime and erased."
+                    : "Weekly counts erased.",
                 data: safeUser,
             },
             { status: 200 }

@@ -33,6 +33,17 @@ export default function Tasbih() {
         return "";
     });
     const [showHiddenMessage, setShowHiddenMessage] = useState(false);
+    // Pagination state
+    const [currentPage, setCurrentPage] = useState(1);
+    const entriesPerPage = 10;
+    const totalPages = Math.ceil(history.length / entriesPerPage);
+    const paginatedHistory = history.slice(
+        (currentPage - 1) * entriesPerPage,
+        currentPage * entriesPerPage
+    );
+    // Clear history confirmation modal
+    const [showClearHistoryConfirm, setShowClearHistoryConfirm] =
+        useState(false);
 
     const router = useRouter();
 
@@ -318,7 +329,15 @@ export default function Tasbih() {
             {/* Durood history list */}
             <div className="w-full max-w-3xl mt-6 mb-14 card bg-base-200 shadow-md rounded-2xl p-6">
                 <h3 className="text-lg font-bold mb-4 text-primary">
-                    Durood History
+                    <span>Durood History</span>
+                    <button
+                        className="btn btn-ghost btn-sm text-error border border-error hover:bg-error/10 float-right"
+                        style={{ float: "right" }}
+                        aria-label="Clear History"
+                        onClick={() => setShowClearHistoryConfirm(true)}
+                    >
+                        Clear History
+                    </button>
                 </h3>
                 {history.length === 0 ? (
                     <div className="text-center text-base text-primary/70">
@@ -334,12 +353,18 @@ export default function Tasbih() {
                                         <th className="w-24">Counts</th>
                                         <th className="w-40">Date</th>
                                         <th className="w-36">Time</th>
-                                        <th className="w-20">Action</th>
+                                        {/* Action column removed */}
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    {history.map((item, idx) => (
-                                        <tr key={idx}>
+                                    {paginatedHistory.map((item, idx) => (
+                                        <tr
+                                            key={
+                                                idx +
+                                                (currentPage - 1) *
+                                                    entriesPerPage
+                                            }
+                                        >
                                             <td className="align-middle">
                                                 {item.count
                                                     .toString()
@@ -357,17 +382,7 @@ export default function Tasbih() {
                                                     hour12: true,
                                                 })}
                                             </td>
-                                            <td className="align-middle">
-                                                <button
-                                                    className="btn btn-ghost btn-square"
-                                                    onClick={() =>
-                                                        setDeleteIndex(idx)
-                                                    }
-                                                    aria-label="Delete entry"
-                                                >
-                                                    <Trash2 className="h-5 w-5 text-red-500" />
-                                                </button>
-                                            </td>
+                                            {/* Action button removed */}
                                         </tr>
                                     ))}
                                 </tbody>
@@ -376,9 +391,11 @@ export default function Tasbih() {
 
                         {/* Mobile: stacked cards for each history row to avoid narrow columns and right overflow */}
                         <div className="md:hidden flex flex-col gap-3">
-                            {history.map((item, idx) => (
+                            {paginatedHistory.map((item, idx) => (
                                 <div
-                                    key={idx}
+                                    key={
+                                        idx + (currentPage - 1) * entriesPerPage
+                                    }
                                     className="w-full bg-base-100 rounded-lg p-3 flex items-center justify-between border"
                                 >
                                     <div className="flex items-center gap-3">
@@ -402,32 +419,91 @@ export default function Tasbih() {
                                             </span>
                                         </div>
                                     </div>
-                                    <div>
-                                        <button
-                                            className="btn btn-ghost btn-square"
-                                            onClick={() => setDeleteIndex(idx)}
-                                            aria-label="Delete entry"
-                                        >
-                                            <Trash2 className="h-5 w-5 text-red-500" />
-                                        </button>
-                                    </div>
+                                    <div>{/* Action button removed */}</div>
                                 </div>
                             ))}
                         </div>
+
+                        {/* Pagination controls */}
+                        {history.length > entriesPerPage && (
+                            <div className="flex justify-center items-center gap-2 mt-4">
+                                <button
+                                    className="btn btn-sm btn-outline"
+                                    disabled={currentPage === 1}
+                                    onClick={() =>
+                                        setCurrentPage(currentPage - 1)
+                                    }
+                                >
+                                    Previous
+                                </button>
+                                <span className="px-2 font-semibold">
+                                    Page {currentPage} of {totalPages}
+                                </span>
+                                <button
+                                    className="btn btn-sm btn-outline"
+                                    disabled={currentPage === totalPages}
+                                    onClick={() =>
+                                        setCurrentPage(currentPage + 1)
+                                    }
+                                >
+                                    Next
+                                </button>
+                            </div>
+                        )}
+
+                        <div className="mt-4 text-right text-lg font-bold text-primary">
+                            Total Counts:{" "}
+                            {history
+                                .reduce(
+                                    (sum, item) => sum + Number(item.count),
+                                    0
+                                )
+                                .toString()
+                                .padStart(2, "0")}
+                        </div>
                     </>
-                )}
-                {history.length > 0 && (
-                    <div className="mt-4 text-right text-lg font-bold text-primary">
-                        Total Counts:{" "}
-                        {history
-                            .reduce((sum, item) => sum + Number(item.count), 0)
-                            .toString()
-                            .padStart(2, "0")}
-                    </div>
                 )}
             </div>
 
             {/* Delete confirmation modal */}
+            {/* Clear History confirmation modal */}
+            {showClearHistoryConfirm && (
+                <div className="fixed inset-0 flex items-center justify-center bg-black/40 z-50">
+                    <div className="modal modal-open">
+                        <div className="modal-box text-center">
+                            <h3 className="font-bold text-lg text-error">
+                                Clear History
+                            </h3>
+                            <p className="py-4">
+                                Are you sure you want to clear all Durood
+                                history?
+                            </p>
+                            <div className="modal-action justify-center">
+                                <button
+                                    className="btn btn-error"
+                                    onClick={() => {
+                                        setHistory([]);
+                                        localStorage.removeItem(
+                                            "duroodHistory"
+                                        );
+                                        setShowClearHistoryConfirm(false);
+                                    }}
+                                >
+                                    Yes
+                                </button>
+                                <button
+                                    className="btn btn-ghost"
+                                    onClick={() =>
+                                        setShowClearHistoryConfirm(false)
+                                    }
+                                >
+                                    No
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
             {deleteIndex !== null && (
                 <div className="fixed inset-0 flex items-center justify-center bg-black/40 z-50 ">
                     <div className="modal modal-open">

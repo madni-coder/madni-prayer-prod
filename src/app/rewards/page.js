@@ -296,14 +296,20 @@ const RewardsPage = () => {
                 Top 10 Winners of this week
             </div>
 
-            <div className="bg-base-200 rounded-xl p-2 w-full max-w-md">
+            <div className="bg-base-200 rounded-xl p-2 w-full max-w-md ">
                 {/* Label Row */}
-                <div className="flex items-center py-2 border-b border-yellow-100 font-semibold text-xs text-yellow-400 uppercase tracking-wide">
+                <div className="flex items-center py-2  border-b border-yellow-100 font-semibold text-xs text-yellow-400 uppercase tracking-wide">
                     <div style={{ width: 48, textAlign: "center" }}>Rank</div>
                     <div style={{ width: 16 }}></div>
                     <div style={{ flex: 1, textAlign: "left" }}>Names</div>
-                    <div style={{ flex: 1, textAlign: "left" }}>Address</div>
-                    <div style={{ textAlign: "right" }}>Durood Counts</div>
+                    <div style={{ flex: 1, textAlign: "left" }}>
+                        Address
+                    </div>
+                    <div style={{ textAlign: "right", marginLeft: 10 }}>
+                        Durood
+                        <br />
+                        Counts
+                    </div>
                 </div>
                 {/* Data Rows */}
                 {rewardList.length === 0 ? (

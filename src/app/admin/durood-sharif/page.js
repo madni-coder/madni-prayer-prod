@@ -23,6 +23,36 @@ export function ToastProvider({ children }) {
     );
 }
 import React, { useState, useEffect } from "react";
+// Theme-based Yes/No confirmation modal
+function ConfirmModal({ open, title, message, onConfirm, onCancel }) {
+    if (!open) return null;
+    return (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-transparent">
+            <div className="bg-white dark:bg-gray-900 rounded-xl shadow-lg p-6 min-w-[320px] max-w-[90vw]">
+                <h2 className="text-lg font-bold mb-2 text-gray-900 dark:text-white">
+                    {title}
+                </h2>
+                <p className="mb-6 text-gray-700 dark:text-gray-300">
+                    {message}
+                </p>
+                <div className="flex gap-4 justify-end">
+                    <button
+                        className="px-4 py-2 rounded bg-gray-200 dark:bg-gray-700 text-gray-900 dark:text-white font-semibold hover:bg-gray-300 dark:hover:bg-gray-600"
+                        onClick={onCancel}
+                    >
+                        No
+                    </button>
+                    <button
+                        className="px-4 py-2 rounded bg-[#5fb923] text-white font-semibold hover:bg-green-700"
+                        onClick={onConfirm}
+                    >
+                        Yes
+                    </button>
+                </div>
+            </div>
+        </div>
+    );
+}
 import { Trash2 } from "lucide-react";
 import { FaBitcoin, FaMosque } from "react-icons/fa";
 import { useRouter } from "next/navigation";
@@ -30,38 +60,69 @@ import fetchFromApi from "../../../utils/fetchFromApi";
 
 function ClearWinnerListButton() {
     const [loading, setLoading] = useState(false);
+    const [showConfirm, setShowConfirm] = useState(false);
     const showToast = React.useContext(ToastContext);
 
     const handleClear = async () => {
         setLoading(true);
         try {
-            const res = await fetch("/api/api-rewards", { method: "DELETE" });
-            const txt = await res.text();
-            if (!res.ok) throw new Error(txt || res.statusText);
-            let result;
-            try {
-                result = JSON.parse(txt);
-            } catch (e) {
-                result = { message: txt };
+            // Fetch all users from the API
+            const resUsers = await fetch("/api/api-tasbihUsers");
+            const jsonUsers = await resUsers.json();
+            if (!jsonUsers.ok || !Array.isArray(jsonUsers.data))
+                throw new Error("Failed to fetch users");
+            let errorCount = 0;
+            for (const user of jsonUsers.data) {
+                const mobileNumber = user["mobile number"];
+                const weeklyCounts = Number(user["weekly counts"] || 0);
+                if (!mobileNumber || weeklyCounts === 0) continue;
+                // Call a custom API to add weeklyCounts to count and reset weeklyCounts
+                const res = await fetch("/api/api-tasbihUsers", {
+                    method: "DELETE",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({
+                        mobileNumber,
+                        addWeeklyToCount: true,
+                    }),
+                });
+                if (!res.ok) errorCount++;
             }
-            showToast(result.message || "Winner list cleared.", "success");
+            if (errorCount === 0) {
+                showToast(
+                    "Weekly counts added to lifetime counts and cleared for all users.",
+                    "success"
+                );
+            } else {
+                showToast(
+                    `Some users failed to update (${errorCount}).`,
+                    "error"
+                );
+            }
         } catch (e) {
             showToast(e.message, "error");
         } finally {
             setLoading(false);
+            setShowConfirm(false);
         }
     };
 
     return (
         <div className="inline-block">
             <button
-                onClick={handleClear}
+                onClick={() => setShowConfirm(true)}
                 className="bg-red-500 hover:bg-red-600 text-white font-semibold py-2 px-4 rounded-md"
                 disabled={loading}
                 title="Clear winner list (delete all rewards)"
             >
                 {loading ? "Clearing..." : "Clear Winners List"}
             </button>
+            <ConfirmModal
+                open={showConfirm}
+                title="Clear Winner List?"
+                message="Are you sure want to clear winners list ?"
+                onConfirm={handleClear}
+                onCancel={() => setShowConfirm(false)}
+            />
         </div>
     );
 }
@@ -74,6 +135,7 @@ export default function DuroodSharifPage() {
     const [currentPage, setCurrentPage] = useState(1);
     const [isPublishing, setIsPublishing] = useState(false);
     const [publishStatus, setPublishStatus] = useState(null);
+    const [showPublishConfirm, setShowPublishConfirm] = useState(false);
     const showToast = React.useContext(ToastContext);
 
     useEffect(() => {
@@ -171,7 +233,19 @@ export default function DuroodSharifPage() {
                     {/* Theme-based publish and clear winner list buttons at top-right */}
                     <div className="ml-auto flex gap-2">
                         <button
-                            onClick={async () => {
+                            onClick={() => setShowPublishConfirm(true)}
+                            className="bg-purple-500 hover:bg-green-600 text-white font-semibold py-2 px-4 rounded-md"
+                            disabled={isPublishing || filtered.length === 0}
+                            title="Publish top 10 results to rewards API"
+                        >
+                            {isPublishing ? "Publishing..." : "Publish Results"}
+                        </button>
+                        <ConfirmModal
+                            open={showPublishConfirm}
+                            title="Publish Top 10 Results?"
+                            message="Are you sure you want to publish the top 10 results?"
+                            onConfirm={async () => {
+                                setShowPublishConfirm(false);
                                 setIsPublishing(true);
                                 setPublishStatus(null);
                                 try {
@@ -248,12 +322,8 @@ export default function DuroodSharifPage() {
                                     setIsPublishing(false);
                                 }
                             }}
-                            className="bg-purple-500 hover:bg-green-600 text-white font-semibold py-2 px-4 rounded-md"
-                            disabled={isPublishing || filtered.length === 0}
-                            title="Publish top 10 results to rewards API"
-                        >
-                            {isPublishing ? "Publishing..." : "Publish Results"}
-                        </button>
+                            onCancel={() => setShowPublishConfirm(false)}
+                        />
                         <ClearWinnerListButton />
                     </div>
                 </div>
@@ -274,60 +344,7 @@ export default function DuroodSharifPage() {
                             </th>
                             <th className="font-semibold text-base text-white text-left flex items-center gap-2">
                                 <span>This Week Counts</span>
-                                <button
-                                    title="Erase all weekly counts"
-                                    className="ml-2 text-white hover:text-red-700"
-                                    onClick={async () => {
-                                        if (
-                                            !window.confirm(
-                                                "Are you sure you want to erase ALL weekly counts for all users?"
-                                            )
-                                        )
-                                            return;
-                                        try {
-                                            // Call DELETE API for each user
-                                            let errorCount = 0;
-                                            for (const user of users) {
-                                                const res = await fetch(
-                                                    "/api/api-tasbihUsers",
-                                                    {
-                                                        method: "DELETE",
-                                                        headers: {
-                                                            "Content-Type":
-                                                                "application/json",
-                                                        },
-                                                        body: JSON.stringify({
-                                                            "mobile number":
-                                                                user[
-                                                                    "mobile number"
-                                                                ],
-                                                        }),
-                                                    }
-                                                );
-                                                const json = await res.json();
-                                                if (!json.ok) errorCount++;
-                                            }
-                                            setUsers((prev) =>
-                                                prev.map((u) => ({
-                                                    ...u,
-                                                    "weekly counts": 0,
-                                                }))
-                                            );
-                                            showToast(
-                                                errorCount === 0
-                                                    ? "All weekly counts erased."
-                                                    : `Some users failed to erase (${errorCount})`,
-                                                errorCount === 0
-                                                    ? "success"
-                                                    : "error"
-                                            );
-                                        } catch (e) {
-                                            showToast(e.message, "error");
-                                        }
-                                    }}
-                                >
-                                    <Trash2 size={18} />
-                                </button>
+                                {/* ...existing code... */}
                             </th>
                             <th className="font-semibold text-base text-white text-left">
                                 Life Time Counts
@@ -358,10 +375,10 @@ export default function DuroodSharifPage() {
                                 <td className="py-4 text-gray-800 text-left">
                                     {row["Address"]}
                                 </td>
-                                <td className="py-4 text-gray-800 text-left">
+                                <td className="py-4 text-blue-600 font-bold text-left">
                                     {row["mobile number"]}
                                 </td>
-                                <td className="py-4 text-gray-800 text-left flex items-center gap-2">
+                                <td className="py-4 text-orange-800 font-bold  text-left flex items-center gap-2">
                                     {row["weekly counts"] || "00"}
                                 </td>
                                 <td className="py-4 text-gray-800 text-left">
