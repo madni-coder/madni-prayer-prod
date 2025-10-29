@@ -126,9 +126,9 @@ export default function Tasbih() {
                             <p className="font-medium text-base-content">
                                 Baraye maherbani agar durood sharif submit
                                 karein toh fake counts, fake taps krke submit na
-                                karein, ye galat or najayaz tarika hai, apse guzarish hy ki
-                                jab tasbih par tap karein toh kuch padh kar hi
-                                karein.
+                                karein, ye galat or najayaz tarika hai, apse
+                                guzarish hy ki jab tasbih par tap karein toh
+                                kuch padh kar hi karein.
                             </p>
                         </div>
                     )}
@@ -301,7 +301,10 @@ export default function Tasbih() {
                     // Capture current count for history, then reset counter
                     const currentCount = count;
                     const newEntry = {
+                        // keep existing count field as-is
                         count: currentCount,
+                        // also store weeklyCounts for weekly tracking (set equal to current tasbih count)
+                        weeklyCounts: currentCount,
                         date: new Date().toLocaleDateString(),
                         time: new Date().toLocaleTimeString(),
                     };

@@ -62,12 +62,15 @@ export default function UserModal({
                 payload = {
                     "mobile number": mobileValue.trim(),
                     tasbihCount: tasbihCount,
+                    // include weeklyCounts (store tasbih count for weekly tracking)
+                    weeklyCounts: tasbihCount,
                 };
             } else if (step === "review") {
                 // User is submitting with saved data
                 payload = {
                     "mobile number": userData.mobile,
                     tasbihCount: tasbihCount,
+                    weeklyCounts: tasbihCount,
                 };
             } else {
                 payload = {
@@ -75,6 +78,7 @@ export default function UserModal({
                     Address: addressRef.current?.value?.trim(),
                     "mobile number": savedMobile,
                     tasbihCount: tasbihCount,
+                    weeklyCounts: tasbihCount,
                 };
             }
             const res = await fetchFromApi(

@@ -11,6 +11,14 @@ export async function POST(req) {
         const mobileNumber =
             body["mobile number"] ?? body.mobileNumber ?? body.mobile;
         const tasbihCount = body.tasbihCount;
+        // New variable: weeklyCounts stores the tasbih count for weekly tracking
+        // If caller provides weeklyCounts use it, otherwise default to tasbihCount (number) or 0
+        const weeklyCounts =
+            typeof body.weeklyCounts === "number"
+                ? body.weeklyCounts
+                : typeof tasbihCount === "number"
+                ? tasbihCount
+                : 0;
 
         // Only validate mobile number if fullName and address are not provided
         if (!fullName && !address) {
@@ -53,7 +61,10 @@ export async function POST(req) {
                     fullName,
                     address,
                     mobileNumber,
+                    // keep existing `count` behavior (store tasbihCount there as before)
                     count: tasbihCount,
+                    // additionally store weekly count in `weeklyCounts`
+                    weeklyCounts: weeklyCounts,
                 },
             });
         }
@@ -74,9 +85,14 @@ export async function POST(req) {
             const updatedUser = await prisma.tasbihUser.update({
                 where: { id: existingUser.id },
                 data: {
+                    // preserve existing count increment behavior
                     count:
                         existingUser.count +
                         (typeof tasbihCount === "number" ? tasbihCount : 0),
+                    // update weeklyCounts by adding the incoming weeklyCounts value
+                    weeklyCounts:
+                        existingUser.weeklyCounts +
+                        (typeof weeklyCounts === "number" ? weeklyCounts : 0),
                 },
             });
             return NextResponse.json(
@@ -109,7 +125,10 @@ export async function GET() {
             "Full Name": u.fullName,
             Address: u.address,
             "mobile number": u.mobileNumber,
+            // Life time counts
             "Tasbih Counts": u.count,
+            // Weekly counts (note: key is lowercase to match admin UI expectation)
+            "weekly counts": u.weeklyCounts,
         }));
         return NextResponse.json({ ok: true, data: filtered }, { status: 200 });
     } catch (err) {

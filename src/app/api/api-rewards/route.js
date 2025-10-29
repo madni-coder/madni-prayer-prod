@@ -89,3 +89,17 @@ export async function GET() {
         });
     }
 }
+
+export async function DELETE() {
+    try {
+        await prisma.reward.deleteMany({});
+        return new Response(
+            JSON.stringify({ success: true, message: "All Winners list deleted." }),
+            { status: 200 }
+        );
+    } catch (error) {
+        return new Response(JSON.stringify({ error: error.message }), {
+            status: 500,
+        });
+    }
+}
