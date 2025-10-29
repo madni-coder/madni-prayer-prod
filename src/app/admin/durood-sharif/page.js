@@ -23,6 +23,7 @@ export function ToastProvider({ children }) {
     );
 }
 import React, { useState, useEffect } from "react";
+import { Trash2 } from "lucide-react";
 import { FaBitcoin, FaMosque } from "react-icons/fa";
 import { useRouter } from "next/navigation";
 import fetchFromApi from "../../../utils/fetchFromApi";
@@ -73,6 +74,7 @@ export default function DuroodSharifPage() {
     const [currentPage, setCurrentPage] = useState(1);
     const [isPublishing, setIsPublishing] = useState(false);
     const [publishStatus, setPublishStatus] = useState(null);
+    const showToast = React.useContext(ToastContext);
 
     useEffect(() => {
         // Check authentication on client side
@@ -267,8 +269,62 @@ export default function DuroodSharifPage() {
                             <th className="font-semibold text-base text-white text-left">
                                 Mobile Number
                             </th>
-                            <th className="font-semibold text-base text-white text-left">
-                                This Week Counts
+                            <th className="font-semibold text-base text-white text-left flex items-center gap-2">
+                                <span>This Week Counts</span>
+                                <button
+                                    title="Erase all weekly counts"
+                                    className="ml-2 text-white hover:text-red-700"
+                                    onClick={async () => {
+                                        if (
+                                            !window.confirm(
+                                                "Are you sure you want to erase ALL weekly counts for all users?"
+                                            )
+                                        )
+                                            return;
+                                        try {
+                                            // Call DELETE API for each user
+                                            let errorCount = 0;
+                                            for (const user of users) {
+                                                const res = await fetch(
+                                                    "/api/api-tasbihUsers",
+                                                    {
+                                                        method: "DELETE",
+                                                        headers: {
+                                                            "Content-Type":
+                                                                "application/json",
+                                                        },
+                                                        body: JSON.stringify({
+                                                            "mobile number":
+                                                                user[
+                                                                    "mobile number"
+                                                                ],
+                                                        }),
+                                                    }
+                                                );
+                                                const json = await res.json();
+                                                if (!json.ok) errorCount++;
+                                            }
+                                            setUsers((prev) =>
+                                                prev.map((u) => ({
+                                                    ...u,
+                                                    "weekly counts": 0,
+                                                }))
+                                            );
+                                            showToast(
+                                                errorCount === 0
+                                                    ? "All weekly counts erased."
+                                                    : `Some users failed to erase (${errorCount})`,
+                                                errorCount === 0
+                                                    ? "success"
+                                                    : "error"
+                                            );
+                                        } catch (e) {
+                                            showToast(e.message, "error");
+                                        }
+                                    }}
+                                >
+                                    <Trash2 size={18} />
+                                </button>
                             </th>
                             <th className="font-semibold text-base text-white text-left">
                                 Life Time Counts
@@ -302,8 +358,8 @@ export default function DuroodSharifPage() {
                                 <td className="py-4 text-gray-800 text-left">
                                     {row["mobile number"]}
                                 </td>
-                                <td className="py-4 text-gray-800 text-left">
-                                    {row["weekly counts"] || "NA"}
+                                <td className="py-4 text-gray-800 text-left flex items-center gap-2">
+                                    {row["weekly counts"] || "00"}
                                 </td>
                                 <td className="py-4 text-gray-800 text-left">
                                     {row["Tasbih Counts"] || "NA"}

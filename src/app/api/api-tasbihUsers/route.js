@@ -1,3 +1,60 @@
+export async function DELETE(req) {
+    try {
+        const body = await req.json();
+        const mobileNumber =
+            body["mobile number"] ?? body.mobileNumber ?? body.mobile;
+        if (!mobileNumber || typeof mobileNumber !== "string") {
+            return NextResponse.json(
+                {
+                    ok: false,
+                    error: "Mobile number is required and must be a string.",
+                },
+                { status: 400 }
+            );
+        }
+        const existingUser = await prisma.tasbihUser.findFirst({
+            where: { mobileNumber },
+        });
+        if (!existingUser) {
+            return NextResponse.json(
+                {
+                    ok: false,
+                    error: "User not found.",
+                },
+                { status: 404 }
+            );
+        }
+        const updatedUser = await prisma.tasbihUser.update({
+            where: { id: existingUser.id },
+            data: { weeklyCounts: 0 },
+        });
+        // Convert BigInt fields to Number before returning
+        const safeUser = {
+            ...updatedUser,
+            count:
+                typeof updatedUser.count === "bigint"
+                    ? Number(updatedUser.count)
+                    : updatedUser.count,
+            weeklyCounts:
+                typeof updatedUser.weeklyCounts === "bigint"
+                    ? Number(updatedUser.weeklyCounts)
+                    : updatedUser.weeklyCounts,
+        };
+        return NextResponse.json(
+            {
+                ok: true,
+                message: "Weekly counts erased.",
+                data: safeUser,
+            },
+            { status: 200 }
+        );
+    } catch (err) {
+        return NextResponse.json(
+            { ok: false, error: String(err) },
+            { status: 500 }
+        );
+    }
+}
 import { NextResponse } from "next/server";
 import { PrismaClient } from "@prisma/client";
 const prisma = new PrismaClient();
@@ -82,32 +139,68 @@ export async function POST(req) {
 
         // If user exists, increment their count
         if (existingUser) {
+            // Convert BigInt to Number if needed
+            const prevCount =
+                typeof existingUser.count === "bigint"
+                    ? Number(existingUser.count)
+                    : existingUser.count;
+            const prevWeeklyCounts =
+                typeof existingUser.weeklyCounts === "bigint"
+                    ? Number(existingUser.weeklyCounts)
+                    : existingUser.weeklyCounts;
             const updatedUser = await prisma.tasbihUser.update({
                 where: { id: existingUser.id },
                 data: {
-                    // preserve existing count increment behavior
                     count:
-                        existingUser.count +
+                        prevCount +
                         (typeof tasbihCount === "number" ? tasbihCount : 0),
-                    // update weeklyCounts by adding the incoming weeklyCounts value
                     weeklyCounts:
-                        existingUser.weeklyCounts +
+                        prevWeeklyCounts +
                         (typeof weeklyCounts === "number" ? weeklyCounts : 0),
                 },
             });
+            // Convert BigInt fields to Number before returning
+            const safeUser = {
+                ...updatedUser,
+                count:
+                    typeof updatedUser.count === "bigint"
+                        ? Number(updatedUser.count)
+                        : updatedUser.count,
+                weeklyCounts:
+                    typeof updatedUser.weeklyCounts === "bigint"
+                        ? Number(updatedUser.weeklyCounts)
+                        : updatedUser.weeklyCounts,
+            };
             return NextResponse.json(
                 {
                     ok: true,
                     error: "REGISTERED_USER",
                     message:
                         "You are already registered. Durood count incremented.",
-                    data: updatedUser,
+                    data: safeUser,
                 },
                 { status: 200 }
             );
         }
 
-        return NextResponse.json({ ok: true, data: newItem }, { status: 201 });
+        // Convert BigInt fields to Number before returning
+        const safeNewItem = newItem
+            ? {
+                  ...newItem,
+                  count:
+                      typeof newItem.count === "bigint"
+                          ? Number(newItem.count)
+                          : newItem.count,
+                  weeklyCounts:
+                      typeof newItem.weeklyCounts === "bigint"
+                          ? Number(newItem.weeklyCounts)
+                          : newItem.weeklyCounts,
+              }
+            : null;
+        return NextResponse.json(
+            { ok: true, data: safeNewItem },
+            { status: 201 }
+        );
     } catch (err) {
         return NextResponse.json(
             { ok: false, error: String(err) },
@@ -126,9 +219,13 @@ export async function GET() {
             Address: u.address,
             "mobile number": u.mobileNumber,
             // Life time counts
-            "Tasbih Counts": u.count,
+            "Tasbih Counts":
+                typeof u.count === "bigint" ? Number(u.count) : u.count,
             // Weekly counts (note: key is lowercase to match admin UI expectation)
-            "weekly counts": u.weeklyCounts,
+            "weekly counts":
+                typeof u.weeklyCounts === "bigint"
+                    ? Number(u.weeklyCounts)
+                    : u.weeklyCounts,
         }));
         return NextResponse.json({ ok: true, data: filtered }, { status: 200 });
     } catch (err) {

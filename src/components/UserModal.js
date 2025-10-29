@@ -8,6 +8,8 @@ export default function UserModal({
     onClose = () => {},
     onSuccess = () => {},
     tasbihCount = 0,
+    // when true, always show the mobile entry step even if saved user data exists
+    alwaysShowMobile = false,
 }) {
     const fullNameRef = useRef(null);
     const addressRef = useRef(null);
@@ -33,14 +35,20 @@ export default function UserModal({
                 setUserData(parsedData);
                 setMobileValue(parsedData.mobile || "");
                 setSavedMobile(parsedData.mobile || "");
-                setStep("review"); // Skip to review if user data exists
+                // Skip to review if user data exists unless the parent wants to
+                // force showing the mobile entry screen (alwaysShowMobile)
+                if (!alwaysShowMobile) {
+                    setStep("review");
+                } else {
+                    setStep("mobile");
+                }
             } else {
                 setUserData(null);
                 setMobileValue("");
                 setStep("mobile");
             }
         }
-    }, [open]);
+    }, [open, alwaysShowMobile]);
 
     function resetForm() {
         if (fullNameRef.current) fullNameRef.current.value = "";
@@ -200,7 +208,10 @@ export default function UserModal({
                             </div>
                         </div>
                     ) : step === "review" ? (
-                        <div className="mt-4 space-y-4">
+                        <div
+                            className="mt-4 space-y-4"
+                            onClick={(e) => e.stopPropagation()}
+                        >
                             <div className="alert alert-info shadow-sm">
                                 <svg
                                     xmlns="http://www.w3.org/2000/svg"
