@@ -24,11 +24,15 @@ export async function POST(request) {
                     position,
                     counts,
                     weeklyCounts,
+                    from,
+                    to,
                 } = item || {};
                 return {
                     fullName: fullName || "",
                     address: address || "",
                     areaMasjid: areaMasjid || "",
+                    from: from || "",
+                    to: to || "",
                     position: position !== undefined ? Number(position) : 0,
                     counts: counts !== undefined ? Number(counts) : 0,
                     weeklyCounts:
@@ -69,6 +73,8 @@ export async function POST(request) {
             position,
             counts,
             weeklyCounts,
+            from,
+            to,
         } = payload || {};
         if (!fullName || !address || !areaMasjid || position === undefined) {
             return new Response(JSON.stringify({ error: "Missing fields" }), {
@@ -81,6 +87,8 @@ export async function POST(request) {
                 fullName,
                 address,
                 areaMasjid,
+                from: from || "",
+                to: to || "",
                 position: Number(position),
                 counts: counts !== undefined ? Number(counts) : 0,
                 weeklyCounts:
@@ -102,8 +110,17 @@ export async function POST(request) {
 export async function GET() {
     try {
         const rewards = await prisma.reward.findMany();
+
+        // Remove any dollar signs from 'from' and 'to' fields before returning
+        const cleaned = rewards.map((r) => ({
+            ...r,
+            from:
+                typeof r.from === "string" ? r.from.replace(/\$/g, "") : r.from,
+            to: typeof r.to === "string" ? r.to.replace(/\$/g, "") : r.to,
+        }));
+
         // Serialize BigInt values to string
-        const safeJson = JSON.stringify(rewards, (key, value) =>
+        const safeJson = JSON.stringify(cleaned, (key, value) =>
             typeof value === "bigint" ? value.toString() : value
         );
         return new Response(safeJson, { status: 200 });

@@ -66,6 +66,8 @@ model Reward {
   fullName   String
   address    String
   areaMasjid String
+  from       String   @default("")
+  to         String   @default("")
   counts     Int      @default(0)
   weeklyCounts BigInt @default(0)
   position   Int

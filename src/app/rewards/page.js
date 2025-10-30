@@ -75,8 +75,19 @@ const medalSVG = [
 ];
 
 const RewardsPage = () => {
+    // Helper to format date as dd/mm/yyyy
+    function formatDateDMY(dateStr) {
+        if (!dateStr) return "--";
+        const d = new Date(dateStr);
+        if (isNaN(d.getTime())) return dateStr;
+        const day = String(d.getDate()).padStart(2, "0");
+        const month = String(d.getMonth() + 1).padStart(2, "0");
+        const year = d.getFullYear();
+        return `${day}/${month}/${year}`;
+    }
     const router = useRouter();
     const [showModal, setShowModal] = useState(false);
+    const [showRoadmap, setShowRoadmap] = useState(false);
     const [rewardList, setRewardList] = useState([]);
 
     React.useEffect(() => {
@@ -121,6 +132,17 @@ const RewardsPage = () => {
     // goldWinner is the top user (first in sorted list)
     const goldWinner =
         positionsList[0] && !positionsList[0].empty ? positionsList[0] : null;
+
+    // Derive a displayable week range (from / to) from the reward list
+    const weekRange = React.useMemo(() => {
+        if (!rewardList || rewardList.length === 0) return null;
+        const item = rewardList.find((r) => r && (r.from || r.to));
+        if (!item) return null;
+        return {
+            from: item.from ? String(item.from) : "",
+            to: item.to ? String(item.to) : "",
+        };
+    }, [rewardList]);
 
     return (
         <div className="min-h-screen flex flex-col items-center justify-center bg-base-200">
@@ -296,15 +318,29 @@ const RewardsPage = () => {
                 Top 10 Winners of this week
             </div>
 
+            {/* Week range (from / to) displayed with theme-based colors and fonts, formatted as dd/mm/yyyy */}
+            {weekRange ? (
+                <div className="w-full max-w-md mx-auto flex items-center justify-center gap-3 mb-4">
+                    <div className="text-sm  text-white-content/60 font-semibold tracking-wide uppercase">
+                        From
+                    </div>
+                    <div className="px-3 py-1 rounded-full bg-gradient-to-r from-indigo-600 to-indigo-400 text-white font-bold text-sm">
+                        {formatDateDMY(weekRange.from)}
+                    </div>
+                    <div className="text-sm text-white-content/60 ">To</div>
+                    <div className="px-3 py-1 rounded-full bg-gradient-to-r from-yellow-400 to-yellow-600 text-amber-900 font-bold text-sm">
+                        {formatDateDMY(weekRange.to)}
+                    </div>
+                </div>
+            ) : null}
+
             <div className="bg-base-200 rounded-xl p-2 w-full max-w-md ">
                 {/* Label Row */}
-                <div className="flex items-center py-2  border-b border-yellow-100 font-semibold text-xs text-yellow-400 uppercase tracking-wide">
+                <div className="flex items-center  border-b border-yellow-100 font-semibold text-xs text-yellow-400 uppercase tracking-wide">
                     <div style={{ width: 48, textAlign: "center" }}>Rank</div>
                     <div style={{ width: 16 }}></div>
                     <div style={{ flex: 1, textAlign: "left" }}>Names</div>
-                    <div style={{ flex: 1, textAlign: "left" }}>
-                        Address
-                    </div>
+                    <div style={{ flex: 1, textAlign: "left" }}>Address</div>
                     <div style={{ textAlign: "right", marginLeft: 10 }}>
                         Durood
                         <br />
@@ -388,102 +424,112 @@ const RewardsPage = () => {
                 )}
             </div>
 
-            {/* Decorative Roadmap UI moved below winners list */}
+            {/* Collapsible Roadmap UI below winners list */}
             <div className="w-full max-w-md mx-auto my-6">
-                <div className="relative bg-base-100 rounded-xl p-4 shadow-sm overflow-visible">
-                    <div className="text-center text-lg font-bold mb-3">
-                        How to register
+                <button
+                    className="btn btn-outline btn-info w-full mb-2 font-semibold"
+                    onClick={() => setShowRoadmap((v) => !v)}
+                    aria-label="See  how to register"
+                >
+                    {showRoadmap
+                        ? "Hide registration steps"
+                        : "See Steps How To Register"}
+                </button>
+                {showRoadmap && (
+                    <div className="relative bg-base-100 rounded-xl p-4 shadow-sm overflow-visible animate-fadeIn">
+                        <div className="text-center text-lg font-bold mb-3">
+                            How to register
+                        </div>
+                        <div className="flex flex-col gap-4">
+                            <div className="flex items-center gap-4">
+                                <div>
+                                    <div className="w-14 h-14 rounded-full bg-gradient-to-br from-yellow-400 to-yellow-600 flex items-center justify-center text-white text-xl shadow-lg">
+                                        🎗️
+                                    </div>
+                                </div>
+                                <div>
+                                    <div className="font-semibold">
+                                        Register for Weekly Durood Sharif
+                                    </div>
+                                    <div className="text-sm text-base-content/60">
+                                        Begin the registration flow — quick and
+                                        secure
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div className="flex flex-col items-center">
+                                <div className="w-0.5 h-6 bg-gradient-to-b from-yellow-200 to-yellow-400 rounded" />
+                                <FaArrowDown className="my-1 text-yellow-500" />
+                                <div className="w-0.5 h-6 bg-gradient-to-b from-yellow-200 to-yellow-400 rounded" />
+                            </div>
+
+                            <div className="flex items-center gap-4">
+                                <div>
+                                    <div className="w-14 h-14 rounded-full bg-gradient-to-br from-indigo-400 to-indigo-600 flex items-center justify-center text-white text-xl shadow-lg">
+                                        📍
+                                    </div>
+                                </div>
+                                <div>
+                                    <div className="font-semibold">
+                                        Go to Tasbih page
+                                    </div>
+                                    <div className="text-sm text-base-content/60">
+                                        Open the Tasbih page where registration
+                                        is available
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div className="flex flex-col items-center">
+                                <div className="w-0.5 h-6 bg-gradient-to-b from-indigo-200 to-indigo-400 rounded" />
+                                <FaArrowDown className="my-1 text-indigo-500" />
+                                <div className="w-0.5 h-6 bg-gradient-to-b from-indigo-200 to-indigo-400 rounded" />
+                            </div>
+
+                            <div className="flex items-center gap-4">
+                                <div>
+                                    <div className="w-14 h-14 rounded-full bg-gradient-to-br from-green-400 to-green-600 flex items-center justify-center text-white text-xl shadow-lg">
+                                        <FaRegCheckCircle />
+                                    </div>
+                                </div>
+                                <div>
+                                    <div className="font-semibold">
+                                        Click on Submit Durood Sharif button
+                                    </div>
+                                    <div className="text-sm text-base-content/60">
+                                        Recite Durood and Tap the submit button
+                                        to open the form
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div className="flex flex-col items-center">
+                                <div className="w-0.5 h-6 bg-gradient-to-b from-green-200 to-green-400 rounded" />
+                                <FaArrowDown className="my-1 text-green-500" />
+                                <div className="w-0.5 h-6 bg-gradient-to-b from-green-200 to-green-400 rounded" />
+                            </div>
+
+                            <div className="flex items-center gap-4">
+                                <div>
+                                    <div className="w-14 h-14 rounded-full bg-gradient-to-br from-pink-400 to-pink-600 flex items-center justify-center text-white text-xl shadow-lg">
+                                        <FaStar />
+                                    </div>
+                                </div>
+                                <div>
+                                    <div className="font-semibold">
+                                        Fill details and submit
+                                    </div>
+                                    <div className="text-sm text-base-content/60">
+                                        Enter full name, address and mobile then
+                                        submit
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
                     </div>
-                    <div className="flex flex-col gap-4">
-                        <div className="flex items-center gap-4">
-                            <div>
-                                <div className="w-14 h-14 rounded-full bg-gradient-to-br from-yellow-400 to-yellow-600 flex items-center justify-center text-white text-xl shadow-lg">
-                                    🎗️
-                                </div>
-                            </div>
-                            <div>
-                                <div className="font-semibold">
-                                    Register for Weekly Durood Sharif
-                                </div>
-                                <div className="text-sm text-base-content/60">
-                                    Begin the registration flow — quick and
-                                    secure
-                                </div>
-                            </div>
-                        </div>
-
-                        <div className="flex flex-col items-center">
-                            <div className="w-0.5 h-6 bg-gradient-to-b from-yellow-200 to-yellow-400 rounded" />
-                            <FaArrowDown className="my-1 text-yellow-500" />
-                            <div className="w-0.5 h-6 bg-gradient-to-b from-yellow-200 to-yellow-400 rounded" />
-                        </div>
-
-                        <div className="flex items-center gap-4">
-                            <div>
-                                <div className="w-14 h-14 rounded-full bg-gradient-to-br from-indigo-400 to-indigo-600 flex items-center justify-center text-white text-xl shadow-lg">
-                                    📍
-                                </div>
-                            </div>
-                            <div>
-                                <div className="font-semibold">
-                                    Go to Tasbih page
-                                </div>
-                                <div className="text-sm text-base-content/60">
-                                    Open the Tasbih page where registration is
-                                    available
-                                </div>
-                            </div>
-                        </div>
-
-                        <div className="flex flex-col items-center">
-                            <div className="w-0.5 h-6 bg-gradient-to-b from-indigo-200 to-indigo-400 rounded" />
-                            <FaArrowDown className="my-1 text-indigo-500" />
-                            <div className="w-0.5 h-6 bg-gradient-to-b from-indigo-200 to-indigo-400 rounded" />
-                        </div>
-
-                        <div className="flex items-center gap-4">
-                            <div>
-                                <div className="w-14 h-14 rounded-full bg-gradient-to-br from-green-400 to-green-600 flex items-center justify-center text-white text-xl shadow-lg">
-                                    <FaRegCheckCircle />
-                                </div>
-                            </div>
-                            <div>
-                                <div className="font-semibold">
-                                    Click on Submit Durood Sharif button
-                                </div>
-                                <div className="text-sm text-base-content/60">
-                                    Recite Durood and Tap the submit button to
-                                    open the form
-                                </div>
-                            </div>
-                        </div>
-
-                        <div className="flex flex-col items-center">
-                            <div className="w-0.5 h-6 bg-gradient-to-b from-green-200 to-green-400 rounded" />
-                            <FaArrowDown className="my-1 text-green-500" />
-                            <div className="w-0.5 h-6 bg-gradient-to-b from-green-200 to-green-400 rounded" />
-                        </div>
-
-                        <div className="flex items-center gap-4">
-                            <div>
-                                <div className="w-14 h-14 rounded-full bg-gradient-to-br from-pink-400 to-pink-600 flex items-center justify-center text-white text-xl shadow-lg">
-                                    <FaStar />
-                                </div>
-                            </div>
-                            <div>
-                                <div className="font-semibold">
-                                    Fill details and submit
-                                </div>
-                                <div className="text-sm text-base-content/60">
-                                    Enter full name, address and mobile then
-                                    submit
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
+                )}
             </div>
-            {/* Animated Modal */}
             {showModal && (
                 <div
                     className="fixed inset-0 z-50 flex items-center justify-center animate-fadeIn backdrop-blur-lg"

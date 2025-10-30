@@ -150,6 +150,24 @@ function ClearWinnerListButton() {
 }
 
 export default function DuroodSharifPage() {
+    // Date change handlers for calendar inputs
+    const handleFromDateChange = (e) => {
+        setFromDate(e.target.value);
+        if (toDate && e.target.value > toDate) {
+            setError("'To' date cannot be before 'From' date.");
+        } else {
+            setError("");
+        }
+    };
+
+    const handleToDateChange = (e) => {
+        setToDate(e.target.value);
+        if (fromDate && e.target.value < fromDate) {
+            setError("'To' date cannot be before 'From' date.");
+        } else {
+            setError("");
+        }
+    };
     const router = useRouter();
     const [loading, setLoading] = useState(true);
     const [search, setSearch] = useState("");
@@ -160,19 +178,39 @@ export default function DuroodSharifPage() {
     const [showPublishConfirm, setShowPublishConfirm] = useState(false);
     const showToast = React.useContext(ToastContext);
 
-    useEffect(() => {
-        // Check authentication on client side
-        const checkAuth = () => {
-            const isAuthenticated =
-                localStorage.getItem("isAuthenticated") === "true";
-            if (!isAuthenticated) {
-                router.push("/login");
+    // Date range states
+    const [fromDate, setFromDate] = useState("");
+    const [toDate, setToDate] = useState("");
+    const [error, setError] = useState("");
+    // refs for native date inputs so we can trigger picker programmatically
+    const fromDateRef = React.useRef(null);
+    const toDateRef = React.useRef(null);
+
+    const openDatePicker = (ref) => {
+        if (!ref || !ref.current) return;
+        // Modern browsers (Chrome/Edge/Opera) support showPicker()
+        try {
+            if (typeof ref.current.showPicker === "function") {
+                ref.current.showPicker();
                 return;
             }
-            setLoading(false);
-        };
+        } catch (e) {
+            // ignore and fallback
+        }
+        // Fallback: focus and attempt click
+        ref.current.focus();
+        if (typeof ref.current.click === "function") ref.current.click();
+    };
 
-        checkAuth();
+    useEffect(() => {
+        // Check authentication on client side
+        const isAuthenticated =
+            localStorage.getItem("isAuthenticated") === "true";
+        if (!isAuthenticated) {
+            router.push("/login");
+            return;
+        }
+        setLoading(false);
     }, [router]);
 
     useEffect(() => {
@@ -241,8 +279,8 @@ export default function DuroodSharifPage() {
     return (
         <ToastProvider>
             <div className="bg-white rounded-xl shadow p-0 mt-8">
-                <div className="p-4 flex items-start justify-between gap-4">
-                    <div>
+                <div className="p-4 flex items-center justify-between gap-4 flex-wrap">
+                    <div className="flex items-center gap-4">
                         <input
                             type="text"
                             placeholder="Search by name, address or mobile number"
@@ -251,9 +289,7 @@ export default function DuroodSharifPage() {
                             onChange={(e) => setSearch(e.target.value)}
                         />
                     </div>
-
-                    {/* Theme-based publish and clear winner list buttons at top-right */}
-                    <div className="ml-auto flex gap-2">
+                    <div className="ml-auto flex gap-2 relative">
                         <button
                             onClick={() => setShowPublishConfirm(true)}
                             className="bg-purple-500 hover:bg-green-600 text-white font-semibold py-2 px-4 rounded-md"
@@ -262,90 +298,285 @@ export default function DuroodSharifPage() {
                         >
                             {isPublishing ? "Publishing..." : "Publish Results"}
                         </button>
-                        <ConfirmModal
-                            open={showPublishConfirm}
-                            title="Publish Top 10 Results?"
-                            message="Are you sure you want to publish the top 10 results?"
-                            onConfirm={async () => {
-                                setShowPublishConfirm(false);
-                                setIsPublishing(true);
-                                setPublishStatus(null);
-                                try {
-                                    const topTen = usersWithRank
-                                        .filter((u) => u.TOP)
-                                        .slice(0, 10);
-                                    if (!topTen.length) {
-                                        setPublishStatus({
-                                            ok: 0,
-                                            fail: 0,
-                                            error: "No top entries to publish",
-                                        });
-                                        setIsPublishing(false);
-                                        return;
-                                    }
-                                    const payloadItems = topTen.map(
-                                        (row, i) => ({
-                                            position:
-                                                row.TOP !== "" &&
-                                                row.TOP !== undefined
-                                                    ? Number(row.TOP)
-                                                    : i + 1,
-                                            fullName: row["Full Name"] || "",
-                                            address: row["Address"] || "",
-                                            areaMasjid:
-                                                row["areaMasjid"] ||
-                                                row["Address"] ||
-                                                "",
-                                            counts: Number(
-                                                row["Tasbih Counts"] || 0
-                                            ),
-                                            weeklyCounts: Number(
-                                                row["weekly counts"] || 0
-                                            ),
-                                        })
-                                    );
-                                    const res = await fetch(
-                                        "/api/api-rewards",
-                                        {
-                                            method: "POST",
-                                            headers: {
-                                                "Content-Type":
-                                                    "application/json",
-                                            },
-                                            body: JSON.stringify({
-                                                items: payloadItems,
-                                            }),
-                                        }
-                                    );
-                                    const txt = await res.text();
-                                    if (!res.ok)
-                                        throw new Error(txt || res.statusText);
-                                    let result;
-                                    try {
-                                        result = JSON.parse(txt);
-                                    } catch (e) {
-                                        result = { message: txt };
-                                    }
-                                    setPublishStatus({
-                                        ok:
-                                            result.inserted ||
-                                            (result.success
-                                                ? payloadItems.length
-                                                : 0),
-                                        fail: 0,
-                                    });
-                                } catch (e) {
-                                    setPublishStatus({
-                                        ok: 0,
-                                        fail: 1,
-                                        error: e.message,
-                                    });
-                                } finally {
-                                    setIsPublishing(false);
-                                }
-                            }}
-                            onCancel={() => setShowPublishConfirm(false)}
-                        />
+                        {/* Modal for publish with date fields */}
+                        {showPublishConfirm && (
+                            <div className="absolute right-0 mt-2 z-50 w-[400px] max-w-[98vw]">
+                                <div className="bg-white rounded-xl shadow-lg p-5 border border-gray-200 dark:border-gray-700 flex flex-col gap-4">
+                                    <h2 className="text-lg font-bold mb-2 text-gray-900">
+                                        Publish Top 10 Results . Enter Week
+                                        Dates Correctly
+                                    </h2>
+                                    <div className="flex flex-wrap gap-4 w-full">
+                                        <div className="flex-1 min-w-[150px] flex flex-col gap-1">
+                                            <label className="font-bold text-black text-sm">
+                                                From Date
+                                            </label>
+                                            <div className="relative">
+                                                <input
+                                                    type="date"
+                                                    ref={fromDateRef}
+                                                    value={fromDate}
+                                                    onChange={
+                                                        handleFromDateChange
+                                                    }
+                                                    className="text-black border rounded px-2 py-1 focus:outline-none focus:ring-2 focus:ring-blue-500 w-full pr-10"
+                                                    max={toDate || undefined}
+                                                />
+                                                <button
+                                                    type="button"
+                                                    aria-label="Open from date picker"
+                                                    onClick={() =>
+                                                        openDatePicker(
+                                                            fromDateRef
+                                                        )
+                                                    }
+                                                    className="absolute right-1 top-1/2 -translate-y-1/2 p-1 text-gray-600 hover:text-gray-900"
+                                                >
+                                                    <svg
+                                                        xmlns="http://www.w3.org/2000/svg"
+                                                        width="20"
+                                                        height="20"
+                                                        viewBox="0 0 24 24"
+                                                        fill="none"
+                                                        stroke="currentColor"
+                                                        strokeWidth="2"
+                                                        strokeLinecap="round"
+                                                        strokeLinejoin="round"
+                                                        className="feather feather-calendar"
+                                                    >
+                                                        <rect
+                                                            x="3"
+                                                            y="4"
+                                                            width="18"
+                                                            height="18"
+                                                            rx="2"
+                                                            ry="2"
+                                                        ></rect>
+                                                        <line
+                                                            x1="16"
+                                                            y1="2"
+                                                            x2="16"
+                                                            y2="6"
+                                                        ></line>
+                                                        <line
+                                                            x1="8"
+                                                            y1="2"
+                                                            x2="8"
+                                                            y2="6"
+                                                        ></line>
+                                                        <line
+                                                            x1="3"
+                                                            y1="10"
+                                                            x2="21"
+                                                            y2="10"
+                                                        ></line>
+                                                    </svg>
+                                                </button>
+                                            </div>
+                                        </div>
+                                        <div className="flex-1 min-w-[150px] flex flex-col gap-1">
+                                            <label className="font-bold text-black text-sm">
+                                                To Date
+                                            </label>
+                                            <div className="relative">
+                                                <input
+                                                    type="date"
+                                                    ref={toDateRef}
+                                                    value={toDate}
+                                                    onChange={
+                                                        handleToDateChange
+                                                    }
+                                                    className="text-black border rounded px-2 py-1 focus:outline-none focus:ring-2 focus:ring-blue-500 w-full pr-10"
+                                                    min={fromDate || undefined}
+                                                />
+                                                <button
+                                                    type="button"
+                                                    aria-label="Open to date picker"
+                                                    onClick={() =>
+                                                        openDatePicker(
+                                                            toDateRef
+                                                        )
+                                                    }
+                                                    className="absolute right-1 top-1/2 -translate-y-1/2 p-1 text-gray-600 hover:text-gray-900"
+                                                >
+                                                    <svg
+                                                        xmlns="http://www.w3.org/2000/svg"
+                                                        width="20"
+                                                        height="20"
+                                                        viewBox="0 0 24 24"
+                                                        fill="none"
+                                                        stroke="currentColor"
+                                                        strokeWidth="2"
+                                                        strokeLinecap="round"
+                                                        strokeLinejoin="round"
+                                                        className="feather feather-calendar"
+                                                    >
+                                                        <rect
+                                                            x="3"
+                                                            y="4"
+                                                            width="18"
+                                                            height="18"
+                                                            rx="2"
+                                                            ry="2"
+                                                        ></rect>
+                                                        <line
+                                                            x1="16"
+                                                            y1="2"
+                                                            x2="16"
+                                                            y2="6"
+                                                        ></line>
+                                                        <line
+                                                            x1="8"
+                                                            y1="2"
+                                                            x2="8"
+                                                            y2="6"
+                                                        ></line>
+                                                        <line
+                                                            x1="3"
+                                                            y1="10"
+                                                            x2="21"
+                                                            y2="10"
+                                                        ></line>
+                                                    </svg>
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    {error && (
+                                        <div className="text-red-500 font-semibold text-sm ml-2">
+                                            {error}
+                                        </div>
+                                    )}
+                                    <div className="flex gap-2 justify-end mt-4">
+                                        <button
+                                            className="px-4 py-2 rounded bg-gray-200 text-gray-900 font-semibold hover:bg-gray-300"
+                                            onClick={() =>
+                                                setShowPublishConfirm(false)
+                                            }
+                                        >
+                                            Cancel
+                                        </button>
+                                        <button
+                                            className="px-4 py-2 rounded bg-[#5fb923] text-white font-semibold hover:bg-green-700"
+                                            disabled={
+                                                !!error || !fromDate || !toDate
+                                            }
+                                            onClick={async () => {
+                                                setShowPublishConfirm(false);
+                                                setIsPublishing(true);
+                                                setPublishStatus(null);
+                                                try {
+                                                    const topTen = usersWithRank
+                                                        .filter((u) => u.TOP)
+                                                        .slice(0, 10);
+                                                    if (!topTen.length) {
+                                                        setPublishStatus({
+                                                            ok: 0,
+                                                            fail: 0,
+                                                            error: "No top entries to publish",
+                                                        });
+                                                        setIsPublishing(false);
+                                                        return;
+                                                    }
+                                                    const payloadItems =
+                                                        topTen.map(
+                                                            (row, i) => ({
+                                                                position:
+                                                                    row.TOP !==
+                                                                        "" &&
+                                                                    row.TOP !==
+                                                                        undefined
+                                                                        ? Number(
+                                                                              row.TOP
+                                                                          )
+                                                                        : i + 1,
+                                                                fullName:
+                                                                    row[
+                                                                        "Full Name"
+                                                                    ] || "",
+                                                                address:
+                                                                    row[
+                                                                        "Address"
+                                                                    ] || "",
+                                                                areaMasjid:
+                                                                    row[
+                                                                        "areaMasjid"
+                                                                    ] ||
+                                                                    row[
+                                                                        "Address"
+                                                                    ] ||
+                                                                    "",
+                                                                counts: Number(
+                                                                    row[
+                                                                        "Tasbih Counts"
+                                                                    ] || 0
+                                                                ),
+                                                                weeklyCounts:
+                                                                    Number(
+                                                                        row[
+                                                                            "weekly counts"
+                                                                        ] || 0
+                                                                    ),
+                                                                from: fromDate,
+                                                                to: toDate,
+                                                            })
+                                                        );
+                                                    const res = await fetch(
+                                                        "/api/api-rewards",
+                                                        {
+                                                            method: "POST",
+                                                            headers: {
+                                                                "Content-Type":
+                                                                    "application/json",
+                                                            },
+                                                            body: JSON.stringify(
+                                                                {
+                                                                    items: payloadItems,
+                                                                }
+                                                            ),
+                                                        }
+                                                    );
+                                                    const txt =
+                                                        await res.text();
+                                                    if (!res.ok)
+                                                        throw new Error(
+                                                            txt ||
+                                                                res.statusText
+                                                        );
+                                                    let result;
+                                                    try {
+                                                        result =
+                                                            JSON.parse(txt);
+                                                    } catch (e) {
+                                                        result = {
+                                                            message: txt,
+                                                        };
+                                                    }
+                                                    setPublishStatus({
+                                                        ok:
+                                                            result.inserted ||
+                                                            (result.success
+                                                                ? payloadItems.length
+                                                                : 0),
+                                                        fail: 0,
+                                                    });
+                                                } catch (e) {
+                                                    setPublishStatus({
+                                                        ok: 0,
+                                                        fail: 1,
+                                                        error: e.message,
+                                                    });
+                                                } finally {
+                                                    setIsPublishing(false);
+                                                }
+                                            }}
+                                        >
+                                            Publish
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        )}
                         <ClearWinnerListButton />
                     </div>
                 </div>
