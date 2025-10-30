@@ -1,4 +1,4 @@
-package com.prayer.dev
+package com.prayer.madni
 
 import android.content.Context
 import android.hardware.Sensor

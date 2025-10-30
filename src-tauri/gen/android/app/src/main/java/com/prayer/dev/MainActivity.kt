@@ -1,4 +1,4 @@
-package com.prayer.dev
+package com.prayer.madni
 
 import android.os.Bundle
 import androidx.activity.enableEdgeToEdge
