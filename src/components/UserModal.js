@@ -64,17 +64,25 @@ export default function UserModal({
         e.preventDefault();
         setError(null);
         setLoading(true);
+        // Validate mobile number for mobile step and review step
+        if (
+            (step === "mobile" && !/^\d{10}$/.test(mobileValue.trim())) ||
+            (step === "review" &&
+                (!userData?.mobile || !/^\d{10}$/.test(userData.mobile)))
+        ) {
+            setError("Mobile number must be exactly 10 digits.");
+            setLoading(false);
+            return;
+        }
         try {
             let payload;
             if (step === "mobile") {
                 payload = {
                     "mobile number": mobileValue.trim(),
                     tasbihCount: tasbihCount,
-                    // include weeklyCounts (store tasbih count for weekly tracking)
                     weeklyCounts: tasbihCount,
                 };
             } else if (step === "review") {
-                // User is submitting with saved data
                 payload = {
                     "mobile number": userData.mobile,
                     tasbihCount: tasbihCount,

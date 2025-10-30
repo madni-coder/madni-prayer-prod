@@ -241,7 +241,6 @@ export default function DuroodSharifPage() {
         };
     });
 
-    // Filter after ranking
     const filtered = usersWithRank.filter(
         (row) =>
             row["Full Name"].toLowerCase().includes(search.toLowerCase()) ||
@@ -277,10 +276,13 @@ export default function DuroodSharifPage() {
     }
 
     return (
-        <ToastProvider>
-            <div className="bg-white rounded-xl shadow p-0 mt-8">
-                <div className="p-4 flex items-center justify-between gap-4 flex-wrap">
-                    <div className="flex items-center gap-4">
+        <>
+            <ToastProvider>
+                <div className="bg-white rounded-xl shadow p-0 mt-8">
+                    {/* ...existing code... */}
+                </div>
+                <div className="p-4 flex items-center justify-between">
+                    <div className="flex-1 min-w-[200px]">
                         <input
                             type="text"
                             placeholder="Search by name, address or mobile number"
@@ -599,12 +601,8 @@ export default function DuroodSharifPage() {
                                 <span>This Week Counts</span>
                                 {/* ...existing code... */}
                             </th>
-                            <th className="font-semibold text-base text-white text-left">
-                                Life Time Counts
-                            </th>
-
                             <th className="font-semibold text-base text-white text-left rounded-tr-xl">
-                                Date
+                                Life Time Counts
                             </th>
                         </tr>
                     </thead>
@@ -636,10 +634,6 @@ export default function DuroodSharifPage() {
                                 </td>
                                 <td className="py-4 text-gray-800 text-left">
                                     {row["Tasbih Counts"] || "NA"}
-                                </td>
-                                <td className="py-4 text-gray-800 text-left">
-                                    {row["date"] ||
-                                        new Date().toLocaleDateString()}
                                 </td>
                             </tr>
                         ))}
@@ -744,7 +738,7 @@ export default function DuroodSharifPage() {
                         </nav>
                     </div>
                 )}
-            </div>
-        </ToastProvider>
+            </ToastProvider>
+        </>
     );
 }
