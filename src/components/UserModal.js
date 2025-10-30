@@ -17,17 +17,17 @@ export default function UserModal({
 
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState(null);
-    const [visible, setVisible] = useState(open);
     const [step, setStep] = useState("mobile");
     const [savedMobile, setSavedMobile] = useState("");
     const [mobileValue, setMobileValue] = useState("");
     const [userData, setUserData] = useState(null);
 
     useEffect(() => {
-        setVisible(open);
+        // Debug: log when the parent toggles the modal
+        console.log("UserModal open prop:", open);
         setError(null);
 
-        // Load user data from localStorage
+        // Load user data from localStorage when modal opens
         if (open && typeof window !== "undefined") {
             const savedUserData = localStorage.getItem("userRegistrationData");
             if (savedUserData) {
@@ -47,6 +47,14 @@ export default function UserModal({
                 setMobileValue("");
                 setStep("mobile");
             }
+            // Focus the mobile input shortly after mount so we can confirm the modal rendered
+            setTimeout(() => {
+                try {
+                    mobileRef.current?.focus();
+                } catch (e) {
+                    // ignore
+                }
+            }, 50);
         }
     }, [open, alwaysShowMobile]);
 
@@ -162,7 +170,8 @@ export default function UserModal({
         }
     }
 
-    if (!visible) return null;
+    // Render only when parent asks to open
+    if (!open) return null;
 
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center">
@@ -170,7 +179,6 @@ export default function UserModal({
                 className="absolute inset-0 bg-black/40"
                 onClick={() => {
                     resetForm();
-                    setVisible(false);
                     onClose();
                 }}
             />
@@ -183,7 +191,6 @@ export default function UserModal({
                         className="absolute top-4 right-4 btn btn-ghost btn-sm btn-circle"
                         onClick={() => {
                             resetForm();
-                            setVisible(false);
                             onClose();
                         }}
                         aria-label="Close"
@@ -491,7 +498,6 @@ export default function UserModal({
                                     className="btn btn-ghost"
                                     onClick={() => {
                                         resetForm();
-                                        setVisible(false);
                                         onClose();
                                     }}
                                     disabled={loading}
