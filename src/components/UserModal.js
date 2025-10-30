@@ -183,8 +183,8 @@ export default function UserModal({
                 }}
             />
 
-            <div className="modal modal-open">
-                <div className="modal-box w-[min(95vw,480px)] max-h-[90vh] overflow-y-auto relative bg-base-100">
+            <div className="modal modal-open ">
+                <div className="modal-box w-[min(95vw,480px)] max-h-[75vh] overflow-y-auto relative bg-base-100">
                     {/* Cross icon for closing modal */}
                     <button
                         type="button"
