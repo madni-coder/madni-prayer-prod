@@ -13,6 +13,7 @@ import {
     FaMicrophone,
     FaRegIdBadge,
 } from "react-icons/fa";
+import TasbihSvgIcon from "../components/TasbihSvgIcon";
 
 const navLinks = [
     { name: "Home", href: "/", icon: <FaHome className="text-lg" /> },
@@ -35,15 +36,7 @@ const navLinks = [
     {
         name: "Tasbih",
         href: "/tasbih",
-        icon: (
-            <Image
-                src="/tasbih.png"
-                alt="Tasbih"
-                width={18}
-                height={18}
-                className="w-6 h-6 object-cover"
-            />
-        ),
+        icon: <TasbihSvgIcon className="w-6 h-6" />,
     },
     { name: "Rewards", href: "/rewards", icon: <FaGift className="text-lg" /> },
     {
