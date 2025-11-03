@@ -14,6 +14,9 @@ const surahs = [
     { number: 1, name: "Surah Yaseen", arabic: "يسٓ", ayahs: 83 },
     { number: 2, name: "Surah Baqrah", arabic: "البقرة", ayahs: 286 },
     { number: 3, name: "Surah Muzammil", arabic: "المزمل", ayahs: 200 },
+    { number: 4, name: "Surah Waqi'a", arabic: "الواقعة", ayahs: 96 },
+    { number: 5, name: "Surah Maryam", arabic: "مريم", ayahs: 98 },
+    { number: 6, name: "Surah Mulk", arabic: "الملك", ayahs: 30 },
     // ...add more or fetch dynamically
 ];
 
