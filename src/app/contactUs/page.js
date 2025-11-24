@@ -88,12 +88,25 @@ export default function ContactUs() {
                         <span className="text-gray-400">
                             Bilaspur , Chhattisgarh
                         </span>
+                         <div>
+                   
+                        </div>
+                        
+                    </div>
+                    <div>
+                        <Link
+                            href="/privacy"
+                            className="text-green-400 hover:text-green-300 hover:underline font-semibold transition-colors duration-200"
+                        >
+                            See Privacy Policy →
+                        </Link>
                     </div>
                 </div>
             </section>
 
             {/* Footer Section */}
-            <footer className="mt-10 pt-6 border-t border-gray-600 text-center text-xs w-full">
+            <footer className="mt-10 pt-6 border-t border-gray-600 text-center text-xs w-full space-y-3">
+               
                 <span className="text-gray-400">
                     Developed by{" "}
                     <Link

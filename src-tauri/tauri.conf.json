@@ -26,6 +26,6 @@
     "bundle": {
         "active": true,
         "targets": "all",
-        "icon": ["logo.png"]
+        "icon": ["mosqueLogo.png"]
     }
 }
