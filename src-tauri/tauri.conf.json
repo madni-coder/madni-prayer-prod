@@ -1,7 +1,7 @@
 {
     "$schema": "../node_modules/@tauri-apps/cli/config.schema.json",
     "productName": "raaheHidayat",
-    "version": "0.1.0",
+    "version": "1.1.1",
     "identifier": "com.prayer.madni",
     "build": {
         "frontendDist": "../out",
@@ -24,6 +24,7 @@
         }
     },
     "bundle": {
+        
         "active": true,
         "targets": "all",
         "icon": [
@@ -34,7 +35,8 @@
             "icons/icon.ico"
         ],
         "android": {
-            "minSdkVersion": 24
+            "minSdkVersion": 24,
+            "versionCode":1001
         }
     }
 }

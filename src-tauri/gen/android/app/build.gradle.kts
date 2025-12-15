@@ -22,8 +22,8 @@ android {
         applicationId = "com.prayer.madni"
         minSdk = 24
         targetSdk = 36
-        versionCode = tauriProperties.getProperty("tauri.android.versionCode", "1").toInt()
-        versionName = tauriProperties.getProperty("tauri.android.versionName", "1.0")
+        versionCode = tauriProperties.getProperty("tauri.android.versionCode", "1001").toInt()
+        versionName = tauriProperties.getProperty("tauri.android.versionName", "1.0.1")
     }
     signingConfigs {
         create("release") {
