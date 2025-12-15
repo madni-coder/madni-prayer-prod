@@ -10,11 +10,6 @@ const nextConfig = {
 
     skipTrailingSlashRedirect: true,
 
-    // allow builds to proceed even if ESLint reports errors (useful while fixing hook issues)
-    eslint: {
-        ignoreDuringBuilds: true,
-    },
-
     async rewrites() {
         if (isTauri) {
             return [
