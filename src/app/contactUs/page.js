@@ -110,11 +110,11 @@ export default function ContactUs() {
                 <span className="text-gray-400">
                     Developed by{" "}
                     <Link
-                        href="https://crown-edge-technologies.vercel.app/"
+                        href="https://www.geeksinvention.com/"
                         target="_blank"
                         className="text-green-600 hover:underline font-semibold"
                     >
-                        Crown Edge Technologies
+                        Geeks Invention Pvt Ltd
                     </Link>
                 </span>
             </footer>

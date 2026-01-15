@@ -9,6 +9,7 @@ import {
     FaGift,
     FaMicrophone,
     FaPhoneSquare,
+    FaHandPointRight
 } from "react-icons/fa";
 import { Megaphone } from "lucide-react";
 import Image from "next/image";
@@ -75,9 +76,15 @@ export default function Home() {
                         RAAH-E-HIDAYAT{" "}
                     </span>{" "}
                 </h1>
-                <p className="mt-2 text-lg sm:text-xl text-white-400 max-w-2xl mx-auto">
-                    Your essential companion for daily Islamic practices.
-                </p>
+                <Link
+                    href="/time-table"
+                    className="mt-2 text-lg sm:text-xl max-w-2xl mx-auto inline-block font-semibold px-4 py-2 rounded-lg bg-gradient-to-r from-primary to-secondary text-white shadow-sm hover:shadow-md transform transition-all duration-200 hover:scale-105 cursor-pointer"
+                >
+                    <span className="inline-flex items-center">
+                        <FaHandPointRight className="mr-2 text-xl lg:text-2xl" />
+                        See Ramzan Time Table
+                    </span>
+                </Link>
             </header>
             <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 gap-4 w-full max-w-6xl ">
                 {sections.map((section) => (
