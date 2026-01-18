@@ -11,6 +11,7 @@ const prayers = [
     { name: "Asr", defaultTime: "4:30 pm" },
     { name: "Maghrib", defaultTime: "7:15 pm" },
     { name: "Isha", defaultTime: "8:45 pm" },
+    { name: "Taravih", defaultTime: "9:15 pm" },
     { name: "Juma", defaultTime: "1:30 pm" }, // Added Juma below Isha
 ];
 
@@ -74,7 +75,7 @@ export default function JamatTimesPage() {
                     const uniqueColonies = [
                         ...new Set(
                             masjidsData.data?.map((masjid) => masjid.colony) ||
-                                []
+                            []
                         ),
                     ];
                     setColonies(
@@ -139,6 +140,9 @@ export default function JamatTimesPage() {
                                 break;
                             case "Isha":
                                 value = masjidData.isha;
+                                break;
+                            case "Taravih":
+                                value = masjidData.taravih;
                                 break;
                             case "Juma":
                                 value = masjidData.juma;
@@ -238,6 +242,9 @@ export default function JamatTimesPage() {
                         break;
                     case "Isha":
                         updateData.isha = time;
+                        break;
+                    case "Taravih":
+                        updateData.taravih = time;
                         break;
                     case "Juma":
                         updateData.juma = time;
@@ -429,16 +436,18 @@ export default function JamatTimesPage() {
                                         idx === 0
                                             ? "text-green-600 border-green-400"
                                             : idx === 1
-                                            ? "text-pink-500 border-pink-300"
-                                            : idx === 2
-                                            ? "text-yellow-600 border-yellow-400"
-                                            : idx === 3
-                                            ? "text-red-500 border-red-400"
-                                            : idx === 4
-                                            ? "text-blue-500 border-blue-400"
-                                            : idx === 5
-                                            ? "text-[#8B4513] border-[#8B4513]"
-                                            : "",
+                                                ? "text-pink-500 border-pink-300"
+                                                : idx === 2
+                                                    ? "text-yellow-600 border-yellow-400"
+                                                    : idx === 3
+                                                        ? "text-red-500 border-red-400"
+                                                        : idx === 4
+                                                            ? "text-blue-500 border-blue-400"
+                                                            : idx === 5
+                                                                ? "text-purple-600 border-purple-400"
+                                                                : idx === 6
+                                                                    ? "text-[#8B4513] border-[#8B4513]"
+                                                                    : "",
                                     ].join(" ")}
                                 >
                                     {prayer.name}

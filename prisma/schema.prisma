@@ -24,6 +24,7 @@ model AllMasjid {
   asar       String?
   maghrib    String?
   isha       String?
+  taravih    String?  // Ramadan-specific prayer time
   juma       String?
   name       String?  // optional
   role       String?  // optional

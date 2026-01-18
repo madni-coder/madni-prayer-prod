@@ -5,8 +5,17 @@ import prisma from "../../../../lib/prisma";
 export async function PATCH(request) {
     try {
         const body = await request.json();
-        const { id, masjidName, fazar, zuhar, asar, maghrib, isha, juma } =
-            body;
+        const {
+            id,
+            masjidName,
+            fazar,
+            zuhar,
+            asar,
+            maghrib,
+            isha,
+            taravih,
+            juma,
+        } = body;
 
         // Must provide either id or masjidName to identify the masjid
         if (!id && !masjidName) {
@@ -25,6 +34,7 @@ export async function PATCH(request) {
         if (asar !== undefined) updateData.asar = asar;
         if (maghrib !== undefined) updateData.maghrib = maghrib;
         if (isha !== undefined) updateData.isha = isha;
+        if (taravih !== undefined) updateData.taravih = taravih;
         if (juma !== undefined) updateData.juma = juma;
 
         if (Object.keys(updateData).length === 0) {

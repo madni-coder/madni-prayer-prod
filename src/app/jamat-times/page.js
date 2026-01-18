@@ -166,6 +166,7 @@ export default function JamatTimesPage() {
             asar: selectedMasjidData.asar,
             maghrib: selectedMasjidData.maghrib,
             isha: selectedMasjidData.isha,
+            taravih: selectedMasjidData.taravih,
             juma: selectedMasjidData.juma,
             pasteMapUrl: selectedMasjidData.pasteMapUrl || "",
             savedAt: new Date().toISOString(),
@@ -340,9 +341,8 @@ export default function JamatTimesPage() {
 
         // Build a text query for deep links
         const placeQuery = encodeURIComponent(
-            `${selectedMasjidData?.masjidName || ""} ${
-                selectedMasjidData?.colony || ""
-            } ${selectedMasjidData?.locality || ""}`.trim()
+            `${selectedMasjidData?.masjidName || ""} ${selectedMasjidData?.colony || ""
+                } ${selectedMasjidData?.locality || ""}`.trim()
         );
 
         try {
@@ -357,7 +357,7 @@ export default function JamatTimesPage() {
                     const platform = await os.platform();
                     isiOS = platform === "ios";
                     isAndroid = platform === "android";
-                } catch (_) {}
+                } catch (_) { }
 
                 if (isiOS) {
                     const iosGmaps = `comgooglemaps://?q=${placeQuery}`;
@@ -376,7 +376,7 @@ export default function JamatTimesPage() {
                         try {
                             await openUrl(`google.navigation:q=${placeQuery}`);
                             return;
-                        } catch (_) {}
+                        } catch (_) { }
                     }
                 }
 
@@ -423,6 +423,11 @@ export default function JamatTimesPage() {
                 name: "Isha",
                 time: selectedMasjidData.isha,
                 color: "border-indigo-500",
+            },
+            {
+                name: "Taravih",
+                time: selectedMasjidData.taravih || "—",
+                color: "border-purple-500",
             },
             {
                 name: "Juma Khutba",
@@ -557,11 +562,10 @@ export default function JamatTimesPage() {
                                         filteredMasjids.map((m, idx) => (
                                             <li
                                                 key={m.id}
-                                                className={`px-3 py-2 cursor-pointer hover:bg-primary/10 ${
-                                                    idx === masjidHighlight
+                                                className={`px-3 py-2 cursor-pointer hover:bg-primary/10 ${idx === masjidHighlight
                                                         ? "bg-primary/10"
                                                         : ""
-                                                }`}
+                                                    }`}
                                                 onMouseDown={(ev) =>
                                                     ev.preventDefault()
                                                 }
@@ -651,11 +655,10 @@ export default function JamatTimesPage() {
                                         filteredColonies.map((c, idx) => (
                                             <li
                                                 key={c}
-                                                className={`px-3 py-2 cursor-pointer hover:bg-primary/10 ${
-                                                    idx === colonyHighlight
+                                                className={`px-3 py-2 cursor-pointer hover:bg-primary/10 ${idx === colonyHighlight
                                                         ? "bg-primary/10"
                                                         : ""
-                                                }`}
+                                                    }`}
                                                 onMouseDown={(ev) =>
                                                     ev.preventDefault()
                                                 }
@@ -734,7 +737,7 @@ export default function JamatTimesPage() {
                         <p className="text-sm text-gray-600 dark:text-gray-400 mb-4 font-medium">
                             {savedMasjid?.masjidName ===
                                 selectedMasjidData.masjidName &&
-                            savedMasjid?.colony === selectedMasjidData.colony
+                                savedMasjid?.colony === selectedMasjidData.colony
                                 ? ""
                                 : "Save this masjid details permanently to view Jama'at times"}
                         </p>
@@ -743,23 +746,22 @@ export default function JamatTimesPage() {
                             onClick={saveMasjidToLocalStorage}
                             disabled={
                                 savedMasjid?.masjidName ===
-                                    selectedMasjidData.masjidName &&
+                                selectedMasjidData.masjidName &&
                                 savedMasjid?.colony ===
-                                    selectedMasjidData.colony
+                                selectedMasjidData.colony
                             }
-                            className={`group relative inline-flex items-center gap-3 px-3 py-2 rounded-xl font-bold text-lg shadow-lg transition-all duration-300 transform overflow-hidden ${
-                                savedMasjid?.masjidName ===
+                            className={`group relative inline-flex items-center gap-3 px-3 py-2 rounded-xl font-bold text-lg shadow-lg transition-all duration-300 transform overflow-hidden ${savedMasjid?.masjidName ===
                                     selectedMasjidData.masjidName &&
-                                savedMasjid?.colony ===
+                                    savedMasjid?.colony ===
                                     selectedMasjidData.colony
                                     ? "bg-green-500 text-white cursor-not-allowed opacity-80"
                                     : "bg-gradient-to-r from-primary via-primary to-primary/90 hover:from-primary/90 hover:via-primary hover:to-primary text-white hover:scale-105 hover:shadow-xl active:scale-95"
-                            }`}
+                                }`}
                         >
                             <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-1000"></div>
                             {savedMasjid?.masjidName ===
                                 selectedMasjidData.masjidName &&
-                            savedMasjid?.colony ===
+                                savedMasjid?.colony ===
                                 selectedMasjidData.colony ? (
                                 <Check className="w-6 h-6 relative z-10" />
                             ) : (
@@ -768,7 +770,7 @@ export default function JamatTimesPage() {
                             <span className="relative z-10">
                                 {savedMasjid?.masjidName ===
                                     selectedMasjidData.masjidName &&
-                                savedMasjid?.colony ===
+                                    savedMasjid?.colony ===
                                     selectedMasjidData.colony
                                     ? "Already Saved"
                                     : "Save This Masjid"}
@@ -792,11 +794,10 @@ export default function JamatTimesPage() {
                 {/* Toast Notification */}
                 {showNotification && (
                     <div
-                        className={`fixed bottom-18 right-4 z-[9999] max-w-md animate-slide-in-bottom ${
-                            notificationType === "success"
+                        className={`fixed bottom-18 right-4 z-[9999] max-w-md animate-slide-in-bottom ${notificationType === "success"
                                 ? "bg-green-500"
                                 : "bg-red-500"
-                        } text-white px-6 py-4 rounded-lg shadow-2xl flex items-start gap-3 border-2 border-white/20`}
+                            } text-white px-6 py-4 rounded-lg shadow-2xl flex items-start gap-3 border-2 border-white/20`}
                         style={{
                             animation: "slideInBottom 0.3s ease-out",
                         }}

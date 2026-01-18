@@ -11,6 +11,7 @@ const prayers = [
     { name: "Asr", defaultTime: "4:30 pm" },
     { name: "Maghrib", defaultTime: "7:15 pm" },
     { name: "Isha", defaultTime: "8:45 pm" },
+    { name: "Taravih", defaultTime: "9:15 pm" },
     { name: "Juma", defaultTime: "1:30 pm" },
 ];
 
@@ -70,7 +71,8 @@ export default function AddMasjidPage() {
                 asar: times[2],
                 maghrib: times[3],
                 isha: times[4],
-                juma: times[5],
+                taravih: times[5],
+                juma: times[6],
             };
 
             const res = await fetchFromApi("/api/all-masjids", {
@@ -315,16 +317,18 @@ export default function AddMasjidPage() {
                                                 idx === 0
                                                     ? "text-primary border-primary"
                                                     : idx === 1
-                                                    ? "text-pink-500 border-pink-500"
-                                                    : idx === 2
-                                                    ? "text-warning border-warning"
-                                                    : idx === 3
-                                                    ? "text-error border-error"
-                                                    : idx === 4
-                                                    ? "text-info border-info"
-                                                    : idx === 5
-                                                    ? "text-[#8B4513] border-[#8B4513]"
-                                                    : "",
+                                                        ? "text-pink-500 border-pink-500"
+                                                        : idx === 2
+                                                            ? "text-warning border-warning"
+                                                            : idx === 3
+                                                                ? "text-error border-error"
+                                                                : idx === 4
+                                                                    ? "text-info border-info"
+                                                                    : idx === 5
+                                                                        ? "text-purple-600 border-purple-400"
+                                                                        : idx === 6
+                                                                            ? "text-[#8B4513] border-[#8B4513]"
+                                                                            : "",
                                             ].join(" ")}
                                         >
                                             {prayer.name}
