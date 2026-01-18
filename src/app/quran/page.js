@@ -90,7 +90,9 @@ async function getSurahPdf(surahName) {
     }
 }
 
-export default function Quran() {
+// Kanzul helper removed — use server API to resolve file and debug access
+
+export default function Page() {
     const [search, setSearch] = useState("");
     const [view, setView] = useState("para"); // "para" is now default
     const [files, setFiles] = useState([]); // store API files
@@ -98,6 +100,7 @@ export default function Quran() {
     const [currentPara, setCurrentPara] = useState(null);
     const [currentTitle, setCurrentTitle] = useState("");
     const [readerUrl, setReaderUrl] = useState("");
+    const [currentObjectUrl, setCurrentObjectUrl] = useState(null);
     const router = useRouter();
 
     // keyboard handlers for reader modal + lock body scroll while open
@@ -118,6 +121,19 @@ export default function Quran() {
         };
     }, [showReader]);
 
+    // revoke any created object URL when reader closes
+    useEffect(() => {
+        if (showReader) return;
+        if (currentObjectUrl) {
+            try {
+                URL.revokeObjectURL(currentObjectUrl);
+            } catch (e) {
+                // ignore
+            }
+            setCurrentObjectUrl(null);
+        }
+    }, [showReader, currentObjectUrl]);
+
     // Open reader modal for a surah
     const openSurahReader = async (surah) => {
         try {
@@ -126,13 +142,13 @@ export default function Quran() {
 
             const proxied = isTauri
                 ? `${REMOTE_API_BASE}/api/pdf-proxy?url=${encodeURIComponent(
-                      fileUrl
-                  )}`
+                    fileUrl
+                )}`
                 : `/api/pdf-proxy?url=${encodeURIComponent(fileUrl)}`;
             const viewer = isTauri
                 ? `${REMOTE_API_BASE}/pdf-viewer?file=${encodeURIComponent(
-                      proxied
-                  )}`
+                    proxied
+                )}`
                 : `/pdf-viewer?file=${encodeURIComponent(proxied)}`;
 
             console.log("PDF viewer URLs", { proxied, viewer });
@@ -142,8 +158,7 @@ export default function Quran() {
             setReaderUrl(finalUrl);
             setShowReader(true);
         } catch (error) {
-            console.error("Error opening surah:", error);
-            alert("Error loading surah PDF");
+
         }
     };
 
@@ -155,20 +170,99 @@ export default function Quran() {
         const proxied = `/api/pdf-proxy?url=${encodeURIComponent(urlBase)}`;
         const proxiedFinal = isTauri
             ? `${REMOTE_API_BASE}/api/pdf-proxy?url=${encodeURIComponent(
-                  urlBase
-              )}`
+                urlBase
+            )}`
             : proxied;
-        const viewer = isTauri
-            ? `${REMOTE_API_BASE}/pdf-viewer?file=${encodeURIComponent(
-                  proxiedFinal
-              )}`
-            : `/pdf-viewer?file=${encodeURIComponent(proxiedFinal)}`;
-        console.log("PDF viewer URLs", { proxied: proxiedFinal, viewer });
-        const finalUrl = viewer;
-        setCurrentPara(p.number);
-        setCurrentTitle(`Para ${p.number}`);
-        setReaderUrl(finalUrl);
-        setShowReader(true);
+
+        try {
+            const storageKey = `para_pdf_${p.number}`;
+            const saved = localStorage.getItem(storageKey);
+
+            // If we have a saved base64 PDF, use it to create an object URL
+            if (saved) {
+                try {
+                    const parsed = JSON.parse(saved);
+                    if (parsed && parsed.type === "base64" && parsed.data) {
+                        const byteCharacters = atob(parsed.data.split(",")[1] || parsed.data);
+                        const byteNumbers = new Array(byteCharacters.length);
+                        for (let i = 0; i < byteCharacters.length; i++) {
+                            byteNumbers[i] = byteCharacters.charCodeAt(i);
+                        }
+                        const byteArray = new Uint8Array(byteNumbers);
+                        const blob = new Blob([byteArray], { type: "application/pdf" });
+                        const objUrl = URL.createObjectURL(blob);
+                        setCurrentObjectUrl(objUrl);
+                        const viewer = isTauri
+                            ? `${REMOTE_API_BASE}/pdf-viewer?file=${encodeURIComponent(objUrl)}`
+                            : `/pdf-viewer?file=${encodeURIComponent(objUrl)}`;
+                        setCurrentPara(p.number);
+                        setCurrentTitle(`Para ${p.number}`);
+                        setReaderUrl(viewer);
+                        setShowReader(true);
+                        return;
+                    }
+                } catch (e) {
+                    console.warn("Failed to parse saved para PDF", e);
+                }
+            }
+
+            // Otherwise fetch the proxied PDF and try to save it (if small enough)
+            const resp = await fetch(proxiedFinal);
+            if (!resp.ok) throw new Error("Failed to fetch para PDF");
+            const blob = await resp.blob();
+
+            // Revoke previous object URL (if any) and create a new one so we can display immediately
+            if (currentObjectUrl) {
+                try {
+                    URL.revokeObjectURL(currentObjectUrl);
+                } catch (e) {
+                    // ignore
+                }
+                setCurrentObjectUrl(null);
+            }
+            const objUrl = URL.createObjectURL(blob);
+            setCurrentObjectUrl(objUrl);
+
+            // If blob is small enough (approx < 4.5MB), store as base64 in localStorage (async)
+            const maxSaveBytes = 4.5 * 1024 * 1024; // 4.5 MB
+            if (blob.size <= maxSaveBytes) {
+                const reader = new FileReader();
+                reader.onload = function (e) {
+                    try {
+                        const result = e.target.result; // data:application/pdf;base64,....
+                        const payload = JSON.stringify({ type: "base64", data: result, size: blob.size, savedAt: Date.now() });
+                        try {
+                            localStorage.setItem(storageKey, payload);
+                        } catch (err) {
+                            console.warn("Failed to save para PDF to localStorage", err);
+                        }
+                    } catch (err) {
+                        console.warn("Error converting blob to base64", err);
+                    }
+                };
+                reader.readAsDataURL(blob);
+            } else {
+                // Save metadata with URL for fallback
+                try {
+                    localStorage.setItem(storageKey, JSON.stringify({ type: "url", url: proxiedFinal, size: blob.size, savedAt: Date.now() }));
+                } catch (err) {
+                    // ignore
+                }
+            }
+
+            const viewer = isTauri
+                ? `${REMOTE_API_BASE}/pdf-viewer?file=${encodeURIComponent(objUrl)}`
+                : `/pdf-viewer?file=${encodeURIComponent(objUrl)}`;
+
+            console.log("PDF viewer URLs", { proxied: proxiedFinal, viewer });
+            setCurrentPara(p.number);
+            setCurrentTitle(`Para ${p.number}`);
+            setReaderUrl(viewer);
+            setShowReader(true);
+        } catch (error) {
+            console.error("Error opening para:", error);
+            alert("Error loading para PDF");
+        }
     };
 
     useEffect(() => {
@@ -208,34 +302,31 @@ export default function Quran() {
             <h2 className="text-2xl md:text-3xl font-bold text-primary mb-4">
                 Quran Sharif
             </h2>
-            <div className="glass-card p-6 max-w-2xl w-full bg-base-200 text-base-content">
-                {/* Toggle buttons for Surah/Para */}
+            <div className="glass-card p-8 max-w-4xl w-full bg-base-200 text-base-content pl-4 mx-auto">
+                {/* Toggle buttons for Surah/Para/Kanzul Imaan */}
                 <div className="flex gap-2 mb-4">
                     <button
-                        className={`btn btn-xxl ${
-                            view === "para" ? "btn-primary" : "btn-ghost"
-                        }`}
+                        className={`btn btn-xxl ${view === "para" ? "btn-primary" : "btn-ghost"
+                            }`}
                         onClick={() => setView("para")}
                     >
                         Para (Juz)
                     </button>
                     <button
-                        className={`btn btn-xxl ${
-                            view === "surah" ? "btn-primary" : "btn-ghost"
-                        }`}
+                        className={`btn btn-xxl ${view === "surah" ? "btn-primary" : "btn-ghost"
+                            }`}
                         onClick={() => setView("surah")}
                     >
                         Surah
                     </button>
+                    <button
+                        className={`btn btn-xxl ${view === "kanzul" ? "btn-primary" : "btn-ghost"}`}
+                        onClick={() => setView("kanzul")}
+                    >
+                        Kanzul Imaan
+                    </button>
                 </div>
-                <input
-                    className="input input-bordered w-full mb-4"
-                    placeholder={`Search ${
-                        view === "surah" ? "Surah" : "Para"
-                    } by name, number, or Arabic...`}
-                    value={search}
-                    onChange={(e) => setSearch(e.target.value)}
-                />
+
                 <div
                     className={
                         view === "para"
@@ -243,73 +334,103 @@ export default function Quran() {
                             : "grid grid-cols-1 sm:grid-cols-2 gap-3"
                     }
                 >
-                    {view === "surah"
-                        ? filteredSurahs.map((s) => (
-                              <div
-                                  key={s.number}
-                                  className="neumorph-card p-4 flex flex-col items-center transition hover:scale-105 active:scale-95 hover:shadow-lg active:shadow-md cursor-pointer bg-base-100 border border-base-300"
-                                  onClick={() => openSurahReader(s)}
-                              >
-                                  <span className="text-lg font-bold text-primary">
-                                      {s.number}. {s.name}
-                                  </span>
-                                  <span className="text-2xl mb-1">
-                                      {s.arabic}
-                                  </span>
-                                  <span className="text-xs text-base-content/60">
-                                      Ayahs: {s.ayahs}
-                                  </span>
-                              </div>
-                          ))
-                        : filteredParas.map((p) => {
-                              return (
-                                  <div
-                                      key={p.number}
-                                      className="neumorph-card flex flex-col items-center justify-between transition hover:scale-105 active:scale-95 hover:shadow-lg active:shadow-md cursor-pointer bg-base-100 border border-primary"
-                                      style={{
-                                          minHeight: 140,
-                                          height: 140,
-                                          maxHeight: 140,
-                                          minWidth: 0,
-                                          width: "100%",
-                                          borderRadius: 12,
-                                          position: "relative",
-                                          padding: 12,
-                                      }}
-                                      onClick={() => openReader(p)}
-                                  >
-                                      <div className="w-full flex justify-between items-start">
-                                          <span className="text-base font-bold text-primary">
-                                              {p.number}
-                                          </span>
-                                          {/* Decorative corner, optional */}
-                                          <span
-                                              className="text-xs text-primary"
-                                              style={{ fontFamily: "serif" }}
-                                          >
-                                              ◤
-                                          </span>
-                                      </div>
-                                      <span
-                                          className="text-2xl mb-1 mt-2 text-center text-white"
-                                          style={{ fontWeight: 600 }}
-                                      >
-                                          {p.arabic}
-                                      </span>
-                                      <div className="w-full flex justify-end items-end mt-auto">
-                                          {/* Decorative corner, optional */}
-                                          <span
-                                              className="text-xs text-primary"
-                                              style={{ fontFamily: "serif" }}
-                                          >
-                                              ◢
-                                          </span>
-                                      </div>
-                                  </div>
-                              );
-                          })}
+                    {view === "surah" ? (
+                        filteredSurahs.map((s) => (
+                            <div
+                                key={s.number}
+                                className="neumorph-card p-4 flex flex-col items-center transition hover:scale-105 active:scale-95 hover:shadow-lg active:shadow-md cursor-pointer bg-base-100 border border-base-300"
+                                onClick={() => openSurahReader(s)}
+                            >
+                                <span className="text-lg font-bold text-primary">
+                                    {s.number}. {s.name}
+                                </span>
+                                <span className="text-2xl mb-1">{s.arabic}</span>
+                                <span className="text-xs text-base-content/60">Ayahs: {s.ayahs}</span>
+                            </div>
+                        ))
+                    ) : view === "para" ? (
+                        filteredParas.map((p) => {
+                            return (
+                                <div
+                                    key={p.number}
+                                    className="neumorph-card flex flex-col items-center justify-between transition hover:scale-105 active:scale-95 hover:shadow-lg active:shadow-md cursor-pointer bg-base-100 border border-primary"
+                                    style={{
+                                        minHeight: 140,
+                                        height: 140,
+                                        maxHeight: 140,
+                                        minWidth: 0,
+                                        width: "100%",
+                                        borderRadius: 12,
+                                        position: "relative",
+                                        padding: 12,
+                                    }}
+                                    onClick={() => openReader(p)}
+                                >
+                                    <div className="w-full flex justify-between items-start">
+                                        <span className="text-base font-bold text-primary">{p.number}</span>
+                                        <span className="text-xs text-primary" style={{ fontFamily: "serif" }}>
+                                            ◤
+                                        </span>
+                                    </div>
+                                    <span className="text-2xl mb-1 mt-2 text-center text-white" style={{ fontWeight: 600 }}>
+                                        {p.arabic}
+                                    </span>
+                                    <div className="w-full flex justify-end items-end mt-auto">
+                                        <span className="text-xs text-primary" style={{ fontFamily: "serif" }}>
+                                            ◢
+                                        </span>
+                                    </div>
+                                </div>
+                            );
+                        })
+                    ) : (
+                        <div className="col-span-2 sm:col-span-4 flex justify-center">
+                            <button
+                                className="btn btn-error"
+                                onClick={async () => {
+                                    try {
+                                        const resp = await fetch('/api/kanzul');
+                                        const data = await resp.json();
+
+                                        const rawFileUrl = data.fileUrl || data.publicUrl || data.signedUrl || data.fallback;
+                                        if (!resp.ok) {
+                                            if (rawFileUrl) {
+                                                window.open(rawFileUrl, '_blank', 'noopener');
+                                                return;
+                                            }
+                                            throw new Error(data.error || 'Failed to resolve Kanzul file');
+                                        }
+
+                                        if (!rawFileUrl) throw new Error('No file URL returned from server');
+
+                                        try {
+                                            window.open(rawFileUrl, '_blank', 'noopener');
+                                            return;
+                                        } catch (e) {
+                                            // fallback to proxy viewer below
+                                        }
+
+                                        const proxied = isTauri
+                                            ? `${REMOTE_API_BASE}/api/pdf-proxy?url=${encodeURIComponent(rawFileUrl)}`
+                                            : `/api/pdf-proxy?url=${encodeURIComponent(rawFileUrl)}`;
+                                        const viewer = isTauri
+                                            ? `${REMOTE_API_BASE}/pdf-viewer?file=${encodeURIComponent(proxied)}`
+                                            : `/pdf-viewer?file=${encodeURIComponent(proxied)}`;
+                                        setCurrentTitle('Kanzul Imaan');
+                                        setReaderUrl(viewer);
+                                        setShowReader(true);
+                                    } catch (err) {
+                                        console.error('Failed to open Kanzul Imaan', err);
+                                        alert(err.message || 'Failed to open Kanzul Imaan PDF');
+                                    }
+                                }}
+                            >
+                                Open Kanzul Imaan
+                            </button>
+                        </div>
+                    )}
                     {(view === "surah" && filteredSurahs.length === 0) ||
-                    (view === "para" && filteredParas.length === 0) ? (
+                        (view === "para" && filteredParas.length === 0) ? (
                         <div className="col-span-2 sm:col-span-4 text-center text-base-content/60">
                             No {view === "surah" ? "Surah" : "Para"} found.
                         </div>
@@ -339,9 +460,8 @@ export default function Quran() {
                                 <iframe
                                     src={readerUrl}
                                     className="w-full h-full min-h-0"
-                                    title={`${
-                                        currentTitle || `Para ${currentPara}`
-                                    } preview`}
+                                    title={`${currentTitle || `Para ${currentPara}`
+                                        } preview`}
                                 />
                             </main>
                         </div>
