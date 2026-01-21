@@ -32,7 +32,7 @@ export default function Tasbih() {
         }
         return "";
     });
-    const [showHiddenMessage, setShowHiddenMessage] = useState(false);
+
     // Pagination state
     const [currentPage, setCurrentPage] = useState(1);
     const entriesPerPage = 10;
@@ -99,10 +99,10 @@ export default function Tasbih() {
     });
 
     return (
-        <section className="flex flex-col items-center min-h-screen px-4 py-6 bg-base-100 text-base-content">
+        <section className="flex flex-col items-center min-h-screen px-4 py-1 bg-base-100 text-base-content">
             {/* Header */}
             <button
-                className="flex items-center gap-2 mb-4 text-lg text-primary hover:text-green-600 font-semibold"
+                className="flex items-center gap-2 mb-2 text-lg text-primary hover:text-green-600 font-semibold"
                 onClick={() => router.push("/")}
                 aria-label="Back to Home"
                 style={{ alignSelf: "flex-start" }}
@@ -110,46 +110,16 @@ export default function Tasbih() {
                 <FaAngleLeft /> Back
             </button>
             <div className="w-full max-w-3xl flex items-center gap-2">
-                <h2 className="flex-1 text-xl font-bold">Tasbih</h2>
 
-                <button
-                    className="btn btn-sm btn-primary"
-                    onClick={() => setShowUserModal(true)}
-                    aria-label="Register Durood"
-                >
-                    Submit Durood Sharif
-                </button>
+
             </div>
 
-            {/* Hidden Message Revealer */}
-            <div className="w-full max-w-3xl mt-2">
-                <div className="text-center">
-                    <button
-                        className="text-xs text-primary/60 hover:text-primary underline"
-                        onClick={() => setShowHiddenMessage(!showHiddenMessage)}
-                    >
-                        {showHiddenMessage
-                            ? "Hide Message"
-                            : "Click to view important message"}
-                    </button>
-                    {showHiddenMessage && (
-                        <div className="mt-2 p-3 bg-warning/10 border border-warning/30 rounded-lg text-sm text-warning-content">
-                            <p className="font-medium text-base-content">
-                                Baraye maherbani agar durood sharif submit
-                                karein toh fake counts, fake taps krke submit na
-                                karein, ye galat or najayaz tarika hai, apse
-                                guzarish hy ki jab tasbih par tap karein toh
-                                kuch padh kar hi karein.
-                            </p>
-                        </div>
-                    )}
-                </div>
-            </div>
+            {/* Hidden message removed from page — now shown only in modal */}
 
             {/* Card */}
             {/* Make this entire card respond to pointer and keyboard so taps anywhere increment the counter */}
             <div
-                className="w-full max-w-3xl mt-6 card bg-base-200 shadow-md rounded-2xl p-6 flex flex-col items-center"
+                className="w-full max-w-3xl  card bg-base-200 shadow-md rounded-2xl p-6 flex flex-col items-center"
                 onPointerDown={(e) => {
                     // increment on any pointer (touch/mouse/stylus)
                     increment();
@@ -324,10 +294,28 @@ export default function Tasbih() {
                 }}
                 tasbihCount={count}
                 savedMobile={savedMobile}
+                importantMessage={
+                    <div className="mt-2 p-3 bg-warning/10 border border-warning/30 rounded-lg text-sm text-warning-content">
+                        <p className="font-medium text-base-content">
+                            Baraye maherbani agar durood sharif submit
+                            karein toh fake counts, fake taps krke submit na
+                            karein, ye galat or najayaz tarika hai, apse
+                            guzarish hy ki jab tasbih par tap karein toh
+                            kuch padh kar hi karein.
+                        </p>
+                    </div>
+                }
             />
 
             {/* Durood history list */}
             <div className="w-full max-w-3xl mt-6 mb-14 card bg-base-200 shadow-md rounded-2xl p-6">
+                <button
+                    className="btn btn-sm btn-primary mb-4"
+                    onClick={() => setShowUserModal(true)}
+                    aria-label="Register Durood"
+                >
+                    Submit Durood Sharif
+                </button>
                 <h3 className="text-lg font-bold mb-4 text-primary">
                     <span>Durood History</span>
                     <button
@@ -362,7 +350,7 @@ export default function Tasbih() {
                                             key={
                                                 idx +
                                                 (currentPage - 1) *
-                                                    entriesPerPage
+                                                entriesPerPage
                                             }
                                         >
                                             <td className="align-middle">

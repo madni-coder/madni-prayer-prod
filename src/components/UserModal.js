@@ -5,11 +5,12 @@ import fetchFromApi from "../utils/fetchFromApi";
 
 export default function UserModal({
     open = false,
-    onClose = () => {},
-    onSuccess = () => {},
+    onClose = () => { },
+    onSuccess = () => { },
     tasbihCount = 0,
     // when true, always show the mobile entry step even if saved user data exists
     alwaysShowMobile = false,
+    importantMessage = null,
 }) {
     const fullNameRef = useRef(null);
     const addressRef = useRef(null);
@@ -200,6 +201,15 @@ export default function UserModal({
                     <h3 className="font-bold text-lg text-base-content">
                         Register for Durood Counts
                     </h3>
+
+                    {importantMessage && (
+                        <details className="mt-4">
+                            <summary className="text-sm text-primary/60 hover:text-primary cursor-pointer underline list-none">
+                                Click to view important message
+                            </summary>
+                            <div className="mt-2">{importantMessage}</div>
+                        </details>
+                    )}
 
                     {step === "registered" || step === "submitted" ? (
                         <div className="mt-6 text-center">
