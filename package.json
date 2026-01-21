@@ -19,6 +19,7 @@
         "@prisma/client": "^6.16.2",
         "@supabase/supabase-js": "^2.58.0",
         "@tauri-apps/plugin-opener": "^2.5.0",
+        "@tauri-apps/plugin-os": "^2.3.2",
         "@tiptap/extension-underline": "^3.7.2",
         "@tiptap/pm": "^3.7.2",
         "@tiptap/react": "^3.7.2",
