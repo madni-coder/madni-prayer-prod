@@ -389,33 +389,58 @@ export default function Page() {
                                 className="btn btn-error"
                                 onClick={async () => {
                                     try {
+                                        const storageKey = `kanzul_imaan_pdf`;
+                                        const saved = localStorage.getItem(storageKey);
+
+                                        // If we have a saved base64 PDF, use it to create an object URL
+                                        if (saved) {
+                                            try {
+                                                const parsed = JSON.parse(saved);
+                                                if (parsed && parsed.type === "base64" && parsed.data) {
+                                                    const byteCharacters = atob(parsed.data.split(",")[1] || parsed.data);
+                                                    const byteNumbers = new Array(byteCharacters.length);
+                                                    for (let i = 0; i < byteCharacters.length; i++) {
+                                                        byteNumbers[i] = byteCharacters.charCodeAt(i);
+                                                    }
+                                                    const byteArray = new Uint8Array(byteNumbers);
+                                                    const blob = new Blob([byteArray], { type: "application/pdf" });
+                                                    const objUrl = URL.createObjectURL(blob);
+                                                    setCurrentObjectUrl(objUrl);
+                                                    const viewer = isTauri
+                                                        ? `${REMOTE_API_BASE}/pdf-viewer?file=${encodeURIComponent(objUrl)}`
+                                                        : `/pdf-viewer?file=${encodeURIComponent(objUrl)}`;
+                                                    setCurrentTitle('Kanzul Imaan');
+                                                    setReaderUrl(viewer);
+                                                    setShowReader(true);
+                                                    return;
+                                                }
+                                            } catch (e) {
+                                                console.warn("Failed to parse saved Kanzul Imaan PDF", e);
+                                            }
+                                        }
+
+                                        // Fetch Kanzul Imaan file URL from API
                                         const resp = await fetch('/api/kanzul');
                                         const data = await resp.json();
+                                        console.log('Kanzul API response:', data);
 
                                         const rawFileUrl = data.fileUrl || data.publicUrl || data.signedUrl || data.fallback;
                                         if (!resp.ok) {
-                                            if (rawFileUrl) {
-                                                window.open(rawFileUrl, '_blank', 'noopener');
-                                                return;
-                                            }
                                             throw new Error(data.error || 'Failed to resolve Kanzul file');
                                         }
 
                                         if (!rawFileUrl) throw new Error('No file URL returned from server');
 
-                                        try {
-                                            window.open(rawFileUrl, '_blank', 'noopener');
-                                            return;
-                                        } catch (e) {
-                                            // fallback to proxy viewer below
-                                        }
-
+                                        // Proxy the PDF and use it directly (don't fetch as blob - Kanzul Imaan is too large)
                                         const proxied = isTauri
                                             ? `${REMOTE_API_BASE}/api/pdf-proxy?url=${encodeURIComponent(rawFileUrl)}`
                                             : `/api/pdf-proxy?url=${encodeURIComponent(rawFileUrl)}`;
+
                                         const viewer = isTauri
                                             ? `${REMOTE_API_BASE}/pdf-viewer?file=${encodeURIComponent(proxied)}`
                                             : `/pdf-viewer?file=${encodeURIComponent(proxied)}`;
+
+                                        console.log("Kanzul Imaan PDF viewer URLs", { proxied, viewer });
                                         setCurrentTitle('Kanzul Imaan');
                                         setReaderUrl(viewer);
                                         setShowReader(true);
