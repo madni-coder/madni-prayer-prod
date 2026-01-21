@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 // Build Kanzul Imaan public URL using NEXT_PUBLIC_SUPABASE_URL (matches api-quran pattern)
 
 export const runtime = "nodejs";
+export const dynamic = "force-static";
 
 export async function GET() {
     try {
