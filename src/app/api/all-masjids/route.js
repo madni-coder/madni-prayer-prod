@@ -179,10 +179,26 @@ export async function GET(request) {
         if (masjid)
             where.masjidName = { contains: masjid, mode: "insensitive" };
 
-        const data = await prisma.allMasjid.findMany({
-            where,
-            orderBy: { id: "desc" },
-        });
+        let data;
+        try {
+            data = await prisma.allMasjid.findMany({
+                where,
+                orderBy: { id: "desc" },
+            });
+        } catch (err) {
+            // Handle missing column / schema drift gracefully
+            if (err?.code === "P2022") {
+                console.error("Prisma schema mismatch (missing column):", err.meta || err);
+                return NextResponse.json(
+                    {
+                        error:
+                            "Database schema mismatch: some columns are missing. Please run migrations or sync the database.",
+                    },
+                    { status: 500 }
+                );
+            }
+            throw err;
+        }
 
         return NextResponse.json({ data, count: data.length });
     } catch (err) {

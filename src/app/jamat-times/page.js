@@ -349,39 +349,57 @@ export default function JamatTimesPage() {
             const isTauri = process.env.NEXT_PUBLIC_TAURI_BUILD;
 
             if (isTauri) {
-                const { openUrl } = await import("@tauri-apps/plugin-opener");
+                const openerModule = "@tauri-apps/plugin-opener";
+                const osModule = "@tauri-apps/plugin-os";
+                let openUrl;
+
+                try {
+                    const opener = await new Function("m", "return import(m)")(openerModule);
+                    openUrl = opener.openUrl || opener.default?.openUrl;
+                } catch (e) {
+                    console.warn("Tauri opener plugin not available:", e);
+                }
+
                 let isiOS = false;
                 let isAndroid = false;
                 try {
-                    const os = await import("@tauri-apps/plugin-os");
-                    const platform = await os.platform();
-                    isiOS = platform === "ios";
-                    isAndroid = platform === "android";
+                    if (typeof window !== "undefined" && window.__TAURI__) {
+                        const os = await new Function("m", "return import(m)")(osModule);
+                        const platform = await os.platform();
+                        isiOS = platform === "ios";
+                        isAndroid = platform === "android";
+                    }
                 } catch (_) { }
 
-                if (isiOS) {
-                    const iosGmaps = `comgooglemaps://?q=${placeQuery}`;
-                    try {
-                        await openUrl(iosGmaps);
-                        return;
-                    } catch (_) {
-                        // Fall through to HTTPS
-                    }
-                } else if (isAndroid) {
-                    const androidGeo = `geo:0,0?q=${placeQuery}`;
-                    try {
-                        await openUrl(androidGeo);
-                        return;
-                    } catch (_) {
+                if (openUrl) {
+                    if (isiOS) {
+                        const iosGmaps = `comgooglemaps://?q=${placeQuery}`;
                         try {
-                            await openUrl(`google.navigation:q=${placeQuery}`);
+                            await openUrl(iosGmaps);
                             return;
-                        } catch (_) { }
+                        } catch (_) {
+                            // Fall through to HTTPS
+                        }
+                    } else if (isAndroid) {
+                        const androidGeo = `geo:0,0?q=${placeQuery}`;
+                        try {
+                            await openUrl(androidGeo);
+                            return;
+                        } catch (_) {
+                            try {
+                                await openUrl(`google.navigation:q=${placeQuery}`);
+                                return;
+                            } catch (_) { }
+                        }
+                    }
+
+                    try {
+                        await openUrl(httpUrl);
+                        return;
+                    } catch (e) {
+                        console.warn("Tauri openUrl failed, falling back:", e);
                     }
                 }
-
-                await openUrl(httpUrl);
-                return;
             }
 
             window.open(httpUrl, "_blank", "noopener,noreferrer");
@@ -563,8 +581,8 @@ export default function JamatTimesPage() {
                                             <li
                                                 key={m.id}
                                                 className={`px-3 py-2 cursor-pointer hover:bg-primary/10 ${idx === masjidHighlight
-                                                        ? "bg-primary/10"
-                                                        : ""
+                                                    ? "bg-primary/10"
+                                                    : ""
                                                     }`}
                                                 onMouseDown={(ev) =>
                                                     ev.preventDefault()
@@ -656,8 +674,8 @@ export default function JamatTimesPage() {
                                             <li
                                                 key={c}
                                                 className={`px-3 py-2 cursor-pointer hover:bg-primary/10 ${idx === colonyHighlight
-                                                        ? "bg-primary/10"
-                                                        : ""
+                                                    ? "bg-primary/10"
+                                                    : ""
                                                     }`}
                                                 onMouseDown={(ev) =>
                                                     ev.preventDefault()
@@ -751,11 +769,11 @@ export default function JamatTimesPage() {
                                 selectedMasjidData.colony
                             }
                             className={`group relative inline-flex items-center gap-3 px-3 py-2 rounded-xl font-bold text-lg shadow-lg transition-all duration-300 transform overflow-hidden ${savedMasjid?.masjidName ===
-                                    selectedMasjidData.masjidName &&
-                                    savedMasjid?.colony ===
-                                    selectedMasjidData.colony
-                                    ? "bg-green-500 text-white cursor-not-allowed opacity-80"
-                                    : "bg-gradient-to-r from-primary via-primary to-primary/90 hover:from-primary/90 hover:via-primary hover:to-primary text-white hover:scale-105 hover:shadow-xl active:scale-95"
+                                selectedMasjidData.masjidName &&
+                                savedMasjid?.colony ===
+                                selectedMasjidData.colony
+                                ? "bg-green-500 text-white cursor-not-allowed opacity-80"
+                                : "bg-gradient-to-r from-primary via-primary to-primary/90 hover:from-primary/90 hover:via-primary hover:to-primary text-white hover:scale-105 hover:shadow-xl active:scale-95"
                                 }`}
                         >
                             <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-1000"></div>
@@ -795,8 +813,8 @@ export default function JamatTimesPage() {
                 {showNotification && (
                     <div
                         className={`fixed bottom-18 right-4 z-[9999] max-w-md animate-slide-in-bottom ${notificationType === "success"
-                                ? "bg-green-500"
-                                : "bg-red-500"
+                            ? "bg-green-500"
+                            : "bg-red-500"
                             } text-white px-6 py-4 rounded-lg shadow-2xl flex items-start gap-3 border-2 border-white/20`}
                         style={{
                             animation: "slideInBottom 0.3s ease-out",
