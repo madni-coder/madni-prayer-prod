@@ -420,7 +420,10 @@ export default function Page() {
                                         }
 
                                         // Fetch Kanzul Imaan file URL from API
-                                        const resp = await fetch('/api/kanzul');
+                                        const apiUrl = isTauri
+                                            ? `${REMOTE_API_BASE}/api/kanzul`
+                                            : '/api/kanzul';
+                                        const resp = await fetch(apiUrl);
                                         const data = await resp.json();
                                         console.log('Kanzul API response:', data);
 
