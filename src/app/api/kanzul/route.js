@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 
 export const runtime = "nodejs";
-export const dynamic = "force-dynamic";
+export const dynamic = "force-static";
 
 export async function GET() {
     try {
@@ -28,18 +28,8 @@ export async function GET() {
             );
         }
 
-        const contentType = upstream.headers.get("content-type") || "";
-        if (contentType.includes("application/pdf")) {
-            return new Response(upstream.body, {
-                status: 200,
-                headers: {
-                    "Content-Type": "application/pdf",
-                    "Content-Disposition": `inline; filename="${fileName}"`,
-                },
-            });
-        }
-
-        // Fallback: return the public URL as JSON (if upstream isn't a pdf)
+        // If upstream returned a valid file (PDF), return the public file URL as JSON
+        // so the client can safely call `resp.json()` and proxy the PDF separately.
         return NextResponse.json({ success: true, fileName, fileUrl });
     } catch (err) {
         return NextResponse.json({ error: err.message || String(err) }, { status: 500 });
