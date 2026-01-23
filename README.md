@@ -6,12 +6,12 @@ First, run the development server:
 
 ```bash
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+
+# build the app
+npm run tauri ios build
+
+# open the project on xcode
+npm run tauri ios dev --open
 ```
 
 Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.

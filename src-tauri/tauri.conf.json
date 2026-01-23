@@ -24,7 +24,6 @@
         }
     },
     "bundle": {
-        
         "active": true,
         "targets": "all",
         "icon": [
@@ -36,7 +35,10 @@
         ],
         "android": {
             "minSdkVersion": 24,
-            "versionCode":1001
+            "versionCode": 1001
+        },
+        "iOS": {
+            "developmentTeam": "D2TWM3W54N"
         }
     }
 }
