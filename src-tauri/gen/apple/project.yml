@@ -40,7 +40,8 @@ targets:
             properties:
                 LSRequiresIPhoneOS: true
                 UILaunchStoryboardName: LaunchScreen
-                UIRequiredDeviceCapabilities: [arm64, metal]
+                # Do not require 'arm64' here — that can hide simulators on some Macs
+                UIRequiredDeviceCapabilities: [metal]
                 UISupportedInterfaceOrientations:
                     - UIInterfaceOrientationPortrait
                     - UIInterfaceOrientationLandscapeLeft
@@ -67,8 +68,8 @@ targets:
                 LIBRARY_SEARCH_PATHS[arch=x86_64]: $(inherited) $(PROJECT_DIR)/Externals/x86_64/$(CONFIGURATION) $(SDKROOT)/usr/lib/swift $(TOOLCHAIN_DIR)/usr/lib/swift/$(PLATFORM_NAME) $(TOOLCHAIN_DIR)/usr/lib/swift-5.0/$(PLATFORM_NAME)
                 LIBRARY_SEARCH_PATHS[arch=arm64]: $(inherited) $(PROJECT_DIR)/Externals/arm64/$(CONFIGURATION) $(SDKROOT)/usr/lib/swift $(TOOLCHAIN_DIR)/usr/lib/swift/$(PLATFORM_NAME) $(TOOLCHAIN_DIR)/usr/lib/swift-5.0/$(PLATFORM_NAME)
                 ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES: true
-                EXCLUDED_ARCHS[sdk=iphoneos*]: x86_64
-                EXCLUDED_ARCHS[sdk=iphonesimulator*]: x86_64
+                # Remove excluded simulator arch to allow simulators on Intel/Apple Silicon
+                # (Previously excluded x86_64 for iphonesimulator which can hide simulators.)
             groups: [app]
         dependencies:
             - framework: libapp.a

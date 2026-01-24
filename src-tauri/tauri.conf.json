@@ -5,7 +5,7 @@
     "identifier": "com.prayer.madni",
     "build": {
         "frontendDist": "../out",
-        "devUrl": "https://madni-prayer.vercel.app/",
+        "devUrl": "http://localhost:3000/",
         "beforeDevCommand": "npm run dev",
         "beforeBuildCommand": "npm run build:tauri"
     },
