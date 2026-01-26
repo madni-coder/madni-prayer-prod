@@ -38,6 +38,7 @@ const navLinks = [
         href: "/tasbih",
         icon: <TasbihSvgIcon className="w-6 h-6" />,
     },
+    { name: "Zikr", href: "/zikr", icon: <img src="/iconZikr.png" alt="Zikr" className="w-6 h-6 object-contain bg-white rounded-full p-0.5" /> },
     { name: "Rewards", href: "/rewards", icon: <FaGift className="text-lg" /> },
     {
         name: "Aelaan Naama",
@@ -99,9 +100,8 @@ export default function TopNav() {
     return (
         <nav
             data-app-top-nav
-            className={`${
-                isNotice ? "relative w-full" : "sticky top-0 z-50"
-            } bg-base-100 backdrop-blur border-b border-base-300 shadow-sm`}
+            className={`${isNotice ? "relative w-full" : "sticky top-0 z-50"
+                } bg-base-100 backdrop-blur border-b border-base-300 shadow-sm`}
         >
             <div className="max-w-5xl mx-auto flex items-center justify-between px-4 py-2 mt-10">
                 <div className="flex items-center gap-2">
@@ -120,10 +120,9 @@ export default function TopNav() {
                             <a
                                 href={link.href}
                                 className={`flex items-center gap-1 xl:gap-2 px-2 xl:px-4 py-2 rounded-lg text-xs xl:text-sm font-medium text-base-content hover:bg-primary hover:text-primary-content transition-all duration-200 transform hover:scale-105
-                                    ${
-                                        pathname === link.href
-                                            ? "bg-primary text-primary-content shadow-md"
-                                            : ""
+                                    ${pathname === link.href
+                                        ? "bg-primary text-primary-content shadow-md"
+                                        : ""
                                     }
                                 `}
                             >
@@ -162,9 +161,8 @@ export default function TopNav() {
                             stroke="currentColor"
                             strokeWidth="2"
                             viewBox="0 0 24 24"
-                            className={`transition-transform duration-500 transform ${
-                                mobileOpen ? "rotate-180 scale-110" : ""
-                            }`}
+                            className={`transition-transform duration-500 transform ${mobileOpen ? "rotate-180 scale-110" : ""
+                                }`}
                         >
                             <path d="M4 6h16M4 12h16M4 18h16" />
                         </svg>
@@ -207,10 +205,9 @@ export default function TopNav() {
                                     <a
                                         href={link.href}
                                         className={`text-base-content hover:bg-primary hover:text-primary-content transition-all duration-300 transform hover:scale-105 hover:translate-x-2 rounded-xl py-3 px-4 mb-1 relative overflow-hidden
-                                            ${
-                                                pathname === link.href
-                                                    ? "bg-primary text-primary-content font-bold shadow-md"
-                                                    : ""
+                                            ${pathname === link.href
+                                                ? "bg-primary text-primary-content font-bold shadow-md"
+                                                : ""
                                             }`}
                                         onClick={() => setMobileOpen(false)}
                                     >
