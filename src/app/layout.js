@@ -2,6 +2,7 @@ import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import TopNav from "./TopNav";
 import BottomNav from "./BottomNav";
+import IosClassSetter from "./IosClassSetter.client";
 
 const geistSans = Geist({
     variable: "--font-geist-sans",
@@ -25,6 +26,8 @@ export default function RootLayout({ children }) {
                 className={`${geistSans.variable} ${geistMono.variable} antialiased`}
             >
                 <TopNav />
+
+                <IosClassSetter />
 
                 {children}
 

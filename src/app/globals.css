@@ -69,3 +69,72 @@ html[data-hide-navs="1"] [data-app-top-nav] {
         transform: translateX(100%);
     }
 }
+
+/* iOS-specific: reduce extra top/bottom padding, APPLIED ONLY when
+   `html.is-ios` is present (set by a small client script). This avoids
+   affecting Android views which shouldn't receive these overrides. */
+@supports (padding: env(safe-area-inset-bottom)) {
+    html.is-ios {
+        --ios-safe-top: env(safe-area-inset-top, 10px);
+        --ios-safe-bottom: env(safe-area-inset-bottom, 0px);
+    }
+
+    /* Reduce global body insets by half (adjust factor if needed) */
+    html.is-ios,
+    html.is-ios body {
+        padding-top: calc(var(--ios-safe-top) * 0.5) !important;
+        padding-bottom: calc(var(--ios-safe-bottom) * 0.5) !important;
+    }
+
+    /* If your app uses sticky top/bottom nav containers, reduce their
+       padding too so navs sit closer to edges on iOS only. */
+    html.is-ios [data-app-top-nav] {
+        padding-top: calc(var(--ios-safe-top) * 0.5) !important;
+    }
+    html.is-ios [data-app-bottom-nav] {
+        padding-bottom: calc(var(--ios-safe-bottom)) !important;
+    }
+}
+
+/* Stronger overrides for components that add extra visual spacing on iOS.
+   These override Tailwind `mt-10` and fixed `h-16` sizing where necessary.
+   Use `constant()` as an additional fallback for older iOS WebViews. */
+@supports (padding: env(safe-area-inset-top)) {
+    html.is-ios {
+        --ios-safe-top: env(safe-area-inset-top, 0px);
+        --ios-safe-bottom: env(safe-area-inset-bottom, 0px);
+        --ios-safe-top-legacy: constant(safe-area-inset-top, 0px);
+        --ios-safe-bottom-legacy: constant(safe-area-inset-bottom, 0px);
+    }
+
+    /* Reduce the margin inside the top nav that uses `mt-10` in JSX. */
+    html.is-ios nav[data-app-top-nav] > div {
+        margin-top: calc(
+            8px + min(var(--ios-safe-top), var(--ios-safe-top-legacy)) * 0.25
+        ) !important;
+        padding-top: calc(
+            min(var(--ios-safe-top), var(--ios-safe-top-legacy)) * 0.25
+        ) !important;
+    }
+
+    /* Bring bottom nav closer to the screen edge while still reserving
+       a small amount for the home indicator. */
+    html.is-ios nav[data-app-bottom-nav] {
+        padding-bottom: calc(
+            min(var(--ios-safe-bottom), var(--ios-safe-bottom-legacy)) * 0.25
+        ) !important;
+        height: calc(
+            4rem +
+                (
+                    min(var(--ios-safe-bottom), var(--ios-safe-bottom-legacy)) *
+                        0.25
+                )
+        ) !important;
+    }
+
+    /* If there are any elements that apply large top margins globally,
+       clamp them on iOS to avoid excessive spacing (safe fallback). */
+    html.is-ios .mt-10 {
+        margin-top: calc(2.5rem * 0.6) !important;
+    }
+}
