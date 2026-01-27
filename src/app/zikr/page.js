@@ -148,12 +148,14 @@ export default function Page() {
     async function submitCountsForRegistered(mobile) {
         setIsSubmitting(true);
         try {
+            // Save zikr to database
+            await saveZikrToDatabase();
+
             const payload = {
                 "mobile number": mobile,
                 tasbihCount: Number(count),
                 weeklyCounts: Number(count),
             };
-            const res = await fetchFromApi(`/api/api-tasbihUsers`, "POST", payload);
             const data = await res.json();
 
             if (data?.errors) {
@@ -168,7 +170,8 @@ export default function Page() {
 
             localStorage.setItem("userMobile", mobile);
             setSavedMobile(mobile);
-            addHistoryEntry();
+            // We already saved to DB above, avoid saving again in addHistoryEntry
+            addHistoryEntry(true);
             showToast({ type: "success", text: "Zikr count submitted." });
         } catch (err) {
             showToast({ type: "error", text: "Unable to submit right now. Please try again." });
@@ -177,7 +180,46 @@ export default function Page() {
         }
     }
 
-    function addHistoryEntry() {
+    async function saveZikrToDatabase() {
+        try {
+            const response = await fetch('/api/api-zikr', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    zikrType: selected,
+                    zikrCounts: Number(count),
+                }),
+            });
+
+            if (!response.ok) {
+                const error = await response.json();
+                throw new Error(error.error || 'Failed to save zikr');
+            }
+
+            const result = await response.json();
+            console.log('Zikr saved successfully:', result);
+            return result;
+        } catch (error) {
+            console.error('Error saving zikr to database:', error);
+            showToast({ type: 'error', text: 'Failed to save zikr to database' });
+            throw error;
+        }
+    }
+
+    async function addHistoryEntry(skipDb = false) {
+        // Save to database unless caller indicates it's already saved
+        if (!skipDb) {
+            try {
+                await saveZikrToDatabase();
+            } catch (error) {
+                // Error already handled in saveZikrToDatabase
+                return;
+            }
+        }
+
+        // Add to local history
         const newEntry = {
             zikr: selected,
             count: Number(count),

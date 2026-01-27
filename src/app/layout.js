@@ -31,7 +31,7 @@ export default function RootLayout({ children }) {
 
                 {children}
 
-                <BottomNav />
+                {/* <BottomNav /> */}
             </body>
         </html>
     );
