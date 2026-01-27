@@ -23,6 +23,8 @@ export default function UserModal({
     const [savedMobile, setSavedMobile] = useState("");
     const [mobileValue, setMobileValue] = useState("");
     const [userData, setUserData] = useState(null);
+    const [fullName, setFullName] = useState("");
+    const [address, setAddress] = useState("");
 
     useEffect(() => {
         // Debug: log when the parent toggles the modal
@@ -68,37 +70,46 @@ export default function UserModal({
         setStep("mobile");
         setMobileValue("");
         setUserData(null);
+        setFullName("");
+        setAddress("");
     }
 
     async function handleSubmit(e) {
         e.preventDefault();
         setError(null);
         setLoading(true);
-        // Validate mobile number for mobile step and review step
-        if (
-            (step === "mobile" && !/^\d{10}$/.test(mobileValue.trim())) ||
-            (step === "review" &&
-                (!userData?.mobile || !/^\d{10}$/.test(userData.mobile)))
-        ) {
+
+        // If on mobile step, just validate and move to details step
+        if (step === "mobile") {
+            if (!/^\d{10}$/.test(mobileValue.trim())) {
+                setError("Mobile number must be exactly 10 digits.");
+                setLoading(false);
+                return;
+            }
+            // Move to details step to collect full name and address
+            setSavedMobile(mobileValue.trim());
+            setStep("details");
+            setLoading(false);
+            return;
+        }
+
+        // Validate mobile number for review step
+        if (step === "review" && (!userData?.mobile || !/^\d{10}$/.test(userData.mobile))) {
             setError("Mobile number must be exactly 10 digits.");
             setLoading(false);
             return;
         }
+
         try {
             let payload;
-            if (step === "mobile") {
-                payload = {
-                    "mobile number": mobileValue.trim(),
-                    tasbihCount: tasbihCount,
-                    weeklyCounts: tasbihCount,
-                };
-            } else if (step === "review") {
+            if (step === "review") {
                 payload = {
                     "mobile number": userData.mobile,
                     tasbihCount: tasbihCount,
                     weeklyCounts: tasbihCount,
                 };
             } else {
+                // step === "details" - registering new user
                 payload = {
                     "Full Name": fullNameRef.current?.value?.trim(),
                     Address: addressRef.current?.value?.trim(),
@@ -113,19 +124,13 @@ export default function UserModal({
                 payload
             );
             const data = await res.json();
-            if (data.error === "NOT_REGISTERED") {
-                setStep("details");
-                setSavedMobile(mobileValue.trim());
-                setError(null);
-                setLoading(false);
-                return;
-            }
+
             if (data.error === "REGISTERED_USER") {
                 setStep("registered");
                 setError(null);
                 setLoading(false);
                 // Show the registered message briefly, then notify parent with mobile and close
-                const registeredMobile = mobileValue.trim() || userData?.mobile;
+                const registeredMobile = userData?.mobile || savedMobile;
                 setTimeout(() => {
                     onSuccess({ mobile: registeredMobile });
                 }, 1500);
@@ -203,7 +208,7 @@ export default function UserModal({
                         {pageType === "zikr" ? "Register for Zikr Counts" : "Register for Durood Counts"}
                     </h3>
 
-                    {importantMessage && (
+                    {importantMessage && !["registered", "submitted"].includes(step) && (
                         <details className="mt-2">
                             <summary className="text-xs text-primary/60 hover:text-primary cursor-pointer underline list-none">
                                 Click to view important message
@@ -342,23 +347,7 @@ export default function UserModal({
                                         "Confirm & Submit"
                                     )}
                                 </button>
-                                <button
-                                    type="button"
-                                    className="btn btn-outline btn-ghost btn-sm sm:flex-1 border-base-content/20"
-                                    onClick={() => {
-                                        // Clear localStorage and start fresh
-                                        if (typeof window !== "undefined") {
-                                            localStorage.removeItem(
-                                                "userRegistrationData"
-                                            );
-                                        }
-                                        setUserData(null);
-                                        setMobileValue("");
-                                        setStep("mobile");
-                                    }}
-                                >
-                                    Use Different Number
-                                </button>
+
                             </div>{" "}
                             {error && (
                                 <div className="alert alert-error shadow-sm py-2">
@@ -437,8 +426,29 @@ export default function UserModal({
                                     <div className="alert alert-success shadow-sm py-2">
                                         <BookUser size={18} />
                                         <span className="text-sm">
-                                            Add Details for your registration
+                                            Complete your registration
                                         </span>
+                                    </div>
+
+                                    <div className="form-control w-full">
+                                        <label className="label py-1">
+                                            <span className="label-text text-sm font-medium">
+                                                Mobile Number
+                                            </span>
+                                        </label>
+                                        <div className="relative">
+                                            <Phone
+                                                className="absolute left-3 top-1/2 -translate-y-1/2 text-base-content z-10 pointer-events-none"
+                                                size={16}
+                                                aria-hidden="true"
+                                            />
+                                            <input
+                                                type="text"
+                                                value={savedMobile}
+                                                disabled
+                                                className="input input-bordered input-sm w-full pl-10 bg-base-200"
+                                            />
+                                        </div>
                                     </div>
 
                                     <div className="form-control w-full">
@@ -459,6 +469,9 @@ export default function UserModal({
                                                 type="text"
                                                 placeholder="Enter your full name"
                                                 className="input input-bordered input-sm w-full pl-10"
+                                                value={fullName}
+                                                onChange={(e) => setFullName(e.target.value)}
+                                                required
                                             />
                                         </div>
                                     </div>
@@ -480,6 +493,9 @@ export default function UserModal({
                                                 type="text"
                                                 placeholder="Enter your address"
                                                 className="input input-bordered input-sm w-full pl-10"
+                                                value={address}
+                                                onChange={(e) => setAddress(e.target.value)}
+                                                required
                                             />
                                         </div>
                                     </div>
@@ -521,16 +537,20 @@ export default function UserModal({
                                     disabled={
                                         loading ||
                                         (step === "mobile" &&
-                                            mobileValue.trim().length === 0)
+                                            mobileValue.trim().length === 0) ||
+                                        (step === "details" &&
+                                            (!fullName.trim() || !address.trim()))
                                     }
                                 >
                                     {loading ? (
                                         <>
                                             <span className="loading loading-spinner loading-xs"></span>
-                                            Saving...
+                                            {step === "details" ? "Registering..." : "Loading..."}
                                         </>
                                     ) : step === "mobile" ? (
                                         "Next"
+                                    ) : step === "details" ? (
+                                        "Register"
                                     ) : (
                                         "Save"
                                     )}

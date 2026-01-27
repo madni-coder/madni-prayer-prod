@@ -4,6 +4,7 @@ import { createPortal } from "react-dom";
 import { FaAngleLeft } from "react-icons/fa";
 import { useRouter } from "next/navigation";
 import UserModal from "../../components/UserModal";
+import fetchFromApi from "../../utils/fetchFromApi";
 
 const ZIKR_OPTIONS = [
     "Surah Yaseen",
@@ -21,6 +22,7 @@ export default function Page() {
     const [count, setCount] = useState("");
     const [toast, setToast] = useState(null);
     const [isModalOpen, setIsModalOpen] = useState(false);
+    const [isSubmitting, setIsSubmitting] = useState(false);
     const [history, setHistory] = useState(() => {
         if (typeof window !== "undefined") {
             const saved = localStorage.getItem("zikrHistory");
@@ -91,6 +93,7 @@ export default function Page() {
     function handleSubmit(e) {
         e?.preventDefault();
         setToast(null);
+        if (isSubmitting) return;
         const num = Number(count);
         if (!selected) {
             showToast({ type: "error", text: "Please select a Zikr option." });
@@ -101,7 +104,21 @@ export default function Page() {
             return;
         }
 
-        // Open the modal instead of just showing a toast
+        const savedDataRaw = typeof window !== "undefined" ? localStorage.getItem("userRegistrationData") : null;
+        const savedMobileOnly = typeof window !== "undefined" ? localStorage.getItem("userMobile") : null;
+        let savedData = null;
+        try {
+            savedData = savedDataRaw ? JSON.parse(savedDataRaw) : null;
+        } catch (err) {
+            savedData = null;
+        }
+
+        const registeredMobile = savedData?.mobile || savedMobileOnly;
+        if (registeredMobile && /^\d{10}$/.test(registeredMobile)) {
+            submitCountsForRegistered(registeredMobile);
+            return;
+        }
+
         setIsModalOpen(true);
     }
 
@@ -120,7 +137,47 @@ export default function Page() {
         }
         setIsModalOpen(false);
 
-        // Capture current zikr data for history
+        addHistoryEntry();
+    }
+
+    function handleModalClose() {
+        // Called when user closes the modal without submitting
+        setIsModalOpen(false);
+    }
+
+    async function submitCountsForRegistered(mobile) {
+        setIsSubmitting(true);
+        try {
+            const payload = {
+                "mobile number": mobile,
+                tasbihCount: Number(count),
+                weeklyCounts: Number(count),
+            };
+            const res = await fetchFromApi(`/api/api-tasbihUsers`, "POST", payload);
+            const data = await res.json();
+
+            if (data?.errors) {
+                showToast({ type: "error", text: data.errors.join(". ") });
+                return;
+            }
+
+            if (!res.ok && data?.error !== "REGISTERED_USER") {
+                showToast({ type: "error", text: "Unable to submit right now. Please try again." });
+                return;
+            }
+
+            localStorage.setItem("userMobile", mobile);
+            setSavedMobile(mobile);
+            addHistoryEntry();
+            showToast({ type: "success", text: "Zikr count submitted." });
+        } catch (err) {
+            showToast({ type: "error", text: "Unable to submit right now. Please try again." });
+        } finally {
+            setIsSubmitting(false);
+        }
+    }
+
+    function addHistoryEntry() {
         const newEntry = {
             zikr: selected,
             count: Number(count),
@@ -129,15 +186,8 @@ export default function Page() {
             time: new Date().toLocaleTimeString(),
         };
         setHistory((prev) => [newEntry, ...prev]);
-
-        // Reset form
         setSelected("");
         setCount("");
-    }
-
-    function handleModalClose() {
-        // Called when user closes the modal without submitting
-        setIsModalOpen(false);
     }
 
     return (
@@ -209,8 +259,19 @@ export default function Page() {
                         </div>
 
                         <div className="flex items-end justify-end">
-                            <button className="btn btn-primary w-full sm:w-auto" type="submit">
-                                Submit
+                            <button
+                                className="btn btn-primary w-full sm:w-auto"
+                                type="submit"
+                                disabled={isSubmitting}
+                            >
+                                {isSubmitting ? (
+                                    <>
+                                        <span className="loading loading-spinner loading-sm"></span>
+                                        Submitting
+                                    </>
+                                ) : (
+                                    "Submit"
+                                )}
                             </button>
                         </div>
                     </div>
