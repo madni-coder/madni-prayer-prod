@@ -3,6 +3,7 @@ import React, { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
 import { FaAngleLeft } from "react-icons/fa";
 import { useRouter } from "next/navigation";
+import UserModal from "../../components/UserModal";
 
 const ZIKR_OPTIONS = [
     "Surah Yaseen",
@@ -19,6 +20,32 @@ export default function Page() {
     const [selected, setSelected] = useState("");
     const [count, setCount] = useState("");
     const [toast, setToast] = useState(null);
+    const [isModalOpen, setIsModalOpen] = useState(false);
+    const [history, setHistory] = useState(() => {
+        if (typeof window !== "undefined") {
+            const saved = localStorage.getItem("zikrHistory");
+            return saved ? JSON.parse(saved) : [];
+        }
+        return [];
+    });
+    const [savedMobile, setSavedMobile] = useState(() => {
+        if (typeof window !== "undefined") {
+            return localStorage.getItem("userMobile") || "";
+        }
+        return "";
+    });
+
+    // Pagination state
+    const [currentPage, setCurrentPage] = useState(1);
+    const entriesPerPage = 6;
+    const totalPages = Math.ceil(history.length / entriesPerPage);
+    const paginatedHistory = history.slice(
+        (currentPage - 1) * entriesPerPage,
+        currentPage * entriesPerPage
+    );
+    // Clear history confirmation modal
+    const [showClearHistoryConfirm, setShowClearHistoryConfirm] =
+        useState(false);
 
     useEffect(() => {
         const saved = typeof window !== "undefined" && localStorage.getItem("theme");
@@ -32,6 +59,13 @@ export default function Page() {
             return () => mq.removeEventListener && mq.removeEventListener("change", onChange);
         }
     }, []);
+
+    // Sync history to localStorage whenever it changes
+    useEffect(() => {
+        if (typeof window !== "undefined") {
+            localStorage.setItem("zikrHistory", JSON.stringify(history));
+        }
+    }, [history]);
 
     function applyTheme(t) {
         const root = document.documentElement;
@@ -67,15 +101,43 @@ export default function Page() {
             return;
         }
 
-        showToast({ type: "success", text: `Registered ${selected} — ${num} time(s).` });
-        setSelected("");
-        setCount("");
+        // Open the modal instead of just showing a toast
+        setIsModalOpen(true);
     }
 
     function showToast(t) {
         setToast(t);
         if (!t) return;
         setTimeout(() => setToast(null), 2000);
+    }
+
+    function handleModalSuccess(data) {
+        // Called when user successfully submits the modal
+        // Save mobile number to localStorage
+        if (data && data.mobile) {
+            localStorage.setItem("userMobile", data.mobile);
+            setSavedMobile(data.mobile);
+        }
+        setIsModalOpen(false);
+
+        // Capture current zikr data for history
+        const newEntry = {
+            zikr: selected,
+            count: Number(count),
+            weeklyCounts: Number(count),
+            date: new Date().toLocaleDateString(),
+            time: new Date().toLocaleTimeString(),
+        };
+        setHistory((prev) => [newEntry, ...prev]);
+
+        // Reset form
+        setSelected("");
+        setCount("");
+    }
+
+    function handleModalClose() {
+        // Called when user closes the modal without submitting
+        setIsModalOpen(false);
     }
 
     return (
@@ -94,7 +156,7 @@ export default function Page() {
                         >
                             <FaAngleLeft /> Back
                         </button>
-                        <h1 className="text-2xl sm:text-3xl  font-semibold bg-gradient-to-r from-green-400 via-green-200 to-white bg-clip-text text-transparent">
+                        <h1 className="text-2xl sm:text-3xl  font-semibold bg-linear-to-r from-green-400 via-green-200 to-white bg-clip-text text-transparent">
                             Aaj Aapne Kya Padha
                         </h1>
                         <img
@@ -117,10 +179,10 @@ export default function Page() {
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <div className="col-span-1 sm:col-span-2">
                             <label className="label">
-                                <span className="label-text">Dropdown</span>
+                                <span className="label-text  mb-2 font-bold text-white">Zikr</span>
                             </label>
                             <select value={selected} onChange={(e) => setSelected(e.target.value)} className="select select-bordered w-full" aria-label="Select Zikr">
-                                <option value="">Select Zikr</option>
+                                <option value="">Select</option>
                                 {ZIKR_OPTIONS.map((o) => (
                                     <option key={o} value={o}>
                                         {o}
@@ -131,7 +193,7 @@ export default function Page() {
 
                         <div>
                             <label className="label">
-                                <span className="label-text">How many times</span>
+                                <span className="label-text mb-2 font-bold text-white">How many times</span>
                             </label>
                             <input
                                 inputMode="numeric"
@@ -148,13 +210,183 @@ export default function Page() {
 
                         <div className="flex items-end justify-end">
                             <button className="btn btn-primary w-full sm:w-auto" type="submit">
-                                Register
+                                Submit
                             </button>
                         </div>
                     </div>
                 </form>
                 <Toast toast={toast} isDark={typeof window !== "undefined" ? effectiveTheme() === "dark" : false} />
+
+                {/* Zikr history list */}
+                <div className="mt-6 mb-14 bg-gradient-to-br from-base-200 to-base-300 p-6 rounded-xl shadow-lg border border-primary/20">
+                    <h3 className="text-xl font-bold mb-6 text-primary flex items-center justify-between">
+                        <span className="flex items-center gap-2">
+                            <span className="inline-block w-1 h-6 bg-primary rounded-full"></span>
+                            Zikr History
+                        </span>
+                        {history.length > 0 && (
+                            <button
+                                className="btn btn-ghost btn-sm text-error border-2 border-error hover:bg-error hover:text-white transition-all duration-300 rounded-full"
+                                aria-label="Clear History"
+                                onClick={() => setShowClearHistoryConfirm(true)}
+                            >
+                                Clear History
+                            </button>
+                        )}
+                    </h3>
+                    {history.length === 0 ? (
+                        <div className="text-center text-base text-primary/70 py-8">
+                            No history yet. Register your zikr to see it here.
+                        </div>
+                    ) : (
+                        <>
+                            {/* Total Counts Display */}
+                            <div className="mb-6 flex justify-center">
+                                <div className="relative inline-block">
+                                    <div className="absolute inset-0 bg-gradient-to-r from-primary/30 via-primary/50 to-primary/30 rounded-2xl blur-xl"></div>
+                                    <div className="relative bg-gradient-to-r from-primary/20 to-primary/30 backdrop-blur-sm px-8 py-4 rounded-2xl border-2 border-primary/40 shadow-xl">
+                                        <div className="text-center">
+                                            <div className="text-xs font-semibold text-primary/80 uppercase tracking-wider mb-1">Total Counts</div>
+                                            <div className="text-4xl font-black text-primary">
+                                                {history
+                                                    .reduce(
+                                                        (sum, item) => sum + Number(item.count),
+                                                        0
+                                                    )
+                                                    .toLocaleString()}
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* Tabular display for all screen sizes */}
+                            <div className="w-full bg-base-100/50 rounded-lg overflow-hidden border border-primary/10">
+                                <table className="table w-full text-primary">
+                                    <thead>
+                                        <tr className="bg-primary/10 border-b-2 border-primary/30">
+                                            <th className="px-3 py-4 text-primary font-bold">Zikr Name</th>
+                                            <th className="px-3 py-4 text-primary font-bold text-center">Counts</th>
+                                            <th className="px-3 py-4 text-primary font-bold">Date & Time</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {paginatedHistory.map((item, idx) => (
+                                            <tr
+                                                key={
+                                                    idx +
+                                                    (currentPage - 1) *
+                                                    entriesPerPage
+                                                }
+                                                className="hover:bg-primary/5 transition-colors duration-200 border-b border-primary/5"
+                                            >
+                                                <td className="align-middle px-3 py-3 font-medium">
+                                                    {item.zikr}
+                                                </td>
+                                                <td className="align-middle px-3 py-3 text-center">
+                                                    <span className="inline-block bg-primary/20 text-white font-bold px-3 py-1 rounded-full ">
+                                                        {item.count
+                                                            .toString()
+                                                            .padStart(2, "0")}
+                                                    </span>
+                                                </td>
+                                                <td className="align-middle px-3 py-3 text-sm opacity-90">
+                                                    {item.date} {new Date(
+                                                        `1970-01-01T${item.time}`
+                                                    ).toLocaleTimeString([], {
+                                                        hour: "2-digit",
+                                                        minute: "2-digit",
+                                                        hour12: true,
+                                                    })}
+                                                </td>
+                                            </tr>
+                                        ))}
+                                    </tbody>
+                                </table>
+                            </div>
+
+                            {/* Pagination controls */}
+                            {history.length > entriesPerPage && (
+                                <div className="flex justify-center items-center gap-3 mt-6">
+                                    <button
+                                        className="btn btn-sm btn-primary btn-outline hover:scale-105 transition-transform"
+                                        disabled={currentPage === 1}
+                                        onClick={() =>
+                                            setCurrentPage(currentPage - 1)
+                                        }
+                                    >
+                                        Previous
+                                    </button>
+                                    <span className="px-4 py-2 font-semibold bg-primary/10 rounded-full text-primary">
+                                        Page {currentPage} of {totalPages}
+                                    </span>
+                                    <button
+                                        className="btn btn-sm btn-primary btn-outline hover:scale-105 transition-transform"
+                                        disabled={currentPage === totalPages}
+                                        onClick={() =>
+                                            setCurrentPage(currentPage + 1)
+                                        }
+                                    >
+                                        Next
+                                    </button>
+                                </div>
+                            )}
+                        </>
+                    )}
+                </div>
             </div>
+
+            {/* Clear History confirmation modal */}
+            {showClearHistoryConfirm && (
+                <div className="fixed inset-0 flex items-center justify-center bg-black/40 z-50">
+                    <div className="modal modal-open">
+                        <div className="modal-box text-center">
+                            <h3 className="font-bold text-lg text-error">
+                                Clear History
+                            </h3>
+                            <p className="py-4">
+                                Are you sure you want to clear all Zikr history?
+                            </p>
+                            <div className="modal-action justify-center">
+                                <button
+                                    className="btn btn-error"
+                                    onClick={() => {
+                                        setHistory([]);
+                                        localStorage.removeItem("zikrHistory");
+                                        setShowClearHistoryConfirm(false);
+                                    }}
+                                >
+                                    Yes
+                                </button>
+                                <button
+                                    className="btn btn-ghost"
+                                    onClick={() =>
+                                        setShowClearHistoryConfirm(false)
+                                    }
+                                >
+                                    No
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            <UserModal
+                open={isModalOpen}
+                onClose={handleModalClose}
+                onSuccess={handleModalSuccess}
+                tasbihCount={Number(count) || 0}
+                savedMobile={savedMobile}
+                pageType="zikr"
+                importantMessage={
+                    <div className="mt-2 p-3 bg-warning/10 border border-warning/30 rounded-lg text-sm text-warning-content">
+                        <p className="font-medium text-base-content">
+                            Baraye maherbani agar zikr submit karein toh fake counts submit na karein, ye galat or najayaz tarika hai, apse guzarish hy ki jo zikr ap ne parha hai wohi submit karein.
+                        </p>
+                    </div>
+                }
+            />
         </div>
     );
 }
@@ -172,12 +404,12 @@ function Toast({ toast, isDark }) {
                 role="status"
                 aria-live="polite"
                 className={`max-w-md mx-auto px-4 py-2 rounded shadow pointer-events-auto transition-opacity duration-200 ease-out ${toast.type === "error"
-                        ? isDark
-                            ? "bg-red-800 text-white"
-                            : "bg-red-100 text-red-800"
-                        : isDark
-                            ? "bg-green-800 text-white"
-                            : "bg-green-100 text-green-800"
+                    ? isDark
+                        ? "bg-red-800 text-white"
+                        : "bg-red-100 text-red-800"
+                    : isDark
+                        ? "bg-green-800 text-white"
+                        : "bg-green-100 text-green-800"
                     }`}
             >
                 {toast.text}

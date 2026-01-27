@@ -11,6 +11,7 @@ export default function UserModal({
     // when true, always show the mobile entry step even if saved user data exists
     alwaysShowMobile = false,
     importantMessage = null,
+    pageType = "tasbih", // "tasbih" or "zikr"
 }) {
     const fullNameRef = useRef(null);
     const addressRef = useRef(null);
@@ -184,39 +185,39 @@ export default function UserModal({
                 }}
             />
 
-            <div className="modal modal-open ">
-                <div className="modal-box w-[min(95vw,480px)] max-h-[75vh] overflow-y-auto relative bg-base-100">
+            <div className="modal modal-open">
+                <div className="modal-box w-[min(95vw,420px)] max-h-[90vh] overflow-y-auto relative  p-4 border-4 border-green-300">
                     {/* Cross icon for closing modal */}
                     <button
                         type="button"
-                        className="absolute top-4 right-4 btn btn-ghost btn-sm btn-circle"
+                        className="absolute top-2 right-2 btn btn-ghost btn-xs btn-circle"
                         onClick={() => {
                             resetForm();
                             onClose();
                         }}
                         aria-label="Close"
                     >
-                        <X size={20} />
+                        <X size={16} />
                     </button>
-                    <h3 className="font-bold text-lg text-base-content">
-                        Register for Durood Counts
+                    <h3 className="font-bold text-base text-base-content pr-6">
+                        {pageType === "zikr" ? "Register for Zikr Counts" : "Register for Durood Counts"}
                     </h3>
 
                     {importantMessage && (
-                        <details className="mt-4">
-                            <summary className="text-sm text-primary/60 hover:text-primary cursor-pointer underline list-none">
+                        <details className="mt-2">
+                            <summary className="text-xs text-primary/60 hover:text-primary cursor-pointer underline list-none">
                                 Click to view important message
                             </summary>
-                            <div className="mt-2">{importantMessage}</div>
+                            <div className="mt-1 text-sm">{importantMessage}</div>
                         </details>
                     )}
 
                     {step === "registered" || step === "submitted" ? (
-                        <div className="mt-6 text-center">
-                            <div className="alert alert-success shadow-lg">
+                        <div className="mt-3 text-center">
+                            <div className="alert alert-success shadow-lg py-3">
                                 <svg
                                     xmlns="http://www.w3.org/2000/svg"
-                                    className="stroke-current flex-shrink-0 h-6 w-6"
+                                    className="stroke-current flex-shrink-0 h-5 w-5"
                                     fill="none"
                                     viewBox="0 0 24 24"
                                 >
@@ -227,22 +228,22 @@ export default function UserModal({
                                         d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
                                     />
                                 </svg>
-                                <span className="text-lg font-semibold">
-                                    Your Durood Counts are submitted!
+                                <span className="text-base font-semibold">
+                                    {pageType === "zikr" ? "Your Zikr Count is submitted!" : "Your Durood Counts are submitted!"}
                                 </span>
                             </div>
                         </div>
                     ) : step === "review" ? (
                         <div
-                            className="mt-4 space-y-4"
+                            className="mt-3 space-y-3"
                             onClick={(e) => e.stopPropagation()}
                         >
-                            <div className="alert alert-info shadow-sm">
+                            <div className="alert alert-info shadow-sm py-2">
                                 <svg
                                     xmlns="http://www.w3.org/2000/svg"
                                     fill="none"
                                     viewBox="0 0 24 24"
-                                    className="stroke-current flex-shrink-0 w-6 h-6"
+                                    className="stroke-current flex-shrink-0 w-5 h-5"
                                 >
                                     <path
                                         strokeLinecap="round"
@@ -254,87 +255,87 @@ export default function UserModal({
                                 <span className="text-sm">Welcome back!</span>
                             </div>
                             <div className="card bg-base-200 shadow-sm">
-                                <div className="card-body space-y-4 p-4">
-                                    <div className="flex items-center gap-3 p-3 bg-base-100 rounded-lg">
+                                <div className="card-body space-y-2 p-3">
+                                    <div className="flex items-center gap-2 p-2 bg-base-100 rounded-lg">
                                         <div className="flex-shrink-0">
-                                            <div className="bg-primary text-primary-content rounded-full w-12 h-12 flex items-center justify-center">
+                                            <div className="bg-primary text-primary-content rounded-full w-9 h-9 flex items-center justify-center">
                                                 <User
-                                                    size={18}
+                                                    size={16}
                                                     strokeWidth={2.5}
                                                 />
                                             </div>
                                         </div>
-                                        <div className="flex-1">
-                                            <p className="text-xs text-base-content/60">
+                                        <div className="flex-1 min-w-0">
+                                            <p className="text-[10px] text-base-content/60">
                                                 Full Name
                                             </p>
-                                            <p className="font-semibold text-base-content">
+                                            <p className="font-semibold text-sm text-base-content truncate">
                                                 {userData?.fullName}
                                             </p>
                                         </div>
                                     </div>
 
-                                    <div className="flex items-center gap-3 p-3 bg-base-100 rounded-lg">
+                                    <div className="flex items-center gap-2 p-2 bg-base-100 rounded-lg">
                                         <div className="flex-shrink-0">
-                                            <div className="bg-secondary text-secondary-content rounded-full w-12 h-12 flex items-center justify-center">
+                                            <div className="bg-secondary text-secondary-content rounded-full w-9 h-9 flex items-center justify-center">
                                                 <MapPin
-                                                    size={18}
+                                                    size={16}
                                                     strokeWidth={2.5}
                                                 />
                                             </div>
                                         </div>
-                                        <div className="flex-1">
-                                            <p className="text-xs text-base-content/60">
+                                        <div className="flex-1 min-w-0">
+                                            <p className="text-[10px] text-base-content/60">
                                                 Address
                                             </p>
-                                            <p className="font-semibold text-base-content">
+                                            <p className="font-semibold text-sm text-base-content truncate">
                                                 {userData?.address}
                                             </p>
                                         </div>
                                     </div>
 
-                                    <div className="flex items-center gap-3 p-3 bg-base-100 rounded-lg">
+                                    <div className="flex items-center gap-2 p-2 bg-base-100 rounded-lg">
                                         <div className="flex-shrink-0">
-                                            <div className="bg-accent text-accent-content rounded-full w-12 h-12 flex items-center justify-center">
+                                            <div className="bg-accent text-accent-content rounded-full w-9 h-9 flex items-center justify-center">
                                                 <Phone
-                                                    size={18}
+                                                    size={16}
                                                     strokeWidth={2.5}
                                                 />
                                             </div>
                                         </div>
-                                        <div className="flex-1">
-                                            <p className="text-xs text-base-content/60">
+                                        <div className="flex-1 min-w-0">
+                                            <p className="text-[10px] text-base-content/60">
                                                 Mobile Number
                                             </p>
-                                            <p className="font-semibold text-base-content">
+                                            <p className="font-semibold text-sm text-base-content">
                                                 {userData?.mobile}
                                             </p>
                                         </div>
                                     </div>
 
-                                    <div className="divider my-2"></div>
+                                    <div className="divider my-1"></div>
 
-                                    <div className="flex items-center gap-3 p-3 bg-primary/10 rounded-lg">
+                                    <div className="flex items-center gap-2 p-2 bg-primary/10 rounded-lg">
                                         <div className="flex-1">
-                                            <p className="text-xs text-base-content/60">
-                                                Total Tasbih Count
+                                            <p className="text-[10px] text-base-content/60">
+                                                {pageType === "zikr" ? "Total Zikr Count" : "Total Tasbih Count"}
                                             </p>
-                                            <p className="text-2xl font-bold text-primary">
+                                            <p className="text-xl font-bold text-primary">
                                                 {tasbihCount}
                                             </p>
                                         </div>
                                     </div>
                                 </div>
                             </div>
-                            <div className="flex flex-col sm:flex-row gap-2 pt-4 pb-2">
+                            <div className="flex flex-col sm:flex-row gap-2 pt-2">
                                 <button
-                                    className="btn btn-primary  sm:flex-initial"
+                                    className="btn btn-primary btn-sm sm:flex-1"
                                     onClick={(e) => handleSubmit(e)}
                                     disabled={loading}
                                 >
                                     {loading ? (
                                         <>
-                                            <span className="loading loading-spinner loading-sm"></span>
+                                            <span className="loading loading-spinner loading-xs"></span>
                                             Submitting...
                                         </>
                                     ) : (
@@ -343,7 +344,7 @@ export default function UserModal({
                                 </button>
                                 <button
                                     type="button"
-                                    className="btn btn-outline btn-ghost  sm:flex-initial border-base-content/20"
+                                    className="btn btn-outline btn-ghost btn-sm sm:flex-1 border-base-content/20"
                                     onClick={() => {
                                         // Clear localStorage and start fresh
                                         if (typeof window !== "undefined") {
@@ -360,10 +361,10 @@ export default function UserModal({
                                 </button>
                             </div>{" "}
                             {error && (
-                                <div className="alert alert-error shadow-sm">
+                                <div className="alert alert-error shadow-sm py-2">
                                     <svg
                                         xmlns="http://www.w3.org/2000/svg"
-                                        className="stroke-current flex-shrink-0 h-6 w-6"
+                                        className="stroke-current flex-shrink-0 h-5 w-5"
                                         fill="none"
                                         viewBox="0 0 24 24"
                                     >
@@ -374,28 +375,28 @@ export default function UserModal({
                                             d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"
                                         />
                                     </svg>
-                                    <span>{error}</span>
+                                    <span className="text-sm">{error}</span>
                                 </div>
                             )}
                         </div>
                     ) : (
                         <form
                             onSubmit={handleSubmit}
-                            className="mt-4 space-y-4"
+                            className="mt-3 space-y-3"
                             onClick={(e) => e.stopPropagation()}
                         >
                             {step === "mobile" && (
                                 <>
                                     <div className="form-control w-full">
-                                        <label className="label">
-                                            <span className="label-text font-medium">
+                                        <label className="label py-1">
+                                            <span className="label-text text-sm font-medium">
                                                 Mobile Number
                                             </span>
                                         </label>
                                         <div className="relative">
                                             <Phone
                                                 className="absolute left-3 top-1/2 -translate-y-1/2 text-base-content z-10 pointer-events-none"
-                                                size={20}
+                                                size={16}
                                                 aria-hidden="true"
                                             />
                                             <input
@@ -403,7 +404,7 @@ export default function UserModal({
                                                 name="mobile"
                                                 type="text"
                                                 placeholder="Enter your mobile number"
-                                                className="input input-bordered w-full pl-11"
+                                                className="input input-bordered input-sm w-full pl-10"
                                                 value={mobileValue}
                                                 onChange={(e) => {
                                                     const value =
@@ -417,39 +418,39 @@ export default function UserModal({
                                         </div>
                                     </div>
                                     <div className="form-control w-full">
-                                        <label className="label">
-                                            <span className="label-text font-medium">
-                                                Total Tasbih Count
+                                        <label className="label py-1">
+                                            <span className="label-text text-sm font-medium">
+                                                {pageType === "zikr" ? "Total Zikr Count" : "Total Tasbih Count"}
                                             </span>
                                         </label>
                                         <input
                                             type="number"
                                             value={tasbihCount}
                                             disabled
-                                            className="input input-bordered w-full bg-base-200 text-base-content font-bold"
+                                            className="input input-bordered input-sm w-full bg-base-200 text-base-content font-bold"
                                         />
                                     </div>
                                 </>
                             )}
                             {step === "details" && (
                                 <>
-                                    <div className="alert alert-success shadow-sm">
-                                        <BookUser />
+                                    <div className="alert alert-success shadow-sm py-2">
+                                        <BookUser size={18} />
                                         <span className="text-sm">
                                             Add Details for your registration
                                         </span>
                                     </div>
 
                                     <div className="form-control w-full">
-                                        <label className="label">
-                                            <span className="label-text font-medium">
+                                        <label className="label py-1">
+                                            <span className="label-text text-sm font-medium">
                                                 Full Name
                                             </span>
                                         </label>
                                         <div className="relative">
                                             <User
                                                 className="absolute left-3 top-1/2 -translate-y-1/2 text-base-content z-10 pointer-events-none"
-                                                size={20}
+                                                size={16}
                                                 aria-hidden="true"
                                             />
                                             <input
@@ -457,20 +458,20 @@ export default function UserModal({
                                                 name="fullName"
                                                 type="text"
                                                 placeholder="Enter your full name"
-                                                className="input input-bordered w-full pl-11"
+                                                className="input input-bordered input-sm w-full pl-10"
                                             />
                                         </div>
                                     </div>
                                     <div className="form-control w-full">
-                                        <label className="label">
-                                            <span className="label-text font-medium">
+                                        <label className="label py-1">
+                                            <span className="label-text text-sm font-medium">
                                                 Address
                                             </span>
                                         </label>
                                         <div className="relative">
                                             <MapPin
                                                 className="absolute left-3 top-1/2 -translate-y-1/2 text-base-content z-10 pointer-events-none"
-                                                size={20}
+                                                size={16}
                                                 aria-hidden="true"
                                             />
                                             <input
@@ -478,17 +479,17 @@ export default function UserModal({
                                                 name="address"
                                                 type="text"
                                                 placeholder="Enter your address"
-                                                className="input input-bordered w-full pl-11"
+                                                className="input input-bordered input-sm w-full pl-10"
                                             />
                                         </div>
                                     </div>
                                 </>
                             )}
                             {error && (
-                                <div className="alert alert-error shadow-sm">
+                                <div className="alert alert-error shadow-sm py-2">
                                     <svg
                                         xmlns="http://www.w3.org/2000/svg"
-                                        className="stroke-current flex-shrink-0 h-6 w-6"
+                                        className="stroke-current flex-shrink-0 h-5 w-5"
                                         fill="none"
                                         viewBox="0 0 24 24"
                                     >
@@ -499,13 +500,13 @@ export default function UserModal({
                                             d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"
                                         />
                                     </svg>
-                                    <span>{error}</span>
+                                    <span className="text-sm">{error}</span>
                                 </div>
                             )}
-                            <div className="modal-action">
+                            <div className="modal-action mt-3">
                                 <button
                                     type="button"
-                                    className="btn btn-ghost"
+                                    className="btn btn-ghost btn-sm"
                                     onClick={() => {
                                         resetForm();
                                         onClose();
@@ -516,7 +517,7 @@ export default function UserModal({
                                 </button>
                                 <button
                                     type="submit"
-                                    className="btn btn-primary"
+                                    className="btn btn-primary btn-sm"
                                     disabled={
                                         loading ||
                                         (step === "mobile" &&
@@ -525,7 +526,7 @@ export default function UserModal({
                                 >
                                     {loading ? (
                                         <>
-                                            <span className="loading loading-spinner loading-sm"></span>
+                                            <span className="loading loading-spinner loading-xs"></span>
                                             Saving...
                                         </>
                                     ) : step === "mobile" ? (
