@@ -2,7 +2,7 @@
 import { useState, useEffect, useRef } from "react";
 import { FaPencilAlt, FaCheckCircle } from "react-icons/fa";
 import { X, RotateCcw } from "lucide-react";
-import fetchFromApi from "../../../utils/fetchFromApi";
+import apiClient from "../../../lib/apiClient";
 import { useRouter } from "next/navigation";
 
 const prayers = [
@@ -66,27 +66,14 @@ export default function JamatTimesPage() {
                 setLoading(true);
 
                 // Fetch masjids
-                const masjidsResponse = await fetchFromApi("/api/all-masjids");
-                if (masjidsResponse.ok) {
-                    const masjidsData = await masjidsResponse.json();
-                    setMasjids(masjidsData.data || []);
+                const { data: masjidsData } = await apiClient.get(
+                    "/api/all-masjids"
+                );
+                setMasjids(masjidsData?.data || []);
 
-                    // Extract unique colonies from masjids data
-                    const uniqueColonies = [
-                        ...new Set(
-                            masjidsData.data?.map((masjid) => masjid.colony) ||
-                            []
-                        ),
-                    ];
-                    setColonies(
-                        uniqueColonies.map((colony) => ({ name: colony }))
-                    );
-                }
-                const masjidsData = await masjidsResponse.json();
-                setMasjids(masjidsData.data || []);
                 const uniqueColonies = [
                     ...new Set(
-                        masjidsData.data
+                        masjidsData?.data
                             ?.map((masjid) => masjid.colony)
                             .filter(Boolean) || []
                     ),
@@ -251,15 +238,12 @@ export default function JamatTimesPage() {
                         break;
                 }
             });
-            const response = await fetchFromApi("/api/api-jamatTimes", {
-                method: "PATCH",
-                headers: {
-                    "Content-Type": "application/json",
-                },
-                body: JSON.stringify(updateData),
-            });
+            const response = await apiClient.patch(
+                "/api/api-jamatTimes",
+                updateData
+            );
 
-            if (response.ok) {
+            if (response?.status >= 200 && response?.status < 300) {
                 setSaveMessage("Jamat times saved successfully!");
                 setTimeout(() => setSaveMessage(""), 3000);
 
@@ -272,12 +256,13 @@ export default function JamatTimesPage() {
                     )
                 );
             } else {
-                const errorData = await response.json().catch(() => ({}));
-                setError(errorData.error || "Failed to save jamat times");
+                setError(
+                    response?.data?.error || "Failed to save jamat times"
+                );
             }
         } catch (error) {
             console.error("Error saving jamat times:", error);
-            setError("Error saving jamat times");
+            setError(error?.response?.data?.error || "Error saving jamat times");
         } finally {
             setSaving(false);
         }

@@ -3,7 +3,7 @@ import React, { useState, useEffect } from "react";
 import { Trash2 } from "lucide-react";
 import { FaBitcoin, FaMosque } from "react-icons/fa";
 import { useRouter } from "next/navigation";
-import fetchFromApi from "../../../utils/fetchFromApi";
+import apiClient from "../../../lib/apiClient";
 
 const ToastContext = React.createContext(null);
 
@@ -18,9 +18,8 @@ function ToastProvider({ children }) {
             {children}
             {toast && (
                 <div
-                    className={`fixed top-6 right-6 z-50 px-4 py-2 rounded shadow-lg text-white font-semibold transition-all ${
-                        toast.type === "success" ? "bg-green-600" : "bg-red-600"
-                    }`}
+                    className={`fixed top-6 right-6 z-50 px-4 py-2 rounded shadow-lg text-white font-semibold transition-all ${toast.type === "success" ? "bg-green-600" : "bg-red-600"
+                        }`}
                 >
                     {toast.message}
                 </div>
@@ -68,9 +67,10 @@ function ClearWinnerListButton() {
         setLoading(true);
         try {
             // 1) Fetch all users from the API and update their weekly counts (move to lifetime)
-            const resUsers = await fetch("/api/api-tasbihUsers");
-            const jsonUsers = await resUsers.json();
-            if (!jsonUsers.ok || !Array.isArray(jsonUsers.data))
+            const { data: jsonUsers } = await apiClient.get(
+                "/api/api-tasbihUsers"
+            );
+            if (!jsonUsers?.ok || !Array.isArray(jsonUsers.data))
                 throw new Error("Failed to fetch users");
 
             let userErrorCount = 0;
@@ -79,22 +79,26 @@ function ClearWinnerListButton() {
                 const weeklyCounts = Number(user["weekly counts"] || 0);
                 if (!mobileNumber || weeklyCounts === 0) continue;
                 // Call API to add weeklyCounts to lifetime count and reset weeklyCounts
-                const res = await fetch("/api/api-tasbihUsers", {
-                    method: "DELETE",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({
-                        mobileNumber,
-                        addWeeklyToCount: true,
-                    }),
-                });
-                if (!res.ok) userErrorCount++;
+                try {
+                    await apiClient.delete("/api/api-tasbihUsers", {
+                        data: {
+                            mobileNumber,
+                            addWeeklyToCount: true,
+                        },
+                    });
+                } catch (_) {
+                    userErrorCount++;
+                }
             }
 
             // 2) Clear the winners (rewards) list by calling the rewards DELETE endpoint
-            const resClearRewards = await fetch("/api/api-rewards", {
-                method: "DELETE",
-            });
-            const clearedRewardsOk = resClearRewards.ok;
+            let clearedRewardsOk = false;
+            try {
+                await apiClient.delete("/api/api-rewards");
+                clearedRewardsOk = true;
+            } catch (e) {
+                clearedRewardsOk = false;
+            }
 
             // Build user-visible message depending on outcomes
             if (userErrorCount === 0 && clearedRewardsOk) {
@@ -103,9 +107,8 @@ function ClearWinnerListButton() {
                     "success"
                 );
             } else if (!clearedRewardsOk && userErrorCount === 0) {
-                const txt = await resClearRewards.text();
                 showToast(
-                    `Users updated but clearing winners failed: ${txt}`,
+                    "Users updated but clearing winners failed.",
                     "error"
                 );
             } else if (clearedRewardsOk && userErrorCount > 0) {
@@ -114,9 +117,8 @@ function ClearWinnerListButton() {
                     "error"
                 );
             } else {
-                const txt = await resClearRewards.text().catch(() => "");
                 showToast(
-                    `Failed to clear winners and ${userErrorCount} users failed to update. ${txt}`,
+                    `Failed to clear winners and ${userErrorCount} users failed to update.`,
                     "error"
                 );
             }
@@ -216,9 +218,10 @@ export default function DuroodSharifPage() {
     useEffect(() => {
         async function fetchUsers() {
             try {
-                const res = await fetchFromApi("/api/api-tasbihUsers");
-                const json = await res.json();
-                if (json.ok) setUsers(json.data);
+                const { data: json } = await apiClient.get(
+                    "/api/api-tasbihUsers"
+                );
+                if (json?.ok) setUsers(json.data);
             } catch (e) {
                 setUsers([]);
             }
@@ -486,78 +489,54 @@ export default function DuroodSharifPage() {
                                                                 position:
                                                                     row.TOP !==
                                                                         "" &&
-                                                                    row.TOP !==
+                                                                        row.TOP !==
                                                                         undefined
                                                                         ? Number(
-                                                                              row.TOP
-                                                                          )
+                                                                            row.TOP
+                                                                        )
                                                                         : i + 1,
                                                                 fullName:
                                                                     row[
-                                                                        "Full Name"
+                                                                    "Full Name"
                                                                     ] || "",
                                                                 address:
                                                                     row[
-                                                                        "Address"
+                                                                    "Address"
                                                                     ] || "",
                                                                 areaMasjid:
                                                                     row[
-                                                                        "areaMasjid"
+                                                                    "areaMasjid"
                                                                     ] ||
                                                                     row[
-                                                                        "Address"
+                                                                    "Address"
                                                                     ] ||
                                                                     "",
                                                                 counts: Number(
                                                                     row[
-                                                                        "Tasbih Counts"
+                                                                    "Tasbih Counts"
                                                                     ] || 0
                                                                 ),
                                                                 weeklyCounts:
                                                                     Number(
                                                                         row[
-                                                                            "weekly counts"
+                                                                        "weekly counts"
                                                                         ] || 0
                                                                     ),
                                                                 from: fromDate,
                                                                 to: toDate,
                                                             })
                                                         );
-                                                    const res = await fetch(
-                                                        "/api/api-rewards",
-                                                        {
-                                                            method: "POST",
-                                                            headers: {
-                                                                "Content-Type":
-                                                                    "application/json",
-                                                            },
-                                                            body: JSON.stringify(
-                                                                {
-                                                                    items: payloadItems,
-                                                                }
-                                                            ),
-                                                        }
-                                                    );
-                                                    const txt =
-                                                        await res.text();
-                                                    if (!res.ok)
-                                                        throw new Error(
-                                                            txt ||
-                                                                res.statusText
+                                                    const { data: result } =
+                                                        await apiClient.post(
+                                                            "/api/api-rewards",
+                                                            {
+                                                                items: payloadItems,
+                                                            }
                                                         );
-                                                    let result;
-                                                    try {
-                                                        result =
-                                                            JSON.parse(txt);
-                                                    } catch (e) {
-                                                        result = {
-                                                            message: txt,
-                                                        };
-                                                    }
                                                     setPublishStatus({
                                                         ok:
-                                                            result.inserted ||
-                                                            (result.success
+                                                            result?.inserted ||
+                                                            (result?.success
                                                                 ? payloadItems.length
                                                                 : 0),
                                                         fail: 0,
@@ -679,11 +658,10 @@ export default function DuroodSharifPage() {
                                                     ? "page"
                                                     : undefined
                                             }
-                                            className={`px-3 py-1 rounded-md border transition-colors ${
-                                                p === currentPage
+                                            className={`px-3 py-1 rounded-md border transition-colors ${p === currentPage
                                                     ? "bg-[#5fb923] text-white border-[#5fb923]"
                                                     : "bg-white text-black border-gray-200 hover:bg-gray-50 dark:bg-gray-800 dark:text-white dark:border-gray-700 dark:hover:bg-gray-700"
-                                            }`}
+                                                }`}
                                         >
                                             {p}
                                         </button>

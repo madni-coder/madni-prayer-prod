@@ -4,7 +4,7 @@ import { useRef } from "react";
 import { FaCheckCircle } from "react-icons/fa";
 import { useRouter, useSearchParams } from "next/navigation";
 import { ArrowLeft, Pencil } from "lucide-react";
-import fetchFromApi from "../../../../utils/fetchFromApi";
+import apiClient from "../../../../lib/apiClient";
 
 const prayers = [
     { name: "Fajr", defaultTime: "5:00 am" },
@@ -52,12 +52,12 @@ function EditJamatTimePage() {
     const fetchMasjidData = useCallback(async () => {
         try {
             console.log("Fetching masjid data for ID:", masjidId);
-            const res = await fetchFromApi(`/api/all-masjids?id=${masjidId}`);
-            console.log("Response status:", res.status);
-            const data = await res.json();
+            const { data } = await apiClient.get("/api/all-masjids", {
+                params: { id: masjidId },
+            });
             console.log("Response data:", data);
 
-            if (res.ok) {
+            if (data) {
                 setMasjidName(data.masjidName || "");
                 setColony(data.colony || "");
                 setLocality(data.locality || "");
@@ -74,11 +74,11 @@ function EditJamatTimePage() {
                     data.juma || prayers[5].defaultTime,
                 ]);
             } else {
-                setError(data.error || "Failed to fetch masjid data");
+                setError(data?.error || "Failed to fetch masjid data");
             }
         } catch (err) {
             console.error("Fetch error:", err);
-            setError(err.message);
+            setError(err?.response?.data?.error || err.message);
         } finally {
             setLoading(false);
         }
@@ -141,21 +141,15 @@ function EditJamatTimePage() {
                 juma: times[5],
             };
 
-            const res = await fetchFromApi(
-                `/api/all-masjids`,
-                "PATCH",
+            const { data } = await apiClient.patch(
+                "/api/all-masjids",
                 payload
             );
-
-            const data = await res.json();
-            if (!res.ok) {
-                throw new Error(data.error || "Failed to update masjid");
-            }
             setSuccess("Masjid details updated successfully");
             // redirect after slight delay
             setTimeout(() => router.push("/admin/all-masjids"), 800);
         } catch (err) {
-            setError(err.message);
+            setError(err?.response?.data?.error || err.message);
         } finally {
             setSubmitting(false);
         }
@@ -325,16 +319,16 @@ function EditJamatTimePage() {
                                                 idx === 0
                                                     ? "text-primary border-primary"
                                                     : idx === 1
-                                                    ? "text-pink-500 border-pink-500"
-                                                    : idx === 2
-                                                    ? "text-warning border-warning"
-                                                    : idx === 3
-                                                    ? "text-error border-error"
-                                                    : idx === 4
-                                                    ? "text-info border-info"
-                                                    : idx === 5
-                                                    ? "text-[#8B4513] border-[#8B4513]"
-                                                    : "",
+                                                        ? "text-pink-500 border-pink-500"
+                                                        : idx === 2
+                                                            ? "text-warning border-warning"
+                                                            : idx === 3
+                                                                ? "text-error border-error"
+                                                                : idx === 4
+                                                                    ? "text-info border-info"
+                                                                    : idx === 5
+                                                                        ? "text-[#8B4513] border-[#8B4513]"
+                                                                        : "",
                                             ].join(" ")}
                                         >
                                             {prayer.name}

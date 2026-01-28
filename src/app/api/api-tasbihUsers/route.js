@@ -1,3 +1,7 @@
+import { NextResponse } from "next/server";
+import { PrismaClient } from "@prisma/client";
+const prisma = new PrismaClient();
+
 export async function DELETE(req) {
     try {
         const body = await req.json();
@@ -79,9 +83,6 @@ export async function DELETE(req) {
         );
     }
 }
-import { NextResponse } from "next/server";
-import { PrismaClient } from "@prisma/client";
-const prisma = new PrismaClient();
 
 export async function POST(req) {
     try {

@@ -1,7 +1,9 @@
 "use client";
 import React, { useState, useEffect } from "react";
+import axios from "axios";
 import { useRouter } from "next/navigation";
 import { FaAngleLeft } from "react-icons/fa";
+import apiClient from "../../lib/apiClient";
 
 // Detect Tauri environment
 const isTauri = process.env.NEXT_PUBLIC_TAURI_BUILD === "1";
@@ -61,32 +63,22 @@ const paras = paraNames.map((p, i) => ({
 }));
 
 async function getPara() {
-    const endpoint = isTauri
-        ? `${REMOTE_API_BASE}/api/api-quran`
-        : "/api/api-quran";
     try {
-        const res = await fetch(endpoint, { method: "GET" });
-        if (!res.ok) throw new Error("Failed to fetch para files");
-        const data = await res.json();
+        const { data } = await apiClient.get("/api/api-quran");
         return data.files;
     } catch (err) {
-        throw new Error(err.message);
+        throw new Error(err?.message || "Failed to fetch para files");
     }
 }
 
 async function getSurahPdf(surahName) {
-    const endpoint = isTauri
-        ? `${REMOTE_API_BASE}/api/api-quran`
-        : "/api/api-quran";
     try {
-        const res = await fetch(`${endpoint}?surah=${surahName}`, {
-            method: "GET",
+        const { data } = await apiClient.get("/api/api-quran", {
+            params: { surah: surahName },
         });
-        if (!res.ok) throw new Error("Failed to fetch surah PDF");
-        const data = await res.json();
         return data.fileUrl;
     } catch (err) {
-        throw new Error(err.message);
+        throw new Error(err?.message || "Failed to fetch surah PDF");
     }
 }
 
@@ -207,9 +199,10 @@ export default function Page() {
             }
 
             // Otherwise fetch the proxied PDF and try to save it (if small enough)
-            const resp = await fetch(proxiedFinal);
-            if (!resp.ok) throw new Error("Failed to fetch para PDF");
-            const blob = await resp.blob();
+            const resp = await axios.get(proxiedFinal, {
+                responseType: "blob",
+            });
+            const blob = resp.data;
 
             // Revoke previous object URL (if any) and create a new one so we can display immediately
             if (currentObjectUrl) {
@@ -423,14 +416,10 @@ export default function Page() {
                                         const apiUrl = isTauri
                                             ? `${REMOTE_API_BASE}/api/kanzul`
                                             : '/api/kanzul';
-                                        const resp = await fetch(apiUrl);
-                                        const data = await resp.json();
+                                        const { data } = await axios.get(apiUrl);
                                         console.log('Kanzul API response:', data);
 
                                         const rawFileUrl = data.fileUrl || data.publicUrl || data.signedUrl || data.fallback;
-                                        if (!resp.ok) {
-                                            throw new Error(data.error || 'Failed to resolve Kanzul file');
-                                        }
 
                                         if (!rawFileUrl) throw new Error('No file URL returned from server');
 

@@ -104,21 +104,7 @@ export default function Page() {
             return;
         }
 
-        const savedDataRaw = typeof window !== "undefined" ? localStorage.getItem("userRegistrationData") : null;
-        const savedMobileOnly = typeof window !== "undefined" ? localStorage.getItem("userMobile") : null;
-        let savedData = null;
-        try {
-            savedData = savedDataRaw ? JSON.parse(savedDataRaw) : null;
-        } catch (err) {
-            savedData = null;
-        }
-
-        const registeredMobile = savedData?.mobile || savedMobileOnly;
-        if (registeredMobile && /^\d{10}$/.test(registeredMobile)) {
-            submitCountsForRegistered(registeredMobile);
-            return;
-        }
-
+        // Always open the modal for registration
         setIsModalOpen(true);
     }
 
@@ -130,94 +116,7 @@ export default function Page() {
 
     function handleModalSuccess(data) {
         // Called when user successfully submits the modal
-        // Save mobile number to localStorage
-        if (data && data.mobile) {
-            localStorage.setItem("userMobile", data.mobile);
-            setSavedMobile(data.mobile);
-        }
         setIsModalOpen(false);
-
-        addHistoryEntry();
-    }
-
-    function handleModalClose() {
-        // Called when user closes the modal without submitting
-        setIsModalOpen(false);
-    }
-
-    async function submitCountsForRegistered(mobile) {
-        setIsSubmitting(true);
-        try {
-            // Save zikr to database
-            await saveZikrToDatabase();
-
-            const payload = {
-                "mobile number": mobile,
-                tasbihCount: Number(count),
-                weeklyCounts: Number(count),
-            };
-            const data = await res.json();
-
-            if (data?.errors) {
-                showToast({ type: "error", text: data.errors.join(". ") });
-                return;
-            }
-
-            if (!res.ok && data?.error !== "REGISTERED_USER") {
-                showToast({ type: "error", text: "Unable to submit right now. Please try again." });
-                return;
-            }
-
-            localStorage.setItem("userMobile", mobile);
-            setSavedMobile(mobile);
-            // We already saved to DB above, avoid saving again in addHistoryEntry
-            addHistoryEntry(true);
-            showToast({ type: "success", text: "Zikr count submitted." });
-        } catch (err) {
-            showToast({ type: "error", text: "Unable to submit right now. Please try again." });
-        } finally {
-            setIsSubmitting(false);
-        }
-    }
-
-    async function saveZikrToDatabase() {
-        try {
-            const response = await fetch('/api/api-zikr', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({
-                    zikrType: selected,
-                    zikrCounts: Number(count),
-                }),
-            });
-
-            if (!response.ok) {
-                const error = await response.json();
-                throw new Error(error.error || 'Failed to save zikr');
-            }
-
-            const result = await response.json();
-            console.log('Zikr saved successfully:', result);
-            return result;
-        } catch (error) {
-            console.error('Error saving zikr to database:', error);
-            showToast({ type: 'error', text: 'Failed to save zikr to database' });
-            throw error;
-        }
-    }
-
-    async function addHistoryEntry(skipDb = false) {
-        // Save to database unless caller indicates it's already saved
-        if (!skipDb) {
-            try {
-                await saveZikrToDatabase();
-            } catch (error) {
-                // Error already handled in saveZikrToDatabase
-                return;
-            }
-        }
 
         // Add to local history
         const newEntry = {
@@ -230,6 +129,19 @@ export default function Page() {
         setHistory((prev) => [newEntry, ...prev]);
         setSelected("");
         setCount("");
+
+        showToast({ type: "success", text: "Zikr count submitted successfully!" });
+    }
+
+    function handleModalClose() {
+        // Called when user closes the modal without submitting
+        setIsModalOpen(false);
+    }
+
+    async function submitCountsForRegistered(mobile) {
+        // This function is no longer needed with the new modal flow
+        // The modal handles everything
+        setIsModalOpen(true);
     }
 
     return (
@@ -480,6 +392,7 @@ export default function Page() {
                 onClose={handleModalClose}
                 onSuccess={handleModalSuccess}
                 tasbihCount={Number(count) || 0}
+                zikrType={selected}
                 savedMobile={savedMobile}
                 pageType="zikr"
                 importantMessage={
