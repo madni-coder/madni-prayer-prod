@@ -210,23 +210,7 @@ export default function Page() {
 
             const result = await response.json();
 
-            if (response.ok) {
-                // Add to local history
-                const newEntry = {
-                    zikr: selected,
-                    count: Number(count),
-                    weeklyCounts: Number(count),
-                    date: new Date().toLocaleDateString(),
-                    time: new Date().toLocaleTimeString(),
-                };
-                setHistory((prev) => [newEntry, ...prev]);
-                setSelected("");
-                setCount("");
-
-                showToast({ type: "success", text: "Registration and Zikr submission successful!" });
-            } else {
-                showToast({ type: "error", text: result.error || "Registration successful but failed to submit zikr." });
-            }
+          
         } catch (error) {
             console.error('Error submitting zikr after registration:', error);
             showToast({ type: "error", text: "Registration successful but failed to submit zikr." });

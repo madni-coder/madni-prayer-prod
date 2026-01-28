@@ -70,6 +70,22 @@ html[data-hide-navs="1"] [data-app-top-nav] {
     }
 }
 
+/* Slide down animation for toast */
+@keyframes slide-down {
+    0% {
+        transform: translate(-50%, -100%);
+        opacity: 0;
+    }
+    100% {
+        transform: translate(-50%, 0);
+        opacity: 1;
+    }
+}
+
+.animate-slide-down {
+    animation: slide-down 0.3s ease-out;
+}
+
 /* iOS-specific: reduce extra top/bottom padding, APPLIED ONLY when
    `html.is-ios` is present (set by a small client script). This avoids
    affecting Android views which shouldn't receive these overrides. */
