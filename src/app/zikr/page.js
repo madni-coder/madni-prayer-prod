@@ -35,6 +35,13 @@ export default function Page() {
         }
         return "";
     });
+    const [isUserLoggedIn, setIsUserLoggedIn] = useState(() => {
+        if (typeof window !== "undefined") {
+            const userData = localStorage.getItem('userData');
+            return !!userData;
+        }
+        return false;
+    });
 
     // Pagination state
     const [currentPage, setCurrentPage] = useState(1);
@@ -103,8 +110,16 @@ export default function Page() {
             return;
         }
 
-        // Always open the modal for registration
-        setIsModalOpen(true);
+        // Check if user is logged in
+        const userData = localStorage.getItem('userData');
+
+        if (userData) {
+            // User exists, call zikr API directly
+            submitZikrForAuthenticatedUser();
+        } else {
+            // User not logged in, show registration modal
+            setIsModalOpen(true);
+        }
     }
 
     function showToast(t) {
@@ -113,23 +128,111 @@ export default function Page() {
         setTimeout(() => setToast(null), 2000);
     }
 
-    function handleModalSuccess(data) {
+    async function submitZikrForAuthenticatedUser() {
+        try {
+            setIsSubmitting(true);
+            const userData = JSON.parse(localStorage.getItem('userData'));
+
+            const response = await fetch('/api/api-zikr', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    gender: userData.gender,
+                    fullName: userData.fullName,
+                    address: userData.address,
+                    areaMasjid: userData.areaMasjid,
+                    mobile: userData.mobile || userData.email,
+                    zikrType: selected,
+                    zikrCounts: Number(count),
+                }),
+            });
+
+            const data = await response.json();
+
+            if (response.ok) {
+                // Add to history
+                const newEntry = {
+                    zikr: selected,
+                    count: Number(count),
+                    weeklyCounts: Number(count),
+                    date: new Date().toLocaleDateString(),
+                    time: new Date().toLocaleTimeString(),
+                };
+                setHistory((prev) => [newEntry, ...prev]);
+                setSelected("");
+                setCount("");
+
+                showToast({ type: "success", text: "Zikr submitted successfully!" });
+            } else {
+                showToast({ type: "error", text: data.error || "Failed to submit. Please try again." });
+            }
+        } catch (error) {
+            console.error('Error submitting zikr:', error);
+            showToast({ type: "error", text: "Failed to submit. Please try again." });
+        } finally {
+            setIsSubmitting(false);
+        }
+    }
+
+    async function handleModalSuccess(data) {
         // Called when user successfully submits the modal
         setIsModalOpen(false);
 
-        // Add to local history
-        const newEntry = {
-            zikr: selected,
-            count: Number(count),
-            weeklyCounts: Number(count),
-            date: new Date().toLocaleDateString(),
-            time: new Date().toLocaleTimeString(),
-        };
-        setHistory((prev) => [newEntry, ...prev]);
-        setSelected("");
-        setCount("");
+        // Update logged in state
+        setIsUserLoggedIn(true);
 
-        showToast({ type: "success", text: "Zikr count submitted successfully!" });
+        // Save mobile number
+        if (data && data.mobile) {
+            localStorage.setItem("userMobile", data.mobile);
+            setSavedMobile(data.mobile);
+        }
+
+        // Submit to zikr API
+        try {
+            setIsSubmitting(true);
+            const response = await fetch('/api/api-zikr', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    gender: data.gender,
+                    fullName: data.fullName,
+                    address: data.address,
+                    areaMasjid: data.areaMasjid,
+                    mobile: data.mobile || data.email,
+                    zikrType: selected,
+                    zikrCounts: Number(count),
+                }),
+            });
+
+            const result = await response.json();
+
+            if (response.ok) {
+                // Add to local history
+                const newEntry = {
+                    zikr: selected,
+                    count: Number(count),
+                    weeklyCounts: Number(count),
+                    date: new Date().toLocaleDateString(),
+                    time: new Date().toLocaleTimeString(),
+                };
+                setHistory((prev) => [newEntry, ...prev]);
+                setSelected("");
+                setCount("");
+
+                showToast({ type: "success", text: "Registration and Zikr submission successful!" });
+            } else {
+                showToast({ type: "error", text: result.error || "Registration successful but failed to submit zikr." });
+            }
+        } catch (error) {
+            console.error('Error submitting zikr after registration:', error);
+            showToast({ type: "error", text: "Registration successful but failed to submit zikr." });
+        } finally {
+            setIsSubmitting(false);
+        }
     }
 
     function handleModalClose() {

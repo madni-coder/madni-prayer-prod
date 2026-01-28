@@ -74,8 +74,8 @@ export default function UsersPage() {
                                         <td className="px-6 py-4 whitespace-nowrap text-sm text-black">{u.gender || '-'}</td>
                                         <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-black">{u.fullName || u.name || '-'}</td>
                                         <td className="px-6 py-4 whitespace-nowrap text-sm text-black">{u.email || '-'}</td>
-                                        <td className="px-6 py-4 whitespace-nowrap text-sm text-black">{u.address || '-'}</td>
-                                        <td className="px-6 py-4 whitespace-nowrap text-sm text-black">{u.areaMasjid || '-'}</td>
+                                        <td className="px-6 py-4 text-sm text-black whitespace-normal break-words">{u.address || '-'}</td>
+                                        <td className="px-6 py-4 text-sm text-black whitespace-normal break-words">{u.areaMasjid || '-'}</td>
                                     </tr>
                                 ))
                             )}

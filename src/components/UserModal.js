@@ -87,6 +87,14 @@ export default function UserModal({
             const data = res.data;
 
             // Success — `route` returns `{ message, user, session }`.
+            // Save session token and user data to localStorage
+            if (data?.session) {
+                localStorage.setItem('userSession', JSON.stringify(data.session));
+            }
+            if (data?.user) {
+                localStorage.setItem('userData', JSON.stringify(data.user));
+            }
+
             setLoading(false);
             resetForm();
             onSuccess(data?.user || data);
@@ -117,10 +125,10 @@ export default function UserModal({
 
             <div className={`relative w-full max-w-md bg-primary/10 rounded-2xl shadow-2xl border-2 ${isDark ? 'border-primary/30' : 'border-primary/20'} overflow-hidden`}>
                 {/* Header with gradient */}
-                <div className="bg-gradient-to-r from-primary to-secondary p-4">
+                <div className="bg-gradient-to-r from-primary to-secondary p-2">
                     <div className="flex items-center justify-between">
-                        <h3 className="font-bold text-lg text-white flex items-center gap-2">
-                            <Building2 size={20} />
+                        <h3 className="font-bold text-base text-white flex items-center gap-2">
+                            <Building2 size={16} />
                             {pageType === "zikr" ? "Register for Zikr" : "Register for Durood"}
                         </h3>
                         <button
@@ -139,19 +147,19 @@ export default function UserModal({
 
                 {/* Important Message (collapsible) */}
                 {importantMessage && (
-                    <div className="px-4 pt-3">
+                    <div className="px-4 pt-2">
                         <button
                             type="button"
                             onClick={() => setShowImportant((s) => !s)}
-                            className="w-full text-left bg-transparent border-2 rounded-lg p-2 flex items-center justify-between hover:bg-primary/20 transition"
+                            className="w-full text-left bg-transparent border-b-2 border-primary/30 py-2 flex items-center justify-between hover:bg-primary/5 transition"
                         >
                             <span className="text-sm text-primary font-medium">Important Message</span>
                             <span className="text-xs text-primary/80">{showImportant ? 'Hide' : 'Click to view'}</span>
                         </button>
 
                         {showImportant && (
-                            <div className="mt-2">
-                                <div className="rounded-lg p-3 border-2 border-primary/30 bg-primary/5 text-sm text-base-content">
+                            <div className="mt-1">
+                                <div className="rounded p-2 border border-primary/30 bg-primary/5 text-sm text-base-content">
                                     <div className="whitespace-pre-wrap">{importantMessage}</div>
                                 </div>
                             </div>
@@ -168,28 +176,28 @@ export default function UserModal({
                                 Gender <span className="text-error">*</span>
                             </span>
                         </label>
-                        <div className="flex gap-3">
-                            <label className={`flex-1 cursor-pointer border-2 rounded-lg p-3 transition-all ${gender === "Male" ? 'border-primary bg-primary/10' : 'border-base-300 hover:border-base-400'}`}>
+                        <div className="flex gap-2 items-center">
+                            <label className={`cursor-pointer border rounded-md px-3 py-1 transition-all text-sm flex items-center gap-2 ${gender === "Male" ? 'border-primary bg-primary/10' : 'border-base-300 hover:border-base-400'}`}>
                                 <input
                                     type="radio"
                                     name="gender"
                                     value="Male"
                                     checked={gender === "Male"}
                                     onChange={(e) => setGender(e.target.value)}
-                                    className="radio radio-primary radio-sm"
+                                    className="radio radio-sm"
                                 />
-                                <span className="ml-2 text-sm font-medium">Male</span>
+                                <span className="font-medium">Male</span>
                             </label>
-                            <label className={`flex-1 cursor-pointer border-2 rounded-lg p-3 transition-all ${gender === "Female" ? 'border-secondary bg-secondary/10' : 'border-base-300 hover:border-base-400'}`}>
+                            <label className={`cursor-pointer border rounded-md px-3 py-1 transition-all text-sm flex items-center gap-2 ${gender === "Female" ? 'border-secondary bg-secondary/10' : 'border-base-300 hover:border-base-400'}`}>
                                 <input
                                     type="radio"
                                     name="gender"
                                     value="Female"
                                     checked={gender === "Female"}
                                     onChange={(e) => setGender(e.target.value)}
-                                    className="radio radio-secondary radio-sm"
+                                    className="radio radio-sm"
                                 />
-                                <span className="ml-2 text-sm font-medium">Female</span>
+                                <span className="font-medium">Female</span>
                             </label>
                         </div>
                     </div>

@@ -32,6 +32,14 @@ export default function Tasbih() {
         }
         return "";
     });
+    const [isUserLoggedIn, setIsUserLoggedIn] = useState(() => {
+        if (typeof window !== "undefined") {
+            const userData = localStorage.getItem('userData');
+            return !!userData;
+        }
+        return false;
+    });
+    const [submitting, setSubmitting] = useState(false);
 
     // Pagination state
     const [currentPage, setCurrentPage] = useState(1);
@@ -272,25 +280,58 @@ export default function Tasbih() {
             <UserModal
                 open={showUserModal}
                 onClose={() => setShowUserModal(false)}
-                onSuccess={(data) => {
+                onSuccess={async (data) => {
                     // Save mobile number to localStorage
                     if (data && data.mobile) {
                         localStorage.setItem("userMobile", data.mobile);
                         setSavedMobile(data.mobile);
                     }
+
+                    // Update logged in state
+                    setIsUserLoggedIn(true);
+
                     setShowUserModal(false);
-                    // Capture current count for history, then reset counter
-                    const currentCount = count;
-                    const newEntry = {
-                        // keep existing count field as-is
-                        count: currentCount,
-                        // also store weeklyCounts for weekly tracking (set equal to current tasbih count)
-                        weeklyCounts: currentCount,
-                        date: new Date().toLocaleDateString(),
-                        time: new Date().toLocaleTimeString(),
-                    };
-                    setHistory((prev) => [newEntry, ...prev]);
-                    setCount(0);
+
+                    // Submit the tasbih count to the API
+                    try {
+                        setSubmitting(true);
+                        const response = await fetch('/api/api-tasbihUsers', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                            },
+                            body: JSON.stringify({
+                                fullName: data.fullName,
+                                address: data.address,
+                                mobileNumber: data.mobile || data.email,
+                                tasbihCount: count,
+                                weeklyCounts: count,
+                            }),
+                        });
+
+                        const result = await response.json();
+
+                        if (result.ok) {
+                            // Capture current count for history, then reset counter
+                            const currentCount = count;
+                            const newEntry = {
+                                count: currentCount,
+                                weeklyCounts: currentCount,
+                                date: new Date().toLocaleDateString(),
+                                time: new Date().toLocaleTimeString(),
+                            };
+                            setHistory((prev) => [newEntry, ...prev]);
+                            setCount(0);
+                            alert('Registration and Durood submission successful!');
+                        } else {
+                            alert(result.message || 'Registration successful but failed to submit tasbih.');
+                        }
+                    } catch (error) {
+                        console.error('Error submitting tasbih after registration:', error);
+                        alert('Registration successful but failed to submit tasbih.');
+                    } finally {
+                        setSubmitting(false);
+                    }
                 }}
                 tasbihCount={count}
                 savedMobile={savedMobile}
@@ -311,10 +352,60 @@ export default function Tasbih() {
             <div className="w-full max-w-3xl mt-6 mb-14 card bg-base-200 shadow-md rounded-2xl p-6">
                 <button
                     className="btn btn-sm btn-primary mb-4"
-                    onClick={() => setShowUserModal(true)}
+                    onClick={async () => {
+                        // Check if user is logged in
+                        const userData = localStorage.getItem('userData');
+
+                        if (userData) {
+                            // User exists, call tasbih API directly
+                            try {
+                                setSubmitting(true);
+                                const user = JSON.parse(userData);
+                                const response = await fetch('/api/api-tasbihUsers', {
+                                    method: 'POST',
+                                    headers: {
+                                        'Content-Type': 'application/json',
+                                    },
+                                    body: JSON.stringify({
+                                        mobileNumber: user.mobile || user.email,
+                                        tasbihCount: count,
+                                        weeklyCounts: count,
+                                    }),
+                                });
+
+                                const data = await response.json();
+
+                                if (data.ok) {
+                                    // Add to history
+                                    const newEntry = {
+                                        count: count,
+                                        weeklyCounts: count,
+                                        date: new Date().toLocaleDateString(),
+                                        time: new Date().toLocaleTimeString(),
+                                    };
+                                    setHistory((prev) => [newEntry, ...prev]);
+                                    setCount(0);
+
+                                    // Show success message
+                                    alert('Durood Sharif submitted successfully!');
+                                } else {
+                                    alert(data.message || 'Failed to submit. Please try again.');
+                                }
+                            } catch (error) {
+                                console.error('Error submitting tasbih:', error);
+                                alert('Failed to submit. Please try again.');
+                            } finally {
+                                setSubmitting(false);
+                            }
+                        } else {
+                            // User not logged in, show registration modal
+                            setShowUserModal(true);
+                        }
+                    }}
+                    disabled={submitting}
                     aria-label="Register Durood"
                 >
-                    Submit Durood Sharif
+                    {submitting ? 'Submitting...' : 'Submit Durood Sharif'}
                 </button>
                 <h3 className="text-lg font-bold mb-4 text-primary">
                     <span>Durood History</span>
