@@ -10,7 +10,7 @@ import {
     School,
     Coins,
     LogOut,
-    Gauge,Book
+    Gauge, Book,UsersRound
 } from "lucide-react";
 
 const navigation = [
@@ -44,6 +44,11 @@ const navigation = [
         name: "Zikr Counts",
         href: "/admin/zikrCounts",
         icon: Book,
+    },
+    {
+        name: "Users  ",
+        href: "/admin/users",
+        icon: UsersRound
     },
 ];
 

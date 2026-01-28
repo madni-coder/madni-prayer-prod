@@ -4,7 +4,6 @@ import { createPortal } from "react-dom";
 import { FaAngleLeft } from "react-icons/fa";
 import { useRouter } from "next/navigation";
 import UserModal from "../../components/UserModal";
-import fetchFromApi from "../../utils/fetchFromApi";
 
 const ZIKR_OPTIONS = [
     "Surah Yaseen",
