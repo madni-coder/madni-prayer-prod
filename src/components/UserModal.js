@@ -1,7 +1,7 @@
 "use client";
 import React, { useRef, useState, useEffect } from "react";
 import { X, User, MapPin, Phone, Building2 } from "lucide-react";
-import fetchFromApi from "../utils/fetchFromApi";
+import apiClient from "../lib/apiClient";
 
 export default function UserModal({
     open = false,
@@ -26,6 +26,9 @@ export default function UserModal({
     const [address, setAddress] = useState("");
     const [areaMasjid, setAreaMasjid] = useState("");
     const [mobileValue, setMobileValue] = useState("");
+    const [showImportant, setShowImportant] = useState(false);
+    const [email, setEmail] = useState("");
+    const [password, setPassword] = useState("");
 
     useEffect(() => {
         if (open) {
@@ -44,6 +47,8 @@ export default function UserModal({
         setAddress("");
         setAreaMasjid("");
         setMobileValue("");
+        setEmail("");
+        setPassword("");
         setError(null);
     }
 
@@ -53,7 +58,7 @@ export default function UserModal({
         setLoading(true);
 
         // Validate required fields
-        if (!gender || !fullName.trim() || !address.trim() || !areaMasjid.trim()) {
+        if (!gender || !fullName.trim() || !address.trim() || !areaMasjid.trim() || !email.trim() || !password) {
             setError("Please fill in all required fields.");
             setLoading(false);
             return;
@@ -67,68 +72,30 @@ export default function UserModal({
         }
 
         try {
-            if (pageType === "zikr") {
-                // For zikr page, save to zikr table
-                const payload = {
-                    gender,
-                    fullName: fullName.trim(),
-                    address: address.trim(),
-                    areaMasjid: areaMasjid.trim(),
-                    mobile: mobileValue.trim() || null,
-                    zikrType: zikrType,
-                    zikrCounts: tasbihCount,
-                };
+            // Call register API to create user
+            const payload = {
+                email: email.trim(),
+                password,
+                gender,
+                fullName: fullName.trim(),
+                address: address.trim(),
+                areaMasjid: areaMasjid.trim(),
+                mobile: mobileValue.trim() || null,
+            };
 
-                const res = await fetchFromApi("/api/api-zikr", "POST", payload);
-                const data = await res.json();
+            const res = await apiClient.post("/api/auth/register", payload);
+            const data = res.data;
 
-                if (!res.ok) {
-                    setError(data.error || "Failed to submit zikr record");
-                    setLoading(false);
-                    return;
-                }
-
-                // Success
-                setLoading(false);
-                resetForm();
-                onSuccess(data);
-                return;
-            } else {
-                // For tasbih page, use existing logic
-                const payload = {
-                    "Full Name": fullName.trim(),
-                    Address: address.trim(),
-                    "mobile number": mobileValue.trim() || "N/A",
-                    tasbihCount: tasbihCount,
-                    weeklyCounts: tasbihCount,
-                };
-
-                const res = await fetchFromApi("/api/api-tasbihUsers", "POST", payload);
-                const data = await res.json();
-
-                if (data.error === "REGISTERED_USER") {
-                    setError("Mobile number is already registered.");
-                    setLoading(false);
-                    return;
-                }
-                if (res.status === 500) {
-                    setError("Mobile number is already registered.");
-                    setLoading(false);
-                    return;
-                }
-                if (data.errors) {
-                    setError(data.errors.join(". "));
-                    setLoading(false);
-                    return;
-                }
-
-                // Success
-                setLoading(false);
-                resetForm();
-                onSuccess(data);
-            }
+            // Success — `route` returns `{ message, user, session }`.
+            setLoading(false);
+            resetForm();
+            onSuccess(data?.user || data);
+            onClose();
         } catch (err) {
-            setError("Something went wrong. Please try again.");
+            console.error("Registration error:", err);
+            // axios errors often include response.data.error
+            const apiMessage = err?.response?.data?.error || err?.message || "Something went wrong. Please try again.";
+            setError(apiMessage);
             setLoading(false);
         }
     }
@@ -148,7 +115,7 @@ export default function UserModal({
                 }}
             />
 
-            <div className={`relative w-full max-w-md bg-base-100 rounded-2xl shadow-2xl border-2 ${isDark ? 'border-primary/30' : 'border-primary/20'} overflow-hidden`}>
+            <div className={`relative w-full max-w-md bg-primary/10 rounded-2xl shadow-2xl border-2 ${isDark ? 'border-primary/30' : 'border-primary/20'} overflow-hidden`}>
                 {/* Header with gradient */}
                 <div className="bg-gradient-to-r from-primary to-secondary p-4">
                     <div className="flex items-center justify-between">
@@ -170,12 +137,25 @@ export default function UserModal({
                     </div>
                 </div>
 
-                {/* Important Message */}
+                {/* Important Message (collapsible) */}
                 {importantMessage && (
-                    <div className="px-4 pt-4">
-                        <div className="alert alert-info py-2 text-xs">
-                            <span>{importantMessage}</span>
-                        </div>
+                    <div className="px-4 pt-3">
+                        <button
+                            type="button"
+                            onClick={() => setShowImportant((s) => !s)}
+                            className="w-full text-left bg-transparent border-2 rounded-lg p-2 flex items-center justify-between hover:bg-primary/20 transition"
+                        >
+                            <span className="text-sm text-primary font-medium">Important Message</span>
+                            <span className="text-xs text-primary/80">{showImportant ? 'Hide' : 'Click to view'}</span>
+                        </button>
+
+                        {showImportant && (
+                            <div className="mt-2">
+                                <div className="rounded-lg p-3 border-2 border-primary/30 bg-primary/5 text-sm text-base-content">
+                                    <div className="whitespace-pre-wrap">{importantMessage}</div>
+                                </div>
+                            </div>
+                        )}
                     </div>
                 )}
 
@@ -236,6 +216,40 @@ export default function UserModal({
                                 required
                             />
                         </div>
+                    </div>
+
+                    {/* Email */}
+                    <div className="form-control w-full">
+                        <label className="label py-1">
+                            <span className="label-text text-sm font-medium">
+                                Email <span className="text-error">*</span>
+                            </span>
+                        </label>
+                        <input
+                            type="email"
+                            placeholder="Enter your email"
+                            className="input input-bordered input-sm w-full"
+                            value={email}
+                            onChange={(e) => setEmail(e.target.value)}
+                            required
+                        />
+                    </div>
+
+                    {/* Password */}
+                    <div className="form-control w-full">
+                        <label className="label py-1">
+                            <span className="label-text text-sm font-medium">
+                                Password <span className="text-error">*</span>
+                            </span>
+                        </label>
+                        <input
+                            type="password"
+                            placeholder="Choose a password"
+                            className="input input-bordered input-sm w-full"
+                            value={password}
+                            onChange={(e) => setPassword(e.target.value)}
+                            required
+                        />
                     </div>
 
                     {/* Address */}
@@ -314,19 +328,7 @@ export default function UserModal({
                         </div>
                     </div>
 
-                    {/* Total Count Display */}
-                    <div className="form-control w-full">
-                        <label className="label py-1">
-                            <span className="label-text text-sm font-medium">
-                                {pageType === "zikr" ? "Total Zikr Count" : "Total Durood Count"}
-                            </span>
-                        </label>
-                        <div className="bg-gradient-to-r from-primary/10 to-secondary/10 border-2 border-primary/30 rounded-lg p-3">
-                            <div className="text-3xl font-bold text-primary text-center">
-                                {tasbihCount}
-                            </div>
-                        </div>
-                    </div>
+                    {/* (Total count removed per request) */}
 
                     {/* Error Message */}
                     {error && (
@@ -364,7 +366,7 @@ export default function UserModal({
                         <button
                             type="submit"
                             className="btn btn-primary btn-sm flex-1"
-                            disabled={loading || !gender || !fullName.trim() || !address.trim() || !areaMasjid.trim()}
+                            disabled={loading || !gender || !fullName.trim() || !address.trim() || !areaMasjid.trim() || !email.trim() || !password}
                         >
                             {loading ? (
                                 <>
@@ -372,7 +374,7 @@ export default function UserModal({
                                     Submitting...
                                 </>
                             ) : (
-                                "Submit"
+                                "Register"
                             )}
                         </button>
                     </div>

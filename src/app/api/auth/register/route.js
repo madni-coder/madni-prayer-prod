@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import prisma from "../../../../../lib/prisma";
 import { supabase } from "../../../../../lib/supabase";
+import { createClient } from '@supabase/supabase-js';
 
 export async function POST(request) {
     try {
@@ -75,5 +76,16 @@ export async function POST(request) {
             { error: 'Failed to register user' },
             { status: 500 }
         );
+    }
+}
+
+export async function GET(request) {
+    try {
+        // Use server-side Prisma to read users (bypasses Supabase RLS/anon role issues)
+        const users = await prisma.user.findMany();
+        return NextResponse.json({ users }, { status: 200 });
+    } catch (err) {
+        console.error('Error fetching users from Supabase:', err);
+        return NextResponse.json({ error: 'Failed to fetch users' }, { status: 500 });
     }
 }
