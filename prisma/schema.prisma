@@ -79,6 +79,11 @@ model Reward {
 
 model Zikr {
   id         Int      @id @default(autoincrement())
+  gender     String   @default("Male")
+  fullName   String   @default("")
+  address    String   @default("")
+  areaMasjid String   @default("")
+  mobile     String?
   zikrType   String
   zikrCounts Int
   createdAt  DateTime @default(now())
@@ -87,3 +92,17 @@ model Zikr {
   @@map("zikr")
 }
 
+model User {
+  id         Int      @id @default(autoincrement())
+  email      String   @unique
+  password   String
+  gender     String
+  fullName   String
+  address    String
+  areaMasjid String
+  mobile     String?
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@map("users")
+}

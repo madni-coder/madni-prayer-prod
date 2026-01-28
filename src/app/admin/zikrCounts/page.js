@@ -1,6 +1,7 @@
 "use client";
 import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import apiClient from "../../../lib/apiClient";
 // no icon needed for this table view
 
 export const dynamic = 'force-dynamic';
@@ -27,13 +28,7 @@ export default function ZikrCountsPage() {
     useEffect(() => {
         async function fetchZikr() {
             try {
-                const res = await fetch("/api/api-zikr");
-                if (!res.ok) {
-                    console.error("Failed to fetch zikr, status:", res.status);
-                    setZikrList([]);
-                    return;
-                }
-                const data = await res.json();
+                const { data } = await apiClient.get("/api/api-zikr");
                 // route returns either an array (all) or an object (single)
                 if (Array.isArray(data)) setZikrList(data);
                 else if (data) setZikrList([data]);
@@ -80,7 +75,12 @@ export default function ZikrCountsPage() {
                             <thead>
                                 <tr className="bg-cyan-500">
                                     <th className="text-left text-white">#</th>
+                                    <th className="text-left text-white">Gender</th>
                                     <th className="text-left text-white">Full Name</th>
+                                    <th className="text-left text-white">Address</th>
+                                    <th className="text-left text-white">Area Masjid</th>
+                                    <th className="text-left text-white">Mobile</th>
+                                    <th className="text-left text-white">Zikr Type</th>
                                     <th className="text-left text-white">Zikr Counts</th>
                                     <th className="text-left text-white">Created At</th>
                                 </tr>
@@ -89,6 +89,11 @@ export default function ZikrCountsPage() {
                                 {zikrList.map((z, idx) => (
                                     <tr key={z.id ?? idx} className="border-b last:border-b-0 hover:bg-gray-50">
                                         <td className="py-3 text-gray-800">{idx + 1}</td>
+                                        <td className="py-3 text-gray-800">{z.gender ?? "-"}</td>
+                                        <td className="py-3 text-gray-800">{z.fullName ?? "-"}</td>
+                                        <td className="py-3 text-gray-800">{z.address ?? "-"}</td>
+                                        <td className="py-3 text-gray-800">{z.areaMasjid ?? "-"}</td>
+                                        <td className="py-3 text-gray-800">{z.mobile ?? "-"}</td>
                                         <td className="py-3 text-gray-800">{z.zikrType ?? "-"}</td>
                                         <td className="py-3 text-orange-800 font-bold">{z.zikrCounts ?? 0}</td>
                                         <td className="py-3 text-sm text-gray-500">{z.createdAt ? new Date(z.createdAt).toLocaleString() : "-"}</td>

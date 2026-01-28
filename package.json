@@ -17,7 +17,7 @@
     },
     "dependencies": {
         "@prisma/client": "^6.16.2",
-        "@supabase/supabase-js": "^2.58.0",
+        "@supabase/supabase-js": "^2.93.2",
         "@tauri-apps/plugin-opener": "^2.5.0",
         "@tauri-apps/plugin-os": "^2.3.2",
         "@tiptap/extension-underline": "^3.7.2",
@@ -25,6 +25,7 @@
         "@tiptap/react": "^3.7.2",
         "@tiptap/starter-kit": "^3.7.2",
         "@types/react-dom": "^19.2.2",
+        "axios": "^1.13.4",
         "busboy": "^1.6.0",
         "emoji-picker-react": "^4.14.2",
         "formidable": "^3.5.4",

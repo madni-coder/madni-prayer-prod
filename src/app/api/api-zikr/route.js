@@ -45,12 +45,12 @@ export async function GET(request) {
 export async function POST(request) {
     try {
         const body = await request.json();
-        const { zikrType, zikrCounts } = body;
+        const { gender, fullName, address, areaMasjid, mobile, zikrType, zikrCounts } = body;
 
         // Validate required fields
-        if (!zikrType || zikrCounts === undefined) {
+        if (!gender || !fullName || !address || !areaMasjid || !zikrType || zikrCounts === undefined) {
             return NextResponse.json(
-                { error: 'zikrType and zikrCounts are required' },
+                { error: 'gender, fullName, address, areaMasjid, zikrType and zikrCounts are required' },
                 { status: 400 }
             );
         }
@@ -67,6 +67,11 @@ export async function POST(request) {
         // Create new zikr record
         const newZikr = await prisma.zikr.create({
             data: {
+                gender,
+                fullName,
+                address,
+                areaMasjid,
+                mobile: mobile || null,
                 zikrType,
                 zikrCounts: counts,
             },

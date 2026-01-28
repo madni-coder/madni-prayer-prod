@@ -3,7 +3,7 @@ import { useState } from "react";
 import { FaCheckCircle } from "react-icons/fa";
 import { useRouter } from "next/navigation";
 import { ArrowLeft, Plus } from "lucide-react";
-import fetchFromApi from "../../../../utils/fetchFromApi";
+import apiClient from "../../../../lib/apiClient";
 
 const prayers = [
     { name: "Fajr", defaultTime: "5:00 am" },
@@ -75,21 +75,15 @@ export default function AddMasjidPage() {
                 juma: times[6],
             };
 
-            const res = await fetchFromApi("/api/all-masjids", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify(payload),
-            });
-
-            const data = await res.json();
-            if (!res.ok) {
-                throw new Error(data.error || "Failed to create masjid");
-            }
+            const { data } = await apiClient.post(
+                "/api/all-masjids",
+                payload
+            );
             setSuccess("Masjid added successfully");
             // redirect after slight delay
             setTimeout(() => router.push("/admin/all-masjids"), 800);
         } catch (err) {
-            setError(err.message);
+            setError(err?.response?.data?.error || err.message);
         } finally {
             setSubmitting(false);
         }

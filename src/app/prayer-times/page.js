@@ -1,9 +1,10 @@
 "use client";
 import React, { useEffect, useState, useRef } from "react";
+import axios from "axios";
 import { Bell, BellOff, Calendar, Moon, X } from "lucide-react";
 import { FaAngleLeft, FaMapMarkerAlt, FaClock } from "react-icons/fa";
 import { useRouter } from "next/navigation";
-import fetchFromApi from "../../utils/fetchFromApi";
+import apiClient from "../../lib/apiClient";
 
 const initialPrayerTimes = [
     {
@@ -213,7 +214,7 @@ export default function PrayerTimesPage() {
             );
             setCurrentIdx(
                 (upcomingIdx - 1 + prayerDateTimes.length) %
-                    prayerDateTimes.length
+                prayerDateTimes.length
             );
             setTimeLeftSeconds(left);
         }
@@ -257,16 +258,9 @@ export default function PrayerTimesPage() {
                 const m = String(today.getMonth() + 1).padStart(2, "0");
                 const d = String(today.getDate()).padStart(2, "0");
                 const dateStr = `${y}-${m}-${d}`;
-
-                const res = await fetchFromApi(
+                const { data: json } = await apiClient.get(
                     `/api/api-prayerTimes?date=${dateStr}`
                 );
-                const json = await res.json();
-
-                if (!res.ok) {
-                    console.error("Failed to fetch prayer times:", json);
-                    return;
-                }
 
                 // try to extract a sensible location name from the API response
                 const loc =
@@ -332,6 +326,8 @@ export default function PrayerTimesPage() {
                 setLoading(false);
             } catch (err) {
                 console.error("Error fetching prayer times:", err);
+            } finally {
+                setLoading(false);
             }
         };
 
@@ -352,35 +348,33 @@ export default function PrayerTimesPage() {
                 let city = "";
                 let formattedDisplay = "";
                 try {
-                    const geoRes = await fetch(
+                    const geoRes = await axios.get(
                         `https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${lat}&lon=${lon}`
                     );
-                    if (geoRes.ok) {
-                        const geoJson = await geoRes.json();
-                        const addr = geoJson?.address || {};
-                        city =
-                            addr.city ||
-                            addr.town ||
-                            addr.village ||
-                            addr.municipality ||
-                            addr.state_district ||
-                            addr.state ||
-                            "";
-                        const district =
-                            addr.district ||
-                            addr.county ||
-                            addr.state_district ||
-                            addr.suburb ||
-                            addr.block ||
-                            "";
-                        const state = addr.state || addr.region || "";
-                        const parts = [];
-                        if (city) parts.push(city);
-                        if (district && district !== city) parts.push(district);
-                        if (state && state !== city && state !== district)
-                            parts.push(state);
-                        formattedDisplay = parts.join(", ");
-                    }
+                    const geoJson = geoRes?.data;
+                    const addr = geoJson?.address || {};
+                    city =
+                        addr.city ||
+                        addr.town ||
+                        addr.village ||
+                        addr.municipality ||
+                        addr.state_district ||
+                        addr.state ||
+                        "";
+                    const district =
+                        addr.district ||
+                        addr.county ||
+                        addr.state_district ||
+                        addr.suburb ||
+                        addr.block ||
+                        "";
+                    const state = addr.state || addr.region || "";
+                    const parts = [];
+                    if (city) parts.push(city);
+                    if (district && district !== city) parts.push(district);
+                    if (state && state !== city && state !== district)
+                        parts.push(state);
+                    formattedDisplay = parts.join(", ");
                 } catch (e) {
                     // silent
                 }
@@ -390,17 +384,9 @@ export default function PrayerTimesPage() {
                     const m = String(today.getMonth() + 1).padStart(2, "0");
                     const d = String(today.getDate()).padStart(2, "0");
                     const dateStr = `${y}-${m}-${d}`;
-                    const res = await fetchFromApi(
+                    const { data: json } = await apiClient.get(
                         `/api/api-prayerTimes?lat=${lat}&lon=${lon}&date=${dateStr}`
                     );
-                    const json = await res.json();
-                    if (!res.ok) {
-                        alert(
-                            "Failed to fetch prayer times for your location."
-                        );
-                        setLoading(false);
-                        return;
-                    }
                     const fallbackLoc =
                         formattedDisplay ||
                         city ||
@@ -476,15 +462,9 @@ export default function PrayerTimesPage() {
             const m = String(today.getMonth() + 1).padStart(2, "0");
             const d = String(today.getDate()).padStart(2, "0");
             const dateStr = `${y}-${m}-${d}`;
-            const res = await fetchFromApi(
+            const { data: json } = await apiClient.get(
                 `/api/api-prayerTimes?lat=${lat}&lon=${lon}&date=${dateStr}`
             );
-            const json = await res.json();
-            if (!res.ok) {
-                setLoading(false);
-                alert("Failed to fetch prayer times for selected city.");
-                return;
-            }
             setLocationName(
                 fullDisplayName || json?.location?.name || json?.city || ""
             );
@@ -622,15 +602,13 @@ export default function PrayerTimesPage() {
                 setCitySearching(true);
                 const q = encodeURIComponent(citySearch.trim());
                 const url = `https://nominatim.openstreetmap.org/search?format=jsonv2&limit=8&countrycodes=in&addressdetails=1&q=${q}`;
-                const res = await fetch(url, {
+                const { data } = await axios.get(url, {
                     headers: {
                         "Accept-Language": "en",
                         "User-Agent":
                             "prayer-times-app/1.0 (+https://yourdomain.example)",
                     },
                 });
-                if (!res.ok) throw new Error("City search failed");
-                const data = await res.json();
                 // Show all results from API instead of filtering
                 setCityResults(data || []);
             } catch (e) {
@@ -814,13 +792,12 @@ export default function PrayerTimesPage() {
                                     {cityResults.map((r) => (
                                         <li
                                             key={`${r.place_id}`}
-                                            className={`px-3 py-2.5 text-sm md:text-base cursor-pointer hover:bg-gray-600/50 transition-colors ${
-                                                selectedCityResult &&
-                                                selectedCityResult.place_id ===
+                                            className={`px-3 py-2.5 text-sm md:text-base cursor-pointer hover:bg-gray-600/50 transition-colors ${selectedCityResult &&
+                                                    selectedCityResult.place_id ===
                                                     r.place_id
                                                     ? "bg-green-500/20 border-l-2 border-green-500"
                                                     : ""
-                                            } text-gray-200`}
+                                                } text-gray-200`}
                                             onClick={() => handleSelectCity(r)}
                                         >
                                             <div className="font-medium text-white md:text-base">
@@ -890,7 +867,7 @@ export default function PrayerTimesPage() {
                                     const start = prayerDateTimes[idx];
                                     let next =
                                         prayerDateTimes[
-                                            (idx + 1) % prayerDateTimes.length
+                                        (idx + 1) % prayerDateTimes.length
                                         ];
                                     if (next && start && next <= start) {
                                         next = new Date(
@@ -900,25 +877,25 @@ export default function PrayerTimesPage() {
                                     const duration =
                                         start && next
                                             ? Math.max(
-                                                  1,
-                                                  Math.floor(
-                                                      (next.getTime() -
-                                                          start.getTime()) /
-                                                          1000
-                                                  )
-                                              )
+                                                1,
+                                                Math.floor(
+                                                    (next.getTime() -
+                                                        start.getTime()) /
+                                                    1000
+                                                )
+                                            )
                                             : null;
                                     const progress =
                                         duration && timeLeftSeconds != null
                                             ? Math.max(
-                                                  0,
-                                                  Math.min(
-                                                      1,
-                                                      1 -
-                                                          timeLeftSeconds /
-                                                              duration
-                                                  )
-                                              )
+                                                0,
+                                                Math.min(
+                                                    1,
+                                                    1 -
+                                                    timeLeftSeconds /
+                                                    duration
+                                                )
+                                            )
                                             : 0;
                                     const offset =
                                         circumference * (1 - progress);
@@ -977,21 +954,20 @@ export default function PrayerTimesPage() {
                         {prayerTimes.map((prayer) => (
                             <div
                                 key={prayer.name}
-                                className={`flex items-center justify-between px-3 py-3 md:px-6 md:py-4 rounded-lg mb-3 bg-base-100 border-l-4 ${
-                                    prayer.name.startsWith("Fajr")
+                                className={`flex items-center justify-between px-3 py-3 md:px-6 md:py-4 rounded-lg mb-3 bg-base-100 border-l-4 ${prayer.name.startsWith("Fajr")
                                         ? "border-primary"
                                         : prayer.name.startsWith("Sun Rise")
-                                        ? "border-error"
-                                        : prayer.name.startsWith("Zuhr")
-                                        ? "border-accent"
-                                        : prayer.name.startsWith("Asr")
-                                        ? "border-warning"
-                                        : prayer.name.startsWith("Maghrib")
-                                        ? "border-white-500"
-                                        : prayer.name.startsWith("Isha")
-                                        ? "border-blue-500"
-                                        : "border-base-300"
-                                } shadow-sm`}
+                                            ? "border-error"
+                                            : prayer.name.startsWith("Zuhr")
+                                                ? "border-accent"
+                                                : prayer.name.startsWith("Asr")
+                                                    ? "border-warning"
+                                                    : prayer.name.startsWith("Maghrib")
+                                                        ? "border-white-500"
+                                                        : prayer.name.startsWith("Isha")
+                                                            ? "border-blue-500"
+                                                            : "border-base-300"
+                                    } shadow-sm`}
                             >
                                 <span
                                     className={`font-semibold text-base md:text-lg lg:text-xl flex-1 truncate ${prayer.color}`}

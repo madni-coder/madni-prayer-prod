@@ -3,13 +3,13 @@ import { useEffect, useState, useRef } from "react";
 import { useCallback } from "react";
 import { useRouter } from "next/navigation";
 import SocialMediaImageUpload from "../../../components/SocialMediaImageUpload";
-import fetchFromApi from "../../../utils/fetchFromApi";
 import { Pencil, Trash, Smile } from "lucide-react";
 import { useEditor, EditorContent } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
 import Underline from "@tiptap/extension-underline";
 import html2canvas from "html2canvas";
 import dynamic from "next/dynamic";
+import apiClient from "../../../lib/apiClient";
 import "../../tiptap.css";
 
 // Dynamically import EmojiPicker to avoid SSR issues
@@ -159,15 +159,10 @@ export default function NoticeAdmin() {
         setLoading(true);
         setError(null);
         try {
-            const res = await fetchFromApi("/api/api-notice");
-            if (!res.ok) {
-                const errBody = await res.json().catch(() => ({}));
-                throw new Error(errBody.error || res.statusText);
-            }
-            const data = await res.json();
-            setImages(data.images || []);
+            const { data } = await apiClient.get("/api/api-notice");
+            setImages(data?.images || []);
         } catch (err) {
-            setError(err.message || String(err));
+            setError(err?.response?.data?.error || err.message || String(err));
         } finally {
             setLoading(false);
         }
@@ -186,19 +181,13 @@ export default function NoticeAdmin() {
         setShowDeleteModal(false);
 
         try {
-            const res = await fetch("/api/api-notice", {
-                method: "DELETE",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ imageId: imageToDelete }),
+            await apiClient.delete("/api/api-notice", {
+                data: { imageId: imageToDelete },
             });
-            if (!res.ok) {
-                const errBody = await res.json().catch(() => ({}));
-                throw new Error(errBody.error || res.statusText);
-            }
             // Remove deleted image from state
             setImages((prev) => prev.filter((img) => img.id !== imageToDelete));
         } catch (err) {
-            setError(err.message || String(err));
+            setError(err?.response?.data?.error || err.message || String(err));
         } finally {
             setLoading(false);
             setImageToDelete(null);
@@ -383,17 +372,13 @@ export default function NoticeAdmin() {
             formData.append("image", blob, fileName);
 
             // Post to the API (same as route.js POST endpoint)
-            const res = await fetch("/api/api-notice", {
-                method: "POST",
-                body: formData,
-            });
-
-            if (!res.ok) {
-                const errBody = await res.json().catch(() => ({}));
-                throw new Error(errBody.error || res.statusText);
-            }
-
-            const data = await res.json();
+            const { data } = await apiClient.post(
+                "/api/api-notice",
+                formData,
+                {
+                    headers: { "Content-Type": "multipart/form-data" },
+                }
+            );
             setToast({ type: "success", message: "Posted successfully" });
 
             // Refresh the images list
@@ -426,15 +411,13 @@ export default function NoticeAdmin() {
                 disabled={disabled}
                 aria-pressed={active}
                 title={label}
-                className={`flex items-center gap-2 px-3 py-2 rounded-md text-sm font-medium transition border ${
-                    active
+                className={`flex items-center gap-2 px-3 py-2 rounded-md text-sm font-medium transition border ${active
                         ? "bg-green-500 text-white border-green-500"
                         : "bg-white text-gray-700 border-gray-200"
-                } ${
-                    disabled
+                    } ${disabled
                         ? "opacity-50 pointer-events-none"
                         : "hover:shadow-sm"
-                }`}
+                    }`}
             >
                 {icon ? icon : <span className="font-semibold">{label}</span>}
             </button>
@@ -638,9 +621,8 @@ export default function NoticeAdmin() {
                                                 style={{
                                                     transform: `scale(${fitScale})`,
                                                     transformOrigin: "top left",
-                                                    width: `${
-                                                        (1 / fitScale) * 100
-                                                    }%`,
+                                                    width: `${(1 / fitScale) * 100
+                                                        }%`,
                                                 }}
                                             >
                                                 <EditorContent
@@ -1018,11 +1000,10 @@ export default function NoticeAdmin() {
                             <button
                                 onClick={handlePostContentAsImage}
                                 disabled={isPostingImage || liveOverflow}
-                                className={`px-6 py-2 rounded-md disabled:opacity-50 disabled:cursor-not-allowed ${
-                                    liveOverflow
+                                className={`px-6 py-2 rounded-md disabled:opacity-50 disabled:cursor-not-allowed ${liveOverflow
                                         ? "bg-gray-400 text-white"
                                         : "bg-green-600 text-white hover:bg-green-700"
-                                }`}
+                                    }`}
                             >
                                 {isPostingImage
                                     ? "Posting..."
@@ -1038,11 +1019,10 @@ export default function NoticeAdmin() {
                         {/* Toast */}
                         {toast && (
                             <div
-                                className={`fixed bottom-6 right-6 px-4 py-2 rounded shadow-lg z-50 ${
-                                    toast.type === "success"
+                                className={`fixed bottom-6 right-6 px-4 py-2 rounded shadow-lg z-50 ${toast.type === "success"
                                         ? "bg-green-600 text-white"
                                         : "bg-red-600 text-white"
-                                }`}
+                                    }`}
                             >
                                 {toast.message}
                             </div>

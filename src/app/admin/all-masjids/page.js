@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
 import { RefreshCw, X, Pencil, Copy, Check } from "lucide-react";
-import fetchFromApi from "../../../utils/fetchFromApi";
+import apiClient from "../../../lib/apiClient";
 import { useRouter } from "next/navigation";
 
 export default function Page() {
@@ -39,12 +39,10 @@ export default function Page() {
         try {
             setError(null);
             setReloading(true);
-            const res = await fetchFromApi("/api/all-masjids");
-            const data = await res.json();
-            if (!res.ok) throw new Error(data.error || "Failed to load data");
-            setMasjids(data.data || []);
+            const { data } = await apiClient.get("/api/all-masjids");
+            setMasjids(data?.data || []);
         } catch (e) {
-            setError(e.message);
+            setError(e?.response?.data?.error || e.message);
         } finally {
             setLoading(false);
             setReloading(false);
@@ -287,7 +285,7 @@ export default function Page() {
                                 <div className="text-sm text-gray-900">
                                     {/* Show mobile and a copy button that copies only the mobile number */}
                                     {m.mobile &&
-                                    String(m.mobile).trim().length > 0 ? (
+                                        String(m.mobile).trim().length > 0 ? (
                                         <div className="flex items-center">
                                             <span>{m.mobile}</span>
                                             <button
@@ -316,7 +314,7 @@ export default function Page() {
                             <div>
                                 <div className="text-sm">
                                     {m.pasteMapUrl &&
-                                    String(m.pasteMapUrl).trim().length > 0 ? (
+                                        String(m.pasteMapUrl).trim().length > 0 ? (
                                         <span className="text-green-600 font-medium">
                                             YES
                                         </span>
@@ -405,11 +403,10 @@ export default function Page() {
                                                 ? "page"
                                                 : undefined
                                         }
-                                        className={`px-3 py-1 rounded-md text-sm border transition-colors ${
-                                            pageNum === currentPage
+                                        className={`px-3 py-1 rounded-md text-sm border transition-colors ${pageNum === currentPage
                                                 ? "bg-blue-600 text-white border-blue-600"
                                                 : "bg-white text-gray-700 border-gray-300 hover:bg-gray-100 dark:bg-gray-800 dark:text-gray-200 dark:border-gray-700 dark:hover:bg-gray-700"
-                                        }`}
+                                            }`}
                                     >
                                         {pageNum}
                                     </button>

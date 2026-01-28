@@ -3,7 +3,7 @@ import React, { useState, useEffect } from "react";
 import { MapPin, Save, Check } from "lucide-react";
 import { FaAngleLeft, FaMosque, FaTimes } from "react-icons/fa";
 import { useRouter } from "next/navigation";
-import fetchFromApi from "../../utils/fetchFromApi";
+import apiClient from "../../lib/apiClient";
 
 function DigitalClock() {
     const [time, setTime] = useState(new Date());
@@ -113,16 +113,14 @@ export default function JamatTimesPage() {
     const fetchMasjids = async () => {
         try {
             setLoading(true);
-            const response = await fetchFromApi("/api/all-masjids");
-            const result = await response.json();
-
-            if (response.ok) {
-                setMasjids(result.data);
-            } else {
-                setError(result.error || "Failed to fetch masjids");
-            }
+            const { data } = await apiClient.get("/api/all-masjids");
+            setMasjids(data?.data || []);
         } catch (err) {
-            setError("Network error occurred");
+            const message =
+                err?.response?.data?.error ||
+                err?.message ||
+                "Network error occurred";
+            setError(message);
             console.error("Error fetching masjids:", err);
         } finally {
             setLoading(false);
