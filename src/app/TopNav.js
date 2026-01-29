@@ -52,11 +52,7 @@ const navLinks = [
         href: "/contactUs",
         icon: <FaRegIdBadge className="text-lg" />,
     },
-    {
-        name: "My Profile",
-        href: "/myProfile",
-        icon: <FaUser className="text-lg" />,
-    },
+    
 ];
 
 export default function TopNav() {
