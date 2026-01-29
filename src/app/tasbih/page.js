@@ -1,8 +1,8 @@
 "use client";
 import React, { useState, useCallback, useEffect } from "react";
+import { createPortal } from "react-dom";
 import { RotateCw, Trash2 } from "lucide-react";
 import { PiHandTapLight } from "react-icons/pi";
-import UserModal from "../../components/UserModal";
 import { FaAngleLeft } from "react-icons/fa";
 import { useRouter } from "next/navigation";
 
@@ -16,7 +16,6 @@ export default function Tasbih() {
         return 0;
     });
     const [showResetConfirm, setShowResetConfirm] = useState(false);
-    const [showUserModal, setShowUserModal] = useState(false);
     const [showLimitReached, setShowLimitReached] = useState(false);
     const [history, setHistory] = useState(() => {
         if (typeof window !== "undefined") {
@@ -40,6 +39,8 @@ export default function Tasbih() {
         return false;
     });
     const [submitting, setSubmitting] = useState(false);
+    const [toast, setToast] = useState(null);
+    const [theme, setTheme] = useState("system");
 
     // Pagination state
     const [currentPage, setCurrentPage] = useState(1);
@@ -68,6 +69,40 @@ export default function Tasbih() {
             localStorage.setItem("duroodHistory", JSON.stringify(history));
         }
     }, [history]);
+
+    // Detect theme changes
+    useEffect(() => {
+        if (typeof window !== "undefined") {
+            const savedTheme = localStorage.getItem("theme") || "system";
+            setTheme(savedTheme);
+
+            const observer = new MutationObserver(() => {
+                const currentTheme = localStorage.getItem("theme") || "system";
+                setTheme(currentTheme);
+            });
+
+            observer.observe(document.documentElement, {
+                attributes: true,
+                attributeFilter: ["data-theme", "class"],
+            });
+
+            return () => observer.disconnect();
+        }
+    }, []);
+
+    // Helper function to show toast
+    const showToast = (t) => {
+        setToast(t);
+        setTimeout(() => setToast(null), 2000);
+    };
+
+    // Helper to get effective theme
+    const effectiveTheme = () => {
+        if (theme === "system") {
+            return window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+        }
+        return theme;
+    };
 
     // shared increment handler (1..10000 then show popup)
     const increment = useCallback(() => {
@@ -276,77 +311,7 @@ export default function Tasbih() {
                 </div>
             )}
 
-            {/* User registration modal */}
-            <UserModal
-                open={showUserModal}
-                onClose={() => setShowUserModal(false)}
-                onSuccess={async (data) => {
-                    // Save mobile number to localStorage
-                    if (data && data.mobile) {
-                        localStorage.setItem("userMobile", data.mobile);
-                        setSavedMobile(data.mobile);
-                    }
 
-                    // Update logged in state
-                    setIsUserLoggedIn(true);
-
-                    setShowUserModal(false);
-
-                    // Submit the tasbih count to the API
-                    try {
-                        setSubmitting(true);
-                        const response = await fetch('/api/api-tasbihUsers', {
-                            method: 'POST',
-                            headers: {
-                                'Content-Type': 'application/json',
-                            },
-                            body: JSON.stringify({
-                                fullName: data.fullName,
-                                address: data.address,
-                                mobileNumber: data.mobile || data.email,
-                                tasbihCount: count,
-                                weeklyCounts: count,
-                            }),
-                        });
-
-                        const result = await response.json();
-
-                        if (result.ok) {
-                            // Capture current count for history, then reset counter
-                            const currentCount = count;
-                            const newEntry = {
-                                count: currentCount,
-                                weeklyCounts: currentCount,
-                                date: new Date().toLocaleDateString(),
-                                time: new Date().toLocaleTimeString(),
-                            };
-                            setHistory((prev) => [newEntry, ...prev]);
-                            setCount(0);
-                            alert('Registration and Durood submission successful!');
-                        } else {
-                            alert(result.message || 'Registration successful but failed to submit tasbih.');
-                        }
-                    } catch (error) {
-                        console.error('Error submitting tasbih after registration:', error);
-                        alert('Registration successful but failed to submit tasbih.');
-                    } finally {
-                        setSubmitting(false);
-                    }
-                }}
-                tasbihCount={count}
-                savedMobile={savedMobile}
-                importantMessage={
-                    <div className="mt-2 p-3 bg-warning/10 border border-warning/30 rounded-lg text-sm text-warning-content">
-                        <p className="font-medium text-base-content">
-                            Baraye maherbani agar durood sharif submit
-                            karein toh fake counts, fake taps krke submit na
-                            karein, ye galat or najayaz tarika hai, apse
-                            guzarish hy ki jab tasbih par tap karein toh
-                            kuch padh kar hi karein.
-                        </p>
-                    </div>
-                }
-            />
 
             {/* Durood history list */}
             <div className="w-full max-w-3xl mt-6 mb-14 card bg-base-200 shadow-md rounded-2xl p-6">
@@ -367,6 +332,8 @@ export default function Tasbih() {
                                         'Content-Type': 'application/json',
                                     },
                                     body: JSON.stringify({
+                                        fullName: user.fullName,
+                                        address: user.address,
                                         mobileNumber: user.mobile || user.email,
                                         tasbihCount: count,
                                         weeklyCounts: count,
@@ -385,21 +352,19 @@ export default function Tasbih() {
                                     };
                                     setHistory((prev) => [newEntry, ...prev]);
                                     setCount(0);
-
-                                    // Show success message
-                                    alert('Durood Sharif submitted successfully!');
+                                    showToast({ type: "success", text: "Durood Counts Submitted Successfully" });
                                 } else {
-                                    alert(data.message || 'Failed to submit. Please try again.');
+                                    showToast({ type: "error", text: data.message || "Failed to submit. Please try again." });
                                 }
                             } catch (error) {
                                 console.error('Error submitting tasbih:', error);
-                                alert('Failed to submit. Please try again.');
+                                showToast({ type: "error", text: "Failed to submit. Please try again." });
                             } finally {
                                 setSubmitting(false);
                             }
                         } else {
-                            // User not logged in, show registration modal
-                            setShowUserModal(true);
+                            // User not logged in, redirect to profile page
+                            router.push('/myProfile');
                         }
                     }}
                     disabled={submitting}
@@ -616,6 +581,32 @@ export default function Tasbih() {
                     </div>
                 </div>
             )}
+            <Toast toast={toast} isDark={typeof window !== "undefined" ? effectiveTheme() === "dark" : false} />
         </section>
     );
+}
+
+function Toast({ toast, isDark }) {
+    if (!toast) return null;
+    if (typeof document === "undefined") return null;
+
+    const content = (
+        <div
+            className="fixed top-4 left-1/2 transform -translate-x-1/2 z-50 pointer-events-none w-full max-w-md px-4"
+            style={{ paddingTop: "env(safe-area-inset-top)" }}
+        >
+            <div
+                role="status"
+                aria-live="polite"
+                className={`w-full px-6 py-4 rounded-2xl shadow-lg pointer-events-auto transition-all duration-300 ease-out font-medium text-base ${toast.type === "error"
+                        ? "bg-red-500 text-white"
+                        : "bg-green-500 text-white"
+                    }`}
+            >
+                {toast.text}
+            </div>
+        </div>
+    );
+
+    return createPortal(content, document.body);
 }

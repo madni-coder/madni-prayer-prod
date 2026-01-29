@@ -12,6 +12,7 @@ import {
     FaGift,
     FaMicrophone,
     FaRegIdBadge,
+    FaUser,
 } from "react-icons/fa";
 import TasbihSvgIcon from "../components/TasbihSvgIcon";
 
@@ -44,6 +45,11 @@ const navLinks = [
         name: "Aelaan Naama",
         href: "/notice",
         icon: <FaMicrophone className="text-lg" />,
+    },
+    {
+        name: "My Profile",
+        href: "/myProfile",
+        icon: <FaUser className="text-lg" />,
     },
     {
         name: "Contact Us",

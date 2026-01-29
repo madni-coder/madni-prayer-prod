@@ -3,7 +3,6 @@ import React, { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
 import { FaAngleLeft } from "react-icons/fa";
 import { useRouter } from "next/navigation";
-import UserModal from "../../components/UserModal";
 
 const ZIKR_OPTIONS = [
     "Surah Yaseen",
@@ -20,7 +19,6 @@ export default function Page() {
     const [selected, setSelected] = useState("");
     const [count, setCount] = useState("");
     const [toast, setToast] = useState(null);
-    const [isModalOpen, setIsModalOpen] = useState(false);
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [history, setHistory] = useState(() => {
         if (typeof window !== "undefined") {
@@ -117,8 +115,8 @@ export default function Page() {
             // User exists, call zikr API directly
             submitZikrForAuthenticatedUser();
         } else {
-            // User not logged in, show registration modal
-            setIsModalOpen(true);
+            // User not logged in, redirect to profile page
+            router.push('/myProfile');
         }
     }
 
@@ -176,59 +174,7 @@ export default function Page() {
         }
     }
 
-    async function handleModalSuccess(data) {
-        // Called when user successfully submits the modal
-        setIsModalOpen(false);
 
-        // Update logged in state
-        setIsUserLoggedIn(true);
-
-        // Save mobile number
-        if (data && data.mobile) {
-            localStorage.setItem("userMobile", data.mobile);
-            setSavedMobile(data.mobile);
-        }
-
-        // Submit to zikr API
-        try {
-            setIsSubmitting(true);
-            const response = await fetch('/api/api-zikr', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({
-                    gender: data.gender,
-                    fullName: data.fullName,
-                    address: data.address,
-                    areaMasjid: data.areaMasjid,
-                    mobile: data.mobile || data.email,
-                    zikrType: selected,
-                    zikrCounts: Number(count),
-                }),
-            });
-
-            const result = await response.json();
-
-          
-        } catch (error) {
-            console.error('Error submitting zikr after registration:', error);
-            showToast({ type: "error", text: "Registration successful but failed to submit zikr." });
-        } finally {
-            setIsSubmitting(false);
-        }
-    }
-
-    function handleModalClose() {
-        // Called when user closes the modal without submitting
-        setIsModalOpen(false);
-    }
-
-    async function submitCountsForRegistered(mobile) {
-        // This function is no longer needed with the new modal flow
-        // The modal handles everything
-        setIsModalOpen(true);
-    }
 
     return (
         <div
@@ -473,22 +419,7 @@ export default function Page() {
                 </div>
             )}
 
-            <UserModal
-                open={isModalOpen}
-                onClose={handleModalClose}
-                onSuccess={handleModalSuccess}
-                tasbihCount={Number(count) || 0}
-                zikrType={selected}
-                savedMobile={savedMobile}
-                pageType="zikr"
-                importantMessage={
-                    <div className="mt-2 p-3 bg-warning/10 border border-warning/30 rounded-lg text-sm text-warning-content">
-                        <p className="font-medium text-base-content">
-                            Baraye maherbani agar zikr submit karein toh fake counts submit na karein, ye galat or najayaz tarika hai, apse guzarish hy ki jo zikr ap ne parha hai wohi submit karein.
-                        </p>
-                    </div>
-                }
-            />
+
         </div>
     );
 }
@@ -499,19 +430,15 @@ function Toast({ toast, isDark }) {
 
     const content = (
         <div
-            className="fixed left-1/2 transform -translate-x-1/2 bottom-6 z-50 pointer-events-none"
-            style={{ paddingBottom: "env(safe-area-inset-bottom)" }}
+            className="fixed top-4 left-1/2 transform -translate-x-1/2 z-50 pointer-events-none w-full max-w-md px-4"
+            style={{ paddingTop: "env(safe-area-inset-top)" }}
         >
             <div
                 role="status"
                 aria-live="polite"
-                className={`max-w-md mx-auto px-4 py-2 rounded shadow pointer-events-auto transition-opacity duration-200 ease-out ${toast.type === "error"
-                    ? isDark
-                        ? "bg-red-800 text-white"
-                        : "bg-red-100 text-red-800"
-                    : isDark
-                        ? "bg-green-800 text-white"
-                        : "bg-green-100 text-green-800"
+                className={`w-full px-6 py-4 rounded-2xl shadow-lg pointer-events-auto transition-all duration-300 ease-out font-medium text-base ${toast.type === "error"
+                        ? "bg-red-500 text-white"
+                        : "bg-green-500 text-white"
                     }`}
             >
                 {toast.text}

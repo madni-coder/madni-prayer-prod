@@ -99,8 +99,8 @@ export async function POST(req) {
             typeof body.weeklyCounts === "number"
                 ? body.weeklyCounts
                 : typeof tasbihCount === "number"
-                ? tasbihCount
-                : 0;
+                    ? tasbihCount
+                    : 0;
 
         // Only validate mobile number if fullName and address are not provided
         if (!fullName && !address) {
@@ -149,16 +149,15 @@ export async function POST(req) {
                     weeklyCounts: weeklyCounts,
                 },
             });
-        }
-        if (!existingUser && !fullName && !address) {
+        } else if (!existingUser && !fullName && !address) {
             return NextResponse.json(
                 {
                     ok: false,
                     error: "NOT_REGISTERED",
-                    message: "Its new user",
+                    message: "User details (fullName, address) are required for new users. Please complete your profile.",
                     count: tasbihCount,
                 },
-                { status: 200 }
+                { status: 400 }
             );
         }
 
@@ -211,19 +210,19 @@ export async function POST(req) {
         // Convert BigInt fields to Number before returning
         const safeNewItem = newItem
             ? {
-                  ...newItem,
-                  count:
-                      typeof newItem.count === "bigint"
-                          ? Number(newItem.count)
-                          : newItem.count,
-                  weeklyCounts:
-                      typeof newItem.weeklyCounts === "bigint"
-                          ? Number(newItem.weeklyCounts)
-                          : newItem.weeklyCounts,
-              }
+                ...newItem,
+                count:
+                    typeof newItem.count === "bigint"
+                        ? Number(newItem.count)
+                        : newItem.count,
+                weeklyCounts:
+                    typeof newItem.weeklyCounts === "bigint"
+                        ? Number(newItem.weeklyCounts)
+                        : newItem.weeklyCounts,
+            }
             : null;
         return NextResponse.json(
-            { ok: true, data: safeNewItem },
+            { ok: true, message: "Durood Sharif registered successfully!", data: safeNewItem },
             { status: 201 }
         );
     } catch (err) {
