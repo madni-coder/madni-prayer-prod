@@ -52,7 +52,11 @@ const navLinks = [
         href: "/contactUs",
         icon: <FaRegIdBadge className="text-lg" />,
     },
-    
+    {
+        name: "My Profile",
+        href: "/myProfile",
+        icon: <FaUser className="text-lg" />,
+    },
 ];
 
 export default function TopNav() {
@@ -175,7 +179,7 @@ export default function TopNav() {
                     <div
                         id="mobile-nav"
                         role="menu"
-                        className="origin-top-right absolute right-0 mt-2 w-52 rounded-2xl border border-base-300 bg-base-100 shadow-2xl z-40 overflow-hidden"
+                        className="origin-top-right absolute right-0 mt-2 w-52 rounded-2xl border border-base-300 bg-base-100 shadow-2xl z-40 h-[calc(100vh-80px)] max-h-[calc(100vh-80px)] overflow-y-auto"
                         style={{
                             // use preserve-3d/backface-visibility and a short transform transition
                             transformStyle: "preserve-3d",
@@ -189,7 +193,7 @@ export default function TopNav() {
                             pointerEvents: mobileOpen ? "auto" : "none",
                         }}
                     >
-                        <ul className="menu p-3 max-h-[calc(100vh-200px)]">
+                        <ul className="menu p-3 h-full ">
                             {navLinks.map((link, index) => (
                                 <li
                                     key={link.name}

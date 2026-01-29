@@ -9,7 +9,7 @@ import {
     FaGift,
     FaMicrophone,
     FaPhoneSquare,
-    FaHandPointRight
+    FaHandPointRight, FaUser,
 } from "react-icons/fa";
 import { Megaphone } from "lucide-react";
 import Image from "next/image";
@@ -42,7 +42,13 @@ const sections = [
         href: "/tasbih",
         icon: <TasbihSvgIcon className="w-12 h-12 lg:w-24 lg:h-24" />,
     },
-
+    {
+        name: "Zikr",
+        href: "/zikr",
+        icon: (
+            <img src="/iconZikr.png" alt="Zikr" className="w-10 h-10 object-contain bg-white rounded-full p-0.5" />
+        ),
+    },
     {
         name: "Rewards",
         href: "/rewards",
@@ -58,6 +64,14 @@ const sections = [
         href: "/contactUs",
         icon: (
             <FaPhoneSquare className="text-3xl lg:text-6xl text-orange-400" />
+        ),
+    },
+   
+    {
+        name: "My Profile",
+        href: "/myProfile",
+        icon: (
+            <FaUser className="text-3xl lg:text-6xl text-cyan-500" />
         ),
     },
 ];
