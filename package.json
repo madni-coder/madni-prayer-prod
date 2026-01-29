@@ -5,7 +5,7 @@
     "scripts": {
         "dev": "npm run move-api && NEXT_DISABLE_TURBOPACK=1 next dev",
         "move-api": "if [ -d 'src/utils/api' ]; then rm -rf src/app/api && mv src/utils/api src/app/api; fi",
-        "move-api-back": "if [ -d 'src/app/api' ]; then rm -rf src/utils/api && mv src/app/api src/utils/api; fi",
+        "move-api-back": "if [ -e 'src/app/api' ]; then rm -rf src/utils/api && mkdir -p src/utils && mv src/app/api src/utils/api; fi",
         "delete:build": "rm -rf .next && rm -rf out",
         "build": "npm run move-api && npm run db:generate && npm run db:migrate && next build",
         "build:tauri": "npm run delete:build && npm run move-api-back && npm run db:generate && next build",
