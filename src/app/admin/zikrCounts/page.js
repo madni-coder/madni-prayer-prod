@@ -11,6 +11,8 @@ export default function ZikrCountsPage() {
     const [loading, setLoading] = useState(true);
     const [zikrList, setZikrList] = useState([]);
     const [zikrLoading, setZikrLoading] = useState(true);
+    const [currentPage, setCurrentPage] = useState(1);
+    const [pageSize] = useState(15); // fixed page size (changed to 15)
 
     useEffect(() => {
         // Check authentication on client side
@@ -44,6 +46,11 @@ export default function ZikrCountsPage() {
         fetchZikr();
     }, []);
 
+    // reset page when data changes
+    useEffect(() => {
+        setCurrentPage(1);
+    }, [zikrList]);
+
     // no local filtering/pagination — show all zikr records in a table
 
     // Show loading while checking authentication
@@ -54,6 +61,13 @@ export default function ZikrCountsPage() {
             </div>
         );
     }
+
+    // pagination calculations (computed in component scope so JSX can access)
+    const totalPages = Math.max(1, Math.ceil(zikrList.length / pageSize));
+    const start = (currentPage - 1) * pageSize;
+    const pageItems = zikrList.slice(start, start + pageSize);
+    const startItem = zikrList.length === 0 ? 0 : start + 1;
+    const endItem = Math.min(start + pageSize, zikrList.length);
 
     return (
         <div className="bg-white rounded-xl shadow p-0 mt-8">
@@ -82,13 +96,13 @@ export default function ZikrCountsPage() {
                                     <th className="text-left text-white">Mobile</th>
                                     <th className="text-left text-white">Zikr Type</th>
                                     <th className="text-left text-white">Zikr Counts</th>
-                                    <th className="text-left text-white">Created At</th>
+                                    <th className="text-left text-white">Last Updated</th>
                                 </tr>
                             </thead>
                             <tbody>
-                                {zikrList.map((z, idx) => (
-                                    <tr key={z.id ?? idx} className="border-b last:border-b-0 hover:bg-gray-50">
-                                        <td className="py-3 text-gray-800">{idx + 1}</td>
+                                {pageItems.map((z, idx) => (
+                                    <tr key={z.id ?? start + idx} className="border-b last:border-b-0 hover:bg-gray-50">
+                                        <td className="py-3 text-gray-800">{start + idx + 1}</td>
                                         <td className="py-3 text-gray-800">{z.gender ?? "-"}</td>
                                         <td className="py-3 text-gray-800">{z.fullName ?? "-"}</td>
                                         <td className="py-3 text-gray-800">{z.address ?? "-"}</td>
@@ -101,6 +115,37 @@ export default function ZikrCountsPage() {
                                 ))}
                             </tbody>
                         </table>
+                        {/* Pagination - always visible */}
+                        <div className="mt-4 flex items-center justify-between border-t pt-3">
+                            <div className="text-sm text-gray-600">Showing {startItem} to {endItem} of {zikrList.length} entries</div>
+                            <div className="flex items-center gap-2">
+                               
+                                <button
+                                    className="px-3 py-1 bg-black border rounded "
+                                    onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+                                    disabled={currentPage === 1 || zikrList.length === 0}
+                                >
+                                    Prev
+                                </button>
+                                {Array.from({ length: totalPages }).map((_, i) => (
+                                    <button
+                                        key={i}
+                                        onClick={() => setCurrentPage(i + 1)}
+                                        className={`px-3 py-1 border rounded ${currentPage === i + 1 ? 'bg-cyan-500 text-black' : 'bg-white'}`}
+                                    >
+                                        {i + 1}
+                                    </button>
+                                ))}
+                                <button
+                                    className="px-3 py-1 bg-black border rounded "
+                                    onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+                                    disabled={currentPage >= totalPages || zikrList.length === 0}
+                                >
+                                    Next
+                                </button>
+                               
+                            </div>
+                        </div>
                     </div>
                 )}
             </div>

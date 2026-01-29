@@ -147,17 +147,38 @@ export default function MyProfilePage() {
                 localStorage.setItem('userData', JSON.stringify(data.user));
             }
 
+            // update local state and show success
             setLoading(false);
+            setProfileUser(data.user || null);
+            setFullName(data.user?.fullName || '');
+            setEmail(data.user?.email || '');
+            setAddress(data.user?.address || '');
+            setAreaMasjid(data.user?.areaMasjid || '');
+            setMobileValue(data.user?.mobile || '');
+            setGender(data.user?.gender || '');
+            setIsAuthenticated(true);
+            // Close the register form after successful registration
+            setShowRegisterForm(false);
+
             setSuccessMessage("Registration successful!");
             setShowSuccessToast(true);
 
-            // keep user on page; other flows can read localStorage afterwards
+            // Refresh the current route so any server data is re-fetched
+            try {
+                router.refresh();
+            } catch (e) {
+                // fallback to full reload if refresh isn't available
+                if (typeof window !== 'undefined') window.location.reload();
+            }
+
             setTimeout(() => setShowSuccessToast(false), 2000);
         } catch (err) {
             console.error("Registration error:", err);
             const apiMessage = err?.response?.data?.error || err?.message || "Something went wrong. Please try again.";
             setError(apiMessage);
             setLoading(false);
+            // Re-open the register form so the user can correct errors
+            setShowRegisterForm(true);
         }
     }
 
@@ -238,8 +259,7 @@ export default function MyProfilePage() {
                         <FaAngleLeft /> Back
                     </button>
 
-                    <h1 className="text-3xl md:text-4xl font-bold bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent flex-1 text-center">
-
+                    <h1 className="text-3xl md:text-4xl font-bold bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent ml-2 text-left">
                         My Profile
                     </h1>
 
@@ -264,7 +284,7 @@ export default function MyProfilePage() {
                                 </div>
                                 <div>
                                     <label className="label pb-1"><span className="label-text text-white">Password</span></label>
-                                    <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} className="input input-bordered w-full bg-black/30 text-white placeholder-white/60" placeholder="Password" required />
+                                    <input type="text" value={password} onChange={(e) => setPassword(e.target.value)} className="input input-bordered w-full bg-black/30 text-white placeholder-white/60" placeholder="Password" required />
                                 </div>
                                 <div className="flex items-center justify-between gap-3">
                                     <button type="submit" className="btn btn-primary flex-1" disabled={loginLoading}>
@@ -466,7 +486,7 @@ export default function MyProfilePage() {
                                     <div className="relative">
                                         <FaLock className="absolute left-4 top-1/2 -translate-y-1/2 text-white-400 z-10" size={18} />
                                         <input
-                                            type="password"
+                                            type="text"
                                             placeholder="Add a password"
                                             className="input input-bordered w-full pl-12 h-12 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all"
                                             value={password}
@@ -486,7 +506,7 @@ export default function MyProfilePage() {
                                     <div className="relative">
                                         <FaLock className="absolute left-4 top-1/2 -translate-y-1/2 text-white-400 z-10" size={18} />
                                         <input
-                                            type="password"
+                                            type="text"
                                             placeholder="Confirm your password"
                                             className="input input-bordered w-full pl-12 h-12 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all"
                                             value={confirmPassword}
@@ -589,7 +609,7 @@ export default function MyProfilePage() {
                                 </button>
                                 <div className="flex items-center justify-between gap-3">
 
-                                    <button type="button" onClick={() => { setShowLoginModal(true); }} className="text-md text-white hover:text-white underline">
+                                    <button type="button" onClick={() => { setShowLoginModal(true); }} className="text-md text-primary font-bold  underline">
                                         Already have an account? Login
                                     </button>
                                 </div>
@@ -616,10 +636,12 @@ export default function MyProfilePage() {
             </div>
 
             {showSuccessToast && (
-                <div className="fixed top-4 left-1/2 -translate-x-1/2 z-[100]">
-                    <div className="bg-green-500 text-white px-6 py-3 rounded-lg shadow-lg flex items-center gap-3">
-                        <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg>
-                        <span className="font-semibold">{successMessage}</span>
+                <div className="fixed bottom-4 left-1/2 -translate-x-1/2 z-[100] w-[90%] max-w-3xl">
+                    <div className="bg-green-500 text-white px-6 py-3 rounded-lg shadow-lg flex items-center gap-3 w-full h-12">
+                        <div className="flex items-center gap-3 flex-1">
+                            <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg>
+                            <span className="font-semibold truncate">{successMessage}</span>
+                        </div>
                     </div>
                 </div>
             )}

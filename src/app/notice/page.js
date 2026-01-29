@@ -37,8 +37,8 @@ export default function NoticeFeed() {
                         <FaAngleLeft /> Back
                     </button>
 
-                    <h1 className="text-3xl md:text-4xl font-bold bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent flex-1 text-center">
-                        Notice
+                    <h1 className="text-3xl md:text-4xl font-bold bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent ml-2 text-left">
+                      Aelaan
                     </h1>
                 </div>
             </div>
