@@ -476,14 +476,22 @@ export default function JamatTimesPage() {
 
     return (
         <div className="min-h-screen flex flex-col items-center justify-center bg-base-200 pb-12">
-            <button
-                className="flex items-center gap-2 mb-4 text-lg text-primary hover:text-green-600 font-semibold"
-                onClick={() => router.push("/")}
-                aria-label="Back to Home"
-                style={{ alignSelf: "flex-start" }}
-            >
-                <FaAngleLeft /> Back
-            </button>
+            <div className="w-full max-w-md px-4">
+                <div className="mb-8 flex items-center gap-4">
+                    <button
+                        className="flex items-center gap-2 text-lg text-primary hover:text-green-600 font-semibold"
+                        onClick={() => router.push("/")}
+                        aria-label="Back to Home"
+                    >
+                        <FaAngleLeft /> Back
+                    </button>
+
+                </div>
+
+                <h1 className="text-3xl md:text-4xl font-bold bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent flex-1 text-center">
+                    Jamat Times
+                </h1>
+            </div>
 
             <div className="sticky top-0 left-0 w-full z-10 flex justify-center bg-base-200/80 backdrop-blur-sm py-2">
                 <div className="w-full max-w-xs sm:max-w-sm md:max-w-md">

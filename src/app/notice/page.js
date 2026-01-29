@@ -28,17 +28,19 @@ export default function NoticeFeed() {
     return (
         <div className="min-h-screen relative flex flex-col items-center bg-base-200 pt-6 pb-24">
             <div className="w-full max-w-xs mx-auto">
-                <button
-                    type="button"
-                    className="flex items-center gap-2 mb-4 text-lg text-primary hover:text-green-600 font-semibold cursor-pointer z-10"
-                    onClick={(e) => {
-                        e.preventDefault();
-                        router.push("/");
-                    }}
-                    aria-label="Back to Home"
-                >
-                    <FaAngleLeft /> Back
-                </button>
+                <div className="mb-8 flex items-center gap-4">
+                    <button
+                        className="flex items-center gap-2 text-lg text-primary hover:text-green-600 font-semibold"
+                        onClick={() => router.push("/")}
+                        aria-label="Back to Home"
+                    >
+                        <FaAngleLeft /> Back
+                    </button>
+
+                    <h1 className="text-3xl md:text-4xl font-bold bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent flex-1 text-center">
+                        Notice
+                    </h1>
+                </div>
             </div>
             <div className="w-full max-w-xs mx-auto space-y-6 pb-4">
                 {error && (

@@ -146,14 +146,21 @@ const RewardsPage = () => {
 
     return (
         <div className="min-h-screen flex flex-col items-center justify-center bg-base-200">
-            <button
-                className="flex items-center gap-2 mb-4 text-lg text-primary hover:text-green-600 font-semibold"
-                onClick={() => router.push("/")}
-                aria-label="Back to Home"
-                style={{ alignSelf: "flex-start" }}
-            >
-                <FaAngleLeft /> Back
-            </button>
+            <div className="w-full max-w-md px-4">
+                <div className="mb-8 flex items-center gap-4">
+                    <button
+                        className="flex items-center gap-2 text-lg text-primary hover:text-green-600 font-semibold"
+                        onClick={() => router.push("/")}
+                        aria-label="Back to Home"
+                    >
+                        <FaAngleLeft /> Back
+                    </button>
+
+                    <h1 className="text-3xl md:text-4xl font-bold bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent flex-1 text-center">
+                        Rewards
+                    </h1>
+                </div>
+            </div>
             {/* Winner Announcement Card */}
             <div
                 className="w-full max-w-md mx-auto bg-base-100 rounded-2xl p-6 mb-6 shadow-xl"
@@ -415,8 +422,8 @@ const RewardsPage = () => {
                                     {user.empty
                                         ? "--"
                                         : String(
-                                              user.weeklyCounts ?? 0
-                                          ).padStart(2, "0")}
+                                            user.weeklyCounts ?? 0
+                                        ).padStart(2, "0")}
                                 </div>
                             </div>
                         );
