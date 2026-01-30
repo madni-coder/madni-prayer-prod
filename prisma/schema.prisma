@@ -106,3 +106,15 @@ model User {
 
   @@map("users")
 }
+
+model FreeService {
+  id             Int      @id @default(autoincrement())
+  mutuwalliName  String
+  mobileNumber   String
+  masjidName     String
+  numberOfACs    String
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  @@map("free_services")
+}

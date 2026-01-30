@@ -66,7 +66,7 @@ const sections = [
             <FaPhoneSquare className="text-3xl lg:text-6xl text-orange-400" />
         ),
     },
-   
+
     {
         name: "My Profile",
         href: "/myProfile",
@@ -91,7 +91,7 @@ export default function Home() {
                     </span>{" "}
                 </h1>
                 <Link
-                    href="/time-table"
+                    href="/ramzan"
                     className="mt-2 text-lg sm:text-xl max-w-2xl mx-auto inline-block font-semibold px-4 py-2 rounded-lg bg-gradient-to-r from-primary to-secondary text-white shadow-sm hover:shadow-md transform transition-all duration-200 hover:scale-105 cursor-pointer"
                 >
                     <span className="inline-flex items-center">

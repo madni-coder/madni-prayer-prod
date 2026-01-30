@@ -10,7 +10,8 @@ import {
     School,
     Coins,
     LogOut,
-    Gauge, Book,UsersRound
+    Gauge, Book, UsersRound,
+    Wind
 } from "lucide-react";
 
 const navigation = [
@@ -34,7 +35,7 @@ const navigation = [
         href: "/admin/notice",
         icon: Megaphone,
     },
-   
+
     {
         name: "Durooj Sharif",
         href: "/admin/durood-sharif",
@@ -44,6 +45,11 @@ const navigation = [
         name: "Zikr Counts",
         href: "/admin/zikrCounts",
         icon: Book,
+    },
+    {
+        name: "Free Services",
+        href: "/admin/freeServices",
+        icon: Wind,
     },
     {
         name: "Users  ",
@@ -77,18 +83,16 @@ export default function AdminSidebar({ isOpen, onClose, onLogout }) {
                                 <Link
                                     key={item.name}
                                     href={item.href}
-                                    className={`${
-                                        isActive
+                                    className={`${isActive
                                             ? "bg-blue-50 border-r-4 border-blue-500 text-blue-700"
                                             : "text-gray-600 hover:bg-gray-50 hover:text-gray-900"
-                                    } group flex items-center px-2 py-2 text-sm font-medium rounded-md transition-colors duration-150`}
+                                        } group flex items-center px-2 py-2 text-sm font-medium rounded-md transition-colors duration-150`}
                                 >
                                     <item.icon
-                                        className={`${
-                                            isActive
+                                        className={`${isActive
                                                 ? "text-blue-500"
                                                 : "text-gray-400 group-hover:text-gray-500"
-                                        } mr-3 flex-shrink-0 h-6 w-6`}
+                                            } mr-3 flex-shrink-0 h-6 w-6`}
                                         aria-hidden="true"
                                     />
                                     {item.name}
@@ -112,9 +116,8 @@ export default function AdminSidebar({ isOpen, onClose, onLogout }) {
 
             {/* Mobile sidebar */}
             <div
-                className={`lg:hidden fixed inset-y-0 left-0 z-50 w-64 bg-white transform ${
-                    isOpen ? "translate-x-0" : "-translate-x-full"
-                } transition-transform duration-300 ease-in-out`}
+                className={`lg:hidden fixed inset-y-0 left-0 z-50 w-64 bg-white transform ${isOpen ? "translate-x-0" : "-translate-x-full"
+                    } transition-transform duration-300 ease-in-out`}
             >
                 <div className="flex flex-col h-full">
                     <div className="flex items-center justify-between flex-shrink-0 px-4 py-4 border-b border-gray-200">
@@ -141,18 +144,16 @@ export default function AdminSidebar({ isOpen, onClose, onLogout }) {
                                     key={item.name}
                                     href={item.href}
                                     onClick={onClose}
-                                    className={`${
-                                        isActive
+                                    className={`${isActive
                                             ? "bg-blue-50 border-r-4 border-blue-500 text-blue-700"
                                             : "text-gray-600 hover:bg-gray-50 hover:text-gray-900"
-                                    } group flex items-center px-2 py-2 text-sm font-medium rounded-md transition-colors duration-150`}
+                                        } group flex items-center px-2 py-2 text-sm font-medium rounded-md transition-colors duration-150`}
                                 >
                                     <item.icon
-                                        className={`${
-                                            isActive
+                                        className={`${isActive
                                                 ? "text-blue-500"
                                                 : "text-gray-400 group-hover:text-gray-500"
-                                        } mr-3 flex-shrink-0 h-6 w-6`}
+                                            } mr-3 flex-shrink-0 h-6 w-6`}
                                         aria-hidden="true"
                                     />
                                     {item.name}
