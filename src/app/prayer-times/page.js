@@ -236,34 +236,23 @@ export default function PrayerTimesPage() {
         if (initialFetchDoneRef.current) return; // guard against second invocation
         initialFetchDoneRef.current = true;
 
-        // If a city is already saved in localStorage, skip the default fetch
-        // to avoid briefly rendering the default city (e.g. Bilaspur).
-        try {
-            const raw = localStorage.getItem(LS_KEY);
-            if (raw) {
-                const obj = JSON.parse(raw);
-                if (obj && obj.lat && obj.lon) {
-                    // saved city exists; do not run the default fetch
-                    return;
-                }
-            }
-        } catch (e) {
-            // ignore localStorage read/parse errors and proceed with default fetch
-        }
-
-        const fetchPrayerTimesAndSetState = async () => {
+        const fetchPrayerTimesAndSetState = async (lat = null, lon = null, displayName = "") => {
             try {
                 const today = new Date();
                 const y = today.getFullYear();
                 const m = String(today.getMonth() + 1).padStart(2, "0");
                 const d = String(today.getDate()).padStart(2, "0");
                 const dateStr = `${y}-${m}-${d}`;
-                const { data: json } = await apiClient.get(
-                    `/api/api-prayerTimes?date=${dateStr}`
-                );
+
+                let apiUrl = `/api/api-prayerTimes?date=${dateStr}`;
+                if (lat && lon) {
+                    apiUrl = `/api/api-prayerTimes?lat=${lat}&lon=${lon}&date=${dateStr}`;
+                }
+
+                const { data: json } = await apiClient.get(apiUrl);
 
                 // try to extract a sensible location name from the API response
-                const loc =
+                const loc = displayName ||
                     json?.location?.name ||
                     json?.meta?.timezone ||
                     (json?.data &&
@@ -323,6 +312,21 @@ export default function PrayerTimesPage() {
                         };
                     })
                 );
+
+                // If we used lat/lon and have a location, save to localStorage
+                if (lat && lon && loc) {
+                    try {
+                        const saved = {
+                            lat: String(lat),
+                            lon: String(lon),
+                            display_name: loc,
+                        };
+                        localStorage.setItem(LS_KEY, JSON.stringify(saved));
+                    } catch (e) {
+                        console.warn("Could not persist saved city", e);
+                    }
+                }
+
                 setLoading(false);
             } catch (err) {
                 console.error("Error fetching prayer times:", err);
@@ -331,6 +335,22 @@ export default function PrayerTimesPage() {
             }
         };
 
+        // Check if we have a saved city in localStorage
+        try {
+            const raw = localStorage.getItem(LS_KEY);
+            if (raw) {
+                const obj = JSON.parse(raw);
+                if (obj && obj.lat && obj.lon) {
+                    // Load from saved city
+                    fetchPrayerTimesAndSetState(obj.lat, obj.lon, obj.display_name || "");
+                    return;
+                }
+            }
+        } catch (e) {
+            console.warn("Error reading from localStorage", e);
+        }
+
+        // No saved city - fetch default (Bilaspur) and save it
         fetchPrayerTimesAndSetState();
     }, []);
 
@@ -439,6 +459,19 @@ export default function PrayerTimesPage() {
                             };
                         })
                     );
+
+                    // Save the geolocation-based city to localStorage
+                    try {
+                        const saved = {
+                            lat: String(lat),
+                            lon: String(lon),
+                            display_name: fallbackLoc,
+                        };
+                        localStorage.setItem(LS_KEY, JSON.stringify(saved));
+                    } catch (e) {
+                        console.warn("Could not persist saved city", e);
+                    }
+
                     setShowLocationModal(false);
                     setLoading(false);
                 } catch (err) {
@@ -532,27 +565,7 @@ export default function PrayerTimesPage() {
             alert("Error fetching prayer times for selected city.");
         }
     };
-    // On mount, load saved city (if any) and fetch prayer times for it so the app
-    // always shows the saved city's prayer times.
-    useEffect(() => {
-        try {
-            const raw = localStorage.getItem(LS_KEY);
-            if (!raw) return;
-            const obj = JSON.parse(raw);
-            if (obj && obj.lat && obj.lon) {
-                // call the same handler used by Save; it will update UI and persist (again).
-                fetchPrayerTimesByCoords(
-                    obj.lat,
-                    obj.lon,
-                    obj.display_name || ""
-                );
-            }
-        } catch (e) {
-            // ignore parse errors or localStorage errors
-        }
-        // run only once
-    }, []);
-
+    // Removed: This logic is now handled in the initial fetch useEffect above
     // Prefill search box with current location when opening modal if empty
     // REPLACED: keep the search input empty by default and clear previous results/selection
     useEffect(() => {
@@ -648,353 +661,344 @@ export default function PrayerTimesPage() {
             .replace(/^0/, "");
 
     return (
-        <div
-            className="w-full min-h-screen flex flex-col items-center justify-start bg-base-200"
-            style={{ paddingTop: 0, marginTop: 0 }}
-        >
-            <button
-                className="flex items-center gap-2 text-lg text-primary hover:text-green-600 font-semibold md:text-xl lg:text-2xl md:mt-4 md:mb-2"
-                onClick={() => router.push("/")}
-                aria-label="Back to Home"
-                style={{ alignSelf: "flex-start", marginTop: 0, paddingTop: 0 }}
-            >
-                <FaAngleLeft /> Back
-            </button>
-            <section
-                className="flex flex-col items-center justify-start w-full px-0 py-0 sm:px-0 sm:py-0 md:px-8 md:py-4 lg:px-16 lg:py-8 animate-fade-in bg-base-100"
-                style={{ marginTop: 0, paddingTop: 0 }}
-            >
-                <h2
-                    className="text-lg sm:text-2xl md:text-3xl lg:text-4xl font-bold text-primary mb-0 sm:mb-0 md:mb-2 lg:mb-4"
-                    style={{ marginTop: 0, paddingTop: 0 }}
-                >
-                    Prayer Times
-                </h2>
-                {/* Top Bar */}
-                <div className="w-full max-w-2xl flex flex-col sm:flex-row flex-wrap items-center justify-center gap-2 sm:gap-0 md:gap-4 mb-0 md:mb-2 lg:mb-4">
-                    {/* Hijri date removed as requested */}
-                    <div className="flex items-center gap-1 sm:gap-2 md:gap-3 text-sm sm:text-sm md:text-base text-white">
-                        <Calendar className="w-5 h-5 sm:w-5 sm:h-5 md:w-6 md:h-6" />
-                        <span>
-                            {now.toLocaleDateString("en-US", {
-                                weekday: "short",
-                                year: "numeric",
-                                month: "long",
-                                day: "2-digit",
-                            })}
-                        </span>
-                    </div>
-                    <div className="flex items-center gap-1 sm:gap-2 md:gap-3 text-sm sm:text-sm md:text-base text-primary">
-                        <FaClock className="w-4 h-4 mr-1 md:w-5 md:h-5" />
-                        <span>Current Time: {formatTime(now)}</span>
-                    </div>
-                    <div className="flex items-center gap-1 sm:gap-2 md:gap-3 text-xs sm:text-sm md:text-base text-white">
-                        <FaMapMarkerAlt className="w-4 h-4 md:w-5 md:h-5" />
-                        <button
-                            className="underline hover:text-green-400 focus:outline-none text-left"
-                            onClick={() => setShowLocationModal(true)}
-                            style={{
-                                background: "none",
-                                border: "none",
-                                padding: 0,
-                                margin: 0,
-                            }}
-                            aria-label="Select Location"
-                        >
-                            {locationName ? (
-                                <div className="text-left leading-tight text-lg">
-                                    <div className="font-medium text-white md:text-base lg:text-lg">
-                                        {locationName.split(",")[0]}
-                                    </div>
-                                    {locationName.split(",").length > 1 && (
-                                        <div className="text-[10px] sm:text-xs md:text-sm text-white-300 mt-0.5 mb-2">
-                                            {locationName
-                                                .split(",")
-                                                .slice(1, 3)
-                                                .join(",")
-                                                .trim()}
-                                        </div>
-                                    )}
-                                </div>
-                            ) : (
-                                "Loading Location....."
-                            )}
-                        </button>
+        <div className="w-full min-h-screen bg-base-200">
+            {/* Header Section */}
+            <div className="w-full bg-base-100 border-b border-base-300 shadow-sm">
+                <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-2 md:py-4">
+                    <button
+                        className="flex items-center gap-1.5 text-primary hover:text-green-500 font-medium transition-colors mb-2 md:mb-3"
+                        onClick={() => router.push("/")}
+                        aria-label="Back to Home"
+                    >
+                        <FaAngleLeft className="w-4 h-4" />
+                        <span className="text-sm md:text-base">Back</span>
+                    </button>
+
+                    <h1 className="text-xl md:text-3xl lg:text-4xl font-bold text-primary mb-3 md:mb-6">
+                        Prayer Times
+                    </h1>
+
+                    {/* Info Cards */}
+                    <div className="grid grid-cols-2 gap-3 md:gap-4">
+                        {/* Date Card */}
+                        <div className="bg-base-200 rounded-lg p-3 md:p-4 flex items-center gap-3 border border-base-300">
+                            <div className="p-2 md:p-2.5 bg-primary/10 rounded-lg">
+                                <Calendar className="w-5 h-5 md:w-6 md:h-6 text-primary" />
+                            </div>
+                            <div className="flex-1 min-w-0">
+                                <p className="text-sm md:text-base text-base-content font-bold">
+                                    {now.toLocaleDateString("en-US", {
+                                        weekday: "short",
+                                        month: "short",
+                                        day: "numeric",
+                                    })}
+                                </p>
+                                <p className="text-xs text-white">
+                                    {now.toLocaleDateString("en-US", {
+                                        year: "numeric",
+                                    })}
+                                </p>
+                            </div>
+                        </div>
+
+                        {/* Time Card */}
+                        <div className="bg-base-200 rounded-lg p-3 md:p-4 flex items-center gap-3 border border-base-300">
+                            <div className="p-2 md:p-2.5 bg-green-500/10 rounded-lg">
+                                <FaClock className="w-5 h-5 md:w-6 md:h-6 text-green-500" />
+                            </div>
+                            <div className="flex-1 min-w-0">
+                                <p className="text-xs text-white font-large mb-0.5">Current Time</p>
+                                <p className="text-sm md:text-base text-base-content font-bold">
+                                    {formatTime(now)}
+                                </p>
+                               
+                            </div>
+                        </div>
                     </div>
                 </div>
-                {/* Location Modal */}
-                {showLocationModal && (
-                    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-60">
-                        <div className="bg-[#181c27] rounded-xl shadow-lg p-6 w-[350px] max-w-full md:w-[400px] lg:w-[480px] relative">
-                            <button
-                                className="absolute top-3 right-3 text-gray-400 hover:text-white"
-                                onClick={() => setShowLocationModal(false)}
-                                aria-label="Close"
-                            >
-                                <X className="w-5 h-5" />
-                            </button>
-                            <h3 className="text-white text-lg md:text-xl font-semibold mb-4">
+            </div>
+
+            {/* Main Content */}
+            <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-3 md:py-6">
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-3 md:gap-6">
+
+                    {/* Countdown Section */}
+                    <div className="lg:col-span-1">
+                        <div className="bg-base-100 rounded-xl shadow-lg p-3 md:p-6 border border-base-300 lg:sticky lg:top-6">
+
+                            <div className="flex flex-col items-center justify-center">
+                                <div className="relative w-36 h-36 md:w-48 md:h-48 lg:w-56 lg:h-56 mb-2 md:mb-4">
+                                    <svg
+                                        className="absolute top-0 left-0 w-full h-full transform -rotate-90"
+                                        viewBox="0 0 180 180"
+                                    >
+                                        {(() => {
+                                            const circumference = 2 * Math.PI * 80;
+                                            const idx = currentIdx;
+                                            const start = prayerDateTimes[idx];
+                                            let next = prayerDateTimes[(idx + 1) % prayerDateTimes.length];
+                                            if (next && start && next <= start) {
+                                                next = new Date(next.getTime() + 24 * 60 * 60 * 1000);
+                                            }
+                                            const duration = start && next
+                                                ? Math.max(1, Math.floor((next.getTime() - start.getTime()) / 1000))
+                                                : null;
+                                            const progress = duration && timeLeftSeconds != null
+                                                ? Math.max(0, Math.min(1, 1 - timeLeftSeconds / duration))
+                                                : 0;
+                                            const offset = circumference * (1 - progress);
+
+                                            return (
+                                                <>
+                                                    <circle
+                                                        cx="90"
+                                                        cy="90"
+                                                        r="80"
+                                                        stroke="currentColor"
+                                                        className="text-base-300"
+                                                        strokeWidth="8"
+                                                        fill="none"
+                                                    />
+                                                    <circle
+                                                        cx="90"
+                                                        cy="90"
+                                                        r="80"
+                                                        stroke="currentColor"
+                                                        className="text-warning"
+                                                        strokeWidth="8"
+                                                        fill="none"
+                                                        strokeDasharray={circumference}
+                                                        strokeDashoffset={offset}
+                                                        strokeLinecap="round"
+                                                        style={{ transition: "stroke-dashoffset 0.5s ease" }}
+                                                    />
+                                                </>
+                                            );
+                                        })()}
+                                    </svg>
+                                    <div className="absolute inset-0 flex flex-col items-center justify-center">
+                                        <span className="text-warning font-semibold text-sm md:text-lg mb-1 md:mb-2">
+                                            {prayerTimes[currentIdx]?.displayName || "Loading"}
+                                        </span>
+                                        <span className="text-xl md:text-3xl lg:text-4xl font-bold text-base-content">
+                                            {timeLeftSeconds != null
+                                                ? formatDuration(timeLeftSeconds)
+                                                : "--:--:--"}
+                                        </span>
+                                    </div>
+                                </div>
+                                <p className="text-xs md:text-sm text-bold text-white text-center">
+                                    Time remaining
+                                </p>
+
+                                {/* Location Button */}
+                                <button
+                                    className="mt-4 w-full bg-base-200 hover:bg-base-300 rounded-lg p-3 flex items-center justify-center gap-2 border border-base-300 transition-colors"
+                                    onClick={() => setShowLocationModal(true)}
+                                >
+                                    <FaMapMarkerAlt className="w-4 h-4 text-warning" />
+                                    <div className="flex flex-col items-start">
+                                        {locationName ? (
+                                            <>
+                                                <span className="text-sm font-semibold text-base-content underline">
+                                                    {locationName.split(",")[0]}
+                                                </span>
+                                            </>
+                                        ) : (
+                                            <span className="text-sm text-base-content/40">Select location...</span>
+                                        )}
+                                    </div>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Prayer Times List */}
+                    <div className="lg:col-span-2">
+                        <div className="bg-base-100 rounded-xl shadow-lg p-3 md:p-6 border border-base-300">
+
+                            <div className="space-y-2 md:space-y-3">
+                                {prayerTimes.map((prayer, index) => (
+                                    <div
+                                        key={prayer.name}
+                                        className={`group relative flex items-center justify-between p-2.5 md:p-4 rounded-lg transition-all border-2 ${currentIdx === index
+                                            ? "bg-primary/10 border-primary shadow-md scale-[1.02]"
+                                            : "bg-base-200 border-transparent hover:border-base-300"
+                                            }`}
+                                    >
+                                        {/* Color indicator */}
+                                        <div
+                                            className={`absolute left-0 top-0 bottom-0 w-1 rounded-l-lg ${prayer.name === "Fajr"
+                                                ? "bg-primary"
+                                                : prayer.name === "Sun Rise"
+                                                    ? "bg-error"
+                                                    : prayer.name === "Zuhr"
+                                                        ? "bg-accent"
+                                                        : prayer.name === "Asr"
+                                                            ? "bg-warning"
+                                                            : prayer.name === "Maghrib"
+                                                                ? "bg-purple-500"
+                                                                : "bg-info"
+                                                }`}
+                                        />
+
+                                        <div className="flex items-center gap-2 md:gap-4 flex-1 ml-2 md:ml-3">
+                                            <div className="flex-1">
+                                                <h3 className={`font-semibold text-sm md:text-lg ${currentIdx === index ? "text-primary" : "text-base-content"
+                                                    }`}>
+                                                    {prayer.displayName || prayer.name}
+                                                </h3>
+                                            </div>
+
+                                            <div className="flex items-center gap-2 md:gap-3">
+                                                <span className="font-mono text-base md:text-xl font-bold text-base-content">
+                                                    {formatTo12Hour(prayer.time)}
+                                                </span>
+                                                {prayer.alert ? (
+                                                    <Bell className="w-4 h-4 md:w-5 md:h-5 text-warning" title="Alert enabled" />
+                                                ) : (
+                                                    <BellOff className="w-4 h-4 md:w-5 md:h-5 text-base-content/30" title="Alert disabled" />
+                                                )}
+                                            </div>
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            {/* Location Modal */}
+            {showLocationModal && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4">
+                    <div className="bg-base-100 rounded-2xl shadow-2xl w-full max-w-md border border-base-300">
+                        {/* Modal Header */}
+                        <div className="flex items-center justify-between p-6 border-b border-base-300">
+                            <h3 className="text-xl font-bold text-base-content">
                                 Select Location
                             </h3>
                             <button
-                                className="w-full bg-green-500 hover:bg-green-600 text-white font-semibold py-2 rounded mb-4 transition-colors"
+                                className="p-2 hover:bg-base-200 rounded-lg transition-colors"
+                                onClick={() => setShowLocationModal(false)}
+                                aria-label="Close"
+                            >
+                                <X className="w-5 h-5 text-base-content" />
+                            </button>
+                        </div>
+
+                        {/* Modal Body */}
+                        <div className="p-6 space-y-4">
+                            {/* Get Location Button */}
+                            <button
+                                className="w-full bg-green-500 hover:bg-green-600 text-white font-semibold py-3 px-4 rounded-lg transition-colors flex items-center justify-center gap-2"
                                 onClick={handleGetLocation}
                             >
-                                Get location
+                                <FaMapMarkerAlt className="w-4 h-4" />
+                                Use My Current Location
                             </button>
-                            <div className="flex items-center my-2">
-                                <div className="flex-grow h-px bg-gray-600" />
-                                <span className="mx-2 text-gray-400 text-xs md:text-sm">
-                                    OR
-                                </span>
-                                <div className="flex-grow h-px bg-gray-600" />
+
+                            {/* Divider */}
+                            <div className="flex items-center gap-3">
+                                <div className="flex-1 h-px bg-base-300" />
+                                <span className="text-sm text-base-content/50 font-medium">OR</span>
+                                <div className="flex-1 h-px bg-base-300" />
                             </div>
-                            <div className="relative mb-2">
+
+                            {/* Search Input */}
+                            <div className="relative">
                                 <input
                                     type="text"
-                                    className="w-full bg-[#23283a] border border-gray-700 rounded px-3 py-2 text-white placeholder-gray-400 focus:outline-none focus:ring focus:border-green-500 md:text-base pr-8"
-                                    placeholder="Search For Any City"
+                                    className="w-full bg-base-200 border border-base-300 rounded-lg px-4 py-3 text-base-content placeholder-base-content/40 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all"
+                                    placeholder="Search for a city..."
                                     value={citySearch}
                                     onChange={(e) => {
-                                        // user typed -> clear any prior selection and resume searching
                                         setCitySearch(e.target.value);
-                                        if (selectedCityResult)
-                                            setSelectedCityResult(null);
-                                        if (suppressSearchAfterSelect)
-                                            setSuppressSearchAfterSelect(false);
+                                        if (selectedCityResult) setSelectedCityResult(null);
+                                        if (suppressSearchAfterSelect) setSuppressSearchAfterSelect(false);
                                     }}
                                 />
-                                {/* X icon to clear input */}
                                 {citySearch && (
                                     <button
                                         type="button"
-                                        className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 hover:text-red-500 p-1 rounded focus:outline-none"
+                                        className="absolute right-3 top-1/2 -translate-y-1/2 p-1 hover:bg-base-300 rounded-lg transition-colors"
                                         aria-label="Clear search"
                                         onClick={() => {
                                             setCitySearch("");
                                             setSelectedCityResult(null);
                                             setSuppressSearchAfterSelect(false);
                                         }}
-                                        tabIndex={0}
                                     >
-                                        <X className="w-4 h-4" />
+                                        <X className="w-4 h-4 text-base-content/50" />
                                     </button>
                                 )}
                             </div>
-                            {/* NEW: suggestion list */}
+
+                            {/* Search Results */}
                             {citySearching && (
-                                <div className="text-xs md:text-sm text-gray-400 mb-2">
-                                    Searching...
+                                <div className="text-sm text-base-content/50 py-2 text-center">
+                                    Searching cities...
                                 </div>
                             )}
+
                             {!citySearching && cityResults.length > 0 && (
-                                <ul className="max-h-60 overflow-auto mb-2 border border-gray-600 rounded-lg divide-y divide-gray-600 bg-[#1a1f2e] shadow-lg">
+                                <div className="max-h-64 overflow-y-auto rounded-lg border border-base-300 bg-base-200">
                                     {cityResults.map((r) => (
-                                        <li
-                                            key={`${r.place_id}`}
-                                            className={`px-3 py-2.5 text-sm md:text-base cursor-pointer hover:bg-gray-600/50 transition-colors ${selectedCityResult &&
-                                                    selectedCityResult.place_id ===
-                                                    r.place_id
-                                                    ? "bg-green-500/20 border-l-2 border-green-500"
-                                                    : ""
-                                                } text-gray-200`}
+                                        <button
+                                            key={r.place_id}
+                                            className={`w-full text-left px-4 py-3 hover:bg-base-300 transition-colors border-b border-base-300 last:border-b-0 ${selectedCityResult?.place_id === r.place_id
+                                                ? "bg-primary/10 border-l-4 border-l-primary"
+                                                : ""
+                                                }`}
                                             onClick={() => handleSelectCity(r)}
                                         >
-                                            <div className="font-medium text-white md:text-base">
+                                            <div className="font-medium text-base-content">
                                                 {r.display_name.split(",")[0]}
                                             </div>
-                                            <div className="text-xs md:text-sm text-gray-400 mt-0.5">
-                                                {r.display_name
-                                                    .split(",")
-                                                    .slice(1, 3)
-                                                    .join(",")
-                                                    .trim()}
+                                            <div className="text-sm text-base-content/60 mt-0.5">
+                                                {r.display_name.split(",").slice(1, 3).join(",").trim()}
                                             </div>
-                                        </li>
+                                        </button>
                                     ))}
-                                </ul>
+                                </div>
                             )}
-                            {citySearch &&
-                                !citySearching &&
-                                cityResults.length === 0 &&
-                                !selectedCityResult &&
-                                !suppressSearchAfterSelect && (
-                                    <div className="text-xs md:text-sm text-gray-500 mb-2">
-                                        No matches found.
-                                    </div>
-                                )}
-                            <div className="flex justify-end gap-2 mt-2">
-                                <button
-                                    className="px-4 py-2 rounded bg-gray-700 text-gray-300 hover:bg-gray-600"
-                                    onClick={() => setShowLocationModal(false)}
-                                >
-                                    Cancel
-                                </button>
-                                <button
-                                    className="px-4 py-2 rounded bg-green-500 text-white font-semibold hover:bg-green-600 disabled:opacity-40 disabled:cursor-not-allowed"
-                                    disabled={!selectedCityResult}
-                                    onClick={() => {
-                                        if (!selectedCityResult) return;
-                                        fetchPrayerTimesByCoords(
-                                            selectedCityResult.lat,
-                                            selectedCityResult.lon,
-                                            selectedCityResult.display_name
-                                        );
-                                    }}
-                                >
-                                    {loading ? "Loading..." : "Save"}
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                )}
-                {/* Main Card */}
-                <div className="relative glass-card p-2 sm:p-4 md:p-8 lg:p-10 max-w-full sm:max-w-2xl md:max-w-3xl lg:max-w-4xl w-full flex flex-col md:flex-row gap-3 sm:gap-4 md:gap-8 items-center md:items-center bg-base-200 border border-base-300 shadow-md overflow-visible md:pl-16 lg:pl-20">
-                    {/* Circular Countdown */}
-                    <div className="flex flex-col items-center justify-center w-full md:w-auto mb-2 md:mb-0 shrink-0 md:mr-4 lg:mr-6">
-                        <div
-                            className="relative flex items-center justify-center w-[140px] sm:w-[110px] md:w-[160px] lg:w-[200px] aspect-square"
-                            style={{ minWidth: "100px", minHeight: "100px" }}
-                        >
-                            <svg
-                                className="absolute top-0 left-0 w-full h-full"
-                                viewBox="0 0 180 180"
-                                style={{ display: "block" }}
-                            >
-                                {(() => {
-                                    const circumference = 2 * Math.PI * 80; // radius 80
-                                    const idx = currentIdx;
-                                    const start = prayerDateTimes[idx];
-                                    let next =
-                                        prayerDateTimes[
-                                        (idx + 1) % prayerDateTimes.length
-                                        ];
-                                    if (next && start && next <= start) {
-                                        next = new Date(
-                                            next.getTime() + 24 * 60 * 60 * 1000
-                                        );
-                                    }
-                                    const duration =
-                                        start && next
-                                            ? Math.max(
-                                                1,
-                                                Math.floor(
-                                                    (next.getTime() -
-                                                        start.getTime()) /
-                                                    1000
-                                                )
-                                            )
-                                            : null;
-                                    const progress =
-                                        duration && timeLeftSeconds != null
-                                            ? Math.max(
-                                                0,
-                                                Math.min(
-                                                    1,
-                                                    1 -
-                                                    timeLeftSeconds /
-                                                    duration
-                                                )
-                                            )
-                                            : 0;
-                                    const offset =
-                                        circumference * (1 - progress);
 
-                                    return (
-                                        <>
-                                            {/* white full background circle */}
-                                            <circle
-                                                cx="90"
-                                                cy="90"
-                                                r="80"
-                                                stroke="#ffffff"
-                                                strokeWidth="7"
-                                                fill="none"
-                                                style={{ opacity: 1 }}
-                                            />
-                                            {/* yellow progress arc */}
-                                            <circle
-                                                cx="90"
-                                                cy="90"
-                                                r="80"
-                                                stroke="#fbbf24"
-                                                strokeWidth="7"
-                                                fill="none"
-                                                strokeDasharray={circumference}
-                                                strokeDashoffset={offset}
-                                                strokeLinecap="round"
-                                                className="transition-all"
-                                                style={{ opacity: 0.95 }}
-                                            />
-                                        </>
-                                    );
-                                })()}
-                            </svg>
-                            <div className="absolute inset-0 flex flex-col items-center justify-center z-10 w-full h-full">
-                                <span
-                                    className="text-warning font-semibold text-sm sm:text-sm md:text-lg lg:text-xl mb-1"
-                                    style={{ lineHeight: 1 }}
-                                >
-                                    {prayerTimes[currentIdx]?.displayName ||
-                                        "namaz time"}
-                                </span>
-                                <span
-                                    className="text-lg sm:text-lg md:text-2xl lg:text-3xl font-bold text-base-content mt-1"
-                                    style={{ lineHeight: 1.05 }}
-                                >
-                                    {timeLeftSeconds != null
-                                        ? formatDuration(timeLeftSeconds)
-                                        : "--:--"}
-                                </span>
-                            </div>
+                            {citySearch && !citySearching && cityResults.length === 0 && !selectedCityResult && (
+                                <div className="text-sm text-base-content/50 py-4 text-center">
+                                    No cities found. Try a different search.
+                                </div>
+                            )}
                         </div>
-                    </div>
-                    {/* Prayer Times List */}
-                    <div className="flex-1 w-full">
-                        {prayerTimes.map((prayer) => (
-                            <div
-                                key={prayer.name}
-                                className={`flex items-center justify-between px-3 py-3 md:px-6 md:py-4 rounded-lg mb-3 bg-base-100 border-l-4 ${prayer.name.startsWith("Fajr")
-                                        ? "border-primary"
-                                        : prayer.name.startsWith("Sun Rise")
-                                            ? "border-error"
-                                            : prayer.name.startsWith("Zuhr")
-                                                ? "border-accent"
-                                                : prayer.name.startsWith("Asr")
-                                                    ? "border-warning"
-                                                    : prayer.name.startsWith("Maghrib")
-                                                        ? "border-white-500"
-                                                        : prayer.name.startsWith("Isha")
-                                                            ? "border-blue-500"
-                                                            : "border-base-300"
-                                    } shadow-sm`}
+
+                        {/* Modal Footer */}
+                        <div className="flex items-center justify-end gap-3 p-6 border-t border-base-300">
+                            <button
+                                className="px-6 py-2.5 rounded-lg font-medium text-base-content hover:bg-base-200 transition-colors"
+                                onClick={() => setShowLocationModal(false)}
                             >
-                                <span
-                                    className={`font-semibold text-base md:text-lg lg:text-xl flex-1 truncate ${prayer.color}`}
-                                >
-                                    {prayer.displayName || "—"}
-                                </span>
-                                <span className="font-mono text-white text-base md:text-lg lg:text-xl text-base-content/90 ml-2 flex-shrink-0">
-                                    {formatTo12Hour(prayer.time)}
-                                </span>
-                                <span className="ml-2 flex-shrink-0">
-                                    {prayer.alert ? (
-                                        <Bell
-                                            className="w-5 h-5 md:w-6 md:h-6 text-warning"
-                                            title="Azan alert on"
-                                        />
-                                    ) : (
-                                        <BellOff
-                                            className="w-5 h-5 md:w-6 md:h-6 text-base-content/30"
-                                            title="Azan alert off"
-                                        />
-                                    )}
-                                </span>
-                            </div>
-                        ))}
+                                Cancel
+                            </button>
+                            <button
+                                className={`px-6 py-2.5 rounded-lg font-semibold transition-colors ${selectedCityResult
+                                    ? "bg-primary text-white hover:bg-primary/90"
+                                    : "bg-base-300 text-base-content/40 cursor-not-allowed"
+                                    }`}
+                                disabled={!selectedCityResult}
+                                onClick={() => {
+                                    if (!selectedCityResult) return;
+                                    fetchPrayerTimesByCoords(
+                                        selectedCityResult.lat,
+                                        selectedCityResult.lon,
+                                        selectedCityResult.display_name
+                                    );
+                                }}
+                            >
+                                {loading ? "Loading..." : "Save Location"}
+                            </button>
+                        </div>
                     </div>
                 </div>
-            </section>
+            )}
         </div>
     );
 }

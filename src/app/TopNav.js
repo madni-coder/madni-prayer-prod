@@ -13,11 +13,15 @@ import {
     FaMicrophone,
     FaRegIdBadge,
     FaUser,
+    FaChevronRight,
+    FaStarAndCrescent
+
 } from "react-icons/fa";
 import TasbihSvgIcon from "../components/TasbihSvgIcon";
 
 const navLinks = [
     { name: "Home", href: "/", icon: <FaHome className="text-lg" /> },
+    { name: "Ramzan Special", href: "/ramzan", icon: <FaStarAndCrescent className="text-lg" /> },
     {
         name: "Jama'at Times",
         href: "/jamat-times",
@@ -56,8 +60,9 @@ const navLinks = [
         name: "My Profile",
         href: "/myProfile",
         icon: <FaUser className="text-lg" />,
-    },
+    }
 ];
+
 
 export default function TopNav() {
     const pathname = usePathname() || "";
@@ -110,13 +115,13 @@ export default function TopNav() {
             className={`${isNotice ? "relative w-full z-50" : "sticky top-0 z-50"
                 } bg-base-100 backdrop-blur border-b border-base-300 shadow-sm`}
         >
-            <div className="max-w-5xl mx-auto flex items-center justify-between px-4 py-2 mt-10">
+            <div className="max-w-5xl mx-auto flex items-center justify-between px-4 py-1.5">
                 <div className="flex items-center gap-2">
                     <Link href="/">
                         <img
                             src="/logo.png"
                             alt="Raah-e-Hidayat Logo"
-                            className="w-30 h-auto object-contain"
+                            className="w-24 h-auto object-contain"
                         />
                     </Link>
                 </div>
@@ -179,7 +184,7 @@ export default function TopNav() {
                     <div
                         id="mobile-nav"
                         role="menu"
-                        className="origin-top-right absolute right-0 mt-2 w-52 rounded-2xl border border-base-300 bg-base-100 shadow-2xl z-40 h-[calc(100vh-80px)] max-h-[calc(100vh-80px)] overflow-y-auto"
+                        className="fixed top-12 right-0 w-54 bg-base-100 shadow-2xl z-50 h-screen-100  flex flex-col"
                         style={{
                             // use preserve-3d/backface-visibility and a short transform transition
                             transformStyle: "preserve-3d",
@@ -187,13 +192,14 @@ export default function TopNav() {
                             transition: "transform .35s",
                             // dynamic open/closed states
                             transform: mobileOpen
-                                ? "rotateX(0deg) translateY(0) translateZ(0) scale(1)"
-                                : "rotateX(-18deg) translateY(-8px) translateZ(-30px) scale(0.98)",
+                                ? "translateX(0)"
+                                : "translateX(100%)",
                             opacity: mobileOpen ? 1 : 0,
                             pointerEvents: mobileOpen ? "auto" : "none",
                         }}
                     >
-                        <ul className="menu p-3 h-full ">
+                        {/* Menu items */}
+                        <ul className="menu p-3 flex-1 overflow-y-auto">
                             {navLinks.map((link, index) => (
                                 <li
                                     key={link.name}
@@ -229,6 +235,17 @@ export default function TopNav() {
                             ))}
                         </ul>
                     </div>
+
+                    {/* Backdrop overlay */}
+                    {mobileOpen && (
+                        <div
+                            className="fixed inset-0 bg-black/50 z-40"
+                            onClick={() => setMobileOpen(false)}
+                            style={{
+                                transition: "opacity .35s",
+                            }}
+                        />
+                    )}
                 </div>
             </div>
         </nav>
