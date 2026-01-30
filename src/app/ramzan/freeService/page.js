@@ -94,9 +94,11 @@ export default function FreeServicePage() {
                 </div>
                 <h1 className="text-2xl font-bold text-primary mb-6">
                     Only For Masjid Committee                </h1>
-                <h2 className="text-2xl font-bold text-white mb-6">
-                    Request Free AC Service
+                <h2 className="text-xl font-bold text-white mb-6">
+                    Request Free AC Service from
                 </h2>
+                <h2 className="text-2xl font-bold text-error mb-6">
+                    Pefect Solution Company                    </h2>
 
                 <form onSubmit={handleSubmit} className="space-y-5 md:space-y-6">
                     {/* Full Name */}

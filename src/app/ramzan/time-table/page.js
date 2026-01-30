@@ -1,8 +1,21 @@
 "use client"
+import {  FaAngleLeft } from 'react-icons/fa';
+import { useRouter } from 'next/navigation';
 
 export default function Page() {
+    const router = useRouter();
+
     return (
         <main className="min-h-screen p-4 md:p-8 bg-base-200 text-base-content">
+             <button
+                            className="flex items-center gap-2 mb-4 text-lg text-primary hover:text-green-600 font-semibold"
+                            onClick={() => router.push("/ramzan")}
+                            aria-label="Back to Home"
+                            style={{ alignSelf: "flex-start" }}
+                        >
+                            <FaAngleLeft /> Back
+            </button>
+            
             <div className="mx-auto max-w-6xl">
                 <div className="flex items-center justify-between mb-4">
                     <h1 className="text-xl font-bold">Ramzan Time Table Bilaspur C.G</h1>

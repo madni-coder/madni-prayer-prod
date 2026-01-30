@@ -79,7 +79,7 @@ const sections = [
 export default function Home() {
     return (
         <main
-            className="flex min-h-screen flex-col items-center justify-center bg-[#09152a] text-gray-200 p-4 sm:p-6 pb-24 sm:pb-28"
+            className="flex min-h-screen flex-col items-center justify-center bg-[#09152a] text-gray-200 p-4 sm:p-6 pb-24 sm:pb28"
             style={{
                 paddingBottom: "calc(env(safe-area-inset-bottom, 0px) + 2rem)",
             }}
