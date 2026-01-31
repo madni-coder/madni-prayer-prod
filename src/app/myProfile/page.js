@@ -61,13 +61,39 @@ export default function MyProfilePage() {
                     }
                 }
 
-                // Call GET API to fetch latest users and pick matching user by email
+                // Call GET API once (cache in localStorage) to fetch latest users and pick matching user by email
                 (async () => {
                     try {
-                        const res = await apiClient.get('/api/auth/register');
-                        const users = res?.data?.users || [];
+                        let users = null;
+
+                        // Try to read cached users from localStorage
+                        try {
+                            const cached = localStorage.getItem('registerUsers');
+                            if (cached) users = JSON.parse(cached);
+                        } catch (e) {
+                            // if parse fails, remove corrupt cache
+                            try { localStorage.removeItem('registerUsers'); } catch (ee) { }
+                            users = null;
+                        }
+
+                        // If no cache, call the API once and store the result
+                        if (!users) {
+                            try {
+                                const res = await apiClient.get('/api/auth/register');
+                                users = res?.data?.users || [];
+                                try {
+                                    localStorage.setItem('registerUsers', JSON.stringify(users));
+                                } catch (e) {
+                                    // ignore storage errors (e.g., quota)
+                                }
+                            } catch (err) {
+                                console.error('Failed to fetch register users', err);
+                                users = [];
+                            }
+                        }
+
                         const matchEmail = localEmail || (sessionRaw ? (() => { try { return JSON.parse(sessionRaw).user?.email } catch (e) { return null } })() : null);
-                        if (matchEmail) {
+                        if (matchEmail && Array.isArray(users)) {
                             const found = users.find(u => u.email === matchEmail);
                             if (found) {
                                 setProfileUser(found);

@@ -37,22 +37,22 @@ export default function RamzanPage() {
 
     return (
         <main
-            className="flex min-h-screen flex-col items-center justify-center bg-[#09152a] text-gray-200 p-4 sm:p-6 pb-24 sm:pb-28"
+            className="flex min-h-screen flex-col items-start justify-start bg-[#09152a] text-gray-200 p-4 sm:p-6 pb-24 sm:pb-28 "
             style={{
                 paddingBottom: "calc(env(safe-area-inset-bottom, 0px) + 2rem)",
             }}
         >
             <button
-                className="flex items-center gap-2 mb-4 text-lg text-primary hover:text-green-600 font-semibold"
+                className="flex items-center gap-2 mb-6 text-lg text-primary hover:text-green-600 font-semibold"
                 onClick={() => router.push("/")}
                 aria-label="Back to Home"
                 style={{ alignSelf: "flex-start" }}
             >
                 <FaAngleLeft /> Back
             </button>
-            <header className="text-center mb-8">
-                <h1 className="text-4xl sm:text-5xl lg:text-6xl font-extrabold tracking-tight mb-2">
-                    <span className="bg-clip-text text-transparent bg-gradient-to-r from-green-500 to-white">
+            <header className="text-center mb-8 ">
+                <h1 className="text-4xl sm:text-5xl lg:text-6xl font-extrabold tracking-tight mb-2  ">
+                    <span className="bg-clip-text text-transparent bg-gradient-to-r from-green-500 to-white ">
                         Ramzan Mubarak
                     </span>
                 </h1>

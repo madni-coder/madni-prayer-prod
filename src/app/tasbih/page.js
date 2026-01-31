@@ -105,11 +105,52 @@ export default function Tasbih() {
     };
 
     // Helper function to trigger low intensity vibration on mobile
+    // Tries multiple fallbacks: standard Vibration API, common WebView bridges,
+    // and a Tauri invoke if available. Nothing is done if no API exists.
     const triggerVibration = useCallback(() => {
-        // Check if the Vibration API is supported
-        if (typeof window !== "undefined" && "vibrate" in navigator) {
-            // Low intensity vibration: 20ms duration
-            navigator.vibrate(20);
+        if (typeof window === "undefined") return;
+
+        try {
+            // 1) Standard web Vibration API (works in Android Chrome and many browsers)
+            if (typeof navigator !== "undefined" && typeof navigator.vibrate === "function") {
+                navigator.vibrate(20);
+                return;
+            }
+
+            // 2) React Native WebView bridge
+            if (window.ReactNativeWebView && typeof window.ReactNativeWebView.postMessage === "function") {
+                window.ReactNativeWebView.postMessage(JSON.stringify({ type: "vibrate", duration: 20 }));
+                return;
+            }
+
+            // 3) Android/JavascriptInterface commonly exposed as `Android` or `android`
+            if (window.Android && typeof window.Android.vibrate === "function") {
+                window.Android.vibrate(20);
+                return;
+            }
+            if (window.android && typeof window.android.vibrate === "function") {
+                window.android.vibrate(20);
+                return;
+            }
+
+            // 4) WKWebView iOS message handler (app must expose a `vibrate` handler)
+            if (window.webkit && window.webkit.messageHandlers && window.webkit.messageHandlers.vibrate) {
+                window.webkit.messageHandlers.vibrate.postMessage({ duration: 20 });
+                return;
+            }
+
+            // 5) Tauri: try invoking a vibration command if the host exposes one
+            // Note: plugin name and command depend on your Tauri setup.
+            // This attempts a generic `invoke('vibrate', { duration })` if available.
+            if (window.__TAURI__ && typeof window.__TAURI__.invoke === "function") {
+                // best-effort, ignore errors
+                window.__TAURI__.invoke("vibrate", { duration: 20 }).catch(() => { });
+                return;
+            }
+        } catch (err) {
+            // swallow errors — vibration is non-essential
+            // eslint-disable-next-line no-console
+            console.warn("triggerVibration error:", err);
         }
     }, []);
 
