@@ -13,7 +13,13 @@
         "lint": "eslint",
         "db:migrate": "prisma migrate",
         "db:generate": "prisma generate",
-        "tauri": "tauri"
+        "tauri": "tauri",
+        "android": "./run-android.sh",
+        "android:build": "npm run tauri android build",
+        "android:dev": "./tauri-android-dev.sh",
+        "android:hot": "./tauri-android-dev.sh",
+        "ios:build": "npm run tauri ios build",
+        "ios:dev": "npm run tauri ios dev --open"
     },
     "dependencies": {
         "@prisma/client": "^6.16.2",

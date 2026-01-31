@@ -1,5 +1,4 @@
 import prisma from "../../../../lib/prisma";
-import { createClient } from "@supabase/supabase-js";
 
 // Required for static export
 // export const dynamic = "force-static";
@@ -10,8 +9,6 @@ const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 if (!supabaseUrl || !supabaseKey) {
     throw new Error("Missing Supabase environment variables");
 }
-
-const supabase = createClient(supabaseUrl, supabaseKey);
 
 export async function GET(request) {
     try {

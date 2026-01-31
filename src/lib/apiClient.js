@@ -1,8 +1,18 @@
 import axios from "axios";
 
+// Prefer explicit env var, otherwise use the page origin when running in the browser
+const defaultBase =
+    process.env.NEXT_PUBLIC_API_BASE_URL ||
+    (typeof window !== "undefined" && window.location?.origin
+        ? window.location.origin
+        : "http://localhost:3000");
+
 const apiClient = axios.create({
-    baseURL: process.env.NEXT_PUBLIC_API_BASE_URL || "",
+    baseURL: defaultBase,
     withCredentials: false,
+    headers: {
+        'Content-Type': 'application/json',
+    },
 });
 
 apiClient.interceptors.response.use(

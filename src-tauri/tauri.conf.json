@@ -5,7 +5,7 @@
     "identifier": "com.prayer.madni",
     "build": {
         "frontendDist": "../out",
-        "devUrl": "http://localhost:3000/",
+        "devUrl": "http://192.168.0.221:3000",
         "beforeDevCommand": "npm run dev",
         "beforeBuildCommand": "npm run build:tauri"
     },

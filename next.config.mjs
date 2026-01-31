@@ -10,6 +10,20 @@ const nextConfig = {
 
     skipTrailingSlashRedirect: true,
 
+    // Add CORS headers for API routes (useful for emulator / device testing)
+    async headers() {
+        return [
+            {
+                source: "/api/:path*",
+                headers: [
+                    { key: "Access-Control-Allow-Origin", value: "*" },
+                    { key: "Access-Control-Allow-Methods", value: "GET,OPTIONS,POST,PUT,DELETE" },
+                    { key: "Access-Control-Allow-Headers", value: "Content-Type, Authorization" },
+                    { key: "Access-Control-Max-Age", value: "86400" },
+                ],
+            },
+        ];
+    },
     async rewrites() {
         if (isTauri) {
             return [

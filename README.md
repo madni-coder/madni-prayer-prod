@@ -1,20 +1,82 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://github.com/vercel/next.js/tree/canary/packages/create-next-app).
+This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://github.com/vercel/next.js/tree/canary/packages/create-next-app) with [Tauri](https://tauri.app/) for mobile development.
 
 ## Getting Started
 
-First, run the development server:
+### Web Development
+
+Run the development server:
 
 ```bash
 npm run dev
-
-# build the app
-npm run tauri ios build
-
-# open the project on xcode
-npm run tauri ios dev --open
 ```
 
 Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+
+### Mobile Development
+
+> 📱 **For detailed mobile setup instructions, see [MOBILE_SETUP.md](MOBILE_SETUP.md)**
+
+#### 🤖 Android
+
+**🔥 Development with Hot Reload (Recommended for Tauri):**
+
+1. **Start emulator** in Android Studio (Device Manager → Play button)
+2. **Run with hot reload:**
+    ```bash
+    npm run android:dev
+    ```
+
+Tauri automatically:
+
+- Starts Next.js dev server on port 3000
+- Connects Android app to dev server
+- Enables hot module replacement (HMR)
+- **Your changes appear instantly!** ✨
+
+**Just edit code and save - no rebuild needed!**
+
+**Other Commands:**
+
+```bash
+# Build production APK
+npm run android:build
+
+# Automated setup (starts emulator + app)
+npm run android
+```
+
+**Prerequisites:**
+
+- Android Studio installed
+- Android SDK and NDK configured
+- At least one Android Virtual Device (AVD) created
+- `ANDROID_HOME` environment variable set
+
+#### 🍎 iOS
+
+```bash
+# Build iOS app
+npm run ios:build
+
+# Open in Xcode and run
+npm run ios:dev
+```
+
+**Prerequisites:**
+
+- macOS required
+- Xcode installed
+- iOS Simulator or physical device
+
+### Database Commands
+
+```bash
+# Generate Prisma client
+npm run db:generate
+
+# Run migrations
+npm run db:migrate
+```
 
 You can start editing the page by modifying `app/page.js`. The page auto-updates as you edit the file.
 

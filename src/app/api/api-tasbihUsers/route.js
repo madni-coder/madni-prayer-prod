@@ -1,7 +1,5 @@
 import { NextResponse } from "next/server";
-import { PrismaClient } from "@prisma/client";
-const prisma = new PrismaClient();
-export const dynamic = "force-static";
+import prisma from "../../../../lib/prisma";
 
 export async function DELETE(req) {
     try {
@@ -87,6 +85,7 @@ export async function DELETE(req) {
 
 export async function POST(req) {
     try {
+        console.log(req.headers.get('content-length'));
         const body = await req.json();
 
         const fullName = body["Full Name"] ?? body.fullName ?? body.fullname;
@@ -227,6 +226,7 @@ export async function POST(req) {
             { status: 201 }
         );
     } catch (err) {
+        console.log('error: ', err);
         return NextResponse.json(
             { ok: false, error: String(err) },
             { status: 500 }

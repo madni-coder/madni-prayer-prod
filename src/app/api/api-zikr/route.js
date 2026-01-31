@@ -1,9 +1,6 @@
 import { NextResponse } from 'next/server';
 import prisma from "../../../../lib/prisma";
 
-// Required for static export when `output: "export"` is enabled
-export const dynamic = "force-static";
-
 // GET endpoint - Fetch all zikr records
 export async function GET(request) {
     try {

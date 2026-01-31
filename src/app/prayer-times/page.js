@@ -92,8 +92,16 @@ export default function PrayerTimesPage() {
         useState(false);
     const citySearchTimeoutRef = useRef(null);
     const LS_KEY = "prayer_saved_city";
+    const LS_PRAYER_DATA_KEY = "prayer_times_data"; // For caching prayer times
     // prevent duplicate initial fetch (e.g., React 18 StrictMode)
     const initialFetchDoneRef = useRef(false);
+
+    // Default Bilaspur coordinates
+    const DEFAULT_BILASPUR = {
+        lat: "22.0796",
+        lon: "82.1391",
+        display_name: "Bilaspur, Chhattisgarh"
+    };
 
     useEffect(() => {
         const timer = setInterval(() => setNow(new Date()), 1000);
@@ -244,10 +252,10 @@ export default function PrayerTimesPage() {
                 const d = String(today.getDate()).padStart(2, "0");
                 const dateStr = `${y}-${m}-${d}`;
 
-                let apiUrl = `/api/api-prayerTimes?date=${dateStr}`;
-                if (lat && lon) {
-                    apiUrl = `/api/api-prayerTimes?lat=${lat}&lon=${lon}&date=${dateStr}`;
-                }
+                // Use Bilaspur as default if no coordinates provided
+                const finalLat = lat || DEFAULT_BILASPUR.lat;
+                const finalLon = lon || DEFAULT_BILASPUR.lon;
+                const apiUrl = `/api/api-prayerTimes?lat=${finalLat}&lon=${finalLon}&date=${dateStr}`;
 
                 const { data: json } = await apiClient.get(apiUrl);
 
@@ -264,6 +272,20 @@ export default function PrayerTimesPage() {
                 setLocationName(loc);
 
                 const timings = json.timings || {};
+
+                // Save prayer data to localStorage for offline access
+                try {
+                    const prayerDataToCache = {
+                        timings,
+                        location: loc,
+                        date: dateStr,
+                        lat: finalLat,
+                        lon: finalLon
+                    };
+                    localStorage.setItem(LS_PRAYER_DATA_KEY, JSON.stringify(prayerDataToCache));
+                } catch (e) {
+                    console.warn("Could not cache prayer data", e);
+                }
 
                 // helper to find the best matching timing key for each displayed prayer
                 const findTimingKey = (displayName) => {
@@ -313,12 +335,12 @@ export default function PrayerTimesPage() {
                     })
                 );
 
-                // If we used lat/lon and have a location, save to localStorage
-                if (lat && lon && loc) {
+                // Save the selected city to localStorage
+                if (loc) {
                     try {
                         const saved = {
-                            lat: String(lat),
-                            lon: String(lon),
+                            lat: String(finalLat),
+                            lon: String(finalLon),
                             display_name: loc,
                         };
                         localStorage.setItem(LS_KEY, JSON.stringify(saved));
@@ -330,28 +352,134 @@ export default function PrayerTimesPage() {
                 setLoading(false);
             } catch (err) {
                 console.error("Error fetching prayer times:", err);
+
+                // On network error, try to load cached data from localStorage
+                try {
+                    const cachedData = localStorage.getItem(LS_PRAYER_DATA_KEY);
+                    if (cachedData) {
+                        const cached = JSON.parse(cachedData);
+                        setLocationName(cached.location || "Cached Location");
+                        const timings = cached.timings || {};
+
+                        const findTimingKey = (displayName) => {
+                            const tokensMap = {
+                                Fajr: ["fajr"],
+                                "Sun Rise": ["sunrise", "sun rise", "sun"],
+                                Zuhr: ["dhuhr", "zuhr", "zuhur"],
+                                Asr: ["asr"],
+                                Maghrib: ["maghrib"],
+                                Isha: ["isha", "isya"],
+                            };
+                            const candidates = Object.keys(timings || {});
+                            const tokens = tokensMap[displayName] || [displayName.toLowerCase()];
+                            for (const token of tokens) {
+                                const found = candidates.find((k) => k.toLowerCase().includes(token));
+                                if (found) return found;
+                            }
+                            const exact = candidates.find((k) => k.toLowerCase() === displayName.toLowerCase());
+                            return exact || null;
+                        };
+
+                        const cleaned = (val) =>
+                            typeof val === "string" ? val.replace(/\s*\(.*?\)/, "").trim() : val;
+
+                        setPrayerTimes((prev) =>
+                            prev.map((p) => {
+                                const key = findTimingKey(p.name);
+                                const apiVal = key ? cleaned(timings[key]) : null;
+                                return {
+                                    ...p,
+                                    time: apiVal ? formatTo12Hour(apiVal) : p.time,
+                                    displayName: apiVal ? p.name : "",
+                                };
+                            })
+                        );
+                    }
+                } catch (cacheErr) {
+                    console.warn("Could not load cached prayer data", cacheErr);
+                }
             } finally {
                 setLoading(false);
             }
         };
 
+        // First, try to load from localStorage cache (works offline)
+        try {
+            const cachedData = localStorage.getItem(LS_PRAYER_DATA_KEY);
+            if (cachedData) {
+                const cached = JSON.parse(cachedData);
+                const today = new Date();
+                const y = today.getFullYear();
+                const m = String(today.getMonth() + 1).padStart(2, "0");
+                const d = String(today.getDate()).padStart(2, "0");
+                const todayStr = `${y}-${m}-${d}`;
+
+                // If cached data is for today, use it immediately (works offline)
+                if (cached.date === todayStr) {
+                    setLocationName(cached.location || "Bilaspur, Chhattisgarh");
+                    const timings = cached.timings || {};
+
+                    const findTimingKey = (displayName) => {
+                        const tokensMap = {
+                            Fajr: ["fajr"],
+                            "Sun Rise": ["sunrise", "sun rise", "sun"],
+                            Zuhr: ["dhuhr", "zuhr", "zuhur"],
+                            Asr: ["asr"],
+                            Maghrib: ["maghrib"],
+                            Isha: ["isha", "isya"],
+                        };
+                        const candidates = Object.keys(timings || {});
+                        const tokens = tokensMap[displayName] || [displayName.toLowerCase()];
+                        for (const token of tokens) {
+                            const found = candidates.find((k) => k.toLowerCase().includes(token));
+                            if (found) return found;
+                        }
+                        const exact = candidates.find((k) => k.toLowerCase() === displayName.toLowerCase());
+                        return exact || null;
+                    };
+
+                    const cleaned = (val) =>
+                        typeof val === "string" ? val.replace(/\s*\(.*?\)/, "").trim() : val;
+
+                    setPrayerTimes((prev) =>
+                        prev.map((p) => {
+                            const key = findTimingKey(p.name);
+                            const apiVal = key ? cleaned(timings[key]) : null;
+                            return {
+                                ...p,
+                                time: apiVal ? formatTo12Hour(apiVal) : p.time,
+                                displayName: apiVal ? p.name : "",
+                            };
+                        })
+                    );
+                    setLoading(false);
+                }
+            }
+        } catch (e) {
+            console.warn("Error reading cached prayer data", e);
+        }
+
         // Check if we have a saved city in localStorage
+        let savedCity = null;
         try {
             const raw = localStorage.getItem(LS_KEY);
             if (raw) {
                 const obj = JSON.parse(raw);
                 if (obj && obj.lat && obj.lon) {
-                    // Load from saved city
-                    fetchPrayerTimesAndSetState(obj.lat, obj.lon, obj.display_name || "");
-                    return;
+                    savedCity = obj;
                 }
             }
         } catch (e) {
             console.warn("Error reading from localStorage", e);
         }
 
-        // No saved city - fetch default (Bilaspur) and save it
-        fetchPrayerTimesAndSetState();
+        // Fetch prayer times (use saved city if available, otherwise Bilaspur default)
+        if (savedCity) {
+            fetchPrayerTimesAndSetState(savedCity.lat, savedCity.lon, savedCity.display_name || "");
+        } else {
+            // No saved city - use Bilaspur as default
+            fetchPrayerTimesAndSetState(DEFAULT_BILASPUR.lat, DEFAULT_BILASPUR.lon, DEFAULT_BILASPUR.display_name);
+        }
     }, []);
 
     // Add handler for geolocation-based prayer times
@@ -472,6 +600,20 @@ export default function PrayerTimesPage() {
                         console.warn("Could not persist saved city", e);
                     }
 
+                    // Also cache the prayer data for offline access
+                    try {
+                        const prayerDataToCache = {
+                            timings,
+                            location: fallbackLoc,
+                            date: dateStr,
+                            lat: String(lat),
+                            lon: String(lon)
+                        };
+                        localStorage.setItem(LS_PRAYER_DATA_KEY, JSON.stringify(prayerDataToCache));
+                    } catch (e) {
+                        console.warn("Could not cache prayer data", e);
+                    }
+
                     setShowLocationModal(false);
                     setLoading(false);
                 } catch (err) {
@@ -542,20 +684,37 @@ export default function PrayerTimesPage() {
                 })
             );
             // persist saved city (overwrite any previous)
+            const finalDisplayName = fullDisplayName || json?.location?.name || json?.city || "";
             try {
                 const saved = {
                     lat: String(lat),
                     lon: String(lon),
-                    display_name:
-                        fullDisplayName ||
-                        json?.location?.name ||
-                        json?.city ||
-                        "",
+                    display_name: finalDisplayName,
                 };
                 localStorage.setItem(LS_KEY, JSON.stringify(saved));
             } catch (e) {
                 // localStorage may be unavailable or quota exceeded; ignore
                 console.warn("Could not persist saved city", e);
+            }
+
+            // Also cache the prayer data for offline access
+            try {
+                const today = new Date();
+                const y = today.getFullYear();
+                const m = String(today.getMonth() + 1).padStart(2, "0");
+                const d = String(today.getDate()).padStart(2, "0");
+                const dateStr = `${y}-${m}-${d}`;
+
+                const prayerDataToCache = {
+                    timings,
+                    location: finalDisplayName,
+                    date: dateStr,
+                    lat: String(lat),
+                    lon: String(lon)
+                };
+                localStorage.setItem(LS_PRAYER_DATA_KEY, JSON.stringify(prayerDataToCache));
+            } catch (e) {
+                console.warn("Could not cache prayer data", e);
             }
             setShowLocationModal(false);
             setLoading(false);
@@ -711,7 +870,7 @@ export default function PrayerTimesPage() {
                                 <p className="text-sm md:text-base text-base-content font-bold">
                                     {formatTime(now)}
                                 </p>
-                               
+
                             </div>
                         </div>
                     </div>
