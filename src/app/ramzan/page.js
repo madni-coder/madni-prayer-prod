@@ -9,15 +9,15 @@ const ramzanSections = [
     {
         name: "Ramzan Time Table",
         href: "ramzan/time-table",
-        icon: <Calendar className="w-16 h-16 lg:w-24 lg:h-24" />,
+        icon: <Calendar className="w-10 h-10 lg:w-16 lg:h-16" />,
         description: "View Sehri & Iftar timings",
         gradient: "from-purple-500 to-pink-500",
         bgHover: "hover:bg-purple-600",
     },
     {
         name: "Zakat Calculator",
-        href: "/ramzan/zakat-calculator",
-        icon: <Calculator className="w-16 h-16 lg:w-24 lg:h-24" />,
+        href: "/ramzan/zakatCalc",
+        icon: <Calculator className="w-10 h-10 lg:w-16 lg:h-16" />,
         description: "Calculate your Zakat amount",
         gradient: "from-green-500 to-teal-500",
         bgHover: "hover:bg-green-600",
@@ -25,7 +25,7 @@ const ramzanSections = [
     {
         name: "Free Services",
         href: "/ramzan/freeService",
-        icon: <Heart className="w-16 h-16 lg:w-24 lg:h-24" />,
+        icon: <Heart className="w-10 h-10 lg:w-16 lg:h-16" />,
         description: "Community support & services",
         gradient: "from-blue-500 to-cyan-500",
         bgHover: "hover:bg-blue-600",
@@ -61,25 +61,25 @@ export default function RamzanPage() {
                 </p>
             </header>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 w-full max-w-6xl">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 w-full max-w-6xl">
                 {ramzanSections.map((section) => (
                     <Link
                         key={section.name}
                         href={section.href}
-                        className={`group relative flex flex-col items-center justify-center gap-4 p-8 bg-[#243447] rounded-2xl shadow-lg border border-[#2d3f54] hover:shadow-2xl transform transition-all duration-300 hover:scale-105 ${section.bgHover} active:scale-95 min-h-[280px]`}
+                        className={`group relative flex flex-col items-center justify-center gap-2 p-4 bg-[#243447] rounded-xl shadow-lg border border-[#2d3f54] hover:shadow-2xl transform transition-all duration-300 hover:scale-105 ${section.bgHover} active:scale-95 min-h-[160px]`}
                     >
                         {/* Icon with gradient background */}
-                        <div className={`flex-shrink-0 p-4 rounded-full bg-gradient-to-r ${section.gradient} mb-2`}>
+                        <div className={`flex-shrink-0 p-2 rounded-full bg-gradient-to-r ${section.gradient}`}>
                             {section.icon}
                         </div>
 
                         {/* Title */}
-                        <h2 className="text-xl sm:text-2xl font-bold text-center text-white transition-colors">
+                        <h2 className="text-base sm:text-xl font-bold text-center text-white transition-colors">
                             {section.name}
                         </h2>
 
                         {/* Description */}
-                        <p className="text-sm sm:text-base text-gray-300 text-center opacity-80">
+                        <p className="text-xs sm:text-sm text-gray-300 text-center opacity-80 leading-tight">
                             {section.description}
                         </p>
 
