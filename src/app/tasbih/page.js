@@ -104,6 +104,15 @@ export default function Tasbih() {
         return theme;
     };
 
+    // Helper function to trigger low intensity vibration on mobile
+    const triggerVibration = useCallback(() => {
+        // Check if the Vibration API is supported
+        if (typeof window !== "undefined" && "vibrate" in navigator) {
+            // Low intensity vibration: 20ms duration
+            navigator.vibrate(20);
+        }
+    }, []);
+
     // shared increment handler (1..10000 then show popup)
     const increment = useCallback(() => {
         setCount((c) => {
@@ -111,9 +120,10 @@ export default function Tasbih() {
                 setShowLimitReached(true);
                 return c;
             }
+            triggerVibration(); // Add vibration feedback
             return c + 1;
         });
-    }, []);
+    }, [triggerVibration]);
 
     // determine which tick is active (scale count to 100 ticks)
     const activeTick = count > 0 ? (count - 1) % 100 : -1;
@@ -599,8 +609,8 @@ function Toast({ toast, isDark }) {
                 role="status"
                 aria-live="polite"
                 className={`w-full px-6 py-4 rounded-2xl shadow-lg pointer-events-auto transition-all duration-300 ease-out font-medium text-base ${toast.type === "error"
-                        ? "bg-red-500 text-white"
-                        : "bg-green-500 text-white"
+                    ? "bg-red-500 text-white"
+                    : "bg-green-500 text-white"
                     }`}
             >
                 {toast.text}
