@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { FaUser, FaPhone, FaMosque, FaAngleLeft } from 'react-icons/fa';
 import { useRouter } from 'next/navigation';
-import axios from 'axios';
+import apiClient from '../../../lib/apiClient';
 
 export default function FreeServicePage() {
     const router = useRouter();
@@ -37,14 +37,14 @@ export default function FreeServicePage() {
         setSubmitMessage('');
 
         try {
-            const response = await axios.post('/api/free-service', {
+            const { data } = await apiClient.post('/api/free-service', {
                 fullName: formData.fullName,
                 mobileNumber: formData.mobileNumber,
                 masjidName: formData.masjidName,
-                numberOfACs: formData.numberOfACs
+                numberOfACs: formData.numberOfACs,
             });
 
-            if (response.data.ok) {
+            if (data.ok) {
                 setSubmitMessage('Request submitted successfully! We will contact you soon.');
                 setShowSuccessToast(true);
                 setFormData({
@@ -59,11 +59,12 @@ export default function FreeServicePage() {
                     setSubmitMessage('');
                 }, 3000);
             } else {
-                setSubmitMessage(response.data.error || 'Failed to submit request. Please try again.');
+                setSubmitMessage(data.error || 'Failed to submit request. Please try again.');
             }
         } catch (error) {
             console.error('Error submitting form:', error);
-            setSubmitMessage(error.response?.data?.error || 'Failed to submit request. Please try again.');
+            const fallback = 'Failed to submit request. Please try again.';
+            setSubmitMessage(error.response?.data?.error || fallback);
         } finally {
             setIsSubmitting(false);
         }

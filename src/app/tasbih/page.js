@@ -5,6 +5,7 @@ import { RotateCw, Trash2 } from "lucide-react";
 import { PiHandTapLight } from "react-icons/pi";
 import { FaAngleLeft } from "react-icons/fa";
 import { useRouter } from "next/navigation";
+import apiClient from "../../lib/apiClient";
 
 export default function Tasbih() {
     // Initialize count from localStorage
@@ -377,21 +378,16 @@ export default function Tasbih() {
                             try {
                                 setSubmitting(true);
                                 const user = JSON.parse(userData);
-                                const response = await fetch('/api/api-tasbihUsers', {
-                                    method: 'POST',
-                                    headers: {
-                                        'Content-Type': 'application/json',
-                                    },
-                                    body: JSON.stringify({
+                                const { data } = await apiClient.post(
+                                    "/api/api-tasbihUsers",
+                                    {
                                         fullName: user.fullName,
                                         address: user.address,
                                         mobileNumber: user.mobile || user.email,
                                         tasbihCount: count,
                                         weeklyCounts: count,
-                                    }),
-                                });
-
-                                const data = await response.json();
+                                    }
+                                );
 
                                 if (data.ok) {
                                     // Add to history

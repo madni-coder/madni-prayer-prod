@@ -3,6 +3,7 @@ import React, { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
 import { FaAngleLeft } from "react-icons/fa";
 import { useRouter } from "next/navigation";
+import apiClient from "../../lib/apiClient";
 
 const ZIKR_OPTIONS = [
     "Surah Yaseen",
@@ -129,28 +130,19 @@ export default function Page() {
     async function submitZikrForAuthenticatedUser() {
         try {
             setIsSubmitting(true);
-            const userData = JSON.parse(localStorage.getItem('userData'));
+            const userData = JSON.parse(localStorage.getItem("userData"));
 
-            const response = await fetch('/api/api-zikr', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({
-                    gender: userData.gender,
-                    fullName: userData.fullName,
-                    address: userData.address,
-                    areaMasjid: userData.areaMasjid,
-                    mobile: userData.mobile || userData.email,
-                    zikrType: selected,
-                    zikrCounts: Number(count),
-                }),
+            const { data } = await apiClient.post("/api/api-zikr", {
+                gender: userData.gender,
+                fullName: userData.fullName,
+                address: userData.address,
+                areaMasjid: userData.areaMasjid,
+                mobile: userData.mobile || userData.email,
+                zikrType: selected,
+                zikrCounts: Number(count),
             });
 
-            const data = await response.json();
-
-            if (response.ok) {
-                // Add to history
+            if (data && !data.error) {
                 const newEntry = {
                     zikr: selected,
                     count: Number(count),
@@ -162,13 +154,22 @@ export default function Page() {
                 setSelected("");
                 setCount("");
 
-                showToast({ type: "success", text: "Zikr submitted successfully!" });
+                showToast({
+                    type: "success",
+                    text: "Zikr submitted successfully!",
+                });
             } else {
-                showToast({ type: "error", text: data.error || "Failed to submit. Please try again." });
+                showToast({
+                    type: "error",
+                    text: data?.error || "Failed to submit. Please try again.",
+                });
             }
         } catch (error) {
-            console.error('Error submitting zikr:', error);
-            showToast({ type: "error", text: "Failed to submit. Please try again." });
+            console.error("Error submitting zikr:", error);
+            showToast({
+                type: "error",
+                text: "Failed to submit. Please try again.",
+            });
         } finally {
             setIsSubmitting(false);
         }
@@ -185,7 +186,7 @@ export default function Page() {
                 <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-9">
                     <div>
                         <button
-                            className="flex items-center gap-2 mb-4 text-lg text-primary hover:text-green-600 font-semibold"
+                            className="btn btn-ghost gap-2 text-primary"
                             onClick={() => router.push("/")}
                             aria-label="Back to Home"
                             style={{ alignSelf: "flex-start" }}
@@ -437,8 +438,8 @@ function Toast({ toast, isDark }) {
                 role="status"
                 aria-live="polite"
                 className={`w-full px-6 py-4 rounded-2xl shadow-lg pointer-events-auto transition-all duration-300 ease-out font-medium text-base ${toast.type === "error"
-                        ? "bg-red-500 text-white"
-                        : "bg-green-500 text-white"
+                    ? "bg-red-500 text-white"
+                    : "bg-green-500 text-white"
                     }`}
             >
                 {toast.text}

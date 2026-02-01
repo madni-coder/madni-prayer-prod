@@ -1,9 +1,5 @@
 import { NextResponse } from "next/server";
-import { PrismaClient } from "@prisma/client";
-
-const prisma = new PrismaClient();
-
-export const dynamic = "force-dynamic";
+import prisma from "../../../lib/prisma";
 
 // GET - Fetch all free service requests
 export async function GET(req) {
@@ -66,13 +62,26 @@ export async function POST(req) {
             );
         }
 
+        // Validate AC count (allow numeric strings or "5+")
+        const acValue = String(numberOfACs).trim();
+        const isValidAcCount = /^\d+$/.test(acValue) || acValue === "5+";
+        if (!isValidAcCount) {
+            return NextResponse.json(
+                {
+                    ok: false,
+                    error: "Number of ACs must be a positive number or '5+'",
+                },
+                { status: 400 }
+            );
+        }
+
         // Create new free service request
         const newService = await prisma.freeService.create({
             data: {
                 mutuwalliName,
                 mobileNumber,
                 masjidName,
-                numberOfACs,
+                numberOfACs: acValue,
             },
         });
 

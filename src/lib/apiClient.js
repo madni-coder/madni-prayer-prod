@@ -1,17 +1,29 @@
 import axios from "axios";
 
-// Prefer explicit env var, otherwise use the page origin when running in the browser
-const defaultBase =
-    process.env.NEXT_PUBLIC_API_BASE_URL ||
-    (typeof window !== "undefined" && window.location?.origin
+const windowOrigin =
+    typeof window !== "undefined" && window.location?.origin
         ? window.location.origin
-        : "http://localhost:3000");
+        : null;
+const isTauriRuntime =
+    typeof window !== "undefined" && typeof window.__TAURI_IPC__ !== "undefined";
+
+const envBase = process.env.NEXT_PUBLIC_API_BASE_URL?.trim();
+const tauriFallback = process.env.NEXT_PUBLIC_TAURI_DEV_HOST?.trim();
+
+// In a Tauri bundle the app is served from a custom scheme (tauri://), so
+// hitting /api locally will 404 because Next API routes are not bundled with
+// the static export. Force a remote base URL when we detect that runtime.
+const defaultBase =
+    envBase ||
+    (isTauriRuntime && tauriFallback) ||
+    windowOrigin ||
+    "http://localhost:3000";
 
 const apiClient = axios.create({
     baseURL: defaultBase,
     withCredentials: false,
     headers: {
-        'Content-Type': 'application/json',
+        "Content-Type": "application/json",
     },
 });
 
