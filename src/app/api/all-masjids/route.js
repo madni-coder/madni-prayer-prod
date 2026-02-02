@@ -1,5 +1,49 @@
+import { Prisma } from "@prisma/client";
 import { NextResponse } from "next/server";
 import prisma from "../../../../lib/prisma";
+
+const UNIQUE_ID_TARGET = "id";
+
+function extractTargets(err) {
+    const raw = err?.meta?.target;
+    if (Array.isArray(raw)) return raw;
+    if (typeof raw === "string") return [raw];
+    return [];
+}
+
+async function createMasjidWithSequenceGuard(data) {
+    try {
+        return await prisma.allMasjid.create({ data });
+    } catch (err) {
+        const isIdConflict =
+            err instanceof Prisma.PrismaClientKnownRequestError &&
+            err.code === "P2002" &&
+            extractTargets(err).some(
+                (target) =>
+                    target === UNIQUE_ID_TARGET ||
+                    target?.toLowerCase().endsWith("_id_key")
+            );
+
+        if (!isIdConflict) {
+            throw err;
+        }
+
+        try {
+            await prisma.$executeRaw`
+                SELECT setval(
+                    pg_get_serial_sequence('all_masjid', 'id'),
+                    COALESCE(MAX(id), 0)
+                )
+                FROM all_masjid;
+            `;
+        } catch (syncErr) {
+            console.error("Failed to sync all_masjid id sequence", syncErr);
+            throw err;
+        }
+
+        return prisma.allMasjid.create({ data });
+    }
+}
 
 // POST: Create a new Masjid with jamat times
 export async function POST(request) {
@@ -41,23 +85,21 @@ export async function POST(request) {
             );
         }
 
-        const created = await prisma.allMasjid.create({
-            data: {
-                masjidName,
-                colony,
-                locality,
-                fazar,
-                zuhar,
-                asar,
-                maghrib,
-                isha,
-                taravih,
-                juma,
-                name,
-                role,
-                mobile,
-                pasteMapUrl,
-            },
+        const created = await createMasjidWithSequenceGuard({
+            masjidName,
+            colony,
+            locality,
+            fazar,
+            zuhar,
+            asar,
+            maghrib,
+            isha,
+            taravih,
+            juma,
+            name,
+            role,
+            mobile,
+            pasteMapUrl,
         });
 
         return NextResponse.json(
@@ -65,6 +107,20 @@ export async function POST(request) {
             { status: 201 }
         );
     } catch (err) {
+        if (
+            err instanceof Prisma.PrismaClientKnownRequestError &&
+            err.code === "P2002"
+        ) {
+            const targetList = extractTargets(err);
+            const target = targetList.length
+                ? targetList.join(", ")
+                : UNIQUE_ID_TARGET;
+            return NextResponse.json(
+                { error: `Unique constraint violation on ${target}` },
+                { status: 409 }
+            );
+        }
+
         console.error("POST /api/all-masjids error", err);
         return NextResponse.json(
             { error: "Internal server error" },

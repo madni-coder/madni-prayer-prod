@@ -1,8 +1,8 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import axios from 'axios';
 import { Loader2, Trash2 } from 'lucide-react';
+import apiClient from '../../../lib/apiClient';
 
 export default function FreeServicesPage() {
     const [services, setServices] = useState([]);
@@ -18,8 +18,8 @@ export default function FreeServicesPage() {
     const fetchServices = async () => {
         try {
             setLoading(true);
-            const response = await axios.get('/api/free-service');
-            setServices(response.data.data || []);
+            const { data } = await apiClient.get('/api/free-service');
+            setServices(data.data || []);
             setError('');
         } catch (err) {
             console.error('Error fetching free services:', err);
@@ -35,7 +35,7 @@ export default function FreeServicesPage() {
         }
 
         try {
-            await axios.delete('/api/free-service', { data: { id } });
+            await apiClient.delete('/api/free-service', { data: { id } });
             // Refresh the list
             fetchServices();
         } catch (err) {
@@ -166,8 +166,8 @@ export default function FreeServicesPage() {
                                         key={pageNum}
                                         onClick={() => handlePageChange(pageNum)}
                                         className={`px-3 py-1 rounded-md text-sm font-medium ${currentPage === pageNum
-                                                ? 'bg-blue-500 text-white'
-                                                : 'border border-gray-300 text-gray-700 bg-white hover:bg-gray-50'
+                                            ? 'bg-blue-500 text-white'
+                                            : 'border border-gray-300 text-gray-700 bg-white hover:bg-gray-50'
                                             }`}
                                     >
                                         {pageNum}

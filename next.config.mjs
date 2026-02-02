@@ -1,8 +1,9 @@
 const isTauri = process.env.NEXT_PUBLIC_TAURI_BUILD === "1";
+const isStaticExport = isTauri && process.env.NODE_ENV === "production";
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-    ...(isTauri
+    ...(isStaticExport
         ? { output: "export", trailingSlash: true, distDir: "out" }
         : { trailingSlash: false }),
 

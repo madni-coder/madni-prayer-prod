@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import axios from "axios";
+import apiClient from "../../../lib/apiClient";
 
 export default function UsersPage() {
     const [users, setUsers] = useState([]);
@@ -14,8 +14,7 @@ export default function UsersPage() {
         // fetch registered users from the API using axios
         (async () => {
             try {
-                const res = await axios.get("/api/auth/register");
-                const data = res.data;
+                const { data } = await apiClient.get("/api/auth/register");
                 if (data?.error) {
                     setError(data.error);
                 } else if (Array.isArray(data)) {
@@ -112,7 +111,7 @@ export default function UsersPage() {
                 <div className="px-4 py-3 border-t flex items-center justify-between">
                     <div className="text-sm text-gray-600">Showing {startItem} to {endItem} of {users.length} entries</div>
                     <div className="flex items-center gap-2">
-                       
+
                         <button
                             className="px-3 py-1 bg-black border rounded disabled:opacity-50"
                             onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
@@ -136,7 +135,7 @@ export default function UsersPage() {
                         >
                             Next
                         </button>
-                       
+
                     </div>
                 </div>
             </div>
