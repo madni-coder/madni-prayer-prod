@@ -1,6 +1,8 @@
 "use client";
 
-import Link from "next/link";
+import { useState } from "react";
+import CardLink from "../components/CardLink.client";
+import AnimatedLooader from "../components/animatedLooader";
 import {
     FaQuran,
     FaPeopleArrows,
@@ -77,6 +79,8 @@ const sections = [
 ];
 
 export default function Home() {
+    const [showLoader, setShowLoader] = useState(false);
+
     return (
         <main
             className="flex min-h-screen flex-col items-center justify-center bg-[#09152a] text-gray-200 p-4 sm:p-6 pb-24 sm:pb28"
@@ -90,22 +94,24 @@ export default function Home() {
                         RAAH-E-HIDAYAT{" "}
                     </span>{" "}
                 </h1>
-                <Link
+                <CardLink
                     href="/ramzan"
                     className="mt-2 text-lg sm:text-xl max-w-2xl mx-auto inline-block font-semibold px-4 py-2 rounded-lg bg-gradient-to-r from-primary to-secondary text-white shadow-sm hover:shadow-md transform transition-all duration-200 hover:scale-105 cursor-pointer"
+                    onDelayedShow={setShowLoader}
                 >
                     <span className="inline-flex items-center">
                         <FaHandPointRight className="mr-2 text-xl lg:text-2xl" />
                         Ramzan Special
                     </span>
-                </Link>
+                </CardLink>
             </header>
             <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 gap-4 w-full max-w-6xl ">
                 {sections.map((section) => (
-                    <Link
+                    <CardLink
                         key={section.name}
                         href={section.href}
                         className="group relative flex flex-col items-center justify-center gap-3 p-6 bg-[#243447] rounded-2xl shadow-lg border border-[#2d3f54] hover:shadow-xl transform transition-all duration-300 hover:scale-105 hover:bg-green-600 dark:hover:bg-green-700 active:bg-green-600 dark:active:bg-green-800 focus:bg-green-600 dark:focus:bg-green-800 min-h-[140px] aspect-square"
+                        onDelayedShow={setShowLoader}
                     >
                         <div className="flex-shrink-0 p-1 rounded-full bg-[#1e2f3f] mb-1">
                             {section.icon}
@@ -113,9 +119,10 @@ export default function Home() {
                         <h2 className="text-base font-semibold text-center text-white transition-colors">
                             {section.name}
                         </h2>
-                    </Link>
+                    </CardLink>
                 ))}
             </div>
+            {showLoader && <AnimatedLooader message="Please wait..." />}
         </main>
     );
 }

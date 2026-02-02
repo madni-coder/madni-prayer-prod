@@ -507,7 +507,7 @@ export default function JamatTimesPage() {
             </div>
 
             <div className="w-full max-w-md mt-8 mb-12 p-4">
-                <div className="flex justify-start mb-8 ml-8">
+                <div className="flex justify-start mb-8 ml-14">
                     <button
                         onClick={handleAutoLocate}
                         disabled={autoLocating}
@@ -520,7 +520,7 @@ export default function JamatTimesPage() {
                             </>
                         ) : (
                             <>
-                                <MapPin className="w-5 h-5 mr-2" />
+                                <MapPin className="w-5 h-5 " />
                                 See Nearby Masjid
                             </>
                         )}
