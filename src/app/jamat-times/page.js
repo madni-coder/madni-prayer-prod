@@ -1,5 +1,6 @@
 "use client";
 import React, { useState, useEffect } from "react";
+import { toast } from "react-toastify";
 import { MapPin, Save, Check } from "lucide-react";
 import { FaAngleLeft, FaMosque, FaTimes } from "react-icons/fa";
 import { useRouter } from "next/navigation";
@@ -65,9 +66,7 @@ export default function JamatTimesPage() {
     const [mapEmbedUrl, setMapEmbedUrl] = useState(null);
     const [savedMasjid, setSavedMasjid] = useState(null);
     const [hasLoadedSavedMasjid, setHasLoadedSavedMasjid] = useState(false);
-    const [showNotification, setShowNotification] = useState(false);
-    const [notificationMessage, setNotificationMessage] = useState("");
-    const [notificationType, setNotificationType] = useState("success"); // success or error
+
 
     useEffect(() => {
         loadSavedMasjid();
@@ -128,12 +127,8 @@ export default function JamatTimesPage() {
     };
 
     const showToast = (message, type = "success") => {
-        setNotificationMessage(message);
-        setNotificationType(type);
-        setShowNotification(true);
-        setTimeout(() => {
-            setShowNotification(false);
-        }, 4000); // Auto-hide after 4 seconds
+        if (type === "error") toast.error(message);
+        else toast.success(message);
     };
 
     const loadSavedMasjid = () => {
@@ -815,51 +810,7 @@ export default function JamatTimesPage() {
                     </div>
                 )}
 
-                {/* Toast Notification */}
-                {showNotification && (
-                    <div
-                        className={`fixed bottom-18 right-4 z-[9999] max-w-md animate-slide-in-bottom ${notificationType === "success"
-                            ? "bg-green-500"
-                            : "bg-red-500"
-                            } text-white px-6 py-4 rounded-lg shadow-2xl flex items-start gap-3 border-2 border-white/20`}
-                        style={{
-                            animation: "slideInBottom 0.3s ease-out",
-                        }}
-                    >
-                        <div className="flex-shrink-0 mt-0.5">
-                            {notificationType === "success" ? (
-                                <Check className="w-6 h-6" />
-                            ) : (
-                                <FaTimes className="w-6 h-6" />
-                            )}
-                        </div>
-                        <div className="flex-1">
-                            <p className="text-sm font-medium leading-relaxed">
-                                {notificationMessage}
-                            </p>
-                        </div>
-                        <button
-                            onClick={() => setShowNotification(false)}
-                            className="flex-shrink-0 ml-2 hover:bg-white/20 rounded-full p-1 transition"
-                        >
-                            <FaTimes className="w-4 h-4" />
-                        </button>
-                    </div>
-                )}
             </div>
-
-            <style jsx>{`
-                @keyframes slideInBottom {
-                    from {
-                        transform: translateY(100%);
-                        opacity: 0;
-                    }
-                    to {
-                        transform: translateY(0);
-                        opacity: 1;
-                    }
-                }
-            `}</style>
         </div>
     );
 }

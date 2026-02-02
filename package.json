@@ -44,7 +44,8 @@
         "react-dom": "19.1.0",
         "react-easy-crop": "^5.5.2",
         "react-icons": "^5.5.0",
-        "react-image-crop": "^11.0.10"
+        "react-image-crop": "^11.0.10",
+        "react-toastify": "^11.0.5"
     },
     "devDependencies": {
         "@eslint/eslintrc": "^3",

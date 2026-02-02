@@ -1,6 +1,7 @@
 "use client";
 import { useEffect, useState, useRef } from "react";
 import { useCallback } from "react";
+import { toast } from "react-toastify";
 import { useRouter } from "next/navigation";
 import SocialMediaImageUpload from "../../../components/SocialMediaImageUpload";
 import { Pencil, Trash, Smile } from "lucide-react";
@@ -28,7 +29,6 @@ export default function NoticeAdmin() {
     const [isPostingImage, setIsPostingImage] = useState(false);
     const [contentError, setContentError] = useState(null);
     const [liveOverflow, setLiveOverflow] = useState(false);
-    const [toast, setToast] = useState(null); // { type: 'success'|'error', message }
     const [fitScale, setFitScale] = useState(1); // live preview scale-to-fit (1 = no scale)
     const contentRef = useRef(null);
     const [selectedBgColor, setSelectedBgColor] = useState("#ffffff"); // Background color state
@@ -54,12 +54,7 @@ export default function NoticeAdmin() {
         },
     });
 
-    // Show toast messages for 3s
-    useEffect(() => {
-        if (!toast) return;
-        const t = setTimeout(() => setToast(null), 3000);
-        return () => clearTimeout(t);
-    }, [toast]);
+
 
     // Live overflow check: render content into an offscreen iframe sized to editor card
     const checkOverflow = useCallback(async (html) => {
@@ -379,7 +374,7 @@ export default function NoticeAdmin() {
                     headers: { "Content-Type": "multipart/form-data" },
                 }
             );
-            setToast({ type: "success", message: "Posted successfully" });
+            toast.success("Posted successfully");
 
             // Refresh the images list
             await fetchImages();
@@ -412,8 +407,8 @@ export default function NoticeAdmin() {
                 aria-pressed={active}
                 title={label}
                 className={`flex items-center gap-2 px-3 py-2 rounded-md text-sm font-medium transition border ${active
-                        ? "bg-green-500 text-white border-green-500"
-                        : "bg-white text-gray-700 border-gray-200"
+                    ? "bg-green-500 text-white border-green-500"
+                    : "bg-white text-gray-700 border-gray-200"
                     } ${disabled
                         ? "opacity-50 pointer-events-none"
                         : "hover:shadow-sm"
@@ -986,10 +981,7 @@ export default function NoticeAdmin() {
                                     setFitScale(1);
                                     setLiveOverflow(false);
                                     setContentError(null);
-                                    setToast({
-                                        type: "success",
-                                        message: "Content cleared",
-                                    });
+                                    toast.success("Content cleared");
                                 }}
                                 disabled={!editor || isPostingImage}
                                 className={`px-4 py-2 rounded-md disabled:opacity-50 disabled:cursor-not-allowed bg-white text-gray-700 border border-gray-300 hover:shadow-sm`}
@@ -1001,8 +993,8 @@ export default function NoticeAdmin() {
                                 onClick={handlePostContentAsImage}
                                 disabled={isPostingImage || liveOverflow}
                                 className={`px-6 py-2 rounded-md disabled:opacity-50 disabled:cursor-not-allowed ${liveOverflow
-                                        ? "bg-gray-400 text-white"
-                                        : "bg-green-600 text-white hover:bg-green-700"
+                                    ? "bg-gray-400 text-white"
+                                    : "bg-green-600 text-white hover:bg-green-700"
                                     }`}
                             >
                                 {isPostingImage
@@ -1016,17 +1008,7 @@ export default function NoticeAdmin() {
                             </p>
                         )}
 
-                        {/* Toast */}
-                        {toast && (
-                            <div
-                                className={`fixed bottom-6 right-6 px-4 py-2 rounded shadow-lg z-50 ${toast.type === "success"
-                                        ? "bg-green-600 text-white"
-                                        : "bg-red-600 text-white"
-                                    }`}
-                            >
-                                {toast.message}
-                            </div>
-                        )}
+                        {/* Toasts are handled by react-toastify globally */}
                     </div>
                 </div>
 

@@ -1,5 +1,7 @@
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
+import "react-toastify/dist/ReactToastify.css";
+import { ToastContainer, Slide } from "react-toastify";
 import TopNav from "./TopNav";
 import BottomNav from "./BottomNav";
 import IosClassSetter from "./IosClassSetter.client";
@@ -31,6 +33,19 @@ export default function RootLayout({ children }) {
 
                 {children}
 
+                <ToastContainer
+                    position="top-right"
+                    autoClose={2000}
+                    hideProgressBar={false}
+                    newestOnTop={true}
+                    closeOnClick={true}
+                    rtl={false}
+                    pauseOnFocusLoss={false}
+                    draggable={true}
+                    pauseOnHover={true}
+                    transition={Slide}
+                    theme="dark"
+                />
                 {/* <BottomNav /> */}
             </body>
         </html>

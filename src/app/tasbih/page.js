@@ -1,6 +1,6 @@
 "use client";
 import React, { useState, useCallback, useEffect } from "react";
-import { createPortal } from "react-dom";
+import { toast } from "react-toastify";
 import { RotateCw, Trash2 } from "lucide-react";
 import { PiHandTapLight } from "react-icons/pi";
 import { FaAngleLeft } from "react-icons/fa";
@@ -40,7 +40,6 @@ export default function Tasbih() {
         return false;
     });
     const [submitting, setSubmitting] = useState(false);
-    const [toast, setToast] = useState(null);
     const [theme, setTheme] = useState("system");
 
     // Pagination state
@@ -91,10 +90,11 @@ export default function Tasbih() {
         }
     }, []);
 
-    // Helper function to show toast
+    // Helper function to show toast (react-toastify)
     const showToast = (t) => {
-        setToast(t);
-        setTimeout(() => setToast(null), 2000);
+        if (!t) return;
+        if (t.type === "error") toast.error(t.text || t.message || String(t));
+        else toast.success(t.text || t.message || String(t));
     };
 
     // Helper to get effective theme
@@ -370,6 +370,11 @@ export default function Tasbih() {
                 <button
                     className="btn btn-sm btn-primary mb-4"
                     onClick={async () => {
+                        // Prevent submit when count is not greater than 0
+                        if (!count || Number(count) <= 0) {
+                            showToast({ type: "error", text: "Count Value must be greater than 0" });
+                            return;
+                        }
                         // Check if user is logged in
                         const userData = localStorage.getItem('userData');
 
@@ -628,32 +633,8 @@ export default function Tasbih() {
                     </div>
                 </div>
             )}
-            <Toast toast={toast} isDark={typeof window !== "undefined" ? effectiveTheme() === "dark" : false} />
+
         </section>
     );
 }
 
-function Toast({ toast, isDark }) {
-    if (!toast) return null;
-    if (typeof document === "undefined") return null;
-
-    const content = (
-        <div
-            className="fixed top-4 left-1/2 transform -translate-x-1/2 z-50 pointer-events-none w-full max-w-md px-4"
-            style={{ paddingTop: "env(safe-area-inset-top)" }}
-        >
-            <div
-                role="status"
-                aria-live="polite"
-                className={`w-full px-6 py-4 rounded-2xl shadow-lg pointer-events-auto transition-all duration-300 ease-out font-medium text-base ${toast.type === "error"
-                    ? "bg-red-500 text-white"
-                    : "bg-green-500 text-white"
-                    }`}
-            >
-                {toast.text}
-            </div>
-        </div>
-    );
-
-    return createPortal(content, document.body);
-}

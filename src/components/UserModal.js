@@ -1,6 +1,7 @@
 "use client";
 import React, { useRef, useState, useEffect } from "react";
 import { X, User, MapPin, Phone, Building2 } from "lucide-react";
+import { toast } from "react-toastify";
 import apiClient from "../lib/apiClient";
 
 export default function UserModal({
@@ -12,6 +13,7 @@ export default function UserModal({
     alwaysShowMobile = false,
     importantMessage = null,
     pageType = "tasbih", // "tasbih" or "zikr"
+
     zikrType = "General", // Type of zikr being submitted
 }) {
     const fullNameRef = useRef(null);
@@ -29,7 +31,7 @@ export default function UserModal({
     const [showImportant, setShowImportant] = useState(false);
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
-    const [showSuccessToast, setShowSuccessToast] = useState(false);
+
 
     useEffect(() => {
         if (open) {
@@ -100,14 +102,9 @@ export default function UserModal({
             resetForm();
 
             // Show success toast and close modal instantly
-            setShowSuccessToast(true);
+            toast.success("Registration successful!");
             onSuccess(data?.user || data);
             onClose();
-
-            // Hide toast after 2 seconds
-            setTimeout(() => {
-                setShowSuccessToast(false);
-            }, 2000);
         } catch (err) {
             console.error("Registration error:", err);
             // axios errors often include response.data.error
@@ -399,28 +396,7 @@ export default function UserModal({
                 </div>
             )}
 
-            {/* Success Toast */}
-            {showSuccessToast && (
-                <div className="fixed top-4 left-1/2 -translate-x-1/2 z-[100]">
-                    <div className="bg-green-500 text-white px-6 py-3 rounded-lg shadow-lg flex items-center gap-3">
-                        <svg
-                            xmlns="http://www.w3.org/2000/svg"
-                            className="h-6 w-6"
-                            fill="none"
-                            viewBox="0 0 24 24"
-                            stroke="currentColor"
-                        >
-                            <path
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                strokeWidth={2}
-                                d="M5 13l4 4L19 7"
-                            />
-                        </svg>
-                        <span className="font-semibold">Registration successful!</span>
-                    </div>
-                </div>
-            )}
+
         </>
     );
 }

@@ -1,6 +1,6 @@
 "use client";
 import React, { useEffect, useState } from "react";
-import { createPortal } from "react-dom";
+import { toast } from "react-toastify";
 import { FaAngleLeft } from "react-icons/fa";
 import { useRouter } from "next/navigation";
 import apiClient from "../../lib/apiClient";
@@ -19,7 +19,7 @@ export default function Page() {
     const [theme, setTheme] = useState("system");
     const [selected, setSelected] = useState("");
     const [count, setCount] = useState("");
-    const [toast, setToast] = useState(null);
+
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [history, setHistory] = useState(() => {
         if (typeof window !== "undefined") {
@@ -97,15 +97,15 @@ export default function Page() {
 
     function handleSubmit(e) {
         e?.preventDefault();
-        setToast(null);
+
         if (isSubmitting) return;
         const num = Number(count);
         if (!selected) {
-            showToast({ type: "error", text: "Please select a Zikr option." });
+            toast.error("Please select a Zikr option.");
             return;
         }
         if (!count || Number.isNaN(num) || num <= 0 || !Number.isInteger(num)) {
-            showToast({ type: "error", text: "Please enter a valid positive whole number for how many times." });
+            toast.error("Please enter number.");
             return;
         }
 
@@ -121,11 +121,7 @@ export default function Page() {
         }
     }
 
-    function showToast(t) {
-        setToast(t);
-        if (!t) return;
-        setTimeout(() => setToast(null), 2000);
-    }
+
 
     async function submitZikrForAuthenticatedUser() {
         try {
@@ -154,22 +150,13 @@ export default function Page() {
                 setSelected("");
                 setCount("");
 
-                showToast({
-                    type: "success",
-                    text: "Zikr submitted successfully!",
-                });
+                toast.success("Zikr submitted successfully!");
             } else {
-                showToast({
-                    type: "error",
-                    text: data?.error || "Failed to submit. Please try again.",
-                });
+                toast.error(data?.error || "Failed to submit. Please try again.");
             }
         } catch (error) {
             console.error("Error submitting zikr:", error);
-            showToast({
-                type: "error",
-                text: "Failed to submit. Please try again.",
-            });
+            toast.error("Failed to submit. Please try again.");
         } finally {
             setIsSubmitting(false);
         }
@@ -263,7 +250,7 @@ export default function Page() {
                         </div>
                     </div>
                 </form>
-                <Toast toast={toast} isDark={typeof window !== "undefined" ? effectiveTheme() === "dark" : false} />
+
 
                 {/* Zikr history list */}
                 <div className="mt-6 mb-14 bg-gradient-to-br from-base-200 to-base-300 p-6 rounded-xl shadow-lg border border-primary/20">
@@ -425,27 +412,4 @@ export default function Page() {
     );
 }
 
-function Toast({ toast, isDark }) {
-    if (!toast) return null;
-    if (typeof document === "undefined") return null;
 
-    const content = (
-        <div
-            className="fixed top-4 left-1/2 transform -translate-x-1/2 z-50 pointer-events-none w-full max-w-md px-4"
-            style={{ paddingTop: "env(safe-area-inset-top)" }}
-        >
-            <div
-                role="status"
-                aria-live="polite"
-                className={`w-full px-6 py-4 rounded-2xl shadow-lg pointer-events-auto transition-all duration-300 ease-out font-medium text-base ${toast.type === "error"
-                    ? "bg-red-500 text-white"
-                    : "bg-green-500 text-white"
-                    }`}
-            >
-                {toast.text}
-            </div>
-        </div>
-    );
-
-    return createPortal(content, document.body);
-}

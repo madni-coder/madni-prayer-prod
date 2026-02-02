@@ -1,5 +1,6 @@
 "use client";
 import React, { useState, useEffect } from "react";
+import { toast } from "react-toastify";
 import { Trash2 } from "lucide-react";
 import { FaBitcoin, FaMosque } from "react-icons/fa";
 import { useRouter } from "next/navigation";
@@ -8,22 +9,16 @@ import apiClient from "../../../lib/apiClient";
 const ToastContext = React.createContext(null);
 
 function ToastProvider({ children }) {
-    const [toast, setToast] = useState(null);
     const showToast = (message, type = "success") => {
-        setToast({ message, type });
-        setTimeout(() => setToast(null), 2500);
+        if (type === "error") {
+            toast.error(message);
+        } else {
+            toast.success(message);
+        }
     };
     return (
         <ToastContext.Provider value={showToast}>
             {children}
-            {toast && (
-                <div
-                    className={`fixed top-6 right-6 z-50 px-4 py-2 rounded shadow-lg text-white font-semibold transition-all ${toast.type === "success" ? "bg-green-600" : "bg-red-600"
-                        }`}
-                >
-                    {toast.message}
-                </div>
-            )}
         </ToastContext.Provider>
     );
 }
@@ -659,8 +654,8 @@ export default function DuroodSharifPage() {
                                                     : undefined
                                             }
                                             className={`px-3 py-1 rounded-md border transition-colors ${p === currentPage
-                                                    ? "bg-[#5fb923] text-white border-[#5fb923]"
-                                                    : "bg-white text-black border-gray-200 hover:bg-gray-50 dark:bg-gray-800 dark:text-white dark:border-gray-700 dark:hover:bg-gray-700"
+                                                ? "bg-[#5fb923] text-white border-[#5fb923]"
+                                                : "bg-white text-black border-gray-200 hover:bg-gray-50 dark:bg-gray-800 dark:text-white dark:border-gray-700 dark:hover:bg-gray-700"
                                                 }`}
                                         >
                                             {p}

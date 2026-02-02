@@ -9,6 +9,8 @@
 
 :root {
     color-scheme: dark;
+    /* map a simple variable used by components to DaisyUI's theme primary */
+    --primary-color: var(--color-primary);
 }
 
 /* Prevent horizontal overflow */

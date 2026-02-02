@@ -2,45 +2,61 @@
 
 import React from "react";
 
-export default function AnimatedLooader({ message = "Loading..." }) {
+export default function AnimatedLooader({ className = "" }) {
     return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center pointer-events-none">
-            <div className="absolute inset-0 bg-gradient-to-b from-black/40 to-transparent backdrop-blur-sm" />
-
-            <div className="relative pointer-events-auto p-6 rounded-2xl bg-gradient-to-br from-black/60 to-slate-900 border border-slate-700 shadow-xl w-64 flex flex-col items-center gap-4">
-                <div className="w-24 h-24 rounded-full bg-gradient-to-tr from-green-500 to-teal-400 p-1 flex items-center justify-center shadow-lg">
-                    <div className="w-full h-full rounded-full bg-[#071426] flex items-center justify-center overflow-hidden">
-                        <svg className="w-20 h-20 animate-spin-slow" viewBox="0 0 50 50" fill="none" xmlns="http://www.w3.org/2000/svg">
-                            <defs>
-                                <linearGradient id="g" x1="0" x2="1">
-                                    <stop offset="0%" stopColor="#34D399" />
-                                    <stop offset="100%" stopColor="#06B6D4" />
-                                </linearGradient>
-                            </defs>
-                            <path d="M25 5a20 20 0 1 0 0 40" stroke="url(#g)" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round" />
-                            <circle cx="25" cy="5" r="2.6" fill="#10B981" />
-                        </svg>
-                    </div>
-                </div>
-
-                <div className="text-center">
-                    <div className="text-sm font-semibold text-white">{message}</div>
-                    <div className="mt-2 flex items-center justify-center gap-1">
-                        <span className="w-2.5 h-2.5 bg-white/90 rounded-full animate-pulse-delay-0" />
-                        <span className="w-2.5 h-2.5 bg-white/70 rounded-full animate-pulse-delay-200" />
-                        <span className="w-2.5 h-2.5 bg-white/50 rounded-full animate-pulse-delay-400" />
-                    </div>
-                </div>
-            </div>
-
-            <style jsx>{`\
-                @keyframes spin-slow { from { transform: rotate(0deg) } to { transform: rotate(360deg) } }\
-                .animate-spin-slow { animation: spin-slow 2.2s linear infinite }\
-                @keyframes pulse-delay-0 { 0%{ transform:scale(1); opacity:1 } 50%{ transform:scale(0.6); opacity:0.4 } 100%{ transform:scale(1); opacity:1 } }\
-                .animate-pulse-delay-0 { animation: pulse-delay-0 1s ease-in-out infinite }\
-                .animate-pulse-delay-200 { animation: pulse-delay-0 1s ease-in-out infinite 0.2s }\
-                .animate-pulse-delay-400 { animation: pulse-delay-0 1s ease-in-out infinite 0.4s }\
-            `}</style>
-        </div>
+        <>
+            <span className={"loader " + className} aria-hidden="true"></span>
+            <style jsx>{`
+				.loader {
+					display: inline-block;
+					position: relative;
+					width: 100px;
+					height: 100px;
+				}
+				.loader:before{
+					content: '';
+					position: absolute;
+					width: 48px;
+					height: 48px;
+					border-radius: 50%;
+					top: 50%;
+					left: 0;
+					transform: translate(-5px, -50%);
+					background: linear-gradient(to right, #fff 50%, var(--primary-color, #de3500) 50%) no-repeat;
+					background-size: 200% auto;
+					background-position: 100% 0;
+					animation: colorBallMoveX 1.5s linear infinite alternate;
+				}
+			 .loader:after{
+					content: '';
+					position: absolute;
+					left: 50%;
+					top: 0;
+					transform: translateX(-50%);
+					width: 2px;
+					height: 100%;
+					background: var(--primary-color, #de3500);
+			 }
+			@keyframes colorBallMoveX {
+				0%  {
+					background-position: 0% 0;
+					transform: translate(-15px, -50%);
+				}
+				15%  , 25% {
+					background-position: 0% 0;
+					transform: translate(0px, -50%);
+				}
+				75% , 85% {
+					background-position: 100% 0;
+					transform: translate(50px, -50%);
+				}
+				100% {
+					background-position: 100% 0;
+					transform: translate(65px, -50%);
+				}
+			}
+			`}</style>
+        </>
     );
 }
+
