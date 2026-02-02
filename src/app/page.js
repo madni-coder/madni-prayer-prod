@@ -1,8 +1,9 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import CardLink from "../components/CardLink.client";
 import AnimatedLooader from "../components/animatedLooader";
+import UpdatePopup from "../components/UpdatePopup";
 import {
     FaQuran,
     FaPeopleArrows,
@@ -80,6 +81,23 @@ const sections = [
 
 export default function Home() {
     const [showLoader, setShowLoader] = useState(false);
+    const [showUpdatePopup, setShowUpdatePopup] = useState(false);
+
+    useEffect(() => {
+        // Show the update popup on every page load/refresh
+        setShowUpdatePopup(true);
+    }, []);
+
+    const handleUpdate = () => {
+        // Handle update action - could redirect to app store or reload page
+        setShowUpdatePopup(false);
+        // Add your update logic here, e.g., window.location.reload() or redirect to store
+        window.location.reload();
+    };
+
+    const handleCancel = () => {
+        setShowUpdatePopup(false);
+    };
 
     return (
         <main
@@ -101,6 +119,11 @@ export default function Home() {
                 >
                     <span className="inline-flex items-center">
                         <FaHandPointRight className="mr-2 text-xl lg:text-2xl" />
+                        <UpdatePopup
+                            open={showUpdatePopup}
+                            onUpdate={handleUpdate}
+                            onCancel={handleCancel}
+                        />
                         Ramzan Special
                     </span>
                 </CardLink>

@@ -317,7 +317,7 @@ const RewardsPage = () => {
                         marginBottom: 8,
                     }}
                 >
-                    You have achieved 1st Rank on reciting durood sharif
+                   For Achieving  1st Rank on reciting maxium durood sharif
                 </div>
             </div>
 

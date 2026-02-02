@@ -1,7 +1,7 @@
 "use client";
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import { toast } from "react-toastify";
-import { FaAngleLeft } from "react-icons/fa";
+import { FaAngleLeft, FaPlus } from "react-icons/fa";
 import { useRouter } from "next/navigation";
 import AnimatedLooader from "../../components/animatedLooader";
 import apiClient from "../../lib/apiClient";
@@ -54,6 +54,25 @@ export default function Page() {
     // Clear history confirmation modal
     const [showClearHistoryConfirm, setShowClearHistoryConfirm] =
         useState(false);
+    const [showAddModal, setShowAddModal] = useState(false);
+    const [customName, setCustomName] = useState("");
+    const [customOptions, setCustomOptions] = useState([]);
+    const [searchQuery, setSearchQuery] = useState("");
+    const [showDropdown, setShowDropdown] = useState(false);
+    const dropdownRef = useRef(null);
+
+    useEffect(() => {
+        function handleClickOutside(e) {
+            if (
+                dropdownRef.current &&
+                !dropdownRef.current.contains(e.target)
+            ) {
+                setShowDropdown(false);
+            }
+        }
+        document.addEventListener("mousedown", handleClickOutside);
+        return () => document.removeEventListener("mousedown", handleClickOutside);
+    }, [dropdownRef]);
 
     useEffect(() => {
         const saved = typeof window !== "undefined" && localStorage.getItem("theme");
@@ -206,14 +225,90 @@ export default function Page() {
                             <label className="label">
                                 <span className="label-text  mb-2 font-bold text-white">Zikr</span>
                             </label>
-                            <select value={selected} onChange={(e) => setSelected(e.target.value)} className="select select-bordered w-full" aria-label="Select Zikr">
-                                <option value="">Select</option>
-                                {ZIKR_OPTIONS.map((o) => (
-                                    <option key={o} value={o}>
-                                        {o}
-                                    </option>
-                                ))}
-                            </select>
+                            <div className="relative" ref={dropdownRef}>
+                                <button
+                                    type="button"
+                                    className="w-full select select-bordered flex justify-between items-center px-4 py-2"
+                                    onClick={() => setShowDropdown((s) => !s)}
+                                    aria-haspopup="listbox"
+                                    aria-expanded={showDropdown}
+                                >
+                                    <span className={`${selected ? '' : 'text-primary/60'}`}>
+                                        {selected || 'Select'}
+                                    </span>
+                                    <span className="opacity-70">▾</span>
+                                </button>
+
+                                {showDropdown && (
+                                    <div className="absolute left-0 right-0 mt-2 z-50">
+                                        <div className="bg-base-200 rounded-2xl shadow-xl border border-primary/20 overflow-hidden">
+                                            <div className="p-3">
+                                                <input
+                                                    type="search"
+                                                    value={searchQuery}
+                                                    onChange={(e) => setSearchQuery(e.target.value)}
+                                                    placeholder="Search..."
+                                                    className="input input-sm w-full mb-3 rounded-full bg-base-100/10 placeholder:text-primary/60"
+                                                    aria-label="Search zikr"
+                                                />
+
+                                                <div className="max-h-56 overflow-auto bg-base-100/20 rounded-md">
+                                                    {(() => {
+                                                        const allOptions = [
+                                                            ...customOptions,
+                                                            ...ZIKR_OPTIONS,
+                                                        ];
+                                                        const q = searchQuery.trim().toLowerCase();
+                                                        let filtered = q
+                                                            ? allOptions.filter((o) =>
+                                                                o.toLowerCase().includes(q)
+                                                            )
+                                                            : allOptions;
+                                                        // ensure selected is visible
+                                                        if (selected && !filtered.includes(selected)) {
+                                                            filtered = [selected, ...filtered];
+                                                        }
+                                                        if (filtered.length === 0) {
+                                                            return (
+                                                                <div className="p-3 text-center text-sm text-primary/70">No results</div>
+                                                            );
+                                                        }
+                                                        return filtered.map((o) => (
+                                                            <button
+                                                                key={o}
+                                                                type="button"
+                                                                className={`w-full text-left px-3 py-2 hover:bg-primary/5 transition flex items-center justify-between ${o === selected ? 'bg-primary/10' : ''}`}
+                                                                onClick={() => {
+                                                                    setSelected(o);
+                                                                    setShowDropdown(false);
+                                                                    setSearchQuery("");
+                                                                }}
+                                                            >
+                                                                <span>{customOptions.includes(o) ? `★ ${o}` : o}</span>
+                                                                {o === selected && <span className="text-primary font-bold">✓</span>}
+                                                            </button>
+                                                        ));
+                                                    })()}
+                                                </div>
+
+                                                <div className="mt-2 flex justify-end">
+                                                    <button
+                                                        type="button"
+                                                        className="btn btn-sm btn-ghost gap-2"
+                                                        onClick={() => {
+                                                            setShowAddModal(true);
+                                                            setShowDropdown(false);
+                                                            setCustomName("");
+                                                        }}
+                                                    >
+                                                        <FaPlus /> Add Your Own
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                )}
+                            </div>
                         </div>
 
                         <div>
@@ -398,6 +493,59 @@ export default function Page() {
                                     }
                                 >
                                     No
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Add Your Own modal */}
+            {showAddModal && (
+                <div className="fixed inset-0 flex items-center justify-center bg-black/40 z-50">
+                    <div className="modal modal-open">
+                        <div className="modal-box">
+                            <h3 className="font-bold text-lg">Add Your Own</h3>
+                            <p className="py-2">Enter a name for your custom Zikr</p>
+                            <div className="form-control">
+                                <label className="label">
+                                    <span className="label-text font-bold">Name</span>
+                                </label>
+                                <input
+                                    type="text"
+                                    value={customName}
+                                    onChange={(e) => setCustomName(e.target.value)}
+                                    className="input input-bordered w-full"
+                                    placeholder="Enter name"
+                                    aria-label="Custom Zikr name"
+                                />
+                            </div>
+                            <div className="modal-action">
+                                <button
+                                    className="btn btn-primary"
+                                    onClick={() => {
+                                        if (!customName || !customName.trim()) {
+                                            toast.error("Please enter a name.");
+                                            return;
+                                        }
+                                        const name = customName.trim();
+                                        setCustomOptions((prev) => [
+                                            name,
+                                            ...prev.filter((p) => p !== name),
+                                        ]);
+                                        setSelected(name);
+                                        setShowAddModal(false);
+                                    }}
+                                >
+                                    Add
+                                </button>
+                                <button
+                                    className="btn btn-ghost"
+                                    onClick={() => {
+                                        setShowAddModal(false);
+                                    }}
+                                >
+                                    Cancel
                                 </button>
                             </div>
                         </div>
