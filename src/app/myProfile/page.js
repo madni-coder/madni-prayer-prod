@@ -2,6 +2,7 @@
 import React, { useRef, useState, useEffect } from "react";
 import { FaUser, FaAngleLeft, FaEnvelope, FaLock, FaMapMarkerAlt, FaMosque, FaPhone, FaVenusMars, FaSignInAlt, FaSignOutAlt } from "react-icons/fa";
 import apiClient from "../../lib/apiClient";
+import AnimatedLooader from "../../components/animatedLooader";
 import { useRouter } from "next/navigation";
 
 export default function MyProfilePage() {
@@ -314,7 +315,11 @@ export default function MyProfilePage() {
                                 </div>
                                 <div className="flex items-center justify-between gap-3">
                                     <button type="submit" className="btn btn-primary flex-1" disabled={loginLoading}>
-                                        {loginLoading ? 'Signing in...' : 'Login'}
+                                        {loginLoading ? (
+                                            <AnimatedLooader className="inline-block" />
+                                        ) : (
+                                            'Login'
+                                        )}
                                     </button>
                                     <button type="button" className="btn btn-ghost" onClick={() => setShowLoginModal(false)} disabled={loginLoading}>
                                         Cancel
@@ -625,10 +630,7 @@ export default function MyProfilePage() {
                                     disabled={loading}
                                 >
                                     {loading ? (
-                                        <>
-                                            <span className="loading loading-spinner loading-sm"></span>
-                                            Registering...
-                                        </>
+                                        <AnimatedLooader className="inline-block" />
                                     ) : (
                                         "Register"
                                     )}

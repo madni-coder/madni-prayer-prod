@@ -6,6 +6,7 @@ import { PiHandTapLight } from "react-icons/pi";
 import { FaAngleLeft } from "react-icons/fa";
 import { useRouter } from "next/navigation";
 import apiClient from "../../lib/apiClient";
+import AnimatedLooader from "../../components/animatedLooader";
 
 export default function Tasbih() {
     // Initialize count from localStorage
@@ -422,7 +423,11 @@ export default function Tasbih() {
                     disabled={submitting}
                     aria-label="Register Durood"
                 >
-                    {submitting ? 'Submitting...' : 'Submit Durood Sharif'}
+                    {submitting ? (
+                        <AnimatedLooader className="inline-block" />
+                    ) : (
+                        'Submit Durood Sharif'
+                    )}
                 </button>
                 <h3 className="text-lg font-bold mb-4 text-primary">
                     <span>Durood History</span>

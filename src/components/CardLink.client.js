@@ -18,23 +18,73 @@ export default function CardLink({ href, children, onDelayedShow, delay = 800, c
         );
 
         overlay.innerHTML = `
-      <div style="display:flex;flex-direction:column;align-items:center;gap:12px;">
-                <span class="loader-global" aria-hidden="true"></span>
-                <div style="color:#fff;font-size:14px;text-align:center">${text || "Loading..."}</div>
-      </div>
-      <style>
-                .loader-global{display:inline-block;position:relative;width:80px;height:80px}
-                .loader-global:before{content:'';position:absolute;width:38px;height:38px;border-radius:50%;top:50%;left:0;transform:translate(-5px,-50%);background:linear-gradient(to right,#fff 50%,var(--error-color,#de3500) 50%) no-repeat;background-size:200% auto;background-position:100% 0;animation:colorBallMoveX 1.5s linear infinite alternate}
-                .loader-global:after{content:'';position:absolute;left:50%;top:0;transform:translateX(-50%);width:2px;height:100%;background:var(--error-color,#de3500)}
-        @keyframes colorBallMoveX{0%{background-position:0% 0;transform:translate(-15px,-50%)}15%,25%{background-position:0% 0;transform:translate(0px,-50%)}75%,85%{background-position:100% 0;transform:translate(50px,-50%)}100%{background-position:100% 0;transform:translate(65px,-50%)}}
-      </style>
-    `;
+            <div style="display:flex;flex-direction:column;align-items:center;gap:12px;">
+                                <span class="loader" aria-hidden="true"></span>
+                                <div style="color:#fff;font-size:14px;text-align:center">${text || "Loading..."}</div>
+            </div>
+            <style>
+            /* Compact primary-colored loader */
+            .loader {
+                width: 16px;
+                height: 16px;
+                position: relative;
+                left: -32px;
+                border-radius: 50%;
+                color: var(--primary-color, var(--color-primary, #FF3D00));
+                background: currentColor;
+                box-shadow: 32px 0 , -32px 0 ,  64px 0;
+                display: inline-block;
+            }
 
-        // try to inherit the app theme's error color from CSS variables
+            .loader::after {
+                content: '';
+                position: absolute;
+                left: -32px;
+                top: 0;
+                width: 16px;
+                height: 16px;
+                border-radius: 10px;
+                background: var(--primary-color, var(--color-primary, #FF3D00));
+                animation: move 3s linear infinite alternate;
+            }
+
+            @keyframes move {
+                0% , 5%{
+                    left: -32px;
+                    width: 16px;
+                }
+                15% , 20%{
+                    left: -32px;
+                    width: 48px;
+                }
+                30% , 35%{
+                    left: 0px;
+                    width: 16px;
+                }
+                45% , 50%{
+                    left: 0px;
+                    width: 48px;
+                }
+                60% , 65%{
+                    left: 32px;
+                    width: 16px;
+                }
+
+                75% , 80% {
+                    left: 32px;
+                    width: 48px;
+                }
+                95%, 100% {
+                    left: 64px;
+                    width: 16px;
+                }
+            }
+            </style>
+        `;
+
+        // determine the resolved primary color and apply it to the overlay
         try {
-            let error = "";
-
-            const tryGet = (el, name) => {
+            const tryGetVar = (el, name) => {
                 try {
                     return getComputedStyle(el).getPropertyValue(name).trim();
                 } catch (e) {
@@ -42,57 +92,32 @@ export default function CardLink({ href, children, onDelayedShow, delay = 800, c
                 }
             };
 
-            // 1) try :root / html variables commonly used by DaisyUI / Tailwind themes
-            error = tryGet(document.documentElement, "--color-error") || tryGet(document.documentElement, "--error-color");
+            // 1) try CSS variables on :root/html
+            let primary = tryGetVar(document.documentElement, "--primary-color") || tryGetVar(document.documentElement, "--color-primary");
 
-            // 2) if still empty, try body
-            if (!error) error = tryGet(document.body, "--color-error") || tryGet(document.body, "--error-color");
+            // 2) try body
+            if (!primary) primary = tryGetVar(document.body, "--primary-color") || tryGetVar(document.body, "--color-primary");
 
-            // 3) as a last resort attempt: create a temporary element with a theme helper class
-            //    (Tailwind/DaisyUI usually maps `bg-error` to the theme color)
-            if (!error) {
+            // 3) try to read a resolved background color from a themed helper element
+            if (!primary) {
                 const tmp = document.createElement("div");
-                tmp.className = "bg-error";
+                tmp.className = "bg-primary";
                 tmp.style.position = "fixed";
                 tmp.style.left = "-9999px";
                 document.body.appendChild(tmp);
                 try {
                     const bg = getComputedStyle(tmp).backgroundColor;
-                    if (bg && bg !== "rgba(0, 0, 0, 0)" && bg !== "transparent") error = bg;
+                    if (bg && bg !== "rgba(0, 0, 0, 0)" && bg !== "transparent") primary = bg;
                 } catch (e) { }
                 tmp.remove();
             }
 
-            // If we found something, validate it's not a DaisyUI "error" color.
-            const normalize = (c) => (c || "").replace(/\s+/g, "").toLowerCase();
-            const isErrorColor = (c) => {
-                if (!c) return false;
-                const n = normalize(c);
-                // common DaisyUI/ Tailwind error reds (rgb or hex)
-                const errorCandidates = [
-                    "rgb(220,38,38)", // #dc2626
-                    "rgb(239,68,68)", // #ef4444
-                    "rgb(255,0,0)",
-                    "#dc2626",
-                    "#ef4444",
-                    "#ff0000",
-                ];
-                return errorCandidates.includes(n);
-            };
+            // 4) final fallback: reference the CSS variable (will cascade to theme)
+            if (!primary) primary = "var(--primary-color, var(--color-primary, #FF3D00))";
 
-            if (error && isErrorColor(error)) {
-                // try alternative selectors that might map to error
-                const altEl = document.querySelector(".btn-error, .bg-error, [data-theme]");
-                if (altEl) {
-                    const alt = getComputedStyle(altEl).backgroundColor || tryGet(altEl, "--color-error") || tryGet(altEl, "--error-color");
-                    if (alt && !isErrorColor(alt)) error = alt;
-                }
-            }
-
-            // If we found something, set it as the overlay variable. Otherwise leave default.
-            if (error) overlay.style.setProperty("--error-color", error);
+            overlay.style.setProperty("--primary-color", primary);
         } catch (e) {
-            // swallow any errors to avoid breaking navigation
+            // leave overlay to use the CSS fallback defined in the injected styles
         }
 
         document.body.appendChild(overlay);

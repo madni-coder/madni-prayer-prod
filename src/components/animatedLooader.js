@@ -2,61 +2,77 @@
 
 import React from "react";
 
-export default function AnimatedLooader({ className = "" }) {
-    return (
-        <>
-            <span className={"loader " + className} aria-hidden="true"></span>
-            <style jsx>{`
-				.loader {
-					display: inline-block;
-					position: relative;
-					width: 100px;
-					height: 100px;
-				}
-				.loader:before{
-					content: '';
-					position: absolute;
-					width: 48px;
-					height: 48px;
-					border-radius: 50%;
-					top: 50%;
-					left: 0;
-					transform: translate(-5px, -50%);
-					background: linear-gradient(to right, #fff 50%, var(--primary-color, #de3500) 50%) no-repeat;
-					background-size: 200% auto;
-					background-position: 100% 0;
-					animation: colorBallMoveX 1.5s linear infinite alternate;
-				}
-			 .loader:after{
-					content: '';
-					position: absolute;
-					left: 50%;
-					top: 0;
-					transform: translateX(-50%);
-					width: 2px;
-					height: 100%;
-					background: var(--primary-color, #de3500);
-			 }
-			@keyframes colorBallMoveX {
-				0%  {
-					background-position: 0% 0;
-					transform: translate(-15px, -50%);
-				}
-				15%  , 25% {
-					background-position: 0% 0;
-					transform: translate(0px, -50%);
-				}
-				75% , 85% {
-					background-position: 100% 0;
-					transform: translate(50px, -50%);
-				}
-				100% {
-					background-position: 100% 0;
-					transform: translate(65px, -50%);
-				}
-			}
-			`}</style>
-        </>
-    );
+export default function AnimatedLooader({ className = "", message = "Submitting..." }) {
+	return (
+		<div className={className} aria-live="polite">
+			<span className="loader" aria-hidden="true"></span>
+			<div className="loader-message">{message}</div>
+			<style jsx>{`
+        /* Compact primary-colored loader */
+        .loader {
+          width: 16px;
+          height: 16px;
+          position: relative;
+          left: -32px;
+          border-radius: 50%;
+          color: var(--primary-color, var(--color-primary, #FF3D00));
+          background: currentColor;
+          box-shadow: 32px 0 , -32px 0 ,  64px 0;
+          display: inline-block;
+        }
+
+        .loader::after {
+          content: '';
+          position: absolute;
+          left: -32px;
+          top: 0;
+          width: 16px;
+          height: 16px;
+          border-radius: 10px;
+          background: var(--primary-color, var(--color-primary, #FF3D00));
+          animation: move 3s linear infinite alternate;
+        }
+
+        @keyframes move {
+          0% , 5%{
+            left: -32px;
+            width: 16px;
+          }
+          15% , 20%{
+            left: -32px;
+            width: 48px;
+          }
+          30% , 35%{
+            left: 0px;
+            width: 16px;
+          }
+          45% , 50%{
+            left: 0px;
+            width: 48px;
+          }
+          60% , 65%{
+            left: 32px;
+            width: 16px;
+          }
+
+          75% , 80% {
+            left: 32px;
+            width: 48px;
+          }
+          95%, 100% {
+            left: 64px;
+            width: 16px;
+          }
+        }
+
+        .loader-message {
+          margin-top: 12px;
+          color: var(--loader-text-color, #666);
+          font-size: 13px;
+          text-align: center;
+        }
+      `}</style>
+		</div>
+	);
 }
 

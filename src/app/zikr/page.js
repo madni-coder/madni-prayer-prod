@@ -3,6 +3,7 @@ import React, { useEffect, useState } from "react";
 import { toast } from "react-toastify";
 import { FaAngleLeft } from "react-icons/fa";
 import { useRouter } from "next/navigation";
+import AnimatedLooader from "../../components/animatedLooader";
 import apiClient from "../../lib/apiClient";
 
 const ZIKR_OPTIONS = [
@@ -239,10 +240,7 @@ export default function Page() {
                                 disabled={isSubmitting}
                             >
                                 {isSubmitting ? (
-                                    <>
-                                        <span className="loading loading-spinner loading-sm"></span>
-                                        Submitting
-                                    </>
+                                    <AnimatedLooader className="inline-block" />
                                 ) : (
                                     "Submit"
                                 )}
