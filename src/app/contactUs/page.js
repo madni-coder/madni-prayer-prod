@@ -2,8 +2,11 @@
 import React, { useState, useEffect } from "react";
 
 import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { FaAngleLeft } from "react-icons/fa";
 
 export default function ContactUs() {
+    const router = useRouter();
     const [formData, setFormData] = useState({
         name: "",
         email: "",
@@ -25,10 +28,19 @@ export default function ContactUs() {
 
     return (
         <main className="flex min-h-screen flex-col items-center justify-center bg-[#1a2332] text-gray-100 p-4 sm:p-6 mb-[64px]">
-            <header className="text-center mb-8">
-                <h1 className="text-3xl md:text-4xl font-extrabold tracking-tight text-green-400 mb-2">
-                    Contact Us
-                </h1>
+            <header className="mb-8 w-full max-w-4xl">
+                <div className="flex items-center gap-4 mb-4">
+                    <button
+                        className="flex items-center gap-2 text-lg text-primary hover:text-green-600 font-semibold"
+                        onClick={() => router.push("/")}
+                        aria-label="Back to Home"
+                    >
+                        <FaAngleLeft /> Back
+                    </button>
+                    <h1 className="text-3xl md:text-4xl font-extrabold tracking-tight text-green-400 mb-0">
+                        Contact Us
+                    </h1>
+                </div>
             </header>
 
             {/* Information Demo Section */}
@@ -88,10 +100,10 @@ export default function ContactUs() {
                         <span className="text-gray-400">
                             Bilaspur , Chhattisgarh
                         </span>
-                         <div>
-                   
+                        <div>
+
                         </div>
-                        
+
                     </div>
                     <div>
                         <Link
@@ -106,7 +118,7 @@ export default function ContactUs() {
 
             {/* Footer Section */}
             <footer className="mt-10 pt-6 border-t border-gray-600 text-center text-xs w-full space-y-3">
-               
+
                 <span className="text-gray-400">
                     Developed by{" "}
                     <Link
