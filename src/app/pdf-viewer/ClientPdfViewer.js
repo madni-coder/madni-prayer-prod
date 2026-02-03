@@ -79,31 +79,17 @@ export default function ClientPdfViewer({ file: fileProp }) {
                 setTotalPages(totalPagesCount);
                 setPdfDoc(pdf);
 
-                // For large PDFs, initialize placeholder pages
-                if (totalPagesCount > 100) {
-                    setPages(new Array(totalPagesCount).fill(null));
-                } else {
-                    // For small PDFs, render all pages immediately
-                    const created = [];
-                    for (let i = 1; i <= totalPagesCount; i++) {
-                        setCurrentPage(i);
-                        const page = await pdf.getPage(i);
-                        const viewport = page.getViewport({ scale: 1.5 });
-                        const canvas = document.createElement("canvas");
-                        canvas.width = Math.floor(viewport.width);
-                        canvas.height = Math.floor(viewport.height);
-                        const ctx = canvas.getContext("2d");
-                        await page.render({ canvasContext: ctx, viewport }).promise;
-                        if (cancelled) return;
-                        created.push(canvas.toDataURL("image/png"));
-
-                        const pageProgress = (i / totalPagesCount) * 30;
-                        setLoadingProgress(60 + pageProgress);
-                    }
-                    setPages(created);
-                }
+                // Initialize placeholder pages for all PDFs
+                setPages(new Array(totalPagesCount).fill(null));
 
                 setLoadingProgress(100);
+
+                // Eagerly render the first few pages (e.g., first 2) to ensure immediate visibility
+                const initialPagesToRender = Math.min(totalPagesCount, 2);
+                for (let i = 1; i <= initialPagesToRender; i++) {
+                    renderPage(i);
+                }
+
             } catch (e) {
                 console.error("PDF render error:", e);
                 setErr(e.message || String(e));
@@ -146,7 +132,7 @@ export default function ClientPdfViewer({ file: fileProp }) {
 
     // Intersection observer for lazy loading
     useEffect(() => {
-        if (!pdfDoc || totalPages <= 100) return;
+        if (!pdfDoc) return;
 
         observerRef.current = new IntersectionObserver(
             (entries) => {
@@ -168,7 +154,7 @@ export default function ClientPdfViewer({ file: fileProp }) {
     }, [pdfDoc, totalPages, renderPage]);
 
     useEffect(() => {
-        if (!observerRef.current || totalPages <= 100) return;
+        if (!observerRef.current) return;
 
         Object.values(pageRefsRef.current).forEach(el => {
             if (el) observerRef.current.observe(el);

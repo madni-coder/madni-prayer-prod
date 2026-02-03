@@ -1,7 +1,7 @@
 "use client";
 import React, { useEffect, useState, useRef } from "react";
 import axios from "axios";
-import { Bell, BellOff, Calendar, Moon, X } from "lucide-react";
+import { Calendar, X } from "lucide-react";
 import { FaAngleLeft, FaMapMarkerAlt, FaClock } from "react-icons/fa";
 import { useRouter } from "next/navigation";
 import apiClient from "../../lib/apiClient";
@@ -833,7 +833,7 @@ export default function PrayerTimesPage() {
                         <span className="text-sm md:text-base">Back</span>
                     </button>
 
-                    <h1 className="text-xl md:text-3xl lg:text-4xl font-bold text-primary mb-3 md:mb-6">
+                    <h1 className="text-xl md:text-3xl lg:text-4xl font-bold text-primary mb-4 md:mb-6 text-center">
                         Prayer Times
                     </h1>
 
@@ -946,7 +946,7 @@ export default function PrayerTimesPage() {
                                         </span>
                                     </div>
                                 </div>
-                                <p className="text-xs md:text-sm text-bold text-white text-center">
+                                <p className="text-xxl md:text-sm text-bold text-white text-center">
                                     Time remaining
                                 </p>
 
@@ -1013,11 +1013,6 @@ export default function PrayerTimesPage() {
                                                 <span className="font-mono text-base md:text-xl font-bold text-base-content">
                                                     {formatTo12Hour(prayer.time)}
                                                 </span>
-                                                {prayer.alert ? (
-                                                    <Bell className="w-4 h-4 md:w-5 md:h-5 text-warning" title="Alert enabled" />
-                                                ) : (
-                                                    <BellOff className="w-4 h-4 md:w-5 md:h-5 text-base-content/30" title="Alert disabled" />
-                                                )}
                                             </div>
                                         </div>
                                     </div>
