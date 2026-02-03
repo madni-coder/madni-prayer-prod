@@ -309,7 +309,7 @@ const RewardsPage = () => {
                         {goldWinner.address}
                     </div>
                 )}
-                <div
+                {/* <div
                     style={{
                         color: "#fff",
                         fontWeight: 700,
@@ -318,7 +318,7 @@ const RewardsPage = () => {
                     }}
                 >
                    For Achieving  1st Rank on reciting maxium durood sharif
-                </div>
+                </div> */}
             </div>
 
             <div className="text-center text-xxl text-yellow-400 mb-3 mt-1">
