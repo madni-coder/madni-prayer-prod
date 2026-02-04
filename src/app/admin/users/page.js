@@ -63,17 +63,19 @@ export default function UsersPage() {
                 </div>
 
                 <div className="overflow-x-auto">
-                    <table className="min-w-full table-fixed w-full">
+                    <table className="min-w-full table-auto w-full">
                         <colgroup>
-                            <col style={{ width: '12%' }} />
-                            <col style={{ width: '28%' }} />
-                            <col style={{ width: '28%' }} />
+                            <col style={{ width: '4%' }} />
+                            <col style={{ width: '8%' }} />
+                            <col style={{ width: '26%' }} />
+                            <col style={{ width: '36%' }} />
                             <col style={{ width: '22%' }} />
-                            <col style={{ width: '10%' }} />
+                            <col style={{ width: '4%' }} />
                         </colgroup>
                         <thead>
                             <tr className="bg-gradient-to-r from-sky-400 via-cyan-300 to-emerald-300 text-black rounded-t-lg">
-                                <th className="px-6 py-3 text-left text-sm font-bold uppercase">Gender</th>
+                                <th className="px-3 py-3 text-left text-sm font-bold uppercase">S.No</th>
+                                <th className="px-4 py-3 text-left text-sm font-bold uppercase">Gender</th>
                                 <th className="px-6 py-3 text-left text-sm font-bold uppercase">Full Name</th>
                                 <th className="px-6 py-3 text-left text-sm font-bold uppercase">Email</th>
                                 <th className="px-6 py-3 text-left text-sm font-bold uppercase">Address</th>
@@ -83,20 +85,21 @@ export default function UsersPage() {
                         <tbody className="bg-white divide-y divide-gray-200">
                             {loading ? (
                                 <tr>
-                                    <td colSpan={5} className="px-6 py-4 text-center text-sm text-gray-700">Loading...</td>
+                                    <td colSpan={6} className="px-6 py-4 text-center text-sm text-gray-700">Loading...</td>
                                 </tr>
                             ) : error ? (
                                 <tr>
-                                    <td colSpan={5} className="px-6 py-4 text-center text-sm text-red-600">{error}</td>
+                                    <td colSpan={6} className="px-6 py-4 text-center text-sm text-red-600">{error}</td>
                                 </tr>
                             ) : users.length === 0 ? (
                                 <tr>
-                                    <td colSpan={5} className="px-6 py-4 text-center text-sm text-gray-700">No users found.</td>
+                                    <td colSpan={6} className="px-6 py-4 text-center text-sm text-gray-700">No users found.</td>
                                 </tr>
                             ) : (
                                 pageItems.map((u, idx) => (
                                     <tr key={u.id || start + idx} className={idx % 2 === 0 ? "" : "bg-gray-50"}>
-                                        <td className="px-6 py-4 whitespace-nowrap text-sm text-black">{u.gender || '-'}</td>
+                                        <td className="px-3 py-4 whitespace-nowrap text-sm text-black">{start + idx + 1}</td>
+                                        <td className="px-4 py-4 whitespace-nowrap text-sm text-black">{u.gender || '-'}</td>
                                         <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-black">{u.fullName || u.name || '-'}</td>
                                         <td className="px-6 py-4 whitespace-nowrap text-sm text-black">{u.email || '-'}</td>
                                         <td className="px-6 py-4 text-sm text-black whitespace-normal break-words">{u.address || '-'}</td>

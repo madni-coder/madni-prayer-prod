@@ -88,7 +88,7 @@ export default function ZikrCountsPage() {
                         <table className="table w-full">
                             <thead>
                                 <tr className="bg-cyan-500">
-                                    <th className="text-left text-white">#</th>
+                                    <th className="text-left text-white">S.No</th>
                                     <th className="text-left text-white">Gender</th>
                                     <th className="text-left text-white">Full Name</th>
                                     <th className="text-left text-white">Address</th>

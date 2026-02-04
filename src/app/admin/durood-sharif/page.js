@@ -231,11 +231,12 @@ export default function DuroodSharifPage() {
         return bCount - aCount;
     });
 
-    // Assign TOP rank to top 10 users
+    // Assign TOP rank to top 10 users and a serial number to every user
     const usersWithRank = sortedUsers.map((user, idx) => {
         return {
             ...user,
             TOP: idx < 10 ? idx + 1 : "",
+            SERIAL: idx + 1,
         };
     });
 
@@ -247,7 +248,7 @@ export default function DuroodSharifPage() {
     );
 
     // Pagination
-    const PAGE_SIZE = 15;
+    const PAGE_SIZE = 12;
     const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
     // Keep current page in range when filtered changes
     useEffect(() => {
@@ -587,7 +588,7 @@ export default function DuroodSharifPage() {
                                 className="border-b last:border-b-0 hover:bg-gray-50"
                             >
                                 <td className="py-4 text-gray-800 text-left font-bold">
-                                    {row.TOP}
+                                    {row.SERIAL}
                                 </td>
                                 <td className="flex items-center gap-3 py-4 text-gray-800 text-left">
                                     <span className="bg-amber-100 rounded-full p-2 flex items-center justify-center">
@@ -613,104 +614,102 @@ export default function DuroodSharifPage() {
                         ))}
                     </tbody>
                 </table>
-                {/* Pagination controls - show only when more than one page */}
-                {filtered.length > PAGE_SIZE && (
-                    <div className="p-4 flex items-center justify-center">
-                        <nav
-                            className="inline-flex items-center space-x-2"
-                            aria-label="Pagination"
+                {/* Pagination controls */}
+                <div className="p-4 flex items-center justify-center">
+                    <nav
+                        className="inline-flex items-center space-x-2"
+                        aria-label="Pagination"
+                    >
+                        <button
+                            onClick={() =>
+                                setCurrentPage((p) => Math.max(1, p - 1))
+                            }
+                            disabled={currentPage === 1}
+                            className={`px-3 py-1 rounded-md border transition-colors disabled:opacity-50 disabled:cursor-not-allowed bg-white text-black border-gray-200 hover:bg-gray-50 dark:bg-gray-800 dark:text-white dark:border-gray-700 dark:hover:bg-gray-700`}
                         >
-                            <button
-                                onClick={() =>
-                                    setCurrentPage((p) => Math.max(1, p - 1))
-                                }
-                                disabled={currentPage === 1}
-                                className={`px-3 py-1 rounded-md border transition-colors disabled:opacity-50 disabled:cursor-not-allowed bg-white text-black border-gray-200 hover:bg-gray-50 dark:bg-gray-800 dark:text-white dark:border-gray-700 dark:hover:bg-gray-700`}
-                            >
-                                Prev
-                            </button>
+                            Prev
+                        </button>
 
-                            {/* Simple page number window: show up to 7 numbers around current page */}
-                            {(() => {
-                                const pages = [];
-                                const windowSize = 7;
-                                let start = Math.max(
-                                    1,
-                                    currentPage - Math.floor(windowSize / 2)
+                        {/* Simple page number window: show up to 7 numbers around current page */}
+                        {(() => {
+                            const pages = [];
+                            const windowSize = 7;
+                            let start = Math.max(
+                                1,
+                                currentPage - Math.floor(windowSize / 2)
+                            );
+                            let end = start + windowSize - 1;
+                            if (end > totalPages) {
+                                end = totalPages;
+                                start = Math.max(1, end - windowSize + 1);
+                            }
+                            for (let p = start; p <= end; p++) {
+                                pages.push(
+                                    <button
+                                        key={p}
+                                        onClick={() => setCurrentPage(p)}
+                                        aria-current={
+                                            p === currentPage
+                                                ? "page"
+                                                : undefined
+                                        }
+                                        className={`px-3 py-1 rounded-md border transition-colors ${p === currentPage
+                                            ? "bg-[#5fb923] text-white border-[#5fb923]"
+                                            : "bg-white text-black border-gray-200 hover:bg-gray-50 dark:bg-gray-800 dark:text-white dark:border-gray-700 dark:hover:bg-gray-700"
+                                            }`}
+                                    >
+                                        {p}
+                                    </button>
                                 );
-                                let end = start + windowSize - 1;
-                                if (end > totalPages) {
-                                    end = totalPages;
-                                    start = Math.max(1, end - windowSize + 1);
-                                }
-                                for (let p = start; p <= end; p++) {
-                                    pages.push(
+                            }
+                            // if start > 1, show leading first and ellipsis
+                            if (start > 1) {
+                                pages.unshift(
+                                    <React.Fragment key="lead">
                                         <button
-                                            key={p}
-                                            onClick={() => setCurrentPage(p)}
-                                            aria-current={
-                                                p === currentPage
-                                                    ? "page"
-                                                    : undefined
+                                            onClick={() =>
+                                                setCurrentPage(1)
                                             }
-                                            className={`px-3 py-1 rounded-md border transition-colors ${p === currentPage
-                                                ? "bg-[#5fb923] text-white border-[#5fb923]"
-                                                : "bg-white text-black border-gray-200 hover:bg-gray-50 dark:bg-gray-800 dark:text-white dark:border-gray-700 dark:hover:bg-gray-700"
-                                                }`}
+                                            className="px-3 py-1 rounded-md border bg-white text-black border-gray-200 hover:bg-gray-50 dark:bg-gray-800 dark:text-white dark:border-gray-700 dark:hover:bg-gray-700"
                                         >
-                                            {p}
+                                            1
                                         </button>
-                                    );
-                                }
-                                // if start > 1, show leading first and ellipsis
-                                if (start > 1) {
-                                    pages.unshift(
-                                        <React.Fragment key="lead">
-                                            <button
-                                                onClick={() =>
-                                                    setCurrentPage(1)
-                                                }
-                                                className="px-3 py-1 rounded-md border bg-white text-black border-gray-200 hover:bg-gray-50 dark:bg-gray-800 dark:text-white dark:border-gray-700 dark:hover:bg-gray-700"
-                                            >
-                                                1
-                                            </button>
-                                            <span className="px-2">...</span>
-                                        </React.Fragment>
-                                    );
-                                }
-                                if (end < totalPages) {
-                                    pages.push(
-                                        <React.Fragment key="trail">
-                                            <span className="px-2">...</span>
-                                            <button
-                                                onClick={() =>
-                                                    setCurrentPage(totalPages)
-                                                }
-                                                className="px-3 py-1 rounded-md border bg-white text-black border-gray-200 hover:bg-gray-50 dark:bg-gray-800 dark:text-white dark:border-gray-700 dark:hover:bg-gray-700"
-                                            >
-                                                {totalPages}
-                                            </button>
-                                        </React.Fragment>
-                                    );
-                                }
+                                        <span className="px-2">...</span>
+                                    </React.Fragment>
+                                );
+                            }
+                            if (end < totalPages) {
+                                pages.push(
+                                    <React.Fragment key="trail">
+                                        <span className="px-2">...</span>
+                                        <button
+                                            onClick={() =>
+                                                setCurrentPage(totalPages)
+                                            }
+                                            className="px-3 py-1 rounded-md border bg-white text-black border-gray-200 hover:bg-gray-50 dark:bg-gray-800 dark:text-white dark:border-gray-700 dark:hover:bg-gray-700"
+                                        >
+                                            {totalPages}
+                                        </button>
+                                    </React.Fragment>
+                                );
+                            }
 
-                                return pages;
-                            })()}
+                            return pages;
+                        })()}
 
-                            <button
-                                onClick={() =>
-                                    setCurrentPage((p) =>
-                                        Math.min(totalPages, p + 1)
-                                    )
-                                }
-                                disabled={currentPage === totalPages}
-                                className={`px-3 py-1 rounded-md border transition-colors disabled:opacity-50 disabled:cursor-not-allowed bg-white text-black border-gray-200 hover:bg-gray-50 dark:bg-gray-800 dark:text-white dark:border-gray-700 dark:hover:bg-gray-700`}
-                            >
-                                Next
-                            </button>
-                        </nav>
-                    </div>
-                )}
+                        <button
+                            onClick={() =>
+                                setCurrentPage((p) =>
+                                    Math.min(totalPages, p + 1)
+                                )
+                            }
+                            disabled={currentPage === totalPages}
+                            className={`px-3 py-1 rounded-md border transition-colors disabled:opacity-50 disabled:cursor-not-allowed bg-white text-black border-gray-200 hover:bg-gray-50 dark:bg-gray-800 dark:text-white dark:border-gray-700 dark:hover:bg-gray-700`}
+                        >
+                            Next
+                        </button>
+                    </nav>
+                </div>
             </ToastProvider>
         </>
     );
