@@ -1,4 +1,4 @@
-package com.prayer.madni
+package com.prayer.raahe
 
 import android.content.Context
 import android.hardware.Sensor

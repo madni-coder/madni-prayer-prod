@@ -4,9 +4,9 @@
 // SPDX-License-Identifier: Apache-2.0
 // SPDX-License-Identifier: MIT
 
-package com.prayer.madni
+package com.prayer.raahe
 
-import com.prayer.madni.RustWebView
+import com.prayer.raahe.RustWebView
 import android.annotation.SuppressLint
 import android.os.Build
 import android.os.Bundle

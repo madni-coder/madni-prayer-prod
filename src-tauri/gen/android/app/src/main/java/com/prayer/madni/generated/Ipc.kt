@@ -6,7 +6,7 @@
 
 @file:Suppress("unused")
 
-package com.prayer.madni
+package com.prayer.raahe
 
 import android.webkit.*
 

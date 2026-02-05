@@ -19,7 +19,8 @@
         "android:dev": "./tauri-android-dev.sh",
         "android:hot": "./tauri-android-dev.sh",
         "ios:build": "npm run tauri ios build",
-        "ios:dev": "npm run tauri ios dev --open"
+        "ios:dev": "npm run tauri ios dev -- --open",
+        "ios:appstore": "./build-ios-appstore.sh"
     },
     "dependencies": {
         "@prisma/client": "^6.16.2",

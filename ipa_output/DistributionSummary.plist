@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>raaheHidayat.ipa</key>
+	<array>
+		<dict>
+			<key>architectures</key>
+			<array>
+				<string>arm64</string>
+			</array>
+			<key>buildNumber</key>
+			<string>4</string>
+			<key>certificate</key>
+			<dict>
+				<key>SHA1</key>
+				<string>511250714029875E714BC77C8DC2D5A6647FC797</string>
+				<key>dateExpires</key>
+				<string>04/02/27</string>
+				<key>type</key>
+				<string>Apple Distribution</string>
+			</dict>
+			<key>entitlements</key>
+			<dict>
+				<key>application-identifier</key>
+				<string>R8953SWC87.com.prayer.raahe</string>
+				<key>beta-reports-active</key>
+				<true/>
+				<key>com.apple.developer.team-identifier</key>
+				<string>R8953SWC87</string>
+				<key>get-task-allow</key>
+				<false/>
+			</dict>
+			<key>name</key>
+			<string>raaheHidayat.app</string>
+			<key>profile</key>
+			<dict>
+				<key>UUID</key>
+				<string>4d9251f1-51ac-4f91-bfae-b9ef2b9db311</string>
+				<key>dateExpires</key>
+				<string>04/02/27</string>
+				<key>name</key>
+				<string>Raahe Hidayat</string>
+			</dict>
+			<key>symbols</key>
+			<true/>
+			<key>team</key>
+			<dict>
+				<key>id</key>
+				<string>R8953SWC87</string>
+				<key>name</key>
+				<string></string>
+			</dict>
+			<key>versionNumber</key>
+			<string>3.0.0</string>
+		</dict>
+	</array>
+</dict>
+</plist>

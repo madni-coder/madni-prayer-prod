@@ -1,4 +1,4 @@
-package com.prayer.madni
+package com.prayer.raahe
 
 import android.app.Activity
 import android.content.Intent
@@ -10,7 +10,7 @@ import com.google.android.play.core.appupdate.AppUpdateManagerFactory
 import com.google.android.play.core.appupdate.AppUpdateOptions
 import com.google.android.play.core.install.model.AppUpdateType
 import com.google.android.play.core.install.model.UpdateAvailability
-import com.prayer.madni.BuildConfig
+import com.prayer.raahe.BuildConfig
 
 class MainActivity : TauriActivity() {
   private lateinit var compass: CompassBridge

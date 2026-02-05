@@ -62,6 +62,29 @@ npm run ios:build
 npm run ios:dev
 ```
 
+__NOTE:__ If build fails please go through this workflow to successfully build the app
+
+```bash
+cd src-tauri
+
+# Build for simulator (x86_64 for Intel Mac, or aarch64-apple-ios-sim for M1/M2)
+cargo build --target x86_64-apple-ios --lib
+cargo build --release --target x86_64-apple-ios --lib
+
+# Build for device
+cargo build --target aarch64-apple-ios --lib
+cargo build --release --target aarch64-apple-ios --lib
+
+# Create directories and copy libraries
+mkdir -p gen/apple/Externals/x86_64/{debug,release}
+mkdir -p gen/apple/Externals/arm64/{debug,release}
+
+cp target/x86_64-apple-ios/debug/libapp_lib.a gen/apple/Externals/x86_64/debug/libapp.a
+cp target/x86_64-apple-ios/release/libapp_lib.a gen/apple/Externals/x86_64/release/libapp.a
+cp target/aarch64-apple-ios/debug/libapp_lib.a gen/apple/Externals/arm64/debug/libapp.a
+cp target/aarch64-apple-ios/release/libapp_lib.a gen/apple/Externals/arm64/release/libapp.a
+```
+
 **Prerequisites:**
 
 - macOS required

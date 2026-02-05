@@ -2,10 +2,10 @@
     "$schema": "../node_modules/@tauri-apps/cli/config.schema.json",
     "productName": "raaheHidayat",
     "version": "3.0.0",
-    "identifier": "com.prayer.madni",
+    "identifier": "com.prayer.raahe",
     "build": {
         "frontendDist": "../out",
-        "devUrl": "http://192.168.0.221:3000",
+        "devUrl": "https://raahehidayat.vercel.app",
         "beforeDevCommand": "npm run dev",
         "beforeBuildCommand": "npm run build:tauri"
     },
@@ -38,7 +38,7 @@
             "versionCode": 3000
         },
         "iOS": {
-            "developmentTeam": "D2TWM3W54N"
+            "developmentTeam": "R8953SWC87"
         }
     }
 }

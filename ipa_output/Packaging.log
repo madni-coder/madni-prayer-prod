@@ -1,0 +1,158 @@
+2026-02-04 11:47:07 +0000 [MT] Initial pipeline context: <IDEDistributionProcessingPipelineContext: 0x7f91c8bfc770; archive(resolved)="<IDEArchive: 0x7f91c8a44230>", distributionTask(resolved)="2", distributionDestination(resolved)="1", distributionMethod(resolved)="<IDEDistributionMethodiOSAppStoreDistribution: 0x7f91c5135820>", team(resolved)="<IDEProvisioningBasicTeam: 0x7f91c996bf70; teamID='R8953SWC87', teamName='(null)'>">
+	Chain (15, self inclusive):
+	<IDEDistributionProcessingPipelineContext: 0x7f91c8bfc770; archive = "<IDEArchive: 0x7f91c8a44230>", distributionMethod="<IDEDistributionMethodiOSAppStoreDistribution: 0x7f91c5135820>", team="<IDEProvisioningBasicTeam: 0x7f91c996bf70; teamID='R8953SWC87', teamName='(null)'>">
+	<IDEDistributionProcessingPipelineContext: 0x7f91c8bfbde0; archive = "<IDEArchive: 0x7f91c8a44230>", distributionMethod="<IDEDistributionMethodiOSAppStoreDistribution: 0x7f91c5135820>", team="<IDEProvisioningBasicTeam: 0x7f91c996bf70; teamID='R8953SWC87', teamName='(null)'>">
+	<IDEDistributionContext: 0x7f91c8bfbbd0; archive = "<IDEArchive: 0x7f91c8a44230>", distributionMethod="<IDEDistributionMethodiOSAppStoreDistribution: 0x7f91c5135820>", team="<IDEProvisioningBasicTeam: 0x7f91c996bf70; teamID='R8953SWC87', teamName='(null)'>">
+	<IDEDistributionContext: 0x7f91c9c09590; archive = "<IDEArchive: 0x7f91c8a44230>", distributionMethod="<IDEDistributionMethodiOSAppStoreDistribution: 0x7f91c5135820>", team="<IDEProvisioningBasicTeam: 0x7f91c996bf70; teamID='R8953SWC87', teamName='(null)'>">
+	<IDEDistributionContext: 0x7f91c99ad6c0; archive = "<IDEArchive: 0x7f91c8a44230>", distributionMethod="<IDEDistributionMethodiOSAppStoreDistribution: 0x7f91c5135820>", team="<IDEProvisioningBasicTeam: 0x7f91c996bf70; teamID='R8953SWC87', teamName='(null)'>">
+	<IDEDistributionContext: 0x7f91c99c9ed0; archive = "<IDEArchive: 0x7f91c8a44230>", distributionMethod="<IDEDistributionMethodiOSAppStoreDistribution: 0x7f91c5135820>", team="<IDEProvisioningBasicTeam: 0x7f91c996bf70; teamID='R8953SWC87', teamName='(null)'>">
+	<IDEDistributionContext: 0x7f91c996aff0; archive = "<IDEArchive: 0x7f91c8a44230>", distributionMethod="<IDEDistributionMethodiOSAppStoreDistribution: 0x7f91c5135820>", team="<IDEProvisioningBasicTeam: 0x7f91c996bf70; teamID='R8953SWC87', teamName='(null)'>">
+	<IDEDistributionContext: 0x7f91c338afd0; archive = "<IDEArchive: 0x7f91c8a44230>", distributionMethod="<IDEDistributionMethodiOSAppStoreDistribution: 0x7f91c5135820>", team="<IDEProvisioningBasicTeam: 0x7f91c996bf70; teamID='R8953SWC87', teamName='(null)'>">
+	<IDEDistributionContext: 0x7f91c8af9030; archive = "<IDEArchive: 0x7f91c8a44230>", distributionMethod="<IDEDistributionMethodiOSAppStoreDistribution: 0x7f91c5135820>", team="<IDEProvisioningBasicTeam: 0x7f91c996bf70; teamID='R8953SWC87', teamName='(null)'>">
+	<IDEDistributionContext: 0x7f91c335d510; archive = "<IDEArchive: 0x7f91c8a44230>", distributionMethod="<IDEDistributionMethodiOSAppStoreDistribution: 0x7f91c5135820>", team="<IDEProvisioningBasicTeam: 0x7f91c996bf70; teamID='R8953SWC87', teamName='(null)'>">
+	<IDEDistributionContext: 0x7f91c336de80; archive = "<IDEArchive: 0x7f91c8a44230>", distributionMethod="<IDEDistributionMethodiOSAppStoreDistribution: 0x7f91c5135820>", team="<IDEProvisioningBasicTeam: 0x7f91c996bf70; teamID='R8953SWC87', teamName='(null)'>">
+	<IDEDistributionContext: 0x7f91c996bfe0; archive = "<IDEArchive: 0x7f91c8a44230>", distributionMethod="<IDEDistributionMethodiOSAppStoreDistribution: 0x7f91c5135820>", team="<IDEProvisioningBasicTeam: 0x7f91c996bf70; teamID='R8953SWC87', teamName='(null)'>">
+	<IDEDistributionContext: 0x7f91c8ad98d0; archive = "<IDEArchive: 0x7f91c8a44230>", distributionMethod="<IDEDistributionMethodiOSAppStoreDistribution: 0x7f91c5135820>", team="(null)">
+	<IDEDistributionContext: 0x7f91c31b9290; archive = "<IDEArchive: 0x7f91c8a44230>", distributionMethod="<IDEDistributionMethodiOSAppStoreDistribution: 0x7f91c5135820>", team="(null)">
+	<IDEDistributionContext: 0x7f91c8abe7a0; archive = "<IDEArchive: 0x7f91c8a44230>", distributionMethod="(null)", team="(null)">
+</IDEDistributionProcessingPipelineContext: 0x7f91c8bfc770>
+2026-02-04 11:47:07 +0000 [MT] Processing step: IDEDistributionCreateDestRootStep
+2026-02-04 11:47:07 +0000 [MT] Processing step: IDEDistributionCopyItemStep
+2026-02-04 11:47:07 +0000 [MT] Running /usr/bin/ditto '-V' '/Users/madniapple/Library/Developer/Xcode/Archives/2026-02-04/raaheHidayat_iOS 04-02-26, 4.10 PM.xcarchive/Products/Applications/raaheHidayat.app' '/var/folders/2s/v4bx4bmn6b30hjqvdbn4_r7r0000gn/T/XcodeDistPipeline.~~~UqxFOh/Root/Payload/raaheHidayat.app'
+2026-02-04 11:47:07 +0000  >>> Copying /Users/madniapple/Library/Developer/Xcode/Archives/2026-02-04/raaheHidayat_iOS 04-02-26, 4.10 PM.xcarchive/Products/Applications/raaheHidayat.app 
+2026-02-04 11:47:07 +0000  copying file ./_CodeSignature/CodeResources ... 
+2026-02-04 11:47:07 +0000  3625 bytes for ./_CodeSignature/CodeResources
+2026-02-04 11:47:07 +0000  copying file ./raaheHidayat ... 
+2026-02-04 11:47:07 +0000  4833856 bytes for ./raaheHidayat
+2026-02-04 11:47:07 +0000  copying file ./AppIcon60x60@2x.png ... 
+2026-02-04 11:47:07 +0000  6754 bytes for ./AppIcon60x60@2x.png
+2026-02-04 11:47:07 +0000  copying file ./Assets.car ... 
+2026-02-04 11:47:07 +0000  257000 bytes for ./Assets.car
+2026-02-04 11:47:07 +0000  copying file ./AppIcon76x76@2x~ipad.png ... 
+2026-02-04 11:47:07 +0000  8535 bytes for ./AppIcon76x76@2x~ipad.png
+2026-02-04 11:47:07 +0000  copying file ./LaunchScreen.storyboardc/Y6W-OH-hqX-view-5EZ-qb-Rvc.nib ... 
+2026-02-04 11:47:07 +0000  1225 bytes for ./LaunchScreen.storyboardc/Y6W-OH-hqX-view-5EZ-qb-Rvc.nib
+2026-02-04 11:47:07 +0000  copying file ./LaunchScreen.storyboardc/Info.plist ... 
+2026-02-04 11:47:07 +0000  258 bytes for ./LaunchScreen.storyboardc/Info.plist
+2026-02-04 11:47:07 +0000  copying file ./LaunchScreen.storyboardc/UIViewController-Y6W-OH-hqX.nib ... 
+2026-02-04 11:47:07 +0000  924 bytes for ./LaunchScreen.storyboardc/UIViewController-Y6W-OH-hqX.nib
+2026-02-04 11:47:07 +0000  copying file ./embedded.mobileprovision ... 
+2026-02-04 11:47:07 +0000  12113 bytes for ./embedded.mobileprovision
+2026-02-04 11:47:07 +0000  copying file ./Info.plist ... 
+2026-02-04 11:47:07 +0000  1268 bytes for ./Info.plist
+2026-02-04 11:47:07 +0000  copying file ./PkgInfo ... 
+2026-02-04 11:47:07 +0000  8 bytes for ./PkgInfo
+2026-02-04 11:47:07 +0000 [MT] /usr/bin/ditto exited with 0
+2026-02-04 11:47:07 +0000 [MT] Processing step: IDEDistributionEmbedProfileStep
+2026-02-04 11:47:07 +0000 [MT] Processing step: IDEDistributionInfoPlistStep
+2026-02-04 11:47:07 +0000 [MT] Skipping setting DTXcodeBuildDistribution because toolsBuildVersionName was nil.
+2026-02-04 11:47:07 +0000 [MT] Processing step: IDEDistributionItemRemovalStep
+2026-02-04 11:47:07 +0000 [MT] Processing step: IDEDistributionAppThinningPlistStep
+2026-02-04 11:47:07 +0000 [MT] Skipping step: IDEDistributionAppThinningPlistStep because it said so
+2026-02-04 11:47:07 +0000 [MT] Processing step: IDEDistributionSymbolsStep
+2026-02-04 11:47:07 +0000 [MT] Writing /var/folders/2s/v4bx4bmn6b30hjqvdbn4_r7r0000gn/T/XcodeDistPipeline.~~~UqxFOh/Symbols/13C57904-DDDE-3304-B634-3526C2360DFC.symbols
+2026-02-04 11:47:07 +0000 [MT] Processing step: IDEDistributionCopyAppleProvidedContentStep
+2026-02-04 11:47:07 +0000 [MT] Processing step: IDEDistributionAppThinningStep
+2026-02-04 11:47:07 +0000 [MT] Skipping step: IDEDistributionAppThinningStep because it said so
+2026-02-04 11:47:07 +0000 [MT] Processing step: IDEDistributionArchThinningStep
+2026-02-04 11:47:07 +0000 [MT] Archs to thin for item /Users/madniapple/Library/Developer/Xcode/Archives/2026-02-04/raaheHidayat_iOS 04-02-26, 4.10 PM.xcarchive/Products/Applications/raaheHidayat.app are []
+2026-02-04 11:47:07 +0000 [MT] Processing step: IDEDistributionODRStep
+2026-02-04 11:47:07 +0000 [MT] Processing step: IDEDistributionStripXattrsStep
+2026-02-04 11:47:07 +0000 [MT] Skipping stripping extended attributes because the codesign step will strip them.
+2026-02-04 11:47:07 +0000 [MT] Processing step: IDEDistributionCodesignStep
+2026-02-04 11:47:07 +0000 [MT] Entitlements for <IDEDistributionItem: 0x7f91c3378dd0; bundleID='com.prayer.raahe', path='<DVTFilePath:0x7f91c8a44ff0:'/Users/madniapple/Library/Developer/Xcode/Archives/2026-02-04/raaheHidayat_iOS 04-02-26, 4.10 PM.xcarchive/Products/Applications/raaheHidayat.app'>', codeSigningInfo='<_DVTCodeSigningInformation_Path: 0x7f91c33604c0; isSigned='1', isAdHocSigned='0', signingCertificate='<DVTSigningCertificate: 0x7f91c9c3ce50; name='Apple Distribution: Abdul Nadim (R8953SWC87)', hash='511250714029875E714BC77C8DC2D5A6647FC797', serialNumber='5EBAC4AD247ECB4DA697EEFBAE2F2503', certificateKinds='(
+    "1.2.840.113635.100.6.1.7",
+    "1.2.840.113635.100.6.1.4"
+), issueDate='2026-02-04 10:19:43 +0000''>', entitlements='{
+    "application-identifier" = "R8953SWC87.com.prayer.raahe";
+    "beta-reports-active" = 1;
+    "com.apple.developer.team-identifier" = R8953SWC87;
+    "get-task-allow" = 0;
+}', teamID='R8953SWC87', identifier='com.prayer.raahe', executablePath='<DVTFilePath:0x7f91c3677a20:'/Users/madniapple/Library/Developer/Xcode/Archives/2026-02-04/raaheHidayat_iOS 04-02-26, 4.10 PM.xcarchive/Products/Applications/raaheHidayat.app/raaheHidayat'>', hardenedRuntime='0'>'>: {
+    "application-identifier" = "R8953SWC87.com.prayer.raahe";
+    "beta-reports-active" = 1;
+    "com.apple.developer.team-identifier" = R8953SWC87;
+    "get-task-allow" = 0;
+}
+2026-02-04 11:47:07 +0000 [MT] Associated App Clip Identifiers Filter: Skipping because "com.apple.developer.associated-appclip-app-identifiers" is not present
+2026-02-04 11:47:07 +0000 [MT] Entitlements for <IDEDistributionItem: 0x7f91c3378dd0; bundleID='com.prayer.raahe', path='<DVTFilePath:0x7f91c8a44ff0:'/Users/madniapple/Library/Developer/Xcode/Archives/2026-02-04/raaheHidayat_iOS 04-02-26, 4.10 PM.xcarchive/Products/Applications/raaheHidayat.app'>', codeSigningInfo='<_DVTCodeSigningInformation_Path: 0x7f91c33604c0; isSigned='1', isAdHocSigned='0', signingCertificate='<DVTSigningCertificate: 0x7f91c36a2c10; name='Apple Distribution: Abdul Nadim (R8953SWC87)', hash='511250714029875E714BC77C8DC2D5A6647FC797', serialNumber='5EBAC4AD247ECB4DA697EEFBAE2F2503', certificateKinds='(
+    "1.2.840.113635.100.6.1.7",
+    "1.2.840.113635.100.6.1.4"
+), issueDate='2026-02-04 10:19:43 +0000''>', entitlements='{
+    "application-identifier" = "R8953SWC87.com.prayer.raahe";
+    "beta-reports-active" = 1;
+    "com.apple.developer.team-identifier" = R8953SWC87;
+    "get-task-allow" = 0;
+}', teamID='R8953SWC87', identifier='com.prayer.raahe', executablePath='<DVTFilePath:0x7f91c3677a20:'/Users/madniapple/Library/Developer/Xcode/Archives/2026-02-04/raaheHidayat_iOS 04-02-26, 4.10 PM.xcarchive/Products/Applications/raaheHidayat.app/raaheHidayat'>', hardenedRuntime='0'>'> are: {
+    "application-identifier" = "R8953SWC87.com.prayer.raahe";
+    "beta-reports-active" = 1;
+    "com.apple.developer.team-identifier" = R8953SWC87;
+    "get-task-allow" = 0;
+}
+2026-02-04 11:47:07 +0000 [MT] Writing entitlements for <IDEDistributionItem: 0x7f91c3378dd0; bundleID='com.prayer.raahe', path='<DVTFilePath:0x7f91c8a44ff0:'/Users/madniapple/Library/Developer/Xcode/Archives/2026-02-04/raaheHidayat_iOS 04-02-26, 4.10 PM.xcarchive/Products/Applications/raaheHidayat.app'>', codeSigningInfo='<_DVTCodeSigningInformation_Path: 0x7f91c33604c0; isSigned='1', isAdHocSigned='0', signingCertificate='<DVTSigningCertificate: 0x7f91c9bccbe0; name='Apple Distribution: Abdul Nadim (R8953SWC87)', hash='511250714029875E714BC77C8DC2D5A6647FC797', serialNumber='5EBAC4AD247ECB4DA697EEFBAE2F2503', certificateKinds='(
+    "1.2.840.113635.100.6.1.7",
+    "1.2.840.113635.100.6.1.4"
+), issueDate='2026-02-04 10:19:43 +0000''>', entitlements='{
+    "application-identifier" = "R8953SWC87.com.prayer.raahe";
+    "beta-reports-active" = 1;
+    "com.apple.developer.team-identifier" = R8953SWC87;
+    "get-task-allow" = 0;
+}', teamID='R8953SWC87', identifier='com.prayer.raahe', executablePath='<DVTFilePath:0x7f91c3677a20:'/Users/madniapple/Library/Developer/Xcode/Archives/2026-02-04/raaheHidayat_iOS 04-02-26, 4.10 PM.xcarchive/Products/Applications/raaheHidayat.app/raaheHidayat'>', hardenedRuntime='0'>'> to: /var/folders/2s/v4bx4bmn6b30hjqvdbn4_r7r0000gn/T/XcodeDistPipeline.~~~UqxFOh/entitlements~~~3jGlT8
+2026-02-04 11:47:07 +0000 [MT] invoking codesign: <NSConcreteTask: 0x7f91c9b33ee0; launchPath='/usr/bin/codesign', arguments='(
+    "-f",
+    "-s",
+    511250714029875E714BC77C8DC2D5A6647FC797,
+    "--entitlements",
+    "/var/folders/2s/v4bx4bmn6b30hjqvdbn4_r7r0000gn/T/XcodeDistPipeline.~~~UqxFOh/entitlements~~~3jGlT8",
+    "--preserve-metadata=identifier,flags,runtime,launch-constraints,library-constraints",
+    "--generate-entitlement-der",
+    "--strip-disallowed-xattrs",
+    "-vvv",
+    "/var/folders/2s/v4bx4bmn6b30hjqvdbn4_r7r0000gn/T/XcodeDistPipeline.~~~UqxFOh/Root/Payload/raaheHidayat.app"
+)'>
+2026-02-04 11:47:07 +0000 [MT] codesign output: /var/folders/2s/v4bx4bmn6b30hjqvdbn4_r7r0000gn/T/XcodeDistPipeline.~~~UqxFOh/Root/Payload/raaheHidayat.app: replacing existing signature
+/var/folders/2s/v4bx4bmn6b30hjqvdbn4_r7r0000gn/T/XcodeDistPipeline.~~~UqxFOh/Root/Payload/raaheHidayat.app: signed app bundle with Mach-O thin (arm64) [com.prayer.raahe]
+2026-02-04 11:47:07 +0000 [MT] Processing step: IDEDistributionZipODRItemStep
+2026-02-04 11:47:07 +0000 [MT] Skipping step: IDEDistributionZipODRItemStep because it said so
+2026-02-04 11:47:07 +0000 [MT] Processing step: IDEDistributionCreateIPAStep
+2026-02-04 11:47:07 +0000 [MT] Running /usr/bin/rsync '-8aPhhE' '/var/folders/2s/v4bx4bmn6b30hjqvdbn4_r7r0000gn/T/XcodeDistPipeline.~~~UqxFOh/Symbols' '--link-dest' '/var/folders/2s/v4bx4bmn6b30hjqvdbn4_r7r0000gn/T/XcodeDistPipeline.~~~UqxFOh' '/var/folders/2s/v4bx4bmn6b30hjqvdbn4_r7r0000gn/T/XcodeDistPipeline.~~~UqxFOh/Root'
+2026-02-04 11:47:07 +0000  Symbols/
+._Symbols
+            163 170%  936.39KB/s   00:00:00 (xfer#1, to-check=0/4)
+2026-02-04 11:47:07 +0000  Symbols/13C57904-DDDE-3304-B634-3526C2360DFC.symbols
+Symbols/._13C57904-DDDE-3304-B634-3526C2360DFC.symbols
+            163   0%  206.96KB/s   00:00:00 (xfer#2, to-check=2/4)
+2026-02-04 11:47:07 +0000 [MT] /usr/bin/rsync exited with 0
+2026-02-04 11:47:07 +0000 [MT] Running /usr/bin/ditto '-V' '-c' '-k' '--norsrc' '/var/folders/2s/v4bx4bmn6b30hjqvdbn4_r7r0000gn/T/XcodeDistPipeline.~~~UqxFOh/Root' '/var/folders/2s/v4bx4bmn6b30hjqvdbn4_r7r0000gn/T/XcodeDistPipeline.~~~UqxFOh/Packages/raaheHidayat.ipa'
+2026-02-04 11:47:07 +0000  >>> Copying /var/folders/2s/v4bx4bmn6b30hjqvdbn4_r7r0000gn/T/XcodeDistPipeline.~~~UqxFOh/Root 
+2026-02-04 11:47:07 +0000  copying file ./Payload/raaheHidayat.app/_CodeSignature/CodeResources ... 
+2026-02-04 11:47:07 +0000  3625 bytes for ./Payload/raaheHidayat.app/_CodeSignature/CodeResources
+2026-02-04 11:47:07 +0000  copying file ./Payload/raaheHidayat.app/raaheHidayat ... 
+2026-02-04 11:47:07 +0000  4833856 bytes for ./Payload/raaheHidayat.app/raaheHidayat
+2026-02-04 11:47:07 +0000  copying file ./Payload/raaheHidayat.app/AppIcon60x60@2x.png ... 
+2026-02-04 11:47:07 +0000  6754 bytes for ./Payload/raaheHidayat.app/AppIcon60x60@2x.png
+2026-02-04 11:47:07 +0000  copying file ./Payload/raaheHidayat.app/Assets.car ... 
+2026-02-04 11:47:07 +0000  257000 bytes for ./Payload/raaheHidayat.app/Assets.car
+2026-02-04 11:47:07 +0000  copying file ./Payload/raaheHidayat.app/AppIcon76x76@2x~ipad.png ... 
+2026-02-04 11:47:07 +0000  8535 bytes for ./Payload/raaheHidayat.app/AppIcon76x76@2x~ipad.png
+2026-02-04 11:47:07 +0000  copying file ./Payload/raaheHidayat.app/LaunchScreen.storyboardc/Y6W-OH-hqX-view-5EZ-qb-Rvc.nib ... 
+2026-02-04 11:47:07 +0000  1225 bytes for ./Payload/raaheHidayat.app/LaunchScreen.storyboardc/Y6W-OH-hqX-view-5EZ-qb-Rvc.nib
+copying file ./Payload/raaheHidayat.app/LaunchScreen.storyboardc/Info.plist ... 
+2026-02-04 11:47:07 +0000  258 bytes for ./Payload/raaheHidayat.app/LaunchScreen.storyboardc/Info.plist
+copying file ./Payload/raaheHidayat.app/LaunchScreen.storyboardc/UIViewController-Y6W-OH-hqX.nib ... 
+2026-02-04 11:47:07 +0000  924 bytes for ./Payload/raaheHidayat.app/LaunchScreen.storyboardc/UIViewController-Y6W-OH-hqX.nib
+copying file ./Payload/raaheHidayat.app/embedded.mobileprovision ... 
+2026-02-04 11:47:07 +0000  12113 bytes for ./Payload/raaheHidayat.app/embedded.mobileprovision
+2026-02-04 11:47:07 +0000  copying file ./Payload/raaheHidayat.app/Info.plist ... 
+2026-02-04 11:47:07 +0000  1272 bytes for ./Payload/raaheHidayat.app/Info.plist
+2026-02-04 11:47:07 +0000  copying file ./Payload/raaheHidayat.app/PkgInfo ... 
+8 bytes for ./Payload/raaheHidayat.app/PkgInfo
+2026-02-04 11:47:07 +0000  copying file ./Symbols/13C57904-DDDE-3304-B634-3526C2360DFC.symbols ... 
+2026-02-04 11:47:07 +0000  3820332 bytes for ./Symbols/13C57904-DDDE-3304-B634-3526C2360DFC.symbols
+2026-02-04 11:47:07 +0000 [MT] /usr/bin/ditto exited with 0
+2026-02-04 11:47:07 +0000 [MT] Processing step: IDEDistributionAppStoreInformationStep
+2026-02-04 11:47:07 +0000 [MT] Skipping step: IDEDistributionAppStoreInformationStep because it said so
+2026-02-04 11:47:07 +0000 [MT] Processing step: IDEDistributionGenerateProcessedDistributionItems
+2026-02-04 11:47:07 +0000 [MT] IDEDistributionItem init <DVTFilePath:0x7f91c9b26230:'/var/folders/2s/v4bx4bmn6b30hjqvdbn4_r7r0000gn/T/XcodeDistPipeline.~~~UqxFOh/Root/Payload/raaheHidayat.app'>
+2026-02-04 11:47:07 +0000 [MT] Processing step: IDEDistributionCreateManifestStep
+2026-02-04 11:47:07 +0000 [MT] Skipping step: IDEDistributionCreateManifestStep because it said so

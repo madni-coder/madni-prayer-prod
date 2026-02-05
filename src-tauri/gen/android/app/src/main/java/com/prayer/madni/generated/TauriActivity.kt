@@ -4,7 +4,7 @@
 
 /* THIS FILE IS AUTO-GENERATED. DO NOT MODIFY!! */
 
-package com.prayer.madni
+package com.prayer.raahe
 
 import android.os.Bundle
 import android.content.Intent

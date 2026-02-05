@@ -6,7 +6,7 @@
 
 @file:Suppress("unused", "SetJavaScriptEnabled")
 
-package com.prayer.madni
+package com.prayer.raahe
 
 import android.annotation.SuppressLint
 import android.webkit.*
