@@ -53,6 +53,55 @@ export default function ZikrCountsPage() {
 
     // no local filtering/pagination — show all zikr records in a table
 
+    // Group duplicate entries by mobile (fallback to fullName+address) and aggregate counts/types
+    const grouped = React.useMemo(() => {
+        const map = new Map();
+        for (const r of zikrList) {
+            const key = r.mobile && String(r.mobile).trim() !== ''
+                ? String(r.mobile).trim()
+                : `${(r.fullName || '').trim()}||${(r.address || '').trim()}`;
+
+            const incomingTypes = Array.isArray(r.zikrTypes)
+                ? r.zikrTypes
+                : (r.zikrType ? [r.zikrType] : []);
+
+            if (map.has(key)) {
+                const ex = map.get(key);
+                ex.zikrCounts = (Number(ex.zikrCounts) || 0) + (Number(r.zikrCounts) || 0);
+                const merged = new Set([...(ex.zikrTypes || []), ...incomingTypes.filter(Boolean)]);
+                ex.zikrTypes = Array.from(merged);
+                const exTime = new Date(ex.updatedAt || ex.createdAt || 0).getTime();
+                const inTime = new Date(r.updatedAt || r.createdAt || 0).getTime();
+                if (inTime > exTime) {
+                    ex.updatedAt = r.updatedAt || r.createdAt;
+                }
+                ex.repIds.push(r.id);
+            } else {
+                map.set(key, {
+                    id: r.id,
+                    repIds: [r.id],
+                    gender: r.gender,
+                    fullName: r.fullName,
+                    address: r.address,
+                    areaMasjid: r.areaMasjid,
+                    mobile: r.mobile,
+                    zikrTypes: incomingTypes.filter(Boolean),
+                    zikrCounts: Number(r.zikrCounts) || 0,
+                    createdAt: r.createdAt,
+                    updatedAt: r.updatedAt || r.createdAt,
+                });
+            }
+        }
+        return Array.from(map.values());
+    }, [zikrList]);
+
+    // pagination calculations (computed in component scope so JSX can access)
+    const totalPages = Math.max(1, Math.ceil(grouped.length / pageSize));
+    const start = (currentPage - 1) * pageSize;
+    const pageItems = grouped.slice(start, start + pageSize);
+    const startItem = grouped.length === 0 ? 0 : start + 1;
+    const endItem = Math.min(start + pageSize, grouped.length);
+
     // Show loading while checking authentication
     if (loading) {
         return (
@@ -61,13 +110,6 @@ export default function ZikrCountsPage() {
             </div>
         );
     }
-
-    // pagination calculations (computed in component scope so JSX can access)
-    const totalPages = Math.max(1, Math.ceil(zikrList.length / pageSize));
-    const start = (currentPage - 1) * pageSize;
-    const pageItems = zikrList.slice(start, start + pageSize);
-    const startItem = zikrList.length === 0 ? 0 : start + 1;
-    const endItem = Math.min(start + pageSize, zikrList.length);
 
     return (
         <div className="bg-white rounded-xl shadow p-0 mt-8">
@@ -81,7 +123,7 @@ export default function ZikrCountsPage() {
                         <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-500"></div>
                         <span>Loading zikr records...</span>
                     </div>
-                ) : zikrList.length === 0 ? (
+                ) : grouped.length === 0 ? (
                     <div className="text-sm text-gray-500">No zikr records found.</div>
                 ) : (
                     <div className="overflow-x-auto">
@@ -100,30 +142,42 @@ export default function ZikrCountsPage() {
                                 </tr>
                             </thead>
                             <tbody>
-                                {pageItems.map((z, idx) => (
-                                    <tr key={z.id ?? start + idx} className="border-b last:border-b-0 hover:bg-gray-50">
-                                        <td className="py-3 text-gray-800">{start + idx + 1}</td>
-                                        <td className="py-3 text-gray-800">{z.gender ?? "-"}</td>
-                                        <td className="py-3 text-gray-800">{z.fullName ?? "-"}</td>
-                                        <td className="py-3 text-gray-800">{z.address ?? "-"}</td>
-                                        <td className="py-3 text-gray-800">{z.areaMasjid ?? "-"}</td>
-                                        <td className="py-3 text-gray-800">{z.mobile ?? "-"}</td>
-                                        <td className="py-3 text-gray-800">{z.zikrType ?? "-"}</td>
-                                        <td className="py-3 text-orange-800 font-bold">{z.zikrCounts ?? 0}</td>
-                                        <td className="py-3 text-sm text-gray-500">{z.createdAt ? new Date(z.createdAt).toLocaleString() : "-"}</td>
-                                    </tr>
-                                ))}
+                                {pageItems.map((z, idx) => {
+                                    const recordId = z.id ?? start + idx;
+                                    const handleOpen = () => router.push(`/admin/zikrCounts/${recordId}`);
+                                    return (
+                                        <tr
+                                            key={recordId}
+                                            className="border-b last:border-b-0 hover:bg-gray-50 cursor-pointer"
+                                            onClick={handleOpen}
+                                            tabIndex={0}
+                                            role="button"
+                                            onKeyDown={(e) => { if (e.key === 'Enter') handleOpen(); }}
+                                            title={z.fullName ? `Open ${z.fullName}` : 'Open zikr record'}
+                                        >
+                                            <td className="py-3 text-gray-800">{start + idx + 1}</td>
+                                            <td className="py-3 text-gray-800">{z.gender ?? "-"}</td>
+                                            <td className="py-3 text-gray-800">{z.fullName ?? "-"}</td>
+                                            <td className="py-3 text-gray-800">{z.address ?? "-"}</td>
+                                            <td className="py-3 text-gray-800">{z.areaMasjid ?? "-"}</td>
+                                            <td className="py-3 text-gray-800">{z.mobile ?? "-"}</td>
+                                            <td className="py-3 text-gray-800">{(z.zikrTypes && z.zikrTypes.length) ? z.zikrTypes.join(', ') : '-'}</td>
+                                            <td className="py-3 text-orange-800 font-bold">{z.zikrCounts ?? 0}</td>
+                                            <td className="py-3 text-sm text-gray-500">{z.updatedAt ? new Date(z.updatedAt).toLocaleString() : (z.createdAt ? new Date(z.createdAt).toLocaleString() : "-")}</td>
+                                        </tr>
+                                    );
+                                })}
                             </tbody>
                         </table>
                         {/* Pagination - always visible */}
                         <div className="mt-4 flex items-center justify-between border-t pt-3">
-                            <div className="text-sm text-gray-600">Showing {startItem} to {endItem} of {zikrList.length} entries</div>
+                            <div className="text-sm text-gray-600">Showing {startItem} to {endItem} of {grouped.length} entries</div>
                             <div className="flex items-center gap-2">
-                               
+
                                 <button
                                     className="px-3 py-1 bg-black border rounded "
                                     onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
-                                    disabled={currentPage === 1 || zikrList.length === 0}
+                                    disabled={currentPage === 1 || grouped.length === 0}
                                 >
                                     Prev
                                 </button>
@@ -139,11 +193,11 @@ export default function ZikrCountsPage() {
                                 <button
                                     className="px-3 py-1 bg-black border rounded "
                                     onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
-                                    disabled={currentPage >= totalPages || zikrList.length === 0}
+                                    disabled={currentPage >= totalPages || grouped.length === 0}
                                 >
                                     Next
                                 </button>
-                               
+
                             </div>
                         </div>
                     </div>

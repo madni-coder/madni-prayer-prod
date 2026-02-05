@@ -84,7 +84,7 @@ model Zikr {
   address    String   @default("")
   areaMasjid String   @default("")
   mobile     String?
-  zikrType   String
+  zikrTypes  String[] @default([])
   zikrCounts Int
   createdAt  DateTime @default(now())
   updatedAt  DateTime @updatedAt
