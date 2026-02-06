@@ -114,15 +114,15 @@ export default function Page() {
     const pageItems = groupedRecords.slice(start, end);
 
     return (
-        
+
         <div className="bg-white rounded-xl shadow p-6 mt-8">
             <Link href="/admin/zikrCounts">
                 <button className="px-3 py-1 bg-black text-white rounded">Back</button>
             </Link>
             <div className="flex items-center justify-between mb-4">
-                
+
                 <h2 className="text-xl font-bold text-black">Zikr Details</h2>
-                
+
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -158,13 +158,7 @@ export default function Page() {
                     </div>
                 </div>
 
-                <div className="flex items-start gap-3">
-                    <FiPhone className="text-2xl text-cyan-500 mt-1" />
-                    <div>
-                        <div className="text-sm text-gray-500">Mobile</div>
-                        <div className="font-medium text-gray-800">{data.mobile ?? '-'}</div>
-                    </div>
-                </div>
+                {/* Mobile intentionally hidden for privacy */}
 
 
 

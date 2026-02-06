@@ -577,7 +577,7 @@ export default function MyProfilePage() {
                                         <input
                                             ref={addressRef}
                                             type="text"
-                                            placeholder="Enter your address"
+                                            placeholder="Colony, Area, City"
                                             className="input input-bordered w-full pl-12 h-12 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all"
                                             value={address}
                                             onChange={(e) => setAddress(e.target.value)}

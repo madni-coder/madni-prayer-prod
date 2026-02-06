@@ -31,9 +31,7 @@ function ConfirmModal({ open, title, message, onConfirm, onCancel }) {
                 <h2 className="text-lg font-bold mb-2 text-gray-900 dark:text-white">
                     {title}
                 </h2>
-                <p className="mb-6 text-gray-700 dark:text-gray-300">
-                    {message}
-                </p>
+                <p className="mb-6 text-gray-700 dark:text-gray-300">{message}</p>
                 <div className="flex gap-4 justify-end">
                     <button
                         className="px-4 py-2 rounded bg-gray-200 dark:bg-gray-700 text-gray-900 dark:text-white font-semibold hover:bg-gray-300 dark:hover:bg-gray-600"
@@ -57,7 +55,6 @@ function ClearWinnerListButton() {
     const [loading, setLoading] = useState(false);
     const [showConfirm, setShowConfirm] = useState(false);
     const showToast = React.useContext(ToastContext);
-
     const handleClear = async () => {
         setLoading(true);
         try {
@@ -243,8 +240,7 @@ export default function DuroodSharifPage() {
     const filtered = usersWithRank.filter(
         (row) =>
             row["Full Name"].toLowerCase().includes(search.toLowerCase()) ||
-            row["Address"].toLowerCase().includes(search.toLowerCase()) ||
-            row["mobile number"].toLowerCase().includes(search.toLowerCase())
+            row["Address"].toLowerCase().includes(search.toLowerCase())
     );
 
     // Pagination
@@ -284,7 +280,7 @@ export default function DuroodSharifPage() {
                     <div className="flex-1 min-w-[200px]">
                         <input
                             type="text"
-                            placeholder="Search by name, address or mobile number"
+                            placeholder="Search by name or address"
                             className="input input-bordered bg-white w-full max-w-xs text-black"
                             value={search}
                             onChange={(e) => setSearch(e.target.value)}
@@ -569,9 +565,7 @@ export default function DuroodSharifPage() {
                             <th className="font-semibold text-base text-white text-left">
                                 Colony Address
                             </th>
-                            <th className="font-semibold text-base text-white text-left">
-                                Mobile Number
-                            </th>
+                            {/* Mobile column intentionally removed for privacy */}
                             <th className="font-semibold text-base text-white text-left flex items-center gap-2">
                                 <span>This Week Counts</span>
                                 {/* ...existing code... */}
@@ -601,9 +595,7 @@ export default function DuroodSharifPage() {
                                 <td className="py-4 text-gray-800 text-left">
                                     {row["Address"]}
                                 </td>
-                                <td className="py-4 text-blue-600 font-bold text-left">
-                                    {row["mobile number"]}
-                                </td>
+                                {/* Mobile number omitted for privacy */}
                                 <td className="py-4 text-orange-800 font-bold  text-left flex items-center gap-2">
                                     {row["weekly counts"] || "00"}
                                 </td>

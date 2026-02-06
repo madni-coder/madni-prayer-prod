@@ -135,7 +135,6 @@ export default function ZikrCountsPage() {
                                     <th className="text-left text-white">Full Name</th>
                                     <th className="text-left text-white">Address</th>
                                     <th className="text-left text-white">Area Masjid</th>
-                                    <th className="text-left text-white">Mobile</th>
                                     <th className="text-left text-white">Zikr Counts</th>
                                     <th className="text-left text-white">Last Updated</th>
                                 </tr>
@@ -159,7 +158,7 @@ export default function ZikrCountsPage() {
                                             <td className="py-3 text-gray-800">{z.fullName ?? "-"}</td>
                                             <td className="py-3 text-gray-800">{z.address ?? "-"}</td>
                                             <td className="py-3 text-gray-800">{z.areaMasjid ?? "-"}</td>
-                                            <td className="py-3 text-gray-800">{z.mobile ?? "-"}</td>
+                                            {/* Mobile column intentionally hidden for privacy */}
                                             <td className="py-3 text-orange-800 font-bold">{z.zikrCounts ?? 0}</td>
                                             <td className="py-3 text-sm text-gray-500">{z.updatedAt ? new Date(z.updatedAt).toLocaleString() : (z.createdAt ? new Date(z.createdAt).toLocaleString() : "-")}</td>
                                         </tr>
