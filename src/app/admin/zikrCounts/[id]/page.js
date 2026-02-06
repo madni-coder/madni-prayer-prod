@@ -114,12 +114,15 @@ export default function Page() {
     const pageItems = groupedRecords.slice(start, end);
 
     return (
+        
         <div className="bg-white rounded-xl shadow p-6 mt-8">
+            <Link href="/admin/zikrCounts">
+                <button className="px-3 py-1 bg-black text-white rounded">Back</button>
+            </Link>
             <div className="flex items-center justify-between mb-4">
+                
                 <h2 className="text-xl font-bold text-black">Zikr Details</h2>
-                <Link href="/admin/zikrCounts">
-                    <button className="px-3 py-1 bg-black text-white rounded">Back</button>
-                </Link>
+                
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">

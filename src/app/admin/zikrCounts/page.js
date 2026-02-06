@@ -147,7 +147,7 @@ export default function ZikrCountsPage() {
                                     return (
                                         <tr
                                             key={recordId}
-                                            className="border-b last:border-b-0 hover:bg-gray-50 cursor-pointer"
+                                            className="border-b last:border-b-0 hover:bg-emerald-50 cursor-pointer"
                                             onClick={handleOpen}
                                             tabIndex={0}
                                             role="button"

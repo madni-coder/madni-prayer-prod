@@ -42,7 +42,7 @@ const navigation = [
         icon: Coins,
     },
     {
-        name: "Zikr Counts",
+        name: "Zikr Records",
         href: "/admin/zikrCounts",
         icon: Book,
     },

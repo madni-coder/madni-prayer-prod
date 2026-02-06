@@ -313,6 +313,23 @@ export default function MyProfilePage() {
                                     <label className="label pb-1"><span className="label-text text-white">Password</span></label>
                                     <input type="text" value={password} onChange={(e) => setPassword(e.target.value)} className="input input-bordered w-full bg-black/30 text-white placeholder-white/60" placeholder="Password" required />
                                 </div>
+                                {loginError && (
+                                    (String(loginError).toLowerCase().includes('password') ||
+                                        String(loginError).toLowerCase().includes('invalid') ||
+                                        String(loginError).toLowerCase().includes('credential') ||
+                                        String(loginError).toLowerCase().includes('incorrect')) && (
+                                        <div className={`text-sm mt-2 ${isDark ? 'text-gray-300' : 'text-white-800'}`}>
+                                            If you forgot your password then{' '}
+                                            <a
+                                                href="/contactUs"
+                                                onClick={(e) => { e.preventDefault(); setShowLoginModal(false); router.push('/contactUs'); }}
+                                                className="underline font-bold text-primary"
+                                            >
+                                                Contact Us
+                                            </a>
+                                        </div>
+                                    )
+                                )}
                                 <div className="flex items-center justify-between gap-3">
                                     <button type="submit" className="btn btn-primary flex-1" disabled={loginLoading}>
                                         {loginLoading ? (
@@ -324,6 +341,7 @@ export default function MyProfilePage() {
                                     <button type="button" className="btn btn-ghost" onClick={() => setShowLoginModal(false)} disabled={loginLoading}>
                                         Cancel
                                     </button>
+
                                 </div>
                             </form>
                         </div>
@@ -511,7 +529,7 @@ export default function MyProfilePage() {
                                 <div className="form-control w-full">
                                     <label className="label pb-2">
                                         <span className="label-text font-semibold text-base flex items-center gap-1 text-white">
-                                            Password <span className="text-error">*</span>
+                                            Password<span className="text-error">*</span>
                                         </span>
                                     </label>
                                     <div className="relative">
