@@ -161,3 +161,61 @@ export async function DELETE(req) {
         );
     }
 }
+
+// PATCH - Update service fields (e.g., isServiceDone)
+export async function PATCH(req) {
+    try {
+        const body = await req.json();
+        const { id, isServiceDone } = body;
+
+        if (!id) {
+            return NextResponse.json(
+                {
+                    ok: false,
+                    error: 'Service ID is required',
+                },
+                { status: 400 }
+            );
+        }
+
+        const existingService = await prisma.freeService.findUnique({
+            where: { id: parseInt(id) },
+        });
+
+        if (!existingService) {
+            return NextResponse.json(
+                {
+                    ok: false,
+                    error: 'Service request not found',
+                },
+                { status: 404 }
+            );
+        }
+
+        const updated = await prisma.freeService.update({
+            where: { id: parseInt(id) },
+            data: {
+                isServiceDone: Boolean(isServiceDone),
+            },
+        });
+
+        return NextResponse.json(
+            {
+                ok: true,
+                message: 'Service updated successfully',
+                data: updated,
+            },
+            { status: 200 }
+        );
+    } catch (err) {
+        console.error('Error updating free service:', err);
+        return NextResponse.json(
+            {
+                ok: false,
+                error: 'Failed to update service request',
+                details: String(err),
+            },
+            { status: 500 }
+        );
+    }
+}

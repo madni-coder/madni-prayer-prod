@@ -1,7 +1,7 @@
 'use client';
 
-import { useState } from 'react';
-import { FaUser, FaPhone, FaMosque, FaAngleLeft } from 'react-icons/fa';
+import { useState, useEffect } from 'react';
+import { FaUser, FaPhone, FaMosque, FaAngleLeft, FaCheck } from 'react-icons/fa';
 import { useRouter } from 'next/navigation';
 import apiClient from '../../../lib/apiClient';
 
@@ -16,6 +16,12 @@ export default function FreeServicePage() {
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [submitMessage, setSubmitMessage] = useState('');
     const [showSuccessToast, setShowSuccessToast] = useState(false);
+    const [groups, setGroups] = useState([]);
+    const [loadingGroups, setLoadingGroups] = useState(false);
+    const [currentPage, setCurrentPage] = useState(1);
+    const itemsPerPage = 10;
+    const [successServices, setSuccessServices] = useState([]);
+    const [loadingSuccess, setLoadingSuccess] = useState(false);
 
     const handleChange = (e) => {
         const { name, value } = e.target;
@@ -69,6 +75,35 @@ export default function FreeServicePage() {
             setIsSubmitting(false);
         }
     };
+
+    // Fetch completed free-service entries and group by masjidName
+    const fetchSuccessServices = async () => {
+        try {
+            setLoadingGroups(true);
+            const { data } = await apiClient.get('/api/free-service');
+            const list = (data && data.data) || [];
+
+            const done = list.filter((s) => s && s.isServiceDone === true && s.masjidName);
+            const map = {};
+            done.forEach((s) => {
+                const key = String(s.masjidName).trim();
+                if (!map[key]) map[key] = { masjidName: key, count: 0, lastDate: s.createdAt };
+                map[key].count += 1;
+                if (new Date(s.createdAt) > new Date(map[key].lastDate)) map[key].lastDate = s.createdAt;
+            });
+
+            setGroups(Object.values(map));
+        } catch (err) {
+            console.error('Error fetching completed services:', err);
+            setGroups([]);
+        } finally {
+            setLoadingGroups(false);
+        }
+    };
+
+    useEffect(() => {
+        fetchSuccessServices();
+    }, []);
 
     return (
         <div className="relative min-h-screen overflow-hidden bg-base-100 pb-24 pt-6 px-4">
@@ -239,6 +274,68 @@ export default function FreeServicePage() {
                     </div>
                 </div>
             )}
+            {/* Completed free-service masjid list (theme-aware, responsive) */}
+            <div className="mt-8 w-full max-w-3xl mx-auto relative z-10 px-2">
+                <h3 className="text-lg font-bold text-primary mb-4">Successfully Services Done In these Masjids</h3>
+
+                <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm overflow-hidden">
+                    <div className="p-2 sm:p-4">
+                        {loadingGroups ? (
+                            <div className="py-6 text-center">Loading...</div>
+                        ) : groups.length === 0 ? (
+                            <div className="py-6 text-center text-sm text-gray-500 dark:text-gray-400">No completed services found.</div>
+                        ) : (
+                            <div>
+                                <div className="overflow-hidden rounded-lg shadow-md bg-neutral-900">
+                                    <table className="w-full">
+                                        <tbody>
+                                            {groups.slice((currentPage - 1) * itemsPerPage, (currentPage - 1) * itemsPerPage + itemsPerPage).map((r) => (
+                                                <tr key={r.masjidName}>
+                                                    <td className="px-4 py-3 text-lg font-semibold text-success">
+                                                        <FaCheck className="inline-block mr-3 text-success" size={16} />
+                                                        {r.masjidName}
+                                                    </td>
+                                                </tr>
+                                            ))}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        )}
+                    </div>
+                </div>
+                {groups.length > itemsPerPage && (
+                    <div className="mt-4 flex items-center justify-center gap-2">
+                        <button
+                            onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+                            disabled={currentPage === 1}
+                            className="btn btn-sm btn-outline"
+                        >
+                            Previous
+                        </button>
+
+                        <div className="flex gap-1">
+                            {Array.from({ length: Math.ceil(groups.length / itemsPerPage) }, (_, i) => i + 1).map((p) => (
+                                <button
+                                    key={p}
+                                    onClick={() => setCurrentPage(p)}
+                                    className={`btn btn-sm ${currentPage === p ? 'btn-primary' : 'btn-ghost'}`}
+                                >
+                                    {p}
+                                </button>
+                            ))}
+                        </div>
+
+                        <button
+                            onClick={() => setCurrentPage((p) => Math.min(Math.ceil(groups.length / itemsPerPage), p + 1))}
+                            disabled={currentPage === Math.ceil(groups.length / itemsPerPage)}
+                            className="btn btn-sm btn-outline"
+                        >
+                            Next
+                        </button>
+                    </div>
+                )}
+            </div>
         </div>
     );
 }

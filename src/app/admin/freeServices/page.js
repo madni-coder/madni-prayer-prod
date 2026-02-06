@@ -10,6 +10,9 @@ export default function FreeServicesPage() {
     const [error, setError] = useState('');
     const [currentPage, setCurrentPage] = useState(1);
     const itemsPerPage = 15;
+    const [toastMessage, setToastMessage] = useState('');
+    const [toastVariant, setToastVariant] = useState('success');
+    const [showToast, setShowToast] = useState(false);
 
     useEffect(() => {
         fetchServices();
@@ -41,6 +44,31 @@ export default function FreeServicesPage() {
         } catch (err) {
             console.error('Error deleting service:', err);
             alert('Failed to delete service request');
+        }
+    };
+
+    const handleToggle = async (id, value) => {
+        // Optimistic UI update
+        const prev = services;
+        try {
+            const updated = services.map((s) => (s.id === id ? { ...s, isServiceDone: value } : s));
+            setServices(updated);
+
+            await apiClient.patch('/api/free-service', { id, isServiceDone: value });
+
+            // show theme-aware toast
+            setToastMessage(value ? 'Service Completed' : 'Service Incomplete');
+            setToastVariant(value ? 'success' : 'warning');
+            setShowToast(true);
+            setTimeout(() => setShowToast(false), 2500);
+        } catch (err) {
+            console.error('Error updating service:', err);
+            // revert optimistic update
+            setServices(prev);
+            setToastMessage('Failed to update service status');
+            setToastVariant('error');
+            setShowToast(true);
+            setTimeout(() => setShowToast(false), 3000);
         }
     };
 
@@ -98,6 +126,9 @@ export default function FreeServicesPage() {
                                     Date
                                 </th>
                                 <th className="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider">
+                                    Is Service Done
+                                </th>
+                                <th className="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider">
                                     Actions
                                 </th>
                             </tr>
@@ -105,7 +136,7 @@ export default function FreeServicesPage() {
                         <tbody className="bg-white divide-y divide-gray-200">
                             {currentServices.length === 0 ? (
                                 <tr>
-                                    <td colSpan="6" className="px-6 py-8 text-center text-gray-500">
+                                    <td colSpan="7" className="px-6 py-8 text-center text-gray-500">
                                         No service requests found
                                     </td>
                                 </tr>
@@ -126,6 +157,19 @@ export default function FreeServicesPage() {
                                         </td>
                                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                                             {new Date(service.createdAt).toLocaleDateString()}
+                                        </td>
+                                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                            <button
+                                                role="switch"
+                                                aria-checked={!!service.isServiceDone}
+                                                onClick={() => handleToggle(service.id, !service.isServiceDone)}
+                                                className={`relative inline-flex items-center h-6 w-12 rounded-full transition-colors focus:outline-none ${service.isServiceDone ? 'bg-blue-600' : 'bg-gray-300 dark:bg-gray-600'}`}
+                                            >
+                                                <span
+                                                    className={`inline-block h-5 w-5 transform bg-white rounded-full shadow transition-transform ${service.isServiceDone ? 'translate-x-6' : 'translate-x-1'}`}
+                                                />
+                                            </button>
+                                            <span className="ml-3 text-sm text-gray-700">{service.isServiceDone ? 'Yes' : 'No'}</span>
                                         </td>
                                         <td className="px-6 py-4 whitespace-nowrap text-sm">
                                             <button
@@ -184,6 +228,23 @@ export default function FreeServicesPage() {
                             </button>
                         </div>
                     )}
+                </div>
+            )}
+            {/* Toast */}
+            {showToast && (
+                <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-[60]">
+                    <div className={`px-5 py-3 rounded-lg shadow-lg text-white flex items-center gap-3 ${toastVariant === 'success' ? 'bg-green-500 dark:bg-green-600' : toastVariant === 'warning' ? 'bg-yellow-500 dark:bg-yellow-600' : 'bg-red-500 dark:bg-red-600'}`}>
+                        <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            {toastVariant === 'success' ? (
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                            ) : toastVariant === 'warning' ? (
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                            ) : (
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M18.364 5.636l-12.728 12.728M5.636 5.636l12.728 12.728" />
+                            )}
+                        </svg>
+                        <span className="font-medium">{toastMessage}</span>
+                    </div>
                 </div>
             )}
         </div>

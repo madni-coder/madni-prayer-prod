@@ -113,6 +113,7 @@ model FreeService {
   mobileNumber   String
   masjidName     String
   numberOfACs    String
+  isServiceDone  Boolean  @default(false)
   createdAt      DateTime @default(now())
   updatedAt      DateTime @updatedAt
 
