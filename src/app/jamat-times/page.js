@@ -48,6 +48,7 @@ function DigitalClock() {
 export default function JamatTimesPage() {
     const router = useRouter();
     const [masjids, setMasjids] = useState([]);
+    const [onlyRaipur, setOnlyRaipur] = useState(false);
     const [selectedMasjid, setSelectedMasjid] = useState("");
     const [selectedMasjidData, setSelectedMasjidData] = useState(null);
     const [selectedColony, setSelectedColony] = useState("");
@@ -67,11 +68,41 @@ export default function JamatTimesPage() {
     const [savedMasjid, setSavedMasjid] = useState(null);
     const [hasLoadedSavedMasjid, setHasLoadedSavedMasjid] = useState(false);
 
+    // visibleMasjids respects the Raipur-only toggle
+    // Default: show Bilaspur and entries without a city (city === null/undefined/empty)
+    const visibleMasjids = onlyRaipur
+        ? masjids.filter((m) => (m.city || "").toLowerCase() === "raipur")
+        : masjids.filter((m) => {
+            const city = (m.city || "").toString().trim().toLowerCase();
+            return city === "" || city === "bilaspur";
+        });
+
 
     useEffect(() => {
         loadSavedMasjid();
         fetchMasjids();
+
+        // load persisted toggle state
+        try {
+            if (typeof window !== "undefined") {
+                const saved = localStorage.getItem("onlyRaipur");
+                if (saved === "true") setOnlyRaipur(true);
+            }
+        } catch (e) {
+            console.warn("Failed to read onlyRaipur from localStorage", e);
+        }
     }, []);
+
+    // persist toggle to localStorage when changed
+    useEffect(() => {
+        try {
+            if (typeof window === "undefined") return;
+            if (onlyRaipur) localStorage.setItem("onlyRaipur", "true");
+            else localStorage.removeItem("onlyRaipur");
+        } catch (e) {
+            console.warn("Failed to persist onlyRaipur to localStorage", e);
+        }
+    }, [onlyRaipur]);
 
     // Auto-populate selected masjid when saved data is loaded (only once on initial load)
     useEffect(() => {
@@ -82,6 +113,24 @@ export default function JamatTimesPage() {
             setHasLoadedSavedMasjid(true);
         }
     }, [savedMasjid, hasLoadedSavedMasjid]);
+
+    // Clear or adjust selections when onlyRaipur toggle changes
+    useEffect(() => {
+        // reset suggestion lists
+        setFilteredMasjids([]);
+        setFilteredColonies([]);
+
+        // if selected masjid is outside the visible set, clear it
+        if (
+            selectedMasjidData &&
+            onlyRaipur &&
+            (selectedMasjidData.city || "").toLowerCase() !== "raipur"
+        ) {
+            setSelectedMasjid("");
+            setSelectedMasjidData(null);
+            setSelectedColony("");
+        }
+    }, [onlyRaipur]);
 
     const handleAutoLocate = () => {
         if (!navigator.geolocation) {
@@ -179,7 +228,7 @@ export default function JamatTimesPage() {
     const handleMasjidChange = (e) => {
         const masjidName = e.target.value;
         setSelectedMasjid(masjidName);
-        const filtered = masjids.filter((m) =>
+        const filtered = visibleMasjids.filter((m) =>
             m.masjidName.toLowerCase().includes(masjidName.toLowerCase())
         );
         setFilteredMasjids(filtered);
@@ -188,7 +237,7 @@ export default function JamatTimesPage() {
         );
         setMasjidHighlight(-1);
 
-        const exact = masjids.find((m) => m.masjidName === masjidName);
+        const exact = visibleMasjids.find((m) => m.masjidName === masjidName);
         if (exact) {
             setSelectedMasjidData(exact);
             setSelectedColony(exact.colony || "");
@@ -243,11 +292,12 @@ export default function JamatTimesPage() {
     };
 
     const colonies = [
-        ...new Set(masjids.map((m) => m.colony || "").filter(Boolean)),
+        ...new Set(visibleMasjids.map((m) => m.colony || "").filter(Boolean)),
     ];
 
     // derived exact-match flags to avoid showing dropdown when an exact item is selected
-    const selectedMasjidExact = masjids.some(
+    // respect onlyRaipur toggle for exact match checks
+    const selectedMasjidExact = visibleMasjids.some(
         (m) => m.masjidName === selectedMasjid
     );
     const selectedColonyExact = colonies.includes(selectedColony);
@@ -264,7 +314,7 @@ export default function JamatTimesPage() {
 
     const selectColony = (colony) => {
         setSelectedColony(colony);
-        const masjidsInColony = masjids.filter((m) => m.colony === colony);
+        const masjidsInColony = visibleMasjids.filter((m) => m.colony === colony);
         if (masjidsInColony.length > 0) {
             setSelectedMasjid(masjidsInColony[0].masjidName);
             setSelectedMasjidData(masjidsInColony[0]);
@@ -291,7 +341,7 @@ export default function JamatTimesPage() {
 
         const exact = colonies.find((c) => c === colony);
         if (exact) {
-            const masjidsInColony = masjids.filter((m) => m.colony === colony);
+            const masjidsInColony = visibleMasjids.filter((m) => m.colony === colony);
             if (masjidsInColony.length > 0) {
                 setSelectedMasjid(masjidsInColony[0].masjidName);
                 setSelectedMasjidData(masjidsInColony[0]);
@@ -498,17 +548,17 @@ export default function JamatTimesPage() {
 
             <div className="bg-white backdrop-blur-sm p-3 md:p-4 rounded-lg shadow-sm max-w-2xl mx-4 sm:mx-auto">
                 <h2 className="text-base md:text-lg font-extrabold text-primary text-center leading-tight">
-                    Currently this app shows Jama'at Times of Bilaspur Dist (C.G)
+                    Jama'at Times for Bilaspur and Raipur (C.G)
                     Only
                 </h2>
             </div>
 
             <div className="w-full max-w-md mt-8 mb-12 p-4">
-                <div className="flex justify-start mb-8 ml-14">
+                <div className="flex justify-start mb-8 ml-6">
                     <button
                         onClick={handleAutoLocate}
                         disabled={autoLocating}
-                        className="btn btn-outline btn-primary btn-xxl transition-all duration-200 hover:scale-105 hover:bg-primary hover:text-primary-content"
+                        className=" btn btn-outline btn-primary btn-xxl transition-all duration-200 hover:scale-105 hover:bg-primary hover:text-primary-content"
                     >
                         {autoLocating ? (
                             <>
@@ -517,11 +567,24 @@ export default function JamatTimesPage() {
                             </>
                         ) : (
                             <>
-                                <MapPin className="w-5 h-5 " />
+                                <MapPin className="w-5 h-5" />
                                 See Nearby Masjid
                             </>
                         )}
                     </button>
+                    <div className="ml-4 flex items-center gap-3">
+                        <label className="flex items-center gap-2 text-sm text-primary">
+                            <input
+
+                                type="checkbox"
+                                className="toggle toggle-2xl checked:bg-primary checked:border-primary checked:after:bg-primary"
+                                checked={onlyRaipur}
+                                onChange={(e) => setOnlyRaipur(e.target.checked)}
+                                aria-label="Show only Raipur masjids"
+                            />
+                            <span className="select-none">Only Raipur</span>
+                        </label>
+                    </div>
                 </div>
 
                 {mapEmbedUrl && (

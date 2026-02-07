@@ -15,6 +15,7 @@ export default function Page() {
     const [error, setError] = useState(null);
     const [searchQuery, setSearchQuery] = useState("");
     const [colonySearch, setColonySearch] = useState(""); // new state for colony search
+    const [showRaipur, setShowRaipur] = useState(false);
     const [reloading, setReloading] = useState(false);
     const [isAuthenticated, setIsAuthenticated] = useState(false);
     const [authLoading, setAuthLoading] = useState(true);
@@ -74,10 +75,33 @@ export default function Page() {
         }
     }, [fetchMasjids, isAuthenticated]);
 
+    // load persisted showRaipur toggle on mount
+    useEffect(() => {
+        try {
+            if (typeof window !== "undefined") {
+                const saved = localStorage.getItem("showRaipur");
+                if (saved === "true") setShowRaipur(true);
+            }
+        } catch (e) {
+            console.warn("Failed to read showRaipur from localStorage", e);
+        }
+    }, []);
+
+    // persist showRaipur toggle to localStorage when changed
+    useEffect(() => {
+        try {
+            if (typeof window === "undefined") return;
+            if (showRaipur) localStorage.setItem("showRaipur", "true");
+            else localStorage.removeItem("showRaipur");
+        } catch (e) {
+            console.warn("Failed to persist showRaipur to localStorage", e);
+        }
+    }, [showRaipur]);
+
     // Reset to first page when filters or masjids change
     useEffect(() => {
         setCurrentPage(1);
-    }, [searchQuery, colonySearch, masjids]);
+    }, [searchQuery, colonySearch, masjids, showRaipur]);
 
     // Show loading while checking authentication
     if (authLoading) {
@@ -101,7 +125,15 @@ export default function Page() {
     const clearSearch = () => setSearchQuery("");
     const clearColonySearch = () => setColonySearch("");
 
-    const filteredMasjids = masjids.filter((m) => {
+    // derive visibleMasjids based on Show Raipur toggle
+    const visibleMasjids = showRaipur
+        ? masjids.filter((m) => (m.city || "").toString().trim().toLowerCase() === "raipur")
+        : masjids.filter((m) => {
+            const city = (m.city || "").toString().trim().toLowerCase();
+            return city === "" || city === "bilaspur";
+        });
+
+    const filteredMasjids = visibleMasjids.filter((m) => {
         const matchesSearch = (m.masjidName || "")
             .toLowerCase()
             .includes(searchQuery.toLowerCase());
@@ -135,12 +167,12 @@ export default function Page() {
         <div className="p-6 bg-gray-50 min-h-screen">
             {/* Header */}
             <div className="flex items-center justify-between mb-6">
-                <h1 className="text-2xl font-semibold text-gray-900">Masjid</h1>
+                <h1 className="text-2xl font-semibold text-gray-900">All Masjid</h1>
                 <div className="flex items-center gap-3">
                     <button
                         onClick={fetchMasjids}
                         disabled={reloading}
-                        className="flex items-center gap-2 border border-gray-300 px-3 py-2 rounded-md text-sm hover:bg-gray-100 disabled:opacity-60"
+                        className="flex items-center gap-2 border text-black  font-bold border-black-300 px-3 py-2 rounded-md text-sm hover:bg-gray-100 disabled:opacity-60"
                         title="Refresh list"
                     >
                         <RefreshCw
@@ -213,7 +245,17 @@ export default function Page() {
                             )}
                         </div>
                     </div>
-                    <div className="flex items-end">
+                    <div className="flex items-end gap-3">
+                        <label className="flex items-center gap-2 text-sm text-black font-bold">
+                            <input
+                                type="checkbox"
+                                className="toggle toggle-xl bg-error border-error checked:bg-primary checked:border-primary checked:after:bg-primary"
+                                checked={showRaipur}
+                                onChange={(e) => setShowRaipur(e.target.checked)}
+                                aria-label="Show only Raipur masjids"
+                            />
+                            <span className="select-none">Show Raipur</span>
+                        </label>
                         <button
                             onClick={handleReset}
                             className="p-2 border border-gray-300 rounded-md hover:bg-gray-50 transition-colors"
@@ -404,8 +446,8 @@ export default function Page() {
                                                 : undefined
                                         }
                                         className={`px-3 py-1 rounded-md text-sm border transition-colors ${pageNum === currentPage
-                                                ? "bg-blue-600 text-white border-blue-600"
-                                                : "bg-white text-gray-700 border-gray-300 hover:bg-gray-100 dark:bg-gray-800 dark:text-gray-200 dark:border-gray-700 dark:hover:bg-gray-700"
+                                            ? "bg-blue-600 text-white border-blue-600"
+                                            : "bg-white text-gray-700 border-gray-300 hover:bg-gray-100 dark:bg-gray-800 dark:text-gray-200 dark:border-gray-700 dark:hover:bg-gray-700"
                                             }`}
                                     >
                                         {pageNum}

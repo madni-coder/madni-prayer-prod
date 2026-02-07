@@ -28,6 +28,7 @@ export default function AddMasjidPage() {
     // add per-role name cache
     const [roleNames, setRoleNames] = useState({});
     const [pasteMapUrl, setPasteMapUrl] = useState("");
+    const [isRaipur, setIsRaipur] = useState(false);
     const [times, setTimes] = useState(prayers.map((p) => p.defaultTime));
     const [editIdx, setEditIdx] = useState(null);
     const [editValue, setEditValue] = useState("");
@@ -65,6 +66,7 @@ export default function AddMasjidPage() {
                 name: name.trim(),
                 mobile: mobile,
                 pasteMapUrl: pasteMapUrl.trim(),
+                city: isRaipur ? 'Raipur' : 'Bilaspur',
                 // map times
                 fazar: times[0],
                 zuhar: times[1],
@@ -118,6 +120,7 @@ export default function AddMasjidPage() {
 
     return (
         <div className="min-h-screen bg-white flex flex-col items-center py-10">
+
             <div className="w-full max-w-5xl flex items-center mb-4">
                 <button
                     className="bg-blue-600 hover:bg-blue-700 text-white btn btn-sm mr-2 flex items-center gap-1"
@@ -132,6 +135,22 @@ export default function AddMasjidPage() {
                     <h1 className="text-3xl font-bold mb-8 text-center text-gray-800">
                         Add New Masjid
                     </h1>
+                    <div className={
+                        `mb-4 flex items-center gap-3 p-3 rounded-md transition-colors ${isRaipur ? 'bg-primary/10 border border-primary/20' : 'bg-gray-50 border border-gray-100'}`
+                    }>
+                        <label className={`flex items-center cursor-pointer select-none gap-2 ${isRaipur ? 'text-primary' : 'text-gray-700'}`}>
+                            <input
+                                type="checkbox"
+                                className="toggle toggle-lg bg-error border-error checked:bg-primary checked:border-primary mr-2"
+                                checked={isRaipur}
+                                onChange={(e) => setIsRaipur(e.target.checked)}
+                            />
+                            <span className="font-medium">Is Raipur</span>
+                        </label>
+                        <div className={`text-sm ${isRaipur ? 'text-primary' : 'text-gray-500'}`}>
+                            Default city: <span className={`font-semibold ${isRaipur ? 'text-primary' : 'text-gray-700'}`}>{isRaipur ? 'Raipur' : 'Bilaspur'}</span>
+                        </div>
+                    </div>
                     <form
                         className="bg-white p-6 rounded shadow mb-8"
                         onSubmit={handleSubmit}
@@ -262,6 +281,7 @@ export default function AddMasjidPage() {
                                 placeholder="Paste Google Map URL here"
                             />
                         </div>
+
                         {error && (
                             <div className="text-red-600 text-sm mb-2">
                                 {error}

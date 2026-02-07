@@ -30,6 +30,7 @@ model AllMasjid {
   role       String?  // optional
   mobile     String?  // optional
   pasteMapUrl String? // Google Map URL for the masjid
+  city        String?
   createdAt  DateTime @default(now())
   updatedAt  DateTime @updatedAt
 
