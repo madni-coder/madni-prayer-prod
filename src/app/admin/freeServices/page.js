@@ -105,86 +105,145 @@ export default function FreeServicesPage() {
                 </div>
             )}
 
-            <div className="bg-white rounded-lg shadow overflow-hidden">
-                <div className="overflow-x-auto">
-                    <table className="min-w-full divide-y divide-gray-200">
-                        <thead className="bg-error">
-                            <tr>
-                                <th className="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider">
-                                    Masjid Name
-                                </th>
-                                <th className="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider">
-                                    Mutawalli Name
-                                </th>
-                                <th className="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider">
-                                    Mobile No
-                                </th>
-                                <th className="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider">
-                                    No. Of ACs
-                                </th>
-                                <th className="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider">
-                                    Date
-                                </th>
-                                <th className="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider">
-                                    Is Service Done
-                                </th>
-                                <th className="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider">
-                                    Actions
-                                </th>
-                            </tr>
-                        </thead>
-                        <tbody className="bg-white divide-y divide-gray-200">
-                            {currentServices.length === 0 ? (
+            <div>
+                {/* Desktop / Tablet: show table */}
+                <div className="hidden md:block bg-white rounded-lg shadow overflow-hidden">
+                    <div className="overflow-x-auto">
+                        <table className="min-w-full divide-y divide-gray-200">
+                            <thead className="bg-error">
                                 <tr>
-                                    <td colSpan="7" className="px-6 py-8 text-center text-gray-500">
-                                        No service requests found
-                                    </td>
+                                    <th className="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider">
+                                        Masjid Name
+                                    </th>
+                                    <th className="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider">
+                                        Mutawalli Name
+                                    </th>
+                                    <th className="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider">
+                                        Mobile No
+                                    </th>
+                                    <th className="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider">
+                                        No. Of ACs
+                                    </th>
+                                    <th className="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider">
+                                        Date
+                                    </th>
+                                    <th className="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider">
+                                        Is Service Done
+                                    </th>
+                                    <th className="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider">
+                                        Actions
+                                    </th>
                                 </tr>
-                            ) : (
-                                currentServices.map((service, index) => (
-                                    <tr key={service.id} className="hover:bg-gray-50">
-                                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                                            {service.masjidName}
-                                        </td>
-                                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                                            {service.mutuwalliName}
-                                        </td>
-                                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                                            {service.mobileNumber}
-                                        </td>
-                                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                                            {service.numberOfACs}
-                                        </td>
-                                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                            {new Date(service.createdAt).toLocaleDateString()}
-                                        </td>
-                                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                                            <button
-                                                role="switch"
-                                                aria-checked={!!service.isServiceDone}
-                                                onClick={() => handleToggle(service.id, !service.isServiceDone)}
-                                                className={`relative inline-flex items-center h-6 w-12 rounded-full transition-colors focus:outline-none ${service.isServiceDone ? 'bg-blue-600' : 'bg-gray-300 dark:bg-gray-600'}`}
-                                            >
-                                                <span
-                                                    className={`inline-block h-5 w-5 transform bg-white rounded-full shadow transition-transform ${service.isServiceDone ? 'translate-x-6' : 'translate-x-1'}`}
-                                                />
-                                            </button>
-                                            <span className="ml-3 text-sm text-gray-700">{service.isServiceDone ? 'Yes' : 'No'}</span>
-                                        </td>
-                                        <td className="px-6 py-4 whitespace-nowrap text-sm">
-                                            <button
-                                                onClick={() => handleDelete(service.id)}
-                                                className="text-red-600 hover:text-red-900 transition-colors"
-                                                title="Delete"
-                                            >
-                                                <Trash2 className="w-5 h-5" />
-                                            </button>
+                            </thead>
+                            <tbody className="bg-white divide-y divide-gray-200">
+                                {currentServices.length === 0 ? (
+                                    <tr>
+                                        <td colSpan="7" className="px-6 py-8 text-center text-gray-500">
+                                            No service requests found
                                         </td>
                                     </tr>
-                                ))
-                            )}
-                        </tbody>
-                    </table>
+                                ) : (
+                                    currentServices.map((service) => (
+                                        <tr key={service.id} className="hover:bg-gray-50">
+                                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                                {service.masjidName}
+                                            </td>
+                                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                                {service.mutuwalliName}
+                                            </td>
+                                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                                {service.mobileNumber}
+                                            </td>
+                                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                                {service.numberOfACs}
+                                            </td>
+                                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                                {new Date(service.createdAt).toLocaleDateString()}
+                                            </td>
+                                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                                <button
+                                                    role="switch"
+                                                    aria-checked={!!service.isServiceDone}
+                                                    onClick={() => handleToggle(service.id, !service.isServiceDone)}
+                                                    className={`relative inline-flex items-center h-6 w-12 rounded-full transition-colors focus:outline-none ${service.isServiceDone ? 'bg-blue-600' : 'bg-gray-300 dark:bg-gray-600'}`}
+                                                >
+                                                    <span
+                                                        className={`inline-block h-5 w-5 transform bg-white rounded-full shadow transition-transform ${service.isServiceDone ? 'translate-x-6' : 'translate-x-1'}`}
+                                                    />
+                                                </button>
+                                                <span className="ml-3 text-sm text-gray-700">{service.isServiceDone ? 'Yes' : 'No'}</span>
+                                            </td>
+                                            <td className="px-6 py-4 whitespace-nowrap text-sm">
+                                                <button
+                                                    onClick={() => handleDelete(service.id)}
+                                                    className="text-red-600 hover:text-red-900 transition-colors"
+                                                    title="Delete"
+                                                >
+                                                    <Trash2 className="w-5 h-5" />
+                                                </button>
+                                            </td>
+                                        </tr>
+                                    ))
+                                )}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                {/* Mobile: show stacked cards */}
+                <div className="md:hidden space-y-3">
+                    {currentServices.length === 0 ? (
+                        <div className="bg-white rounded-lg shadow p-4 text-center text-gray-500">No service requests found</div>
+                    ) : (
+                        currentServices.map((service) => (
+                            <div key={service.id} className="bg-white rounded-lg shadow p-4">
+                                <div className="flex items-start justify-between">
+                                    <div className="flex-1">
+                                        <div className="text-sm font-semibold text-gray-900">{service.masjidName}</div>
+                                        <div className="mt-1 text-sm text-gray-600">{service.mutuwalliName}</div>
+                                    </div>
+                                    <div className="ml-3 flex items-center gap-3">
+                                        <button
+                                            role="switch"
+                                            aria-checked={!!service.isServiceDone}
+                                            onClick={() => handleToggle(service.id, !service.isServiceDone)}
+                                            className={`relative inline-flex items-center h-6 w-12 rounded-full transition-colors focus:outline-none ${service.isServiceDone ? 'bg-blue-600' : 'bg-gray-300 dark:bg-gray-600'}`}
+                                        >
+                                            <span
+                                                className={`inline-block h-5 w-5 transform bg-white rounded-full shadow transition-transform ${service.isServiceDone ? 'translate-x-6' : 'translate-x-1'}`}
+                                            />
+                                        </button>
+                                        <button
+                                            onClick={() => handleDelete(service.id)}
+                                            className="text-red-600 hover:text-red-900 transition-colors"
+                                            title="Delete"
+                                        >
+                                            <Trash2 className="w-5 h-5" />
+                                        </button>
+                                    </div>
+                                </div>
+
+                                <div className="mt-3 grid grid-cols-2 gap-2 text-sm text-gray-700">
+                                    <div className="flex flex-col">
+                                        <span className="text-xs text-gray-500 uppercase">Mobile</span>
+                                        <span className="truncate">{service.mobileNumber || '-'}</span>
+                                    </div>
+                                    <div className="flex flex-col">
+                                        <span className="text-xs text-gray-500 uppercase">ACs</span>
+                                        <span>{service.numberOfACs ?? '-'}</span>
+                                    </div>
+                                    <div className="flex flex-col">
+                                        <span className="text-xs text-gray-500 uppercase">Date</span>
+                                        <span>{new Date(service.createdAt).toLocaleDateString()}</span>
+                                    </div>
+                                    <div className="flex flex-col">
+                                        <span className="text-xs text-gray-500 uppercase">Status</span>
+                                        <span>{service.isServiceDone ? 'Yes' : 'No'}</span>
+                                    </div>
+                                </div>
+                            </div>
+                        ))
+                    )}
                 </div>
             </div>
 
