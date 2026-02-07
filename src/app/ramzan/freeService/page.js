@@ -263,8 +263,8 @@ export default function FreeServicePage() {
 
             {/* Success Toast */}
             {showSuccessToast && (
-                <div className="fixed bottom-4 left-1/2 -translate-x-1/2 z-[100] w-[90%] max-w-3xl">
-                    <div className="bg-green-500 text-white px-6 py-3 rounded-lg shadow-lg flex items-center gap-3 w-full h-12">
+                <div className="fixed top-4 left-1/2 -translate-x-1/2 z-[100] w-[90%] max-w-3xl" role="status" aria-live="polite">
+                    <div className="bg-green-500 dark:bg-green-600 text-white px-6 py-3 rounded-lg shadow-lg flex items-center gap-3 w-full h-12">
                         <div className="flex items-center gap-3 flex-1">
                             <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
