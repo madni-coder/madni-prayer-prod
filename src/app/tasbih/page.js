@@ -45,7 +45,7 @@ export default function Tasbih() {
 
     // Pagination state
     const [currentPage, setCurrentPage] = useState(1);
-    const entriesPerPage = 10;
+    const entriesPerPage = 6;
     const totalPages = Math.ceil(history.length / entriesPerPage);
     const paginatedHistory = history.slice(
         (currentPage - 1) * entriesPerPage,
@@ -527,9 +527,9 @@ export default function Tasbih() {
 
                         {/* Pagination controls */}
                         {history.length > entriesPerPage && (
-                            <div className="flex justify-center items-center gap-2 mt-4">
+                            <div className="flex justify-center items-center gap-3 mt-6">
                                 <button
-                                    className="btn btn-sm btn-outline"
+                                    className="btn btn-sm btn-primary btn-outline hover:scale-105 transition-transform"
                                     disabled={currentPage === 1}
                                     onClick={() =>
                                         setCurrentPage(currentPage - 1)
@@ -537,11 +537,11 @@ export default function Tasbih() {
                                 >
                                     Previous
                                 </button>
-                                <span className="px-2 font-semibold">
+                                <span className="px-4 py-2 font-semibold bg-primary/10 rounded-full text-primary">
                                     Page {currentPage} of {totalPages}
                                 </span>
                                 <button
-                                    className="btn btn-sm btn-outline"
+                                    className="btn btn-sm btn-primary btn-outline hover:scale-105 transition-transform"
                                     disabled={currentPage === totalPages}
                                     onClick={() =>
                                         setCurrentPage(currentPage + 1)

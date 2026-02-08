@@ -94,6 +94,48 @@ export default function Page() {
         }
     }, [history]);
 
+    // Fetch zikr history from API on mount if not present in localStorage
+    useEffect(() => {
+        if (typeof window === "undefined") return;
+
+        try {
+            const saved = localStorage.getItem("zikrHistory");
+            if (saved && JSON.parse(saved).length > 0) {
+                // already have saved history, no need to call API
+                return;
+            }
+
+            (async () => {
+                try {
+                    const res = await apiClient.get("/api/api-zikr");
+                    const data = res?.data;
+                    if (Array.isArray(data) && data.length > 0) {
+                        const mapped = data.map((item) => {
+                            const zikrName = Array.isArray(item.zikrTypes)
+                                ? item.zikrTypes[0]
+                                : item.zikrType || item.zikr || "Unknown";
+                            const cnt = Number(item.zikrCounts ?? item.count ?? 0);
+                            const dt = item.createdAt ? new Date(item.createdAt) : new Date();
+                            return {
+                                zikr: zikrName,
+                                count: cnt,
+                                weeklyCounts: cnt,
+                                date: dt.toLocaleDateString(),
+                                time: dt.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", hour12: true }),
+                            };
+                        });
+                        setHistory(mapped);
+                        localStorage.setItem("zikrHistory", JSON.stringify(mapped));
+                    }
+                } catch (err) {
+                    console.error("Error fetching zikr history:", err);
+                }
+            })();
+        } catch (e) {
+            console.error(e);
+        }
+    }, []);
+
     function applyTheme(t) {
         const root = document.documentElement;
         if (!root) return;
@@ -164,7 +206,7 @@ export default function Page() {
                     count: Number(count),
                     weeklyCounts: Number(count),
                     date: new Date().toLocaleDateString(),
-                    time: new Date().toLocaleTimeString(),
+                    time: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", hour12: true }),
                 };
                 setHistory((prev) => [newEntry, ...prev]);
                 setSelected("");
@@ -179,6 +221,29 @@ export default function Page() {
             toast.error("Failed to submit. Please try again.");
         } finally {
             setIsSubmitting(false);
+        }
+    }
+
+    // Clear zikr history from server and local state
+    const [isClearing, setIsClearing] = useState(false);
+    async function handleClearHistory() {
+        try {
+            setIsClearing(true);
+            const res = await apiClient.delete("/api/api-zikr");
+            const data = res?.data;
+            if (data && !data.error) {
+                setHistory([]);
+                localStorage.removeItem("zikrHistory");
+                toast.success("Zikr history cleared.");
+            } else {
+                toast.error(data?.error || "Failed to clear history.");
+            }
+        } catch (err) {
+            console.error("Error clearing history:", err);
+            toast.error("Failed to clear history. Please try again.");
+        } finally {
+            setIsClearing(false);
+            setShowClearHistoryConfirm(false);
         }
     }
 
@@ -345,8 +410,12 @@ export default function Page() {
                 </form>
 
 
-                {/* Zikr history list */}
-                <div className="mt-6 mb-14 bg-gradient-to-br from-base-200 to-base-300 p-6 rounded-xl shadow-lg border border-primary/20">
+                {/* Zikr history list moved below to span full width */}
+            </div>
+
+            {/* Full-width Zikr history container */}
+            <div className="w-full">
+                <div className="mt-6 mb-14 bg-gradient-to-br from-base-200 to-base-300 p-4 sm:p-6 rounded-none sm:rounded-xl shadow-lg border-y sm:border border-primary/20">
                     <h3 className="text-xl font-bold mb-6 text-primary flex items-center justify-between">
                         <span className="flex items-center gap-2">
                             <span className="inline-block w-1 h-6 bg-primary rounded-full"></span>
@@ -368,7 +437,6 @@ export default function Page() {
                         </div>
                     ) : (
                         <>
-                            {/* Total Counts Display */}
                             <div className="mb-6 flex justify-center">
                                 <div className="relative inline-block">
                                     <div className="absolute inset-0 bg-gradient-to-r from-primary/30 via-primary/50 to-primary/30 rounded-2xl blur-xl"></div>
@@ -388,52 +456,46 @@ export default function Page() {
                                 </div>
                             </div>
 
-                            {/* Tabular display for all screen sizes */}
-                            <div className="w-full bg-base-100/50 rounded-lg overflow-hidden border border-primary/10">
-                                <table className="table w-full text-primary">
-                                    <thead>
-                                        <tr className="bg-primary/10 border-b-2 border-primary/30">
-                                            <th className="px-3 py-4 text-primary font-bold">Zikr Name</th>
-                                            <th className="px-3 py-4 text-primary font-bold text-center">Counts</th>
-                                            <th className="px-3 py-4 text-primary font-bold">Date & Time</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        {paginatedHistory.map((item, idx) => (
-                                            <tr
-                                                key={
-                                                    idx +
-                                                    (currentPage - 1) *
-                                                    entriesPerPage
-                                                }
-                                                className="hover:bg-primary/5 transition-colors duration-200 border-b border-primary/5"
-                                            >
-                                                <td className="align-middle px-3 py-3 font-medium">
-                                                    {item.zikr}
-                                                </td>
-                                                <td className="align-middle px-3 py-3 text-center">
-                                                    <span className="inline-block bg-primary/20 text-white font-bold px-3 py-1 rounded-full ">
-                                                        {item.count
-                                                            .toString()
-                                                            .padStart(2, "0")}
-                                                    </span>
-                                                </td>
-                                                <td className="align-middle px-3 py-3 text-sm opacity-90">
-                                                    {item.date} {new Date(
-                                                        `1970-01-01T${item.time}`
-                                                    ).toLocaleTimeString([], {
-                                                        hour: "2-digit",
-                                                        minute: "2-digit",
-                                                        hour12: true,
-                                                    })}
-                                                </td>
+                            <div className="w-full bg-base-100/50 rounded-lg border border-primary/10 ">
+                                <div className="w-full">
+                                    <table className="table w-full text-primary">
+                                        <thead>
+                                            <tr className="bg-primary/10 border-b-2 border-primary/30">
+                                                <th className="px-2 sm:px-4 py-3 text-primary font-bold text-left">Zikr Name</th>
+                                                <th className="px-2 sm:px-4 py-3 text-primary font-bold text-center">Counts</th>
+                                                <th className="px-2 sm:px-4 py-3 text-primary font-bold text-left">Date & Time</th>
                                             </tr>
-                                        ))}
-                                    </tbody>
-                                </table>
+                                        </thead>
+                                        <tbody>
+                                            {paginatedHistory.map((item, idx) => (
+                                                <tr
+                                                    key={
+                                                        idx +
+                                                        (currentPage - 1) *
+                                                        entriesPerPage
+                                                    }
+                                                    className="hover:bg-primary/5 transition-colors duration-200 border-b border-primary/5"
+                                                >
+                                                    <td className="align-middle px-2 sm:px-4 py-3 font-medium">
+                                                        <div className="break-words">{item.zikr}</div>
+                                                    </td>
+                                                    <td className="align-middle px-2 sm:px-4 py-3 text-center">
+                                                        <span className="inline-block bg-primary/20 text-white font-bold px-2 sm:px-3 py-1 rounded-full text-sm sm:text-base">
+                                                            {item.count
+                                                                .toString()
+                                                                .padStart(2, "0")}
+                                                        </span>
+                                                    </td>
+                                                    <td className="align-middle px-2 sm:px-4 py-3 text-xs sm:text-sm opacity-90">
+                                                        <div className="break-words">{item.date}<br className="sm:hidden" /><span className="hidden sm:inline"> </span>{item.time}</div>
+                                                    </td>
+                                                </tr>
+                                            ))}
+                                        </tbody>
+                                    </table>
+                                </div>
                             </div>
 
-                            {/* Pagination controls */}
                             {history.length > entriesPerPage && (
                                 <div className="flex justify-center items-center gap-3 mt-6">
                                     <button
@@ -478,11 +540,7 @@ export default function Page() {
                             <div className="modal-action justify-center">
                                 <button
                                     className="btn btn-error"
-                                    onClick={() => {
-                                        setHistory([]);
-                                        localStorage.removeItem("zikrHistory");
-                                        setShowClearHistoryConfirm(false);
-                                    }}
+                                    onClick={() => handleClearHistory()}
                                 >
                                     Yes
                                 </button>

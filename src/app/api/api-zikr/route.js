@@ -38,6 +38,20 @@ export async function GET(request) {
     }
 }
 
+// DELETE endpoint - delete all zikr records
+export async function DELETE(request) {
+    try {
+        const result = await prisma.zikr.deleteMany({});
+        return NextResponse.json({ deletedCount: result.count }, { status: 200 });
+    } catch (error) {
+        console.error('Error deleting zikr records:', error);
+        return NextResponse.json(
+            { error: 'Failed to delete zikr records' },
+            { status: 500 }
+        );
+    }
+}
+
 // POST endpoint - Create new zikr record
 export async function POST(request) {
     try {
