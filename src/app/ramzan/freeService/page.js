@@ -51,7 +51,7 @@ export default function FreeServicePage() {
             });
 
             if (data.ok) {
-                setSubmitMessage('Request submitted successfully! We will contact you soon.');
+                setSubmitMessage('Request submitted successfully');
                 setShowSuccessToast(true);
                 setFormData({
                     fullName: '',
@@ -119,7 +119,7 @@ export default function FreeServicePage() {
 
             <div className="w-full max-w-2xl mx-auto relative z-10">
                 {/* Back Button & Title Section */}
-                <div className="mb-8 flex items-center gap-4">
+                <div className="mb-2 flex items-center gap-4">
                     <button
                         className="flex items-center gap-2 text-lg text-primary hover:text-green-600 font-semibold"
                         onClick={() => router.push("/ramzan")}
@@ -128,6 +128,18 @@ export default function FreeServicePage() {
                         <FaAngleLeft /> Back
                     </button>
                 </div>
+
+                {/* Inline Success Toast (placed under Back button) */}
+                {showSuccessToast && (
+                    <div className="mt-3 w-full max-w-2xl mx-auto" role="status" aria-live="polite">
+                        <div className="bg-green-500 dark:bg-green-600 text-white px-4 py-2 rounded-lg shadow flex items-center gap-3 w-full">
+                            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                            </svg>
+                            <span className="font-semibold truncate">{submitMessage}</span>
+                        </div>
+                    </div>
+                )}
                 <h1 className="text-2xl font-bold text-primary mb-6">
                     Only For Masjid Committee                </h1>
                 <h2 className="text-xl font-bold text-white mb-6">
@@ -261,19 +273,7 @@ export default function FreeServicePage() {
                 </form>
             </div>
 
-            {/* Success Toast */}
-            {showSuccessToast && (
-                <div className="fixed top-4 left-1/2 -translate-x-1/2 z-[100] w-[90%] max-w-3xl" role="status" aria-live="polite">
-                    <div className="bg-green-500 dark:bg-green-600 text-white px-6 py-3 rounded-lg shadow-lg flex items-center gap-3 w-full h-12">
-                        <div className="flex items-center gap-3 flex-1">
-                            <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                            </svg>
-                            <span className="font-semibold truncate">{submitMessage}</span>
-                        </div>
-                    </div>
-                </div>
-            )}
+            {/* Success Toast removed from fixed top - now rendered under Back button */}
             {/* Completed free-service masjid list (theme-aware, responsive) */}
             <div className="mt-8 w-full max-w-3xl mx-auto relative z-10 px-2">
                 <h3 className="text-lg font-bold text-primary mb-4">Successfully Services Done In these Masjids</h3>
