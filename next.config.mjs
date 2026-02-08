@@ -1,5 +1,6 @@
 const isTauri = process.env.NEXT_PUBLIC_TAURI_BUILD === "1";
-const isStaticExport = isTauri && process.env.NODE_ENV === "production";
+// Only enable static export when explicitly requested via NEXT_PUBLIC_TAURI_STATIC_EXPORT=1
+const isStaticExport = process.env.NEXT_PUBLIC_TAURI_STATIC_EXPORT === "1" && process.env.NODE_ENV === "production";
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {

@@ -13,6 +13,9 @@ val tauriProperties = Properties().apply {
         propFile.inputStream().use { load(it) }
     }
 }
+val keystorePropertiesFile = rootProject.file("key.properties")
+val keystorePropertiesExists = keystorePropertiesFile.exists()
+val keystoreProperties = Properties()
 
 android {
     compileSdk = 36
@@ -27,9 +30,7 @@ android {
     }
     signingConfigs {
         create("release") {
-            val keystorePropertiesFile = rootProject.file("key.properties")
-            val keystoreProperties = Properties()
-            if (keystorePropertiesFile.exists()) {
+            if (keystorePropertiesExists) {
                 keystoreProperties.load(FileInputStream(keystorePropertiesFile))
                 keyAlias = keystoreProperties["keyAlias"] as String
                 keyPassword = keystoreProperties["keyPassword"] as String
@@ -59,7 +60,11 @@ android {
                     .plus(getDefaultProguardFile("proguard-android-optimize.txt"))
                     .toList().toTypedArray()
             )
-            signingConfig = signingConfigs.getByName("release")
+            if (keystorePropertiesExists) {
+                signingConfig = signingConfigs.getByName("release")
+            } else {
+                logger.warn("Skipping release signing because key.properties is missing; building unsigned release")
+            }
         }
     }
     kotlinOptions {
