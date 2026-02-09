@@ -6,6 +6,7 @@ export async function generateStaticParams() {
     return items.map((i) => ({ id: String(i.id) }));
 }
 
-export default function Page({ params }) {
-    return <ClientPage params={params} />;
+export default async function Page({ params }) {
+    const resolvedParams = await params;
+    return <ClientPage params={resolvedParams} />;
 }

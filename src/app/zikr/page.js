@@ -229,15 +229,11 @@ export default function Page() {
     async function handleClearHistory() {
         try {
             setIsClearing(true);
-            const res = await apiClient.delete("/api/api-zikr");
-            const data = res?.data;
-            if (data && !data.error) {
-                setHistory([]);
-                localStorage.removeItem("zikrHistory");
-                toast.success("Zikr history cleared.");
-            } else {
-                toast.error(data?.error || "Failed to clear history.");
-            }
+            // Do NOT call the global DELETE API (it removes all DB records).
+            // Only clear local client-side history so server data remains intact.
+            setHistory([]);
+            localStorage.removeItem("zikrHistory");
+            toast.success("Zikr history cleared locally.");
         } catch (err) {
             console.error("Error clearing history:", err);
             toast.error("Failed to clear history. Please try again.");
