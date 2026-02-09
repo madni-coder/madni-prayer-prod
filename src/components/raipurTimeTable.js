@@ -5,7 +5,7 @@ export default function RaipurTimeTable() {
             {/* ##############################Mobile single stacked table showing all 30 rows */}
             <div className="mt-6 md:hidden">
                 <div className="overflow-x-auto overflow-y-auto max-h-[75vh] touch-auto">
-                    <table className="table table-compact table-fixed w-full whitespace-nowrap">
+                    <table className="table table-compact table-fixed w-full whitespace-nowrap divide-y divide-primary">
                         <thead>
                             <tr>
                                 <th className="sticky top-0 z-24 w-10 bg-primary text-primary-content text-center">Roza</th>
@@ -15,7 +15,7 @@ export default function RaipurTimeTable() {
                                 <th className="sticky top-0 z-20 w-20 bg-primary text-primary-content text-center">Iftar</th>
                             </tr>
                         </thead>
-                        <tbody>
+                        <tbody className=" [&>tr>td]:border-t [&>tr>td]:border-primary">
                             <tr><td className="font-semibold">1</td><td className="text-sm">19 Feb</td><td className="text-sm">Wed</td><td className="font-medium text-success">05:17</td><td className="font-medium text-warning">06:06</td></tr>
                             <tr><td className="font-semibold">2</td><td className="text-sm">20 Feb</td><td className="text-sm">Thu</td><td className="font-medium text-success">05:17</td><td className="font-medium text-warning">06:06</td></tr>
                             <tr><td className="font-semibold">3</td><td className="text-sm">21 Feb</td><td className="text-sm">Fri</td><td className="font-medium text-success">05:16</td><td className="font-medium text-warning">06:07</td></tr>
