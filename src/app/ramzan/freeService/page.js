@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { toast } from 'react-toastify';
 import { FaUser, FaPhone, FaMosque, FaAngleLeft, FaCheck } from 'react-icons/fa';
 import { useRouter } from 'next/navigation';
 import apiClient from '../../../lib/apiClient';
@@ -15,7 +16,6 @@ export default function FreeServicePage() {
     });
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [submitMessage, setSubmitMessage] = useState('');
-    const [showSuccessToast, setShowSuccessToast] = useState(false);
     const [groups, setGroups] = useState([]);
     const [loadingGroups, setLoadingGroups] = useState(false);
     const [currentPage, setCurrentPage] = useState(1);
@@ -51,19 +51,14 @@ export default function FreeServicePage() {
             });
 
             if (data.ok) {
-                setSubmitMessage('Request submitted successfully');
-                setShowSuccessToast(true);
+                toast.success('Request submitted successfully');
                 setFormData({
                     fullName: '',
                     mobileNumber: '',
                     masjidName: '',
                     numberOfACs: ''
                 });
-
-                setTimeout(() => {
-                    setShowSuccessToast(false);
-                    setSubmitMessage('');
-                }, 3000);
+                setSubmitMessage('');
             } else {
                 setSubmitMessage(data.error || 'Failed to submit request. Please try again.');
             }
@@ -129,17 +124,6 @@ export default function FreeServicePage() {
                     </button>
                 </div>
 
-                {/* Inline Success Toast (placed under Back button) */}
-                {showSuccessToast && (
-                    <div className="mt-3 w-full max-w-2xl mx-auto" role="status" aria-live="polite">
-                        <div className="bg-green-500 dark:bg-green-600 text-white px-4 py-2 rounded-lg shadow flex items-center gap-3 w-full">
-                            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                            </svg>
-                            <span className="font-semibold truncate">{submitMessage}</span>
-                        </div>
-                    </div>
-                )}
                 <h1 className="text-2xl font-bold text-primary mb-6">
                     Only For Masjid Committee                </h1>
                 <h2 className="text-xl font-bold text-white mb-6">
