@@ -11,7 +11,7 @@ const prayers = [
     { name: "Asr", defaultTime: "4:30 pm" },
     { name: "Maghrib", defaultTime: "7:15 pm" },
     { name: "Isha", defaultTime: "8:45 pm" },
-    { name: "Taravih", defaultTime: "9:15 pm" },
+    { name: "Taravih", defaultTime: "00:00" },
     { name: "Juma", defaultTime: "1:30 pm" }, // Added Juma below Isha
 ];
 

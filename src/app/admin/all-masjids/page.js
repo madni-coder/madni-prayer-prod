@@ -254,7 +254,7 @@ export default function Page() {
                                 onChange={(e) => setShowRaipur(e.target.checked)}
                                 aria-label="Show only Raipur masjids"
                             />
-                            <span className="select-none">Show Raipur</span>
+                            <span className="select-none">Show Raipur's Masjid</span>
                         </label>
                         <button
                             onClick={handleReset}

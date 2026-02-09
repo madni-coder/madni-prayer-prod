@@ -1,6 +1,6 @@
 "use client";
 import React, { useRef, useState, useEffect } from "react";
-import { FaUser, FaAngleLeft, FaEnvelope, FaLock, FaMapMarkerAlt, FaMosque, FaPhone, FaVenusMars, FaSignInAlt, FaSignOutAlt } from "react-icons/fa";
+import { FaUser, FaAngleLeft, FaEnvelope, FaLock, FaMapMarkerAlt, FaMosque, FaPhone, FaVenusMars, FaSignInAlt, FaSignOutAlt, FaTrashAlt } from "react-icons/fa";
 import apiClient from "../../lib/apiClient";
 import AnimatedLooader from "../../components/animatedLooader";
 import { useRouter } from "next/navigation";
@@ -11,6 +11,7 @@ export default function MyProfilePage() {
     const addressRef = useRef(null);
     const mobileRef = useRef(null);
     const areaMasjidRef = useRef(null);
+    const [showDeleteModal, setShowDeleteModal] = useState(false);
 
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState(null);
@@ -429,6 +430,74 @@ export default function MyProfilePage() {
                                     </div>
                                 </div>
 
+                                {/* Delete Account (theme-aware) */}
+                                <div className="flex items-center gap-3 p-3">
+                                    <div className={`w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 ${isDark ? 'bg-red-600/20' : 'bg-red-200'}`}>
+                                        <FaTrashAlt className={`${isDark ? 'text-red-300' : 'text-red-700'} text-base`} />
+                                    </div>
+                                    <div className="flex-1 min-w-0">
+                                        <button
+                                            type="button"
+                                            onClick={() => setShowDeleteModal(true)}
+                                            className="ml-auto inline-flex items-center gap-2 py-1.5 px-3 rounded-md bg-gradient-to-r from-error to-error hover:opacity-90 transition-all shadow text-white font-semibold text-sm"
+                                        >
+                                            Delete My Account
+                                        </button>
+                                    </div>
+                                </div>
+                                {showDeleteModal && (
+                                    <div className="fixed inset-0 z-50 flex items-center justify-center">
+                                        <div className="absolute inset-0 bg-black/50" onClick={() => setShowDeleteModal(false)} />
+                                        <div
+                                            className={`relative w-full max-w-md mx-4 rounded-xl p-6 shadow-lg z-10 ${isDark ? 'bg-neutral-900/95 text-white' : 'bg-white text-base-content'}`}
+                                            onClick={(e) => e.stopPropagation()}
+                                        >
+                                            <h3 className="text-lg text-black font-bold mb-3">Confirm Delete ?</h3>
+                                            <p className={`mb-4 ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>Deleting the account will lose all your data, are you sure you want to delete?</p>
+                                            <div className="flex items-center justify-end gap-3">
+                                                <button autoFocus type="button" className="btn btn-primary" onClick={() => setShowDeleteModal(false)}>No</button>
+                                                <button
+                                                    type="button"
+                                                    className="btn btn-error"
+                                                    onClick={async () => {
+                                                        try {
+                                                            // call delete API
+                                                            const res = await fetch('/api/auth/delete', {
+                                                                method: 'DELETE',
+                                                                headers: { 'Content-Type': 'application/json' },
+                                                                body: JSON.stringify({ email: profileUser?.email })
+                                                            });
+                                                            const data = await res.json();
+                                                            if (!res.ok) {
+                                                                console.error('Delete failed', data);
+                                                                setError(data?.error || 'Failed to delete account');
+                                                                return;
+                                                            }
+
+                                                            // on success, clear local session and navigate away
+                                                            try { localStorage.removeItem('userSession'); } catch (e) { }
+                                                            try { localStorage.removeItem('userData'); } catch (e) { }
+                                                            setShowDeleteModal(false);
+                                                            setIsAuthenticated(false);
+                                                            setProfileUser(null);
+                                                            setSuccessMessage('Account deleted');
+                                                            setShowSuccessToast(true);
+                                                            setTimeout(() => setShowSuccessToast(false), 3000);
+                                                            // redirect to home or login
+                                                            try { router.push('/'); } catch (e) { }
+                                                        } catch (err) {
+                                                            console.error('Delete error', err);
+                                                            setError('Failed to delete account');
+                                                        }
+                                                    }}
+                                                >
+                                                    Yes
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                )}
+
                                 {/* Logout Button */}
                                 <button
                                     onClick={() => {
@@ -441,7 +510,7 @@ export default function MyProfilePage() {
                                         setShowSuccessToast(true);
                                         setTimeout(() => setShowSuccessToast(false), 3000);
                                     }}
-                                    className="w-full mt-2 flex items-center justify-center gap-2 py-3 px-4 rounded-full bg-gradient-to-r from-error to-error hover:opacity-90 transition-all shadow-lg"
+                                    className="w-full mt-2 flex items-center justify-center gap-2 py-3 px-4 rounded-full bg-gradient-to-r from-info to-info hover:opacity-90 transition-all shadow-lg"
                                 >
                                     <FaSignOutAlt className="text-base text-white" />
                                     <span className="text-white font-bold text-base">Log Out</span>

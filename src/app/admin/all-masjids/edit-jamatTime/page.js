@@ -12,6 +12,7 @@ const prayers = [
     { name: "Asr", defaultTime: "4:30 pm" },
     { name: "Maghrib", defaultTime: "7:15 pm" },
     { name: "Isha", defaultTime: "8:45 pm" },
+    { name: "Taravih", defaultTime: "00:00" },
     { name: "Juma", defaultTime: "1:30 pm" },
 ];
 
@@ -71,7 +72,8 @@ function EditJamatTimePage() {
                     data.asar || prayers[2].defaultTime,
                     data.maghrib || prayers[3].defaultTime,
                     data.isha || prayers[4].defaultTime,
-                    data.juma || prayers[5].defaultTime,
+                    data.taravih || prayers[5].defaultTime,
+                    data.juma || prayers[6].defaultTime,
                 ]);
             } else {
                 setError(data?.error || "Failed to fetch masjid data");
@@ -138,7 +140,8 @@ function EditJamatTimePage() {
                 asar: times[2],
                 maghrib: times[3],
                 isha: times[4],
-                juma: times[5],
+                taravih: times[5],
+                juma: times[6],
             };
 
             const { data } = await apiClient.patch(
@@ -327,8 +330,10 @@ function EditJamatTimePage() {
                                                                 : idx === 4
                                                                     ? "text-info border-info"
                                                                     : idx === 5
-                                                                        ? "text-[#8B4513] border-[#8B4513]"
-                                                                        : "",
+                                                                        ? "text-black font-bold border-info"
+                                                                        : idx === 6
+                                                                            ? "text-[#8B4513] border-[#8B4513]"
+                                                                            : "",
                                             ].join(" ")}
                                         >
                                             {prayer.name}
