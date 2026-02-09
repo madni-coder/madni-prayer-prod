@@ -61,7 +61,7 @@ export default function UserModal({
         setLoading(true);
 
         // Validate required fields
-        if (!gender || !fullName.trim() || !address.trim() || !areaMasjid.trim() || !email.trim() || !password) {
+        if (!gender || !fullName.trim() || !email.trim() || !password) {
             setError("Please fill in all required fields.");
             setLoading(false);
             return;
@@ -81,8 +81,8 @@ export default function UserModal({
                 password,
                 gender,
                 fullName: fullName.trim(),
-                address: address.trim(),
-                areaMasjid: areaMasjid.trim(),
+                address: address.trim() || null,
+                areaMasjid: areaMasjid.trim() || null,
                 mobile: mobileValue.trim() || null,
             };
 
@@ -270,7 +270,7 @@ export default function UserModal({
                             <div className="form-control w-full">
                                 <label className="label py-1">
                                     <span className="label-text text-sm font-bold text-white drop-shadow-lg">
-                                        Address <span className="text-error">*</span>
+                                        Address
                                     </span>
                                 </label>
                                 <div className="relative">
@@ -285,7 +285,6 @@ export default function UserModal({
                                         className="input input-bordered input-sm w-full pl-10"
                                         value={address}
                                         onChange={(e) => setAddress(e.target.value)}
-                                        required
                                     />
                                 </div>
                             </div>
@@ -294,7 +293,7 @@ export default function UserModal({
                             <div className="form-control w-full">
                                 <label className="label py-1">
                                     <span className="label-text text-sm font-bold text-white drop-shadow-lg">
-                                        Area Masjid <span className="text-error">*</span>
+                                        Area Masjid
                                     </span>
                                 </label>
                                 <div className="relative">
@@ -309,7 +308,6 @@ export default function UserModal({
                                         className="input input-bordered input-sm w-full pl-10"
                                         value={areaMasjid}
                                         onChange={(e) => setAreaMasjid(e.target.value)}
-                                        required
                                     />
                                 </div>
                             </div>

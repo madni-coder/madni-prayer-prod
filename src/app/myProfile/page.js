@@ -136,7 +136,7 @@ export default function MyProfilePage() {
         setError(null);
         setLoading(true);
 
-        if (!gender || !fullName.trim() || !address.trim() || !areaMasjid.trim() || !email.trim() || !password || !confirmPassword) {
+        if (!gender || !fullName.trim() || !email.trim() || !password || !confirmPassword) {
             setError("Please fill in all required fields.");
             setLoading(false);
             return;
@@ -160,8 +160,8 @@ export default function MyProfilePage() {
                 password,
                 gender,
                 fullName: fullName.trim(),
-                address: address.trim(),
-                areaMasjid: areaMasjid.trim(),
+                address: address.trim() || null,
+                areaMasjid: areaMasjid.trim() || null,
                 mobile: mobileValue.trim() || null,
             };
 
@@ -382,7 +382,7 @@ export default function MyProfilePage() {
                                     </div>
                                     <div className="flex-1 min-w-0">
                                         <div className="text-xs text-base-content/60 dark:text-base-content/70">My Profile</div>
-                                        <div className="font-semibold text-sm text-base-content truncate">{fullName || profileUser?.fullName || '-'}</div>
+                                        <div className="font-semibold text-sm text-base-content truncate">{fullName || profileUser?.fullName || 'Not Provided'}</div>
                                     </div>
                                 </div>
 
@@ -393,7 +393,7 @@ export default function MyProfilePage() {
                                     </div>
                                     <div className="flex-1 min-w-0">
                                         <div className="text-xs text-base-content/60 dark:text-base-content/70">Email</div>
-                                        <div className="font-semibold text-sm text-base-content truncate">{email || profileUser?.email || '-'}</div>
+                                        <div className="font-semibold text-sm text-base-content truncate">{email || profileUser?.email || 'Not Provided'}</div>
                                     </div>
                                 </div>
 
@@ -404,7 +404,7 @@ export default function MyProfilePage() {
                                     </div>
                                     <div className="flex-1 min-w-0">
                                         <div className="text-xs text-base-content/60 dark:text-base-content/70">Saved Addresses</div>
-                                        <div className="font-semibold text-sm text-base-content truncate">{address || profileUser?.address || '-'}</div>
+                                        <div className="font-semibold text-sm text-base-content truncate">{address || profileUser?.address || 'Not Provided'}</div>
                                     </div>
                                 </div>
 
@@ -415,7 +415,7 @@ export default function MyProfilePage() {
                                     </div>
                                     <div className="flex-1 min-w-0">
                                         <div className="text-xs text-base-content/60 dark:text-base-content/70">Area Masjid</div>
-                                        <div className="font-semibold text-sm text-base-content truncate">{areaMasjid || profileUser?.areaMasjid || '-'}</div>
+                                        <div className="font-semibold text-sm text-base-content truncate">{areaMasjid || profileUser?.areaMasjid || 'Not Provided'}</div>
                                     </div>
                                 </div>
 
@@ -638,7 +638,7 @@ export default function MyProfilePage() {
                                 <div className="form-control w-full">
                                     <label className="label pb-2">
                                         <span className="label-text font-semibold text-base flex items-center gap-1 text-white">
-                                            Address <span className="text-error">*</span>
+                                            Address
                                         </span>
                                     </label>
                                     <div className="relative">
@@ -650,7 +650,6 @@ export default function MyProfilePage() {
                                             className="input input-bordered w-full pl-12 h-12 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all"
                                             value={address}
                                             onChange={(e) => setAddress(e.target.value)}
-                                            required
                                         />
                                     </div>
                                 </div>
@@ -659,7 +658,7 @@ export default function MyProfilePage() {
                                 <div className="form-control w-full">
                                     <label className="label pb-2">
                                         <span className="label-text font-semibold text-base flex items-center gap-1 text-white">
-                                            Area Masjid <span className="text-error">*</span>
+                                            Area Masjid
                                         </span>
                                     </label>
                                     <div className="relative">
@@ -671,7 +670,6 @@ export default function MyProfilePage() {
                                             className="input input-bordered w-full pl-12 h-12 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all"
                                             value={areaMasjid}
                                             onChange={(e) => setAreaMasjid(e.target.value)}
-                                            required
                                         />
                                     </div>
                                 </div>

@@ -105,25 +105,23 @@ export async function POST(req) {
                     ? tasbihCount
                     : 0;
 
-        // Only validate mobile number if fullName and address are not provided
-        if (!fullName && !address) {
-            if (!mobileNumber || typeof mobileNumber !== "string") {
-                return NextResponse.json(
-                    {
-                        ok: false,
-                        error: "Mobile number is required and must be a string.",
-                    },
-                    { status: 400 }
-                );
-            }
+        // For new or anonymous submissions, ensure we have either a fullName or a mobile identifier.
+        if (!fullName && !mobileNumber) {
+            return NextResponse.json(
+                {
+                    ok: false,
+                    error: "Mobile number is required and must be a string when full name is not provided.",
+                },
+                { status: 400 }
+            );
         }
 
-        // Validate all fields if fullName and address are provided
+        // Validate fields if provided (address is optional)
         const errors = [];
         if (fullName && (!fullName || typeof fullName !== "string"))
             errors.push("Full Name is required and must be a string.");
         if (address && (!address || typeof address !== "string"))
-            errors.push("Address is required and must be a string.");
+            errors.push("Address must be a string if provided.");
         if (errors.length) {
             return NextResponse.json({ ok: false, errors }, { status: 400 });
         }
@@ -140,29 +138,31 @@ export async function POST(req) {
                 : await prisma.tasbihUser.count();
 
         let newItem;
-        if (!existingUser && fullName && address && mobileNumber) {
+        if (!existingUser) {
+            // For new users, mobileNumber is required (we accepted email as mobile earlier)
+            if (!mobileNumber) {
+                return NextResponse.json(
+                    {
+                        ok: false,
+                        error: "NOT_REGISTERED",
+                        message: "Mobile number is required for new users. Please provide mobile or email.",
+                        count: tasbihCount,
+                    },
+                    { status: 400 }
+                );
+            }
+
             newItem = await prisma.tasbihUser.create({
                 data: {
-                    fullName,
-                    address,
+                    fullName: fullName || null,
+                    address: address || null,
                     mobileNumber,
-                    // keep original email value in response only; DB doesn't have an email column
                     // keep existing `count` behavior (store tasbihCount there as before)
                     count: tasbihCount,
                     // additionally store weekly count in `weeklyCounts`
                     weeklyCounts: weeklyCounts,
                 },
             });
-        } else if (!existingUser && !fullName && !address) {
-            return NextResponse.json(
-                {
-                    ok: false,
-                    error: "NOT_REGISTERED",
-                    message: "User details (fullName, address) are required for new users. Please complete your profile.",
-                    count: tasbihCount,
-                },
-                { status: 400 }
-            );
         }
 
         // If user exists, increment their count

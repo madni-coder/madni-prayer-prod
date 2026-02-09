@@ -99,11 +99,11 @@ export default function UsersPage() {
                                 pageItems.map((u, idx) => (
                                     <tr key={u.id || start + idx} className={idx % 2 === 0 ? "" : "bg-gray-50"}>
                                         <td className="px-3 py-4 whitespace-nowrap text-sm text-black">{start + idx + 1}</td>
-                                        <td className="px-4 py-4 whitespace-nowrap text-sm text-black">{u.gender || '-'}</td>
-                                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-black">{u.fullName || u.name || '-'}</td>
-                                        <td className="px-6 py-4 whitespace-nowrap text-sm text-black">{u.email || '-'}</td>
-                                        <td className="px-6 py-4 text-sm text-black whitespace-normal break-words">{u.address || '-'}</td>
-                                        <td className="px-6 py-4 text-sm text-black whitespace-normal break-words">{u.areaMasjid || '-'}</td>
+                                        <td className="px-4 py-4 whitespace-nowrap text-sm text-black">{u.gender || 'Not Provided'}</td>
+                                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-black">{u.fullName || u.name || 'Not Provided'}</td>
+                                        <td className="px-6 py-4 whitespace-nowrap text-sm text-black">{u.email || 'Not Provided'}</td>
+                                        <td className="px-6 py-4 text-sm text-black whitespace-normal break-words">{u.address || 'Not Provided'}</td>
+                                        <td className="px-6 py-4 text-sm text-black whitespace-normal break-words">{u.areaMasjid || 'Not Provided'}</td>
                                     </tr>
                                 ))
                             )}

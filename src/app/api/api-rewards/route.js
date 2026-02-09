@@ -29,8 +29,8 @@ export async function POST(request) {
                 } = item || {};
                 return {
                     fullName: fullName || "",
-                    address: address || "",
-                    areaMasjid: areaMasjid || "",
+                    address: address || null,
+                    areaMasjid: areaMasjid || null,
                     from: from || "",
                     to: to || "",
                     position: position !== undefined ? Number(position) : 0,
@@ -43,15 +43,10 @@ export async function POST(request) {
             });
 
             // Basic validation: ensure required fields are present on at least one item
-            if (
-                dataToInsert.some(
-                    (d) => !d.fullName || !d.address || !d.areaMasjid
-                )
-            ) {
+            // Ensure at least fullName is provided for each item (address/areaMasjid optional)
+            if (dataToInsert.some((d) => !d.fullName)) {
                 return new Response(
-                    JSON.stringify({
-                        error: "One or more items missing required fields",
-                    }),
+                    JSON.stringify({ error: "One or more items missing required fields (fullName)" }),
                     { status: 400 }
                 );
             }
@@ -76,8 +71,8 @@ export async function POST(request) {
             from,
             to,
         } = payload || {};
-        if (!fullName || !address || !areaMasjid || position === undefined) {
-            return new Response(JSON.stringify({ error: "Missing fields" }), {
+        if (!fullName || position === undefined) {
+            return new Response(JSON.stringify({ error: "Missing fields (fullName or position)" }), {
                 status: 400,
             });
         }
@@ -85,8 +80,8 @@ export async function POST(request) {
         const created = await prisma.reward.create({
             data: {
                 fullName,
-                address,
-                areaMasjid,
+                address: address || null,
+                areaMasjid: areaMasjid || null,
                 from: from || "",
                 to: to || "",
                 position: Number(position),

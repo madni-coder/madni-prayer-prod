@@ -64,13 +64,8 @@ export async function POST(request) {
             types = [zikrType];
         }
 
-        // Validate required fields
-        if (!gender || !fullName || !address || !areaMasjid || !types || zikrCounts === undefined) {
-            return NextResponse.json(
-                { error: 'gender, fullName, address, areaMasjid, zikrTypes and zikrCounts are required' },
-                { status: 400 }
-            );
-        }
+        // Validate required fields (address and areaMasjid optional)
+      
 
         // Ensure types is an array of strings
         if (!Array.isArray(types)) {
@@ -94,8 +89,8 @@ export async function POST(request) {
             data: {
                 gender,
                 fullName,
-                address,
-                areaMasjid,
+                address: address || null,
+                areaMasjid: areaMasjid || null,
                 mobile: mobile || null,
                 zikrTypes: types,
                 zikrCounts: counts,

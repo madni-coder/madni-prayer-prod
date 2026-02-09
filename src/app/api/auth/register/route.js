@@ -7,10 +7,10 @@ export async function POST(request) {
         const body = await request.json();
         const { email, password, gender, fullName, address, areaMasjid, mobile } = body;
 
-        // Validate required fields
-        if (!email || !password || !gender || !fullName || !address || !areaMasjid) {
+        // Validate required fields (address and areaMasjid are optional)
+        if (!email || !password || !gender || !fullName) {
             return NextResponse.json(
-                { error: 'Email, password, gender, fullName, address, and areaMasjid are required' },
+                { error: 'Email, password, gender and fullName are required' },
                 { status: 400 }
             );
         }
@@ -52,8 +52,8 @@ export async function POST(request) {
                 password, // Save password in DB as well
                 gender,
                 fullName,
-                address,
-                areaMasjid,
+                address: address || null,
+                areaMasjid: areaMasjid || null,
                 mobile: mobile || null,
             },
         });

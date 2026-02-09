@@ -239,8 +239,8 @@ export default function DuroodSharifPage() {
 
     const filtered = usersWithRank.filter(
         (row) =>
-            row["Full Name"].toLowerCase().includes(search.toLowerCase()) ||
-            row["Address"].toLowerCase().includes(search.toLowerCase())
+            (row["Full Name"] || '').toLowerCase().includes(search.toLowerCase()) ||
+            (row["Address"] || '').toLowerCase().includes(search.toLowerCase())
     );
 
     // Pagination
@@ -592,14 +592,14 @@ export default function DuroodSharifPage() {
                                         <FaBitcoin className="text-2xl text-amber-700" />
                                     </span>
                                     <span className="font-medium">
-                                        {row["Full Name"]}
+                                        {row["Full Name"] || 'Not Provided'}
                                     </span>
                                 </td>
                                 <td className="py-4 text-gray-800 text-left">
-                                    {row.Email || row.email || "NA"}
+                                    {row.Email || row.email || 'Not Provided'}
                                 </td>
                                 <td className="py-4 text-gray-800 text-left">
-                                    {row["Address"]}
+                                    {row["Address"] || 'Not Provided'}
                                 </td>
                                 {/* Mobile number omitted for privacy */}
                                 <td className="py-4 text-orange-800 font-bold  text-left flex items-center gap-2">

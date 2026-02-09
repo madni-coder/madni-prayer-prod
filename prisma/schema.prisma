@@ -40,7 +40,7 @@ model AllMasjid {
 model TasbihUser {
   id          Int      @id @default(autoincrement())
   fullName    String
-  address     String
+  address     String?
   mobileNumber String
   weeklyCounts BigInt     @default(0)
   count        BigInt     @default(0)
@@ -66,8 +66,8 @@ model FileTable {
 model Reward {
   id         Int      @id @default(autoincrement())
   fullName   String
-  address    String
-  areaMasjid String
+  address    String?
+  areaMasjid String?
   from       String   @default("")
   to         String   @default("")
   counts     Int      @default(0)
@@ -82,8 +82,8 @@ model Zikr {
   id         Int      @id @default(autoincrement())
   gender     String   @default("Male")
   fullName   String   @default("")
-  address    String   @default("")
-  areaMasjid String   @default("")
+  address    String?
+  areaMasjid String?
   mobile     String?
   zikrTypes  String[] @default([])
   zikrCounts Int
@@ -99,8 +99,8 @@ model User {
   password   String
   gender     String
   fullName   String
-  address    String
-  areaMasjid String
+  address    String?
+  areaMasjid String?
   mobile     String?
   createdAt  DateTime @default(now())
   updatedAt  DateTime @updatedAt

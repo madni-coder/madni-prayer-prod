@@ -1,0 +1,16 @@
+-- AlterTable
+ALTER TABLE "rewards" ALTER COLUMN "address" DROP NOT NULL,
+ALTER COLUMN "areaMasjid" DROP NOT NULL;
+
+-- AlterTable
+ALTER TABLE "tasbih_users" ALTER COLUMN "address" DROP NOT NULL;
+
+-- AlterTable
+ALTER TABLE "users" ALTER COLUMN "address" DROP NOT NULL,
+ALTER COLUMN "areaMasjid" DROP NOT NULL;
+
+-- AlterTable
+ALTER TABLE "zikr" ALTER COLUMN "address" DROP NOT NULL,
+ALTER COLUMN "address" DROP DEFAULT,
+ALTER COLUMN "areaMasjid" DROP NOT NULL,
+ALTER COLUMN "areaMasjid" DROP DEFAULT;
