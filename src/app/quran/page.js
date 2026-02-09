@@ -13,7 +13,7 @@ const REMOTE_API_BASE = process.env.NEXT_PUBLIC_API_BASE_URL;
 
 // Sample Surah data (in real app, fetch from API or static JSON)
 const surahs = [
-    { number: 1, name: "Surah Yaseen", arabic: "يسٓ", ayahs: 83 },
+    { number: 1, name: "Surah Yaseen", arabic:" يٰسٓ", ayahs: 83 },
     { number: 2, name: "Surah Baqrah", arabic: "البقرة", ayahs: 286 },
     { number: 3, name: "Surah Muzammil", arabic: "المزمل", ayahs: 200 },
     { number: 4, name: "Surah Waqi'a", arabic: "الواقعة", ayahs: 96 },
@@ -331,14 +331,33 @@ export default function Page() {
                         filteredSurahs.map((s) => (
                             <div
                                 key={s.number}
-                                className="neumorph-card p-4 flex flex-col items-center transition hover:scale-105 active:scale-95 hover:shadow-lg active:shadow-md cursor-pointer bg-base-100 border border-base-300"
+                                className="neumorph-card flex flex-col items-center transition hover:scale-105 active:scale-95 hover:shadow-lg active:shadow-md cursor-pointer bg-base-100 border border-primary"
+                                style={{
+                                    minHeight: 140,
+                                    height: 140,
+                                    maxHeight: 140,
+                                    minWidth: 0,
+                                    width: "100%",
+                                    borderRadius: 12,
+                                    position: "relative",
+                                    padding: 12,
+                                }}
                                 onClick={() => openSurahReader(s)}
                             >
-                                <span className="text-lg font-bold text-primary">
-                                    {s.number}. {s.name}
+                                <div className="w-full flex justify-end items-start">
+                                    <span className="text-xs text-primary" style={{ fontFamily: "serif" }}>
+                                        ◤
+                                    </span>
+                                </div>
+                                <span className="text-2xl mb-1 mt-2 text-center" style={{ fontWeight: 600 }}>
+                                    {s.arabic}
                                 </span>
-                                <span className="text-2xl mb-1">{s.arabic}</span>
-                                <span className="text-xs text-base-content/60">Ayahs: {s.ayahs}</span>
+                                <span className="text-lg text-white font-bold text-center w-full truncate mt-2">{s.name}</span>
+                                <div className="w-full flex justify-end items-end mt-auto">
+                                    <span className="text-xs text-primary" style={{ fontFamily: "serif" }}>
+                                        ◢
+                                    </span>
+                                </div>
                             </div>
                         ))
                     ) : view === "para" ? (
@@ -360,7 +379,7 @@ export default function Page() {
                                     onClick={() => openReader(p)}
                                 >
                                     <div className="w-full flex justify-between items-start">
-                                        <span className="text-base font-bold text-primary">{p.number}</span>
+                                        <span className="text-lg font-bold text-primary">{p.number}</span>
                                         <span className="text-xs text-primary" style={{ fontFamily: "serif" }}>
                                             ◤
                                         </span>
