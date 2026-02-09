@@ -563,6 +563,9 @@ export default function DuroodSharifPage() {
                                 Name
                             </th>
                             <th className="font-semibold text-base text-white text-left">
+                                Email
+                            </th>
+                            <th className="font-semibold text-base text-white text-left">
                                 Colony Address
                             </th>
                             {/* Mobile column intentionally removed for privacy */}
@@ -591,6 +594,9 @@ export default function DuroodSharifPage() {
                                     <span className="font-medium">
                                         {row["Full Name"]}
                                     </span>
+                                </td>
+                                <td className="py-4 text-gray-800 text-left">
+                                    {row.Email || row.email || "NA"}
                                 </td>
                                 <td className="py-4 text-gray-800 text-left">
                                     {row["Address"]}

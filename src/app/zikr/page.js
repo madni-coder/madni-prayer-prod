@@ -60,6 +60,7 @@ export default function Page() {
     const [searchQuery, setSearchQuery] = useState("");
     const [showDropdown, setShowDropdown] = useState(false);
     const dropdownRef = useRef(null);
+    const fetchedRef = useRef(false);
 
     useEffect(() => {
         function handleClickOutside(e) {
@@ -97,20 +98,46 @@ export default function Page() {
     // Fetch zikr history from API on mount if not present in localStorage
     useEffect(() => {
         if (typeof window === "undefined") return;
-
         try {
             const saved = localStorage.getItem("zikrHistory");
-            if (saved && JSON.parse(saved).length > 0) {
-                // already have saved history, no need to call API
+            // If a user is logged in, always fetch from server to get their personal records.
+            // If no user is logged in, use cached history (if present) to avoid unnecessary API calls.
+            const userRaw = localStorage.getItem('userData');
+            if (!userRaw && saved && JSON.parse(saved).length > 0) {
+                // already have saved history and no authenticated user, no need to call API
                 return;
             }
+
+            // Prevent double-fetch in React StrictMode during development
+            if (fetchedRef.current) return;
+            fetchedRef.current = true;
 
             (async () => {
                 try {
                     const res = await apiClient.get("/api/api-zikr");
                     const data = res?.data;
                     if (Array.isArray(data) && data.length > 0) {
-                        const mapped = data.map((item) => {
+                        // Determine currently logged-in user (if any)
+                        let user = null;
+                        try {
+                            const userRaw2 = localStorage.getItem('userData');
+                            user = userRaw2 ? JSON.parse(userRaw2) : null;
+                        } catch (e) {
+                            user = null;
+                        }
+
+                        // If user is present, filter server records to that user only.
+                        const matched = (user)
+                            ? data.filter((item) => {
+                                const itemMobile = item.mobile ? String(item.mobile).toLowerCase() : "";
+                                const itemFull = item.fullName ? String(item.fullName).toLowerCase() : "";
+                                const checkValues = [user.mobile, user.email, user.fullName].filter(Boolean).map(v => String(v).toLowerCase());
+                                return checkValues.some(val => val && (val === itemMobile || val === itemFull));
+                            })
+                            : [];
+
+                        // Map only the matched entries (if user not logged in, we keep history empty)
+                        const mapped = matched.map((item) => {
                             const zikrName = Array.isArray(item.zikrTypes)
                                 ? item.zikrTypes[0]
                                 : item.zikrType || item.zikr || "Unknown";
@@ -124,6 +151,7 @@ export default function Page() {
                                 time: dt.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", hour12: true }),
                             };
                         });
+
                         setHistory(mapped);
                         localStorage.setItem("zikrHistory", JSON.stringify(mapped));
                     }

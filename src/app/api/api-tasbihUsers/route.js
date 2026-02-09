@@ -90,8 +90,11 @@ export async function POST(req) {
 
         const fullName = body["Full Name"] ?? body.fullName ?? body.fullname;
         const address = body.Address ?? body.address;
+        // Accept email as an identifier too. If email is provided and mobile is missing,
+        // treat the email as the mobileIdentifier so it can be stored in mobileNumber field.
+        const email = body.email ?? body.Email ?? null;
         const mobileNumber =
-            body["mobile number"] ?? body.mobileNumber ?? body.mobile;
+            body["mobile number"] ?? body.mobileNumber ?? body.mobile ?? email;
         const tasbihCount = body.tasbihCount;
         // New variable: weeklyCounts stores the tasbih count for weekly tracking
         // If caller provides weeklyCounts use it, otherwise default to tasbihCount (number) or 0
@@ -143,6 +146,7 @@ export async function POST(req) {
                     fullName,
                     address,
                     mobileNumber,
+                    // keep original email value in response only; DB doesn't have an email column
                     // keep existing `count` behavior (store tasbihCount there as before)
                     count: tasbihCount,
                     // additionally store weekly count in `weeklyCounts`
@@ -221,8 +225,12 @@ export async function POST(req) {
                         : newItem.weeklyCounts,
             }
             : null;
+        // If caller provided an email, include it in the response object for convenience
+        const responseData = safeNewItem
+            ? { ...safeNewItem, Email: email || null }
+            : null;
         return NextResponse.json(
-            { ok: true, message: "Durood Sharif registered successfully!", data: safeNewItem },
+            { ok: true, message: "Durood Sharif registered successfully!", data: responseData },
             { status: 201 }
         );
     } catch (err) {
@@ -239,19 +247,37 @@ export async function GET() {
         // Fetch from database
         const users = await prisma.tasbihUser.findMany();
         const count = await prisma.tasbihUser.count();
-        const filtered = users.map((u) => ({
-            "Full Name": u.fullName,
-            Address: u.address,
-            "mobile number": u.mobileNumber,
-            // Life time counts
-            "Tasbih Counts":
-                typeof u.count === "bigint" ? Number(u.count) : u.count,
-            // Weekly counts (note: key is lowercase to match admin UI expectation)
-            "weekly counts":
-                typeof u.weeklyCounts === "bigint"
-                    ? Number(u.weeklyCounts)
-                    : u.weeklyCounts,
-        }));
+        // Resolve Email where possible: if mobileNumber looks like an email use it,
+        // otherwise try to find a matching `User` record by mobile or email.
+        const filtered = await Promise.all(
+            users.map(async (u) => {
+                let resolvedEmail = null;
+                if (u.mobileNumber && u.mobileNumber.includes("@")) {
+                    resolvedEmail = u.mobileNumber;
+                } else if (u.mobileNumber) {
+                    const matched = await prisma.user.findFirst({
+                        where: {
+                            OR: [{ mobile: u.mobileNumber }, { email: u.mobileNumber }],
+                        },
+                    });
+                    if (matched) resolvedEmail = matched.email;
+                }
+                return {
+                    "Full Name": u.fullName,
+                    Address: u.address,
+                    "mobile number": u.mobileNumber,
+                    Email: resolvedEmail,
+                    // Life time counts
+                    "Tasbih Counts":
+                        typeof u.count === "bigint" ? Number(u.count) : u.count,
+                    // Weekly counts (note: key is lowercase to match admin UI expectation)
+                    "weekly counts":
+                        typeof u.weeklyCounts === "bigint"
+                            ? Number(u.weeklyCounts)
+                            : u.weeklyCounts,
+                };
+            })
+        );
         return NextResponse.json({ ok: true, data: filtered }, { status: 200 });
     } catch (err) {
         return NextResponse.json(

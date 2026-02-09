@@ -2,7 +2,7 @@
 import React, { useEffect, useState } from "react";
 import Link from "next/link";
 import apiClient from "../../../../lib/apiClient";
-import { FiUser, FiPhone, FiMapPin, FiHome, FiClock, FiTag, FiHash } from 'react-icons/fi';
+import { FiUser, FiPhone, FiMapPin, FiHome, FiClock, FiTag, FiHash, FiMail } from 'react-icons/fi';
 
 export default function Page({ params }) {
     const id = params?.id;
@@ -29,7 +29,36 @@ export default function Page({ params }) {
             .then((res) => {
                 mainRecord = res.data;
                 setData(mainRecord);
-                return apiClient.get(`/api/api-zikr`);
+
+                // Try to fetch registered users to resolve an email for this record
+                return apiClient.get('/api/auth/register')
+                    .then((uRes) => {
+                        const users = Array.isArray(uRes.data?.users) ? uRes.data.users : [];
+                        // match by mobile/email or fullName+address
+                        const mobileKey = mainRecord && mainRecord.mobile ? String(mainRecord.mobile).trim().toLowerCase() : null;
+                        const nameKey = mainRecord ? `${(mainRecord.fullName || '').trim().toLowerCase()}||${(mainRecord.address || '').trim().toLowerCase()}` : null;
+                        const found = users.find(u => {
+                            if (!u) return false;
+                            const uMobile = (u.mobile || u.email || '').toString().trim().toLowerCase();
+                            if (mobileKey && uMobile === mobileKey) return true;
+                            const k = `${(u.fullName || '').trim().toLowerCase()}||${(u.address || '').trim().toLowerCase()}`;
+                            return !mobileKey && nameKey && k === nameKey;
+                        });
+
+                        if (found) {
+                            // attach email to mainRecord so UI can show it
+                            mainRecord.email = found.email || mainRecord.email;
+                            setData(mainRecord);
+                        } else if (mainRecord && mainRecord.mobile && String(mainRecord.mobile).includes('@')) {
+                            // fallback: if mobile field actually holds an email address, use it
+                            mainRecord.email = String(mainRecord.mobile);
+                            setData(mainRecord);
+                        }
+                    })
+                    .catch(() => {
+                        // ignore users fetch failure and continue to fetch all zikr records
+                    })
+                    .then(() => apiClient.get(`/api/api-zikr`));
             })
             .then((allRes) => {
                 const all = Array.isArray(allRes.data) ? allRes.data : (allRes.data ? [allRes.data] : []);
@@ -129,6 +158,14 @@ export default function Page({ params }) {
                     <div>
                         <div className="text-sm text-gray-500">Full Name</div>
                         <div className="font-medium text-gray-800">{data.fullName ?? '-'}</div>
+                    </div>
+                </div>
+
+                <div className="flex items-start gap-3">
+                    <FiMail className="text-2xl text-cyan-500 mt-1" />
+                    <div>
+                        <div className="text-sm text-gray-500">Email</div>
+                        <div className="font-medium text-gray-800">{data.email ?? '-'}</div>
                     </div>
                 </div>
 
