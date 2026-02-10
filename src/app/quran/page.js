@@ -13,7 +13,7 @@ const REMOTE_API_BASE = process.env.NEXT_PUBLIC_API_BASE_URL;
 
 // Sample Surah data (in real app, fetch from API or static JSON)
 const surahs = [
-    { number: 1, name: "Surah Yaseen", arabic:" يٰسٓ", ayahs: 83 },
+    { number: 1, name: "Surah Yaseen", arabic: " يٰسٓ", ayahs: 83 },
     { number: 2, name: "Surah Baqrah", arabic: "البقرة", ayahs: 286 },
     { number: 3, name: "Surah Muzammil", arabic: "المزمل", ayahs: 200 },
     { number: 4, name: "Surah Waqi'a", arabic: "الواقعة", ayahs: 96 },
@@ -170,51 +170,16 @@ export default function Page() {
             const storageKey = `para_pdf_${p.number}`;
             const saved = localStorage.getItem(storageKey);
 
-            // If we have a saved base64 PDF, use it to create an object URL
-            if (saved) {
-                try {
-                    const parsed = JSON.parse(saved);
-                    if (parsed && parsed.type === "base64" && parsed.data) {
-                        const byteCharacters = atob(parsed.data.split(",")[1] || parsed.data);
-                        const byteNumbers = new Array(byteCharacters.length);
-                        for (let i = 0; i < byteCharacters.length; i++) {
-                            byteNumbers[i] = byteCharacters.charCodeAt(i);
-                        }
-                        const byteArray = new Uint8Array(byteNumbers);
-                        const blob = new Blob([byteArray], { type: "application/pdf" });
-                        const objUrl = URL.createObjectURL(blob);
-                        setCurrentObjectUrl(objUrl);
-                        const viewer = isTauri
-                            ? `${REMOTE_API_BASE}/pdf-viewer?file=${encodeURIComponent(objUrl)}`
-                            : `/pdf-viewer?file=${encodeURIComponent(objUrl)}`;
-                        setCurrentPara(p.number);
-                        setCurrentTitle(`Para ${p.number}`);
-                        setReaderUrl(viewer);
-                        setShowReader(true);
-                        return;
-                    }
-                } catch (e) {
-                    console.warn("Failed to parse saved para PDF", e);
-                }
-            }
+            // Note: We no longer use blob URLs from localStorage cache because
+            // blob URLs don't work across page navigations in mobile/Tauri environments.
+            // Instead, we always fetch via the proxied URL.
+            // The cache is still useful for offline scenarios but we'll handle that differently.
 
-            // Otherwise fetch the proxied PDF and try to save it (if small enough)
+            // Fetch the proxied PDF and try to save it (if small enough) for offline use
             const resp = await axios.get(proxiedFinal, {
                 responseType: "blob",
             });
             const blob = resp.data;
-
-            // Revoke previous object URL (if any) and create a new one so we can display immediately
-            if (currentObjectUrl) {
-                try {
-                    URL.revokeObjectURL(currentObjectUrl);
-                } catch (e) {
-                    // ignore
-                }
-                setCurrentObjectUrl(null);
-            }
-            const objUrl = URL.createObjectURL(blob);
-            setCurrentObjectUrl(objUrl);
 
             // If blob is small enough (approx < 4.5MB), store as base64 in localStorage (async)
             const maxSaveBytes = 4.5 * 1024 * 1024; // 4.5 MB
@@ -226,6 +191,7 @@ export default function Page() {
                         const payload = JSON.stringify({ type: "base64", data: result, size: blob.size, savedAt: Date.now() });
                         try {
                             localStorage.setItem(storageKey, payload);
+                            console.log(`Para ${p.number} PDF saved to localStorage`);
                         } catch (err) {
                             console.warn("Failed to save para PDF to localStorage", err);
                         }
@@ -243,9 +209,11 @@ export default function Page() {
                 }
             }
 
+            // Use the proxied URL directly for the viewer (not blob URL)
+            // This works reliably across page navigations on mobile/Tauri
             const viewer = isTauri
-                ? `${REMOTE_API_BASE}/pdf-viewer?file=${encodeURIComponent(objUrl)}`
-                : `/pdf-viewer?file=${encodeURIComponent(objUrl)}`;
+                ? `${REMOTE_API_BASE}/pdf-viewer?file=${encodeURIComponent(proxiedFinal)}`
+                : `/pdf-viewer?file=${encodeURIComponent(proxiedFinal)}`;
 
             console.log("PDF viewer URLs", { proxied: proxiedFinal, viewer });
             setCurrentPara(p.number);
@@ -254,7 +222,7 @@ export default function Page() {
             setShowReader(true);
         } catch (error) {
             console.error("Error opening para:", error);
-            alert("Error loading para PDF");
+            alert("Error loading para PDF. Please check your connection.");
         }
     };
 

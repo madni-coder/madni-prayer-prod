@@ -33,8 +33,10 @@ export default function ClientPdfViewer({ file: fileProp }) {
         }
         try {
             const decoded = decodeURIComponent(file);
+            console.log("Setting PDF URL:", decoded);
             setUrl(decoded);
         } catch (e) {
+            console.log("Using file as-is (decode failed):", file);
             setUrl(file);
         }
     }, [file]);
@@ -50,44 +52,99 @@ export default function ClientPdfViewer({ file: fileProp }) {
             setPages([]);
             setRenderedPages(new Set());
             try {
+                console.log("Starting PDF load for URL:", url);
                 const pdfjsPath = "/pdfjs/pdf.min.mjs";
                 const workerPath = "/pdfjs/pdf.worker.min.mjs";
 
                 setLoadingProgress(10);
-                const pdfjsModule = await import(
-                    /* webpackIgnore: true */ pdfjsPath
-                );
-                const pdfjsLib = pdfjsModule.default || pdfjsModule;
-                if (pdfjsLib.GlobalWorkerOptions)
+
+                // Try to import PDF.js with better error handling
+                let pdfjsLib;
+                try {
+                    const pdfjsModule = await import(
+                        /* webpackIgnore: true */ pdfjsPath
+                    );
+                    pdfjsLib = pdfjsModule.default || pdfjsModule;
+                    console.log("PDF.js loaded successfully");
+                } catch (importError) {
+                    console.error("Failed to import PDF.js:", importError);
+                    throw new Error("Failed to load PDF library. Please try again.");
+                }
+
+                if (pdfjsLib.GlobalWorkerOptions) {
                     pdfjsLib.GlobalWorkerOptions.workerSrc = workerPath;
+                }
 
                 setLoadingProgress(30);
-                const resp = await fetch(url, {
-                    method: "GET",
-                    credentials: "same-origin",
-                });
-                if (!resp.ok)
-                    throw new Error("Failed to fetch PDF: " + resp.status);
-                const arrayBuffer = await resp.arrayBuffer();
+
+                // Fetch PDF with better error handling
+                let arrayBuffer;
+                try {
+                    console.log("Fetching PDF from:", url);
+                    const resp = await fetch(url, {
+                        method: "GET",
+                        credentials: "same-origin",
+                        mode: "cors",
+                    });
+                    console.log("Fetch response status:", resp.status, resp.statusText);
+                    if (!resp.ok) {
+                        throw new Error(`Failed to fetch PDF: ${resp.status} ${resp.statusText}`);
+                    }
+                    arrayBuffer = await resp.arrayBuffer();
+                    console.log("PDF data loaded, size:", arrayBuffer.byteLength, "bytes");
+                } catch (fetchError) {
+                    console.error("Failed to fetch PDF:", fetchError);
+                    throw new Error(`Failed to load PDF file: ${fetchError.message}`);
+                }
 
                 setLoadingProgress(60);
-                const loadingTask = pdfjsLib.getDocument({ data: arrayBuffer });
-                const pdf = await loadingTask.promise;
-                if (cancelled) return;
 
-                const totalPagesCount = pdf.numPages;
-                setTotalPages(totalPagesCount);
-                setPdfDoc(pdf);
+                // Load and render PDF
+                try {
+                    const loadingTask = pdfjsLib.getDocument({ data: arrayBuffer });
+                    const pdf = await loadingTask.promise;
+                    if (cancelled) return;
 
-                // Initialize placeholder pages for all PDFs
-                setPages(new Array(totalPagesCount).fill(null));
+                    const totalPagesCount = pdf.numPages;
+                    console.log("PDF loaded successfully, total pages:", totalPagesCount);
+                    setTotalPages(totalPagesCount);
+                    setPdfDoc(pdf);
 
-                setLoadingProgress(100);
+                    // Initialize placeholder pages for all PDFs
+                    const pageArray = new Array(totalPagesCount).fill(null);
+                    setPages(pageArray);
 
-                // Eagerly render the first few pages (e.g., first 2) to ensure immediate visibility
-                const initialPagesToRender = Math.min(totalPagesCount, 2);
-                for (let i = 1; i <= initialPagesToRender; i++) {
-                    renderPage(i);
+                    setLoadingProgress(100);
+
+                    // Eagerly render the first few pages directly here
+                    const initialPagesToRender = Math.min(totalPagesCount, 3);
+                    console.log(`Rendering initial ${initialPagesToRender} pages...`);
+
+                    const newRenderedPages = new Set();
+                    for (let i = 1; i <= initialPagesToRender; i++) {
+                        try {
+                            const page = await pdf.getPage(i);
+                            const viewport = page.getViewport({ scale: 1.5 });
+                            const canvas = document.createElement("canvas");
+                            canvas.width = Math.floor(viewport.width);
+                            canvas.height = Math.floor(viewport.height);
+                            const ctx = canvas.getContext("2d");
+                            await page.render({ canvasContext: ctx, viewport }).promise;
+                            const dataUrl = canvas.toDataURL("image/png");
+                            pageArray[i - 1] = dataUrl;
+                            newRenderedPages.add(i);
+                            console.log(`Initial page ${i} rendered`);
+                        } catch (pageErr) {
+                            console.error(`Error rendering initial page ${i}:`, pageErr);
+                        }
+                    }
+
+                    setPages([...pageArray]);
+                    setRenderedPages(newRenderedPages);
+
+                } catch (renderError) {
+                    console.error("Failed to render PDF:", renderError);
+                    throw new Error(`Failed to render PDF: ${renderError.message}`);
                 }
 
             } catch (e) {
@@ -107,8 +164,16 @@ export default function ClientPdfViewer({ file: fileProp }) {
 
     // Lazy render pages for large PDFs
     const renderPage = useCallback(async (pageNum) => {
-        if (!pdfDoc || renderedPages.has(pageNum)) return;
+        if (!pdfDoc) {
+            console.log(`Cannot render page ${pageNum}: pdfDoc not loaded`);
+            return;
+        }
+        if (renderedPages.has(pageNum)) {
+            console.log(`Page ${pageNum} already rendered, skipping`);
+            return;
+        }
 
+        console.log(`Rendering page ${pageNum}...`);
         try {
             const page = await pdfDoc.getPage(pageNum);
             const viewport = page.getViewport({ scale: 1.5 });
@@ -119,6 +184,7 @@ export default function ClientPdfViewer({ file: fileProp }) {
             await page.render({ canvasContext: ctx, viewport }).promise;
 
             const dataUrl = canvas.toDataURL("image/png");
+            console.log(`Page ${pageNum} rendered successfully`);
             setPages(prev => {
                 const newPages = [...prev];
                 newPages[pageNum - 1] = dataUrl;
@@ -128,7 +194,7 @@ export default function ClientPdfViewer({ file: fileProp }) {
         } catch (e) {
             console.error(`Error rendering page ${pageNum}:`, e);
         }
-    }, [pdfDoc, renderedPages]);
+    }, [pdfDoc]);
 
     // Intersection observer for lazy loading
     useEffect(() => {
@@ -194,13 +260,17 @@ export default function ClientPdfViewer({ file: fileProp }) {
 
             {err ? (
                 <div className="p-6 text-center">
+                    <div className="mb-4 text-red-500">
+                        <p className="font-semibold mb-2">Unable to display PDF</p>
+                        <p className="text-sm text-base-content/70">{err}</p>
+                    </div>
                     <a
-                        className="btn"
+                        className="btn btn-primary"
                         href={url}
                         target="_blank"
                         rel="noreferrer"
                     >
-                        Open PDF
+                        Open PDF in External Viewer
                     </a>
                 </div>
             ) : (
