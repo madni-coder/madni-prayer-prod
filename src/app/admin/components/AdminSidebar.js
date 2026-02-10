@@ -41,6 +41,7 @@ const navigation = [
         href: "/admin/durood-sharif",
         icon: Coins,
     },
+    
     {
         name: "Zikr Records",
         href: "/admin/zikrCounts",
@@ -55,6 +56,10 @@ const navigation = [
         name: "Users  ",
         href: "/admin/users",
         icon: UsersRound
+    }, {
+        name: "Local Store",
+        href: "/admin/local-store",
+        icon: Gift,
     },
 ];
 
@@ -84,14 +89,14 @@ export default function AdminSidebar({ isOpen, onClose, onLogout }) {
                                     key={item.name}
                                     href={item.href}
                                     className={`${isActive
-                                            ? "bg-blue-50 border-r-4 border-blue-500 text-blue-700"
-                                            : "text-gray-600 hover:bg-gray-50 hover:text-gray-900"
+                                        ? "bg-blue-50 border-r-4 border-blue-500 text-blue-700"
+                                        : "text-gray-600 hover:bg-gray-50 hover:text-gray-900"
                                         } group flex items-center px-2 py-2 text-sm font-medium rounded-md transition-colors duration-150`}
                                 >
                                     <item.icon
                                         className={`${isActive
-                                                ? "text-blue-500"
-                                                : "text-gray-400 group-hover:text-gray-500"
+                                            ? "text-blue-500"
+                                            : "text-gray-400 group-hover:text-gray-500"
                                             } mr-3 flex-shrink-0 h-6 w-6`}
                                         aria-hidden="true"
                                     />
@@ -145,14 +150,14 @@ export default function AdminSidebar({ isOpen, onClose, onLogout }) {
                                     href={item.href}
                                     onClick={onClose}
                                     className={`${isActive
-                                            ? "bg-blue-50 border-r-4 border-blue-500 text-blue-700"
-                                            : "text-gray-600 hover:bg-gray-50 hover:text-gray-900"
+                                        ? "bg-blue-50 border-r-4 border-blue-500 text-blue-700"
+                                        : "text-gray-600 hover:bg-gray-50 hover:text-gray-900"
                                         } group flex items-center px-2 py-2 text-sm font-medium rounded-md transition-colors duration-150`}
                                 >
                                     <item.icon
                                         className={`${isActive
-                                                ? "text-blue-500"
-                                                : "text-gray-400 group-hover:text-gray-500"
+                                            ? "text-blue-500"
+                                            : "text-gray-400 group-hover:text-gray-500"
                                             } mr-3 flex-shrink-0 h-6 w-6`}
                                         aria-hidden="true"
                                     />
