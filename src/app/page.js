@@ -78,7 +78,7 @@ const sections = [
         ),
     },
     {
-        name: "Olmaa Stores",
+        name: "Olmaa's Stores",
         href: "/local-stores",
         icon: (
             <FaStore className="text-3xl lg:text-6xl text-emerald-400" />

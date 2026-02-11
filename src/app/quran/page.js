@@ -95,6 +95,75 @@ export default function Page() {
     const [currentObjectUrl, setCurrentObjectUrl] = useState(null);
     const router = useRouter();
 
+    // Theme note: allow user to record how many para they completed
+    const [noteText, setNoteText] = useState("");
+    const [completedPara, setCompletedPara] = useState("");
+    const [noteSavedAt, setNoteSavedAt] = useState(null);
+    const [noteHistory, setNoteHistory] = useState([]);
+
+    useEffect(() => {
+        try {
+            const raw = localStorage.getItem("theme_note");
+            if (raw) {
+                const parsed = JSON.parse(raw);
+                if (parsed) {
+                    setNoteText(parsed.text || "");
+                    setCompletedPara(parsed.completedPara || "");
+                    setNoteSavedAt(parsed.savedAt || null);
+                }
+            }
+            const rawHist = localStorage.getItem("theme_note_history");
+            if (rawHist) {
+                try {
+                    const parsedHist = JSON.parse(rawHist);
+                    if (Array.isArray(parsedHist) && parsedHist.length > 0) setNoteHistory([parsedHist[0]]);
+                    else if (parsedHist && typeof parsedHist === 'object') setNoteHistory([parsedHist]);
+                } catch (e) {
+                    // ignore
+                }
+            }
+        } catch (e) {
+            // ignore
+        }
+    }, []);
+
+    const saveThemeNote = () => {
+        try {
+            const payload = {
+                text: noteText,
+                completedPara: completedPara,
+                savedAt: Date.now(),
+            };
+            localStorage.setItem("theme_note", JSON.stringify(payload));
+            setNoteSavedAt(payload.savedAt);
+            // keep only single latest history entry (overwrite)
+            const newEntry = { text: noteText, savedAt: payload.savedAt };
+            const newHist = [newEntry];
+            try {
+                localStorage.setItem("theme_note_history", JSON.stringify(newHist));
+            } catch (e) {
+                // ignore
+            }
+            setNoteHistory(newHist);
+            console.log("Theme note saved", payload);
+        } catch (e) {
+            console.error("Failed to save theme note", e);
+            alert("Failed to save note");
+        }
+    };
+
+    const clearThemeNote = () => {
+        try {
+            localStorage.removeItem("theme_note");
+            localStorage.removeItem("theme_note_history");
+        } catch (e) {
+            // ignore
+        }
+        setNoteText("");
+        setNoteHistory([]);
+        setNoteSavedAt(null);
+    };
+
     // keyboard handlers for reader modal + lock body scroll while open
     useEffect(() => {
         if (!showReader) return;
@@ -265,6 +334,7 @@ export default function Page() {
             </h2>
             <div className="glass-card p-8 max-w-4xl w-full bg-base-200 text-base-content pl-4 mx-auto">
                 {/* Toggle buttons for Surah/Para/Kanzul Imaan */}
+                {/* Theme Note moved to bottom; kept state and save handler only */}
                 <div className="flex gap-2 mb-4">
                     <button
                         className={`btn btn-xxl ${view === "para" ? "btn-primary" : "btn-ghost"
@@ -440,6 +510,39 @@ export default function Page() {
                         </div>
                     ) : null}
                 </div>
+                {/* Theme Note (bottom) - plain responsive textbox with Save */}
+                <div className="mt-6 w-full">
+                    <textarea
+                        placeholder="Kaha tak padh liya ..."
+                        value={noteText}
+                        onChange={(e) => setNoteText(e.target.value)}
+                        className="w-full textarea textarea-bordered"
+                        rows={3}
+                        style={{ resize: "vertical" }}
+                    />
+                    <div className="flex items-center justify-end mt-2 gap-2">
+                        <button className="btn btn-primary" onClick={saveThemeNote}>
+                            Save
+                        </button>
+                        <button className="btn btn-error" onClick={clearThemeNote}>
+                            Clear
+                        </button>
+                    </div>
+                    {/* History rows: show recent saves (most recent first) */}
+                    <div className="mt-3 space-y-2">
+                        {noteHistory.length === 0 ? (
+                            <div className="text-sm text-base-content/60">No notes yet.</div>
+                        ) : (
+                            noteHistory.map((h, idx) => (
+                                <div key={h.savedAt || idx} className="p-3 bg-base-100 border border-base-300 rounded-md">
+                                    <div className="text-xs text-base-content/60">{new Date(h.savedAt).toLocaleString()}</div>
+                                    <div className="text-sm mt-1">{h.text}</div>
+                                </div>
+                            ))
+                        )}
+                    </div>
+                </div>
+
                 {/* In-app full-window reader modal (mobile/tablet/web responsive) */}
                 {showReader && (
                     <div className="fixed inset-0 z-[120] bg-black bg-opacity-80">
