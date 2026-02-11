@@ -11,7 +11,7 @@ import {
     FaGift,
     FaMicrophone,
     FaPhoneSquare,
-    FaHandPointRight, FaUser,
+    FaHandPointRight, FaUser, FaStore,
 } from "react-icons/fa";
 import { Megaphone } from "lucide-react";
 import Image from "next/image";
@@ -69,6 +69,7 @@ const sections = [
         ),
     },
 
+
     {
         name: "My Profile",
         href: "/myProfile",
@@ -76,6 +77,14 @@ const sections = [
             <FaUser className="text-3xl lg:text-6xl text-cyan-500" />
         ),
     },
+    {
+        name: "Olmaa Stores",
+        href: "/local-stores",
+        icon: (
+            <FaStore className="text-3xl lg:text-6xl text-emerald-400" />
+        ),
+    },
+
 ];
 
 export default function Home() {

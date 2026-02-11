@@ -120,3 +120,20 @@ model FreeService {
 
   @@map("free_services")
 }
+
+model LocalStore {
+  id          Int      @id @default(autoincrement())
+  fullName    String
+  mobile      String?
+  shopName    String
+  shopAddress String?
+  workType    String?
+  description String?
+  imageName   String?
+  imageSrc    String?
+  imageSrcPortrait String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@map("local_stores")
+}

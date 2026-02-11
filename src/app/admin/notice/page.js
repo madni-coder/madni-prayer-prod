@@ -35,6 +35,7 @@ export default function NoticeAdmin() {
     const [showAllBackgrounds, setShowAllBackgrounds] = useState(false); // Toggle for showing all backgrounds
     const [showEmojiPicker, setShowEmojiPicker] = useState(false); // Emoji picker visibility
     const [editorKey, setEditorKey] = useState(0); // Force toolbar re-render
+    const [pendingImage, setPendingImage] = useState(null); // image selected but not uploaded
 
     // TipTap Editor
     const editor = useEditor({
@@ -1019,9 +1020,47 @@ export default function NoticeAdmin() {
                             Upload Images
                         </h2>
                         <div className="flex-1">
-                            <SocialMediaImageUpload
-                                onUploadComplete={fetchImages}
-                            />
+                            <div>
+                                <SocialMediaImageUpload
+                                    autoUploadToServer={false}
+                                    onUploadComplete={(img) => setPendingImage(img)}
+                                />
+                                <div className="mt-3 flex items-center gap-2">
+                                    <button
+                                        onClick={async () => {
+                                            if (!pendingImage) return;
+                                            setIsPostingImage(true);
+                                            try {
+                                                // Convert data URL to blob
+                                                const res = await fetch(pendingImage.imageSrc);
+                                                const blob = await res.blob();
+                                                const formData = new FormData();
+                                                const fileName = pendingImage.fileName || `notice_${Date.now()}.jpg`;
+                                                formData.append('image', blob, fileName);
+
+                                                await apiClient.post('/api/api-notice', formData, {
+                                                    headers: { 'Content-Type': 'multipart/form-data' },
+                                                });
+                                                toast.success('Uploaded');
+                                                setPendingImage(null);
+                                                await fetchImages();
+                                            } catch (err) {
+                                                console.error('Upload failed', err);
+                                                toast.error(err?.message || String(err));
+                                            } finally {
+                                                setIsPostingImage(false);
+                                            }
+                                        }}
+                                        disabled={!pendingImage || isPostingImage}
+                                        className={`px-4 py-2 rounded-md ${!pendingImage ? 'bg-gray-200 text-gray-600' : 'bg-blue-600 text-white hover:bg-blue-700'}`}
+                                    >
+                                        {isPostingImage ? 'Uploading...' : 'Upload'}
+                                    </button>
+                                    {pendingImage && (
+                                        <div className="text-sm text-gray-600">Ready to upload: {pendingImage.fileName}</div>
+                                    )}
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>

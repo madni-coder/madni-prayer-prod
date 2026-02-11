@@ -3,13 +3,14 @@
 import { useState, useRef } from "react";
 import { Upload, X, Smartphone } from "lucide-react";
 
-export default function SocialMediaImageUpload({ onUploadComplete }) {
+export default function SocialMediaImageUpload({ onUploadComplete, uploadUrl = "/api/local-stores", httpMethod = "POST", autoUploadToServer = false }) {
     const [selectedFile, setSelectedFile] = useState(null);
     const [previewUrl, setPreviewUrl] = useState(null);
     const [uploading, setUploading] = useState(false);
     const [error, setError] = useState(null);
     const [processing, setProcessing] = useState(false); // added
     const fileInputRef = useRef(null);
+    const abortControllerRef = useRef(null);
 
     // Utility: load image from URL
     const loadImage = (url) =>
@@ -71,7 +72,7 @@ export default function SocialMediaImageUpload({ onUploadComplete }) {
             const processedFile = new File(
                 [blob],
                 (file.name || "image").replace(/\.[^.]+$/, "") +
-                    "-portrait.jpg",
+                "-portrait.jpg",
                 {
                     type: "image/jpeg",
                     lastModified: Date.now(),
@@ -106,14 +107,83 @@ export default function SocialMediaImageUpload({ onUploadComplete }) {
                 await processToPortrait(file);
             setSelectedFile(processedFile);
             setPreviewUrl(processedPreviewUrl);
+            if (autoUploadToServer) {
+                // upload to server using FormData
+                await uploadFile(processedFile);
+            } else {
+                // Convert processed file to data URL and notify parent (no server call)
+                const dataUrl = await fileToDataUrl(processedFile);
+                if (onUploadComplete) onUploadComplete({ fileName: processedFile.name, imageSrc: dataUrl, imageSrcPortrait: dataUrl });
+            }
         } catch (e) {
             setError(e?.message || "Failed to process image");
             // fallback to raw preview if processing fails
             const url = URL.createObjectURL(file);
             setSelectedFile(file);
             setPreviewUrl(url);
+            if (autoUploadToServer) {
+                await uploadFile(file);
+            } else {
+                const dataUrl = await fileToDataUrl(file);
+                if (onUploadComplete) onUploadComplete({ fileName: file.name, imageSrc: dataUrl, imageSrcPortrait: dataUrl });
+            }
         } finally {
             setProcessing(false);
+        }
+    };
+
+    // Convert a File/Blob to data URL
+    const fileToDataUrl = (file) =>
+        new Promise((resolve, reject) => {
+            const reader = new FileReader();
+            reader.onload = () => resolve(reader.result);
+            reader.onerror = reject;
+            reader.readAsDataURL(file);
+        });
+
+    const uploadFile = async (file) => {
+        if (!file) return;
+
+        // Abort any previous upload
+        if (abortControllerRef.current) {
+            try {
+                abortControllerRef.current.abort();
+            } catch (_) { }
+        }
+        const controller = new AbortController();
+        abortControllerRef.current = controller;
+
+        setUploading(true);
+        setError(null);
+
+        try {
+            const formData = new FormData();
+            formData.append("image", file);
+
+            const response = await fetch(uploadUrl, {
+                method: httpMethod,
+                body: formData,
+                signal: controller.signal,
+            });
+
+            if (!response.ok) {
+                const errorData = await response.json().catch(() => ({}));
+                throw new Error(errorData.error || "Upload failed");
+            }
+
+            const json = await response.json();
+            // Reset selection preview after successful upload
+            handleCancel();
+            if (onUploadComplete) onUploadComplete(json);
+        } catch (err) {
+            if (err.name === 'AbortError') {
+                setError('Upload cancelled');
+            } else {
+                setError(err.message || 'Upload failed');
+            }
+        } finally {
+            setUploading(false);
+            abortControllerRef.current = null;
         }
     };
 
@@ -122,6 +192,13 @@ export default function SocialMediaImageUpload({ onUploadComplete }) {
     };
 
     const handleCancel = () => {
+        // Abort in-progress server upload if any
+        if (abortControllerRef.current) {
+            try {
+                abortControllerRef.current.abort();
+            } catch (_) { }
+            abortControllerRef.current = null;
+        }
         setSelectedFile(null);
         if (previewUrl) URL.revokeObjectURL(previewUrl);
         setPreviewUrl(null);
@@ -131,37 +208,7 @@ export default function SocialMediaImageUpload({ onUploadComplete }) {
         }
     };
 
-    const handleUpload = async () => {
-        if (!selectedFile) return;
-
-        setUploading(true);
-        setError(null);
-
-        try {
-            const formData = new FormData();
-            // Upload the processed portrait file
-            formData.append("image", selectedFile);
-
-            const response = await fetch("/api/api-notice", {
-                method: "POST",
-                body: formData,
-            });
-
-            if (!response.ok) {
-                const errorData = await response.json().catch(() => ({}));
-                throw new Error(errorData.error || "Upload failed");
-            }
-
-            await response.json();
-            // Reset form after successful upload
-            handleCancel();
-            if (onUploadComplete) onUploadComplete();
-        } catch (err) {
-            setError(err.message || "Upload failed");
-        } finally {
-            setUploading(false);
-        }
-    };
+    // Manual upload removed — uploads happen automatically after selection
 
     return (
         <div className="w-full">
@@ -182,6 +229,7 @@ export default function SocialMediaImageUpload({ onUploadComplete }) {
                     <Upload className="mx-auto h-12 w-12 text-gray-400" />
                     <div className="mt-4">
                         <button
+                            type="button"
                             onClick={handleUploadClick}
                             disabled={processing || uploading}
                             className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50"
@@ -229,21 +277,18 @@ export default function SocialMediaImageUpload({ onUploadComplete }) {
                                     {error}
                                 </p>
                             )}
-                            <div className="flex space-x-3 mt-4">
+                            <div className="flex space-x-3 mt-4 items-center">
                                 <button
+                                    type="button"
                                     onClick={handleCancel}
-                                    disabled={uploading || processing}
+                                    disabled={processing}
                                     className="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed"
                                 >
                                     Cancel
                                 </button>
-                                <button
-                                    onClick={handleUpload}
-                                    disabled={uploading || processing}
-                                    className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
-                                >
-                                    {uploading ? "Uploading..." : "Upload"}
-                                </button>
+                                <div className="text-sm text-gray-600">
+                                    {processing ? 'Processing...' : 'Image ready'}
+                                </div>
                             </div>
                         </div>
                     </div>

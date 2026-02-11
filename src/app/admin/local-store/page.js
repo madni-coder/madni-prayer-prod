@@ -1,89 +1,90 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { toast } from "react-toastify";
 import { useRouter } from "next/navigation";
-import SocialMediaImageUpload from "../../../components/SocialMediaImageUpload";
+import apiClient from "../../../lib/apiClient";
 
-export default function LocalStorePage() {
+export default function LocalStoreListPage() {
     const router = useRouter();
-    const [form, setForm] = useState({
-        fullName: "",
-        mobile: "",
-        shopName: "",
-        shopAddress: "",
-        workType: "",
-        description: "",
-    });
+    const [stores, setStores] = useState([]);
+    const [loading, setLoading] = useState(false);
 
-    function handleChange(e) {
-        const { name, value } = e.target;
-        setForm((p) => ({ ...p, [name]: value }));
-    }
-
-    function handleSubmit(e) {
-        e.preventDefault();
+    const fetchStores = async () => {
+        setLoading(true);
         try {
-            const existing = JSON.parse(localStorage.getItem("localStores") || "[]");
-            existing.push({ ...form, id: Date.now() });
-            localStorage.setItem("localStores", JSON.stringify(existing));
-            alert("Saved to local storage");
-            router.push("/admin");
+            const { data } = await apiClient.get('/api/local-stores');
+            if (data?.ok) setStores(data.data || []);
+            else setStores([]);
         } catch (err) {
-            console.error(err);
-            alert("Failed to save");
+            console.error('Failed to fetch stores', err);
+            toast.error('Failed to fetch local stores.');
+            setStores([]);
+        } finally {
+            setLoading(false);
         }
-    }
+    };
+
+    useEffect(() => {
+        fetchStores();
+    }, []);
+
+
 
     return (
         <div className="p-6">
-            <h1 className="text-2xl font-bold text-error mb-4">Local Store</h1>
-
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                <div className="lg:col-span-2">
-                    <form onSubmit={handleSubmit} className="space-y-4 max-w-xl">
-                        <div>
-                            <label className="block text-sm font-medium text-gray-700">Full name</label>
-                            <input name="fullName" value={form.fullName} onChange={handleChange} className="mt-1 block w-full rounded-md border-gray-300 shadow-sm" />
-                        </div>
-
-                        <div>
-                            <label className="block text-sm font-medium text-gray-700">Mobile</label>
-                            <input name="mobile" value={form.mobile} onChange={handleChange} className="mt-1 block w-full rounded-md border-gray-300 shadow-sm" />
-                        </div>
-
-                        <div>
-                            <label className="block text-sm font-medium text-gray-700">Shop name</label>
-                            <input name="shopName" value={form.shopName} onChange={handleChange} className="mt-1 block w-full rounded-md border-gray-300 shadow-sm" />
-                        </div>
-
-                        <div>
-                            <label className="block text-sm font-medium text-gray-700">Shop address</label>
-                            <input name="shopAddress" value={form.shopAddress} onChange={handleChange} className="mt-1 block w-full rounded-md border-gray-300 shadow-sm" />
-                        </div>
-
-                        <div>
-                            <label className="block text-sm font-medium text-gray-700">Work type</label>
-                            <input name="workType" value={form.workType} onChange={handleChange} className="mt-1 block w-full rounded-md border-gray-300 shadow-sm" />
-                        </div>
-
-                        <div>
-                            <label className="block text-sm font-medium text-gray-700">Description</label>
-                            <textarea name="description" value={form.description} onChange={handleChange} rows={4} className="mt-1 block w-full rounded-md border-gray-300 shadow-sm" />
-                        </div>
-
-                        <div>
-                            <button type="submit" className="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-md">Save</button>
-                        </div>
-                    </form>
+            <div className="flex items-center justify-between mb-6">
+                <div className="flex items-center gap-4">
+                    <h1 className="text-2xl font-bold text-gray-800">Local Stores</h1>
+                    <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-50 text-blue-700">{stores.length} stores</span>
                 </div>
 
-                <div className="lg:col-span-1">
-                    <div className="bg-white border rounded-lg p-4">
-                        <SocialMediaImageUpload onUploadComplete={() => {
-                            console.log('image uploaded');
-                        }} />
-                    </div>
+                <div className="flex items-center gap-2">
+                    <button onClick={() => router.push('/admin/local-store/createStore')} className="btn btn-primary">Create Store</button>
                 </div>
+            </div>
+
+            <div className="overflow-x-auto bg-white rounded-xl shadow-md">
+                <table className="min-w-full divide-y divide-gray-200">
+                    <thead className="bg-gradient-to-r from-blue-50 to-white">
+                        <tr>
+                            <th className="px-6 py-3 text-left text-xs font-semibold text-blue-700 uppercase tracking-wider">Name</th>
+                            <th className="px-6 py-3 text-left text-xs font-semibold text-blue-700 uppercase tracking-wider">Shop name</th>
+                            <th className="px-6 py-3 text-left text-xs font-semibold text-blue-700 uppercase tracking-wider">Address</th>
+                            <th className="px-6 py-3 text-left text-xs font-semibold text-blue-700 uppercase tracking-wider">Work type</th>
+                            <th className="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody className="bg-white">
+                        {loading ? (
+                            <tr><td colSpan={5} className="px-6 py-4 text-sm text-gray-500">Loading...</td></tr>
+                        ) : stores.length === 0 ? (
+                            <tr>
+                                <td colSpan={5} className="px-6 py-8 text-center text-sm text-gray-500">No stores found.</td>
+                            </tr>
+                        ) : (
+                            stores.map((s, idx) => (
+                                <tr key={s.id} className={`${idx % 2 === 0 ? 'bg-white' : 'bg-gray-50'} hover:bg-gray-100`}>
+                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                        <div className="flex items-center gap-3">
+                                            <div className="w-10 h-10 rounded-md bg-gradient-to-br from-blue-100 to-blue-200 flex items-center justify-center text-blue-700 font-semibold">{(s.fullName || '').charAt(0) || 'S'}</div>
+                                            <div className="cursor-pointer" onClick={() => router.push(`/admin/local-store/${s.id}`)}>
+                                                <div className="text-sm font-medium text-gray-900">{s.fullName}</div>
+                                                <div className="text-xs text-gray-500">ID: {s.id}</div>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700 cursor-pointer" onClick={() => router.push(`/admin/local-store/${s.id}`)}>{s.shopName}</td>
+                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700 cursor-pointer" onClick={() => router.push(`/admin/local-store/${s.id}`)}>{s.shopAddress || '-'}</td>
+                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700 cursor-pointer" onClick={() => router.push(`/admin/local-store/${s.id}`)}>{s.workType || '-'}</td>
+                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                        <button className="btn btn-sm btn-ghost" onClick={() => router.push(`/admin/local-store/editStore?id=${s.id}`)}>Edit</button>
+                                    </td>
+                                </tr>
+                            ))
+                        )}
+                    </tbody>
+                </table>
             </div>
         </div>
     );

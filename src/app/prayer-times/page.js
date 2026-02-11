@@ -485,7 +485,7 @@ export default function PrayerTimesPage() {
     // Add handler for geolocation-based prayer times
     const handleGetLocation = () => {
         if (!navigator.geolocation) {
-            alert("Geolocation is not supported by your browser.");
+            console.warn("Geolocation is not supported by your browser.");
             return;
         }
         setLoading(true);
@@ -617,12 +617,12 @@ export default function PrayerTimesPage() {
                     setShowLocationModal(false);
                     setLoading(false);
                 } catch (err) {
-                    alert("Error fetching prayer times for your location.");
+                    console.warn("Error fetching prayer times for your location.");
                     setLoading(false);
                 }
             },
             (err) => {
-                alert("Unable to retrieve your location.");
+                console.warn("Unable to retrieve your location.");
                 setLoading(false);
             }
         );
@@ -721,7 +721,7 @@ export default function PrayerTimesPage() {
         } catch (e) {
             console.error("City fetch error", e);
             setLoading(false);
-            alert("Error fetching prayer times for selected city.");
+            console.warn("Error fetching prayer times for selected city.");
         }
     };
     // Removed: This logic is now handled in the initial fetch useEffect above
