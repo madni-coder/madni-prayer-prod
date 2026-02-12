@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from "react";
 import { toast } from "react-toastify";
 import { MapPin, Save, Check } from "lucide-react";
-import { FaAngleLeft, FaMosque, FaTimes } from "react-icons/fa";
+import { FaAngleLeft, FaMosque, FaTimes, FaWhatsapp, FaCopy, FaCheck } from "react-icons/fa";
 import { useRouter } from "next/navigation";
 import apiClient from "../../lib/apiClient";
 
@@ -41,6 +41,7 @@ function DigitalClock() {
                     {ampm}
                 </span>
             </div>
+
         </div>
     );
 }
@@ -67,6 +68,10 @@ export default function JamatTimesPage() {
     const [mapEmbedUrl, setMapEmbedUrl] = useState(null);
     const [savedMasjid, setSavedMasjid] = useState(null);
     const [hasLoadedSavedMasjid, setHasLoadedSavedMasjid] = useState(false);
+    const [reportVisible, setReportVisible] = useState(false);
+    const [copied, setCopied] = useState(false);
+    const reportPhone = "96913 02711";
+    const reportWaLink = `https://wa.me/${reportPhone.replace(/\s+/g, "")}`;
 
     // visibleMasjids respects the Raipur-only toggle
     // Default: show Bilaspur and entries without a city (city === null/undefined/empty)
@@ -436,6 +441,20 @@ export default function JamatTimesPage() {
         } catch (err) {
             console.error("Failed to open map URL:", err);
             showToast("Unable to open the map on this device.", "error");
+        }
+    };
+
+    const reportUs = () => {
+        setReportVisible(true);
+    };
+
+    const copyNumber = async () => {
+        try {
+            await navigator.clipboard.writeText(reportPhone);
+            setCopied(true);
+            setTimeout(() => setCopied(false), 2000);
+        } catch (e) {
+            console.error("Copy failed", e);
         }
     };
 
@@ -842,6 +861,7 @@ export default function JamatTimesPage() {
                                     : "Save This Masjid"}
                             </span>
                         </button>
+
                     </div>
                 )}
                 {selectedMasjidData && (
@@ -854,10 +874,62 @@ export default function JamatTimesPage() {
                             <MapPin className="w-5 h-5" />
                             <span>See This Masjid Location On Map</span>
                         </button>
+                        <div className="mt-4">
+                            <button
+                                type="button"
+                                onClick={reportUs}
+                                className="inline-flex items-center gap-2 px-4 py-3 btn btn-error text-white transition font-semibold"
+                            >
+                                <FaWhatsapp className="w-5 h-5" />
+                                <span>Jamat Time Changed ? Report Us</span>
+                            </button>
+                            {reportVisible && (
+                                <div className="mt-3 w-full max-w-full p-3 rounded-md flex flex-col md:flex-row items-start md:items-center justify-between gap-3 border border-base-200 bg-base-100 dark:bg-base-900 dark:border-base-700 text-left relative">
+                                    <div className="flex items-start md:items-center gap-3 flex-1 min-w-0">
+                                        <div className="text-sm text-base-content dark:text-base-content/80 min-w-0">
+                                            <div className="mb-1 md:mb-0 break-words md:truncate">Mistake in Jamat times — report by sending correct Jamat time on WhatsApp</div>
+                                            <div className="flex items-center gap-3">
+                                                <a
+                                                    href={reportWaLink}
+                                                    target="_blank"
+                                                    rel="noopener noreferrer"
+                                                    className="inline-flex items-center gap-2 text-green-600 hover:underline"
+                                                >
+                                                    <FaWhatsapp className="w-4 h-4" />
+                                                    <span className="font-mono whitespace-nowrap">{reportPhone}</span>
+                                                </a>
+                                                <button
+                                                    type="button"
+                                                    onClick={copyNumber}
+                                                    aria-label="Copy phone number"
+                                                    className="inline-flex items-center justify-center p-1 rounded-md text-base-content hover:bg-base-200 dark:hover:bg-base-800"
+                                                >
+                                                    {copied ? (
+                                                        <FaCheck className="w-4 h-4 text-green-600" />
+                                                    ) : (
+                                                        <FaCopy className="w-4 h-4" />
+                                                    )}
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <button
+                                        type="button"
+                                        onClick={() => setReportVisible(false)}
+                                        aria-label="Close report message"
+                                        className="absolute top-2 right-2 text-base-content dark:text-base-content/80 hover:text-primary p-1 rounded"
+                                    >
+                                        <FaTimes />
+                                    </button>
+                                </div>
+                            )}
+                        </div>
                     </div>
+
                 )}
 
             </div>
+
         </div>
     );
 }

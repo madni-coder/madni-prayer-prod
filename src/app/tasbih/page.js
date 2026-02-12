@@ -515,7 +515,7 @@ export default function Tasbih() {
                             <h3 className="font-bold text-lg">Target Achieved</h3>
                             <p className="py-4">
                                 You have reached your target of <strong className="text-primary">{target}</strong>.
-                                Would you like to submit this count now or continue reading?
+                                Would you like to Submit Or Skip?
                             </p>
                             <div className="modal-action justify-center flex gap-3">
                                 <button
