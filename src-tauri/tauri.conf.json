@@ -5,7 +5,7 @@
     "identifier": "com.prayer.raahe",
     "build": {
         "frontendDist": "../out",
-        "devUrl": "http://192.168.0.221:3000",
+        "devUrl": "https://raahehidayat.vercel.app",
         "beforeDevCommand": "npm run dev",
         "beforeBuildCommand": "npm run build:tauri"
     },
