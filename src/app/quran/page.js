@@ -145,6 +145,7 @@ export default function Page() {
                 // ignore
             }
             setNoteHistory(newHist);
+            setNoteText("");
             console.log("Theme note saved", payload);
         } catch (e) {
             console.error("Failed to save theme note", e);
@@ -333,9 +334,11 @@ export default function Page() {
                 Quran Sharif
             </h2>
             <div className="glass-card p-8 max-w-4xl w-full bg-base-200 text-base-content pl-4 mx-auto">
+
                 {/* Toggle buttons for Surah/Para/Kanzul Imaan */}
                 {/* Theme Note moved to bottom; kept state and save handler only */}
                 <div className="flex gap-2 mb-4">
+
                     <button
                         className={`btn btn-xxl ${view === "para" ? "btn-primary" : "btn-ghost"
                             }`}
@@ -357,7 +360,40 @@ export default function Page() {
                         Kanzul Imaan
                     </button>
                 </div>
+                <h1 className="text-primary text-xl font-bold mb-4">Reminder Note</h1>
 
+                <div className="mt-6 w-full">
+                    <textarea
+                        placeholder="Maine Aaj Kaha tak padh liya ..."
+                        value={noteText}
+                        onChange={(e) => setNoteText(e.target.value)}
+                        className="w-full textarea textarea-bordered"
+                        rows={3}
+                        style={{ resize: "vertical" }}
+                    />
+                    <div className="flex items-center justify-end mt-2 gap-2">
+                        <button className="btn btn-primary" onClick={saveThemeNote}>
+                            Save
+                        </button>
+                        <button className="btn btn-error" onClick={clearThemeNote}>
+                            Clear
+                        </button>
+                    </div>
+                    {/* History rows: show recent saves (most recent first) */}
+
+                    <div className="mt-3 space-y-2">
+                        {noteHistory.length === 0 ? (
+                            <div className="text-sm text-base-content/60 mb-3">No notes yet.</div>
+                        ) : (
+                            noteHistory.map((h, idx) => (
+                                <div key={h.savedAt || idx} className="p-3 bg-base-100 border border-info rounded-md mb-3">
+                                    <div className="text-xs text-base-content/60">{new Date(h.savedAt).toLocaleString()}</div>
+                                    <div className="text-sm mt-1 text-white font-bold">{h.text}</div>
+                                </div>
+                            ))
+                        )}
+                    </div>
+                </div>
                 <div
                     className={
                         view === "para"
@@ -511,37 +547,6 @@ export default function Page() {
                     ) : null}
                 </div>
                 {/* Theme Note (bottom) - plain responsive textbox with Save */}
-                <div className="mt-6 w-full">
-                    <textarea
-                        placeholder="Kaha tak padh liya ..."
-                        value={noteText}
-                        onChange={(e) => setNoteText(e.target.value)}
-                        className="w-full textarea textarea-bordered"
-                        rows={3}
-                        style={{ resize: "vertical" }}
-                    />
-                    <div className="flex items-center justify-end mt-2 gap-2">
-                        <button className="btn btn-primary" onClick={saveThemeNote}>
-                            Save
-                        </button>
-                        <button className="btn btn-error" onClick={clearThemeNote}>
-                            Clear
-                        </button>
-                    </div>
-                    {/* History rows: show recent saves (most recent first) */}
-                    <div className="mt-3 space-y-2">
-                        {noteHistory.length === 0 ? (
-                            <div className="text-sm text-base-content/60">No notes yet.</div>
-                        ) : (
-                            noteHistory.map((h, idx) => (
-                                <div key={h.savedAt || idx} className="p-3 bg-base-100 border border-base-300 rounded-md">
-                                    <div className="text-xs text-base-content/60">{new Date(h.savedAt).toLocaleString()}</div>
-                                    <div className="text-sm mt-1">{h.text}</div>
-                                </div>
-                            ))
-                        )}
-                    </div>
-                </div>
 
                 {/* In-app full-window reader modal (mobile/tablet/web responsive) */}
                 {showReader && (
