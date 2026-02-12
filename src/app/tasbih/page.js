@@ -42,6 +42,16 @@ export default function Tasbih() {
     });
     const [submitting, setSubmitting] = useState(false);
     const [theme, setTheme] = useState("system");
+    const [target, setTarget] = useState(() => {
+        if (typeof window !== "undefined") {
+            const saved = localStorage.getItem("tasbihTarget");
+            return saved ? Number(saved) : 0;
+        }
+        return 0;
+    });
+    const [targetInput, setTargetInput] = useState("");
+    const [showTargetReached, setShowTargetReached] = useState(false);
+    const [allowContinueAfterTarget, setAllowContinueAfterTarget] = useState(false);
 
     // Pagination state
     const [currentPage, setCurrentPage] = useState(1);
@@ -71,6 +81,13 @@ export default function Tasbih() {
         }
     }, [history]);
 
+    // Persist target
+    useEffect(() => {
+        if (typeof window !== "undefined") {
+            localStorage.setItem("tasbihTarget", String(target || 0));
+        }
+    }, [target]);
+
     // Detect theme changes
     useEffect(() => {
         if (typeof window !== "undefined") {
@@ -96,6 +113,29 @@ export default function Tasbih() {
         if (!t) return;
         if (t.type === "error") toast.error(t.text || t.message || String(t));
         else toast.success(t.text || t.message || String(t));
+    };
+
+    // local-only submit (skip API call) used by modal Skip action
+    const skipSubmit = (countToSubmit) => {
+        const v = Number(countToSubmit);
+        if (!v || v <= 0) {
+            showToast({ type: 'error', text: 'Count Value must be greater than 0' });
+            return;
+        }
+
+        const newEntry = {
+            count: v,
+            weeklyCounts: v,
+            date: new Date().toLocaleDateString(),
+            time: new Date().toLocaleTimeString(),
+        };
+        setHistory((prev) => [newEntry, ...prev]);
+        setCount(0);
+        setTarget(0);
+        if (typeof window !== 'undefined') localStorage.removeItem('tasbihTarget');
+        setShowTargetReached(false);
+        setAllowContinueAfterTarget(false);
+        showToast({ type: 'success', text: 'Count saved locally' });
     };
 
     // Helper to get effective theme
@@ -156,17 +196,87 @@ export default function Tasbih() {
         }
     }, []);
 
-    // shared increment handler (1..10000 then show popup)
+    // shared increment handler (respects custom target and global 10000 limit)
     const increment = useCallback(() => {
         setCount((c) => {
+            // global hard limit
             if (c >= 10000) {
                 setShowLimitReached(true);
                 return c;
             }
+
+            // if a custom target is set and user hasn't opted to continue,
+            // show target reached modal when about to reach/just reached target
+            if (target > 0 && !allowContinueAfterTarget) {
+                if (c + 1 > target) {
+                    // do not increment beyond target until user chooses to continue
+                    setShowTargetReached(true);
+                    return c;
+                }
+                if (c + 1 === target) {
+                    triggerVibration();
+                    setShowTargetReached(true);
+                    return c + 1;
+                }
+            }
+
             triggerVibration(); // Add vibration feedback
             return c + 1;
         });
-    }, [triggerVibration]);
+    }, [triggerVibration, target, allowContinueAfterTarget]);
+
+    // submit helper used by main submit button and target modal
+    const submitCount = async (countToSubmit) => {
+        if (!countToSubmit || Number(countToSubmit) <= 0) {
+            showToast({ type: 'error', text: 'Count Value must be greater than 0' });
+            return;
+        }
+
+        const userData = localStorage.getItem('userData');
+
+        if (userData) {
+            try {
+                setSubmitting(true);
+                const user = JSON.parse(userData);
+                const { data } = await apiClient.post(
+                    '/api/api-tasbihUsers',
+                    {
+                        fullName: user.fullName,
+                        address: user.address,
+                        mobileNumber: user.mobile || user.email,
+                        tasbihCount: countToSubmit,
+                        weeklyCounts: countToSubmit,
+                    }
+                );
+
+                if (data && data.ok) {
+                    const newEntry = {
+                        count: countToSubmit,
+                        weeklyCounts: countToSubmit,
+                        date: new Date().toLocaleDateString(),
+                        time: new Date().toLocaleTimeString(),
+                    };
+                    setHistory((prev) => [newEntry, ...prev]);
+                    setCount(0);
+                    setTarget(0);
+                    if (typeof window !== 'undefined') localStorage.removeItem('tasbihTarget');
+                    setShowTargetReached(false);
+                    setAllowContinueAfterTarget(false);
+                    showToast({ type: 'success', text: 'Durood Counts Submitted Successfully' });
+                } else {
+                    showToast({ type: 'error', text: (data && data.message) || 'Failed to submit. Please try again.' });
+                }
+            } catch (error) {
+                // eslint-disable-next-line no-console
+                console.error('Error submitting tasbih:', error);
+                showToast({ type: 'error', text: 'Failed to submit. Please try again.' });
+            } finally {
+                setSubmitting(false);
+            }
+        } else {
+            router.push('/myProfile');
+        }
+    };
 
     // determine which tick is active (scale count to 100 ticks)
     const activeTick = count > 0 ? (count - 1) % 100 : -1;
@@ -216,20 +326,6 @@ export default function Tasbih() {
             {/* Make this entire card respond to pointer and keyboard so taps anywhere increment the counter */}
             <div
                 className="w-full max-w-3xl  card bg-base-200 shadow-md rounded-2xl p-6 flex flex-col items-center"
-                onPointerDown={(e) => {
-                    // increment on any pointer (touch/mouse/stylus)
-                    increment();
-                }}
-                role="button"
-                tabIndex={0}
-                onKeyDown={(e) => {
-                    // support keyboard activation
-                    if (e.key === "Enter" || e.key === " ") {
-                        e.preventDefault();
-                        increment();
-                    }
-                }}
-                aria-label="Tasbih tappable area"
             >
                 {/* Header row with label and reset button */}
                 <div
@@ -250,6 +346,52 @@ export default function Tasbih() {
                     </button>
                 </div>
                 <div className="divider my-4" />
+
+                {/* Target setter */}
+                <div className="w-full mb-4 p-3 bg-base-100 rounded-lg flex flex-col md:flex-row items-center gap-3">
+                    <div className="flex items-center gap-2 w-full md:w-auto">
+                        <label className="text-sm font-medium mr-2">Target</label>
+                        <input
+                            aria-label="Set Target Value"
+                            type="number"
+                            min="1"
+                            max="10000"
+                            inputMode="numeric"
+                            className="input input-bordered input-sm w-28"
+                            value={targetInput}
+                            onChange={(e) => setTargetInput(e.target.value.replace(/[^0-9]/g, ''))}
+                            placeholder="e.g. 100"
+                        />
+                        <button
+                            className="btn btn-sm btn-primary"
+                            onClick={() => {
+                                const v = Number(targetInput || 0);
+                                if (!v || v <= 0) {
+                                    showToast({ type: 'error', text: 'Enter a valid target (> 0)' });
+                                    return;
+                                }
+                                if (v > 10000) {
+                                    showToast({ type: 'error', text: 'Target cannot exceed 10000' });
+                                    return;
+                                }
+                                setTarget(v);
+                                setAllowContinueAfterTarget(false);
+                                setTargetInput('');
+                                showToast({ type: 'success', text: `Target set to ${v}` });
+                            }}
+                        >
+                            Set
+                        </button>
+                    </div>
+
+                    <div className="ml-auto text-sm text-primary/80 w-full md:w-auto">
+                        {target > 0 ? (
+                            <span>Current Target: <strong className="text-primary">{target}</strong></span>
+                        ) : (
+                            <span>No target set</span>
+                        )}
+                    </div>
+                </div>
 
                 {/* Circular ring with ticks */}
                 <div className="relative flex items-center justify-center mb-8">
@@ -283,18 +425,14 @@ export default function Tasbih() {
                 {/* Large tappable area */}
                 <div className="flex flex-col items-center gap-6 w-full">
                     <button
-                        // stop propagation so the parent doesn't double-increment when the inner button is used
-                        onPointerDown={(e) => {
-                            e.stopPropagation();
-                            increment();
-                        }}
+                        onClick={() => increment()}
                         className="btn btn-circle bg-base-100 border border-primary text-primary shadow-md hover:scale-105 transition-transform w-28 h-28 flex items-center justify-center"
                         aria-label="Increment Tasbih"
                     >
                         <PiHandTapLight className="h-20 w-20" />
                     </button>
 
-                    <div className="text-xl font-bold">Tap Anywhere</div>
+                    <div className="text-xl font-bold">Tap Below</div>
                 </div>
             </div>
 
@@ -364,62 +502,48 @@ export default function Tasbih() {
                 </div>
             )}
 
+            {/* Target achieved modal (theme aware) */}
+            {showTargetReached && (
+                <div className="fixed inset-0 flex items-center justify-center bg-black/40 z-50">
+                    <div className="modal modal-open">
+                        <div className={
+                            "modal-box text-center " +
+                            (typeof window !== 'undefined' && effectiveTheme() === 'dark'
+                                ? 'bg-neutral text-neutral-content'
+                                : 'bg-base-100 text-primary')
+                        }>
+                            <h3 className="font-bold text-lg">Target Achieved</h3>
+                            <p className="py-4">
+                                You have reached your target of <strong className="text-primary">{target}</strong>.
+                                Would you like to submit this count now or continue reading?
+                            </p>
+                            <div className="modal-action justify-center flex gap-3">
+                                <button
+                                    className="btn btn-primary w-36"
+                                    onClick={() => submitCount(target > 0 ? target : count)}
+                                    disabled={submitting}
+                                >
+                                    {submitting ? <AnimatedLooader className="inline-block" /> : 'Submit'}
+                                </button>
+                                <button
+                                    className="btn btn-error w-36"
+                                    onClick={() => skipSubmit(target > 0 ? target : count)}
+                                >
+                                    Skip
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
+
 
 
             {/* Durood history list */}
             <div className="w-full max-w-3xl mt-6 mb-14 card bg-base-200 shadow-md rounded-2xl p-6">
                 <button
                     className="btn btn-sm btn-primary mb-4"
-                    onClick={async () => {
-                        // Prevent submit when count is not greater than 0
-                        if (!count || Number(count) <= 0) {
-                            showToast({ type: "error", text: "Count Value must be greater than 0" });
-                            return;
-                        }
-                        // Check if user is logged in
-                        const userData = localStorage.getItem('userData');
-
-                        if (userData) {
-                            // User exists, call tasbih API directly
-                            try {
-                                setSubmitting(true);
-                                const user = JSON.parse(userData);
-                                const { data } = await apiClient.post(
-                                    "/api/api-tasbihUsers",
-                                    {
-                                        fullName: user.fullName,
-                                        address: user.address,
-                                        mobileNumber: user.mobile || user.email,
-                                        tasbihCount: count,
-                                        weeklyCounts: count,
-                                    }
-                                );
-
-                                if (data.ok) {
-                                    // Add to history
-                                    const newEntry = {
-                                        count: count,
-                                        weeklyCounts: count,
-                                        date: new Date().toLocaleDateString(),
-                                        time: new Date().toLocaleTimeString(),
-                                    };
-                                    setHistory((prev) => [newEntry, ...prev]);
-                                    setCount(0);
-                                    showToast({ type: "success", text: "Durood Counts Submitted Successfully" });
-                                } else {
-                                    showToast({ type: "error", text: data.message || "Failed to submit. Please try again." });
-                                }
-                            } catch (error) {
-                                console.error('Error submitting tasbih:', error);
-                                showToast({ type: "error", text: "Failed to submit. Please try again." });
-                            } finally {
-                                setSubmitting(false);
-                            }
-                        } else {
-                            // User not logged in, redirect to profile page
-                            router.push('/myProfile');
-                        }
-                    }}
+                    onClick={() => submitCount(count)}
                     disabled={submitting}
                     aria-label="Register Durood"
                 >
