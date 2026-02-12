@@ -26,8 +26,23 @@ export default function ViewStoreClient() {
         const load = async () => {
             try {
                 setLoading(true);
-                const res = await fetch(`/api/local-stores?id=${encodeURIComponent(id)}`);
-                const data = await res.json();
+                const apiBase = process.env.NEXT_PUBLIC_TAURI_STATIC_EXPORT === "1" || process.env.NEXT_PUBLIC_TAURI_BUILD === "1"
+                    ? (process.env.NEXT_PUBLIC_API_BASE_URL || "")
+                    : "";
+
+                const apiUrl = `${apiBase}/api/local-stores?id=${encodeURIComponent(id)}`.replace(/([^:]?)\/\//g, "$1/");
+                const res = await fetch(apiUrl);
+
+                // ensure response is JSON before attempting to parse
+                const contentType = res.headers.get("content-type") || "";
+                let data;
+                if (contentType.includes("application/json")) {
+                    data = await res.json();
+                } else {
+                    const text = await res.text();
+                    throw new Error(`Unexpected response (not JSON): ${text.slice(0, 200)}`);
+                }
+
                 if (!mounted) return;
                 if (data && data.ok) {
                     setStore(data.data);

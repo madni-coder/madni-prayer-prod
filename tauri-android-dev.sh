@@ -29,5 +29,9 @@ echo -e "${BLUE}🚀 Starting Tauri dev mode with hot reload...${NC}\n"
 echo "📝 Edit files in src/ and see changes instantly!"
 echo ""
 
+# Ensure tauri.devUrl is set to this machine's IP so device WebView can reach it
+echo -e "${BLUE}🔧 Running set-dev-url to update src-tauri/tauri.conf.json...${NC}"
+npm run set-dev-url || echo "Warning: set-dev-url failed or is unavailable"
+
 # Tauri will automatically start Next.js dev server via beforeDevCommand
 npm run tauri android dev

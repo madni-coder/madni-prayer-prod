@@ -376,84 +376,66 @@ export default function JamatTimesPage() {
     };
 
     const handleLink = async () => {
-        const httpUrl = getMapUrl();
-        if (!httpUrl) {
+        const mapUrl = getMapUrl();
+        if (!mapUrl) {
             showToast("Location is not added for this masjid.", "error");
             return;
         }
 
-        // Build a text query for deep links
-        const placeQuery = encodeURIComponent(
-            `${selectedMasjidData?.masjidName || ""} ${selectedMasjidData?.colony || ""
-                } ${selectedMasjidData?.locality || ""}`.trim()
-        );
+        // Parse intent:// URLs to extract the actual browser URL
+        const parseIntentUrl = (url) => {
+            if (!url) return url;
+
+            // If it's not an intent URL, return as-is
+            if (!url.toLowerCase().startsWith('intent://')) {
+                return url;
+            }
+
+            // Extract browser_fallback_url from intent URL if present
+            const fallbackMatch = url.match(/S\.browser_fallback_url=([^;#]+)/);
+            if (fallbackMatch && fallbackMatch[1]) {
+                try {
+                    return decodeURIComponent(fallbackMatch[1]);
+                } catch (e) {
+                    return fallbackMatch[1];
+                }
+            }
+
+            // Otherwise extract the core URL
+            // intent://maps.app.goo.gl/xxxxx;end; -> https://maps.app.goo.gl/xxxxx
+            let parsedUrl = url
+                .replace(/^intent:\/\//i, 'https://')  // Replace intent:// with https://
+                .replace(/;end;?$/i, '')                // Remove trailing ;end; or ;end
+                .split(';')[0]                          // Take everything before first semicolon
+                .split('#')[0];                         // Remove any hash fragments
+
+            return parsedUrl;
+        };
+
+        const finalUrl = parseIntentUrl(mapUrl);
+        console.log('Opening URL:', finalUrl); // Debug log
 
         try {
-            const isTauri = process.env.NEXT_PUBLIC_TAURI_BUILD;
-
-            if (isTauri) {
-                const openerModule = "@tauri-apps/plugin-opener";
-                const osModule = "@tauri-apps/plugin-os";
-                let openUrl;
-
+            // Check if running in Tauri mobile app
+            if (typeof window !== "undefined" && window.__TAURI__) {
                 try {
-                    const opener = await new Function("m", "return import(m)")(openerModule);
-                    openUrl = opener.openUrl || opener.default?.openUrl;
-                } catch (e) {
-                    console.warn("Tauri opener plugin not available:", e);
-                }
+                    // Dynamically import Tauri opener plugin
+                    const { open } = await import("@tauri-apps/plugin-opener");
 
-                let isiOS = false;
-                let isAndroid = false;
-                try {
-                    if (typeof window !== "undefined" && window.__TAURI__) {
-                        const os = await new Function("m", "return import(m)")(osModule);
-                        const platform = await os.platform();
-                        isiOS = platform === "ios";
-                        isAndroid = platform === "android";
-                    }
-                } catch (_) { }
-
-                if (openUrl) {
-                    if (isiOS) {
-                        const iosGmaps = `comgooglemaps://?q=${placeQuery}`;
-                        try {
-                            await openUrl(iosGmaps);
-                            return;
-                        } catch (_) {
-                            // Fall through to HTTPS
-                        }
-                    } else if (isAndroid) {
-                        const androidGeo = `geo:0,0?q=${placeQuery}`;
-                        try {
-                            await openUrl(androidGeo);
-                            return;
-                        } catch (_) {
-                            try {
-                                await openUrl(`google.navigation:q=${placeQuery}`);
-                                return;
-                            } catch (_) { }
-                        }
-                    }
-
-                    try {
-                        await openUrl(httpUrl);
-                        return;
-                    } catch (e) {
-                        console.warn("Tauri openUrl failed, falling back:", e);
-                    }
+                    // Use Tauri's open function with the parsed URL
+                    await open(finalUrl);
+                    return;
+                } catch (err) {
+                    console.error("Tauri opener failed:", err);
+                    // Fall through to window.open
                 }
             }
 
-            window.open(httpUrl, "_blank", "noopener,noreferrer");
-        } catch (e) {
-            console.error("Failed to open map via opener:", e);
-            try {
-                window.open(httpUrl, "_blank", "noopener,noreferrer");
-            } catch (err) {
-                console.error("Fallback open failed:", err);
-                showToast("Unable to open the map on this device.", "error");
-            }
+            // For web browsers
+            window.open(finalUrl, "_blank", "noopener,noreferrer");
+        } catch (err) {
+            console.error("Failed to open map URL:", err);
+            showToast("Unable to open the map on this device.", "error");
         }
     };
 

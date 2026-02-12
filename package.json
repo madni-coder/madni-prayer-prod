@@ -3,7 +3,7 @@
     "version": "0.1.0",
     "private": true,
     "scripts": {
-        "dev": "npm run move-api && NEXT_DISABLE_TURBOPACK=1 next dev",
+        "dev": "npm run set-dev-url && npm run move-api && HOST=0.0.0.0 NEXT_DISABLE_TURBOPACK=1 next dev",
         "move-api": "if [ -d 'src/utils/api' ]; then rm -rf src/app/api && mv src/utils/api src/app/api; fi",
         "move-api-back": "if [ -e 'src/app/api' ]; then rm -rf src/utils/api && mkdir -p src/utils && mv src/app/api src/utils/api; fi",
         "delete:build": "rm -rf .next && rm -rf out",
@@ -16,8 +16,9 @@
         "tauri": "tauri",
         "android": "./run-android.sh",
         "android:build": "npm run tauri android build",
-        "android:dev": "./tauri-android-dev.sh",
-        "android:hot": "./tauri-android-dev.sh",
+        "set-dev-url": "node scripts/set-dev-url.js",
+        "android:dev": "npm run set-dev-url && ./tauri-android-dev.sh",
+        "android:hot": "npm run set-dev-url && ./tauri-android-dev.sh",
         "ios:build": "./fix-ios-plist.sh && npm run tauri ios build",
         "ios:dev": "./fix-ios-plist.sh && npm run tauri ios dev -- --open",
         "ios:appstore": "./fix-ios-plist.sh && ./build-ios-appstore.sh"
