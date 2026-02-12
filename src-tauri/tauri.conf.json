@@ -1,7 +1,7 @@
 {
     "$schema": "../node_modules/@tauri-apps/cli/config.schema.json",
     "productName": "raaheHidayat",
-    "version": "3.0.0",
+    "version": "4.0.0",
     "identifier": "com.prayer.raahe",
     "build": {
         "frontendDist": "../out",
@@ -35,7 +35,7 @@
         ],
         "android": {
             "minSdkVersion": 24,
-            "versionCode": 3000
+            "versionCode": 4000
         },
         "iOS": {
             "developmentTeam": "R8953SWC87"

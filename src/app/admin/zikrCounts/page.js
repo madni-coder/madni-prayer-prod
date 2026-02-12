@@ -4,7 +4,7 @@ import { useRouter } from "next/navigation";
 import apiClient from "../../../lib/apiClient";
 // no icon needed for this table view
 
-export const dynamic = 'force-dynamic';
+export const dynamic = 'force-static';
 
 export default function ZikrCountsPage() {
     const router = useRouter();

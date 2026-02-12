@@ -33,8 +33,16 @@ export default function LocalStoresPage() {
             }
 
             // if a fetch is already in progress, reuse its promise
+            // When statically exported for Tauri, API routes are not available
+            // so use the external API base if configured.
+            const apiBase = process.env.NEXT_PUBLIC_TAURI_STATIC_EXPORT === "1" || process.env.NEXT_PUBLIC_TAURI_BUILD === "1"
+                ? (process.env.NEXT_PUBLIC_API_BASE_URL || "")
+                : "";
+
+            const apiUrl = `${apiBase}/api/local-stores`.replace(/([^:]?)\/\//g, "$1/");
+
             if (!storesPromise) {
-                storesPromise = fetch("/api/local-stores").then((r) => r.json());
+                storesPromise = fetch(apiUrl).then((r) => r.json());
             }
 
             try {
