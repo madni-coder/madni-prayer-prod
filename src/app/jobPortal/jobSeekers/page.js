@@ -13,33 +13,10 @@ import {
     FaMapMarkerAlt,
     FaCity,
     FaCheckCircle,
+    FaPhone,
 } from "react-icons/fa";
-import AnimatedLooader from "../../../components/animatedLooader"; import apiClient from "../../../lib/apiClient";
-// Job categories
-const jobCategories = [
-    "Office Jobs (Computer work, back office, data entry)",
-    "Masjid Jobs (Imaamat, Moizzani,Mudarris, Masjid Cleaning)",
-    "Delivery Jobs (Courier, food delivery, parcel)",
-    "Driver Jobs (Car, bike, truck, auto)",
-    "Sales Jobs (Shop sales, field sales)",
-    "Customer Support (Call center, help desk)",
-    "Teaching & Education (Tutor, school teacher)",
-    "Hotel & Restaurant Jobs (Cook, waiter, helper)",
-    "Cleaning Jobs (Housekeeping, office cleaning)",
-    "Security Jobs (Security guard, supervisor)",
-    "Construction Jobs (Labour, mason, site helper)",
-    "Factory Jobs (Worker, machine operator)",
-    "Medical & Healthcare (Nurse, compounder, helper)",
-    "Beauty & Salon (Hair stylist, beautician)",
-    "Tailor & Boutique (Stitching, fashion work)",
-    "Electrician & Plumber (Repair & maintenance)",
-    "IT & Computer Jobs (Computer operator, basic IT)",
-    "Marketing Jobs (Promotion, social media)",
-    "Warehouse Jobs (Packing, loading, sorting)",
-    "Home Services (Cook, maid, babysitter)",
-    "Freelance & Part-time (Online work, part-time jobs)",
-    "Other",
-];
+import AnimatedLooader from "../../../components/animatedLooader";
+import apiClient from "../../../lib/apiClient";
 
 export default function JobSeekersPage() {
     const router = useRouter();
@@ -48,6 +25,7 @@ export default function JobSeekersPage() {
     const [formData, setFormData] = useState({
         fullName: "",
         email: "",
+        mobile: "",
         jobCategory: "",
         otherCategory: "",
         expectedSalary: "",
@@ -58,13 +36,38 @@ export default function JobSeekersPage() {
     });
     const [errors, setErrors] = useState({});
 
+    const jobCategories = [
+        "Software Developer",
+        "Web Developer",
+        "Mobile App Developer",
+        "Data Analyst",
+        "Graphic Designer",
+        "Content Writer",
+        "Digital Marketer",
+        "Sales Executive",
+        "Customer Service",
+        "Accountant",
+        "Teacher",
+        "Other"
+    ];
+
     const handleChange = (e) => {
         const { name, value } = e.target;
-        setFormData((prev) => ({
-            ...prev,
-            [name]: value,
-        }));
-        // Clear error when user starts typing
+
+        // For mobile and expectedSalary, allow only numbers
+        if (name === 'mobile' || name === 'expectedSalary') {
+            const numericValue = value.replace(/[^0-9]/g, '');
+            setFormData((prev) => ({
+                ...prev,
+                [name]: numericValue,
+            }));
+        } else {
+            setFormData((prev) => ({
+                ...prev,
+                [name]: value,
+            }));
+        }
+
         if (errors[name]) {
             setErrors((prev) => ({
                 ...prev,
@@ -84,6 +87,12 @@ export default function JobSeekersPage() {
             newErrors.email = "Email is required";
         } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
             newErrors.email = "Invalid email format";
+        }
+
+        if (!formData.mobile.trim()) {
+            newErrors.mobile = "Mobile number is required";
+        } else if (!/^\d{10,15}$/.test(formData.mobile.replace(/\s/g, ""))) {
+            newErrors.mobile = "Invalid mobile number";
         }
 
         if (!formData.jobCategory) {
@@ -124,19 +133,17 @@ export default function JobSeekersPage() {
         if (validateForm()) {
             setShowLoader(true);
 
-            // Submit to API
             apiClient.post("/api/api-job-seekers", formData)
                 .then(() => {
                     setShowLoader(false);
                     setShowSuccess(true);
-                    console.log("Form submitted:", formData);
 
-                    // Reset form after 3 seconds and redirect
                     setTimeout(() => {
                         setShowSuccess(false);
                         setFormData({
                             fullName: "",
                             email: "",
+                            mobile: "",
                             jobCategory: "",
                             otherCategory: "",
                             expectedSalary: "",
@@ -145,7 +152,7 @@ export default function JobSeekersPage() {
                             address: "",
                             city: "",
                         });
-                        router.push("/jobPortal/viewJobs");
+                        router.push("/jobPortal/jobLists");
                     }, 3000);
                 })
                 .catch((error) => {
@@ -157,7 +164,7 @@ export default function JobSeekersPage() {
     };
 
     const handleBack = () => {
-        router.push("/jobPortal/viewJobs");
+        router.push("/jobPortal/jobLists");
     };
 
     return (
@@ -221,7 +228,7 @@ export default function JobSeekersPage() {
                         </div>
 
                         {/* Email */}
-                        <div className="md:col-span-2">
+                        <div>
                             <label className="flex items-center gap-2 text-sm font-semibold mb-2 text-purple-400">
                                 <FaEnvelope />
                                 Email Address *
@@ -237,6 +244,29 @@ export default function JobSeekersPage() {
                             />
                             {errors.email && (
                                 <p className="text-red-400 text-xs mt-1">{errors.email}</p>
+                            )}
+                        </div>
+
+                        {/* Mobile */}
+                        <div>
+                            <label className="flex items-center gap-2 text-sm font-semibold mb-2 text-purple-400">
+                                <FaPhone />
+                                Mobile Number *
+                            </label>
+                            <input
+                                type="tel"
+                                name="mobile"
+                                value={formData.mobile}
+                                onChange={handleChange}
+                                inputMode="numeric"
+                                pattern="[0-9]*"
+                                maxLength="15"
+                                className={`w-full px-4 py-3 bg-[#1e2f3f] border ${errors.mobile ? "border-red-500" : "border-[#2d3f54]"
+                                    } rounded-lg focus:outline-none focus:border-purple-500 transition-colors text-white placeholder-gray-500`}
+                                placeholder="03001234567"
+                            />
+                            {errors.mobile && (
+                                <p className="text-red-400 text-xs mt-1">{errors.mobile}</p>
                             )}
                         </div>
 
@@ -265,9 +295,9 @@ export default function JobSeekersPage() {
                             )}
                         </div>
 
-                        {/* Other Category Input - Shows when "Other" is selected */}
+                        {/* Other Category Input */}
                         {formData.jobCategory === "Other" && (
-                            <div className="md:col-span-2">
+                            <div>
                                 <label className="flex items-center gap-2 text-sm font-semibold mb-2 text-purple-400">
                                     <FaBriefcase />
                                     Specify Job Category *
@@ -298,9 +328,11 @@ export default function JobSeekersPage() {
                                 name="expectedSalary"
                                 value={formData.expectedSalary}
                                 onChange={handleChange}
+                                inputMode="numeric"
+                                pattern="[0-9]*"
                                 className={`w-full px-4 py-3 bg-[#1e2f3f] border ${errors.expectedSalary ? "border-red-500" : "border-[#2d3f54]"
                                     } rounded-lg focus:outline-none focus:border-purple-500 transition-colors text-white placeholder-gray-500`}
-                                placeholder="e.g., 50,000 - 70,000"
+                                placeholder="e.g., 50000"
                             />
                             {errors.expectedSalary && (
                                 <p className="text-red-400 text-xs mt-1">{errors.expectedSalary}</p>
@@ -322,7 +354,7 @@ export default function JobSeekersPage() {
                                 step="0.5"
                                 className={`w-full px-4 py-3 bg-[#1e2f3f] border ${errors.experience ? "border-red-500" : "border-[#2d3f54]"
                                     } rounded-lg focus:outline-none focus:border-purple-500 transition-colors text-white placeholder-gray-500`}
-                                placeholder="e.g., 3"
+                                placeholder=""
                             />
                             {errors.experience && (
                                 <p className="text-red-400 text-xs mt-1">{errors.experience}</p>
@@ -342,7 +374,7 @@ export default function JobSeekersPage() {
                                 rows="3"
                                 className={`w-full px-4 py-3 bg-[#1e2f3f] border ${errors.skills ? "border-red-500" : "border-[#2d3f54]"
                                     } rounded-lg focus:outline-none focus:border-purple-500 transition-colors text-white placeholder-gray-500 resize-none`}
-                                placeholder="e.g., React, Node.js, MongoDB, Express"
+                                placeholder=""
                             />
                             {errors.skills && (
                                 <p className="text-red-400 text-xs mt-1">{errors.skills}</p>
@@ -382,7 +414,7 @@ export default function JobSeekersPage() {
                                 onChange={handleChange}
                                 className={`w-full px-4 py-3 bg-[#1e2f3f] border ${errors.city ? "border-red-500" : "border-[#2d3f54]"
                                     } rounded-lg focus:outline-none focus:border-purple-500 transition-colors text-white placeholder-gray-500`}
-                                placeholder="e.g., Karachi"
+                                placeholder=""
                             />
                             {errors.city && (
                                 <p className="text-red-400 text-xs mt-1">{errors.city}</p>

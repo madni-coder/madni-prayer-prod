@@ -159,6 +159,7 @@ model JobSeeker {
   id             Int      @id @default(autoincrement())
   fullName       String
   email          String
+  mobile         String?
   jobCategory    String
   otherCategory  String?
   expectedSalary String

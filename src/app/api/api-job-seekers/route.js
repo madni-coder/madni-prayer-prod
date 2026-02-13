@@ -45,6 +45,7 @@ export async function POST(request) {
         const {
             fullName,
             email,
+            mobile,
             jobCategory,
             otherCategory,
             expectedSalary,
@@ -55,7 +56,7 @@ export async function POST(request) {
         } = body;
 
         // Validation
-        if (!fullName || !email || !jobCategory || !expectedSalary || !experience || !skills || !address || !city) {
+        if (!fullName || !email || !mobile || !jobCategory || !expectedSalary || !experience || !skills || !address || !city) {
             return NextResponse.json(
                 { error: "Missing required fields" },
                 { status: 400 }
@@ -66,6 +67,7 @@ export async function POST(request) {
             data: {
                 fullName,
                 email,
+                mobile,
                 jobCategory,
                 otherCategory: otherCategory || null,
                 expectedSalary,
@@ -103,6 +105,7 @@ export async function PUT(request) {
         const {
             fullName,
             email,
+            mobile,
             jobCategory,
             otherCategory,
             expectedSalary,
@@ -117,6 +120,7 @@ export async function PUT(request) {
             data: {
                 ...(fullName && { fullName }),
                 ...(email && { email }),
+                ...(mobile && { mobile }),
                 ...(jobCategory && { jobCategory }),
                 ...(otherCategory !== undefined && { otherCategory }),
                 ...(expectedSalary && { expectedSalary }),
