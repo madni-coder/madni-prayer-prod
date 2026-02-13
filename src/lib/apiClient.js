@@ -13,10 +13,14 @@ const tauriFallback = process.env.NEXT_PUBLIC_TAURI_DEV_HOST?.trim();
 // In a Tauri bundle the app is served from a custom scheme (tauri://), so
 // hitting /api locally will 404 because Next API routes are not bundled with
 // the static export. Force a remote base URL when we detect that runtime.
+// For production builds without an explicit `NEXT_PUBLIC_API_BASE_URL`,
+// prefer the deployed Vercel URL to avoid local `localhost` network errors.
 const defaultBase =
     envBase ||
     (isTauriRuntime && tauriFallback) ||
-    windowOrigin ||
+    (process.env.NODE_ENV === "production"
+        ? "https://raahehidayat.vercel.app"
+        : windowOrigin) ||
     "http://localhost:3000";
 
 const apiClient = axios.create({

@@ -5,6 +5,7 @@ import { ToastContainer, Slide } from "react-toastify";
 import TopNav from "./TopNav";
 import BottomNav from "./BottomNav";
 import IosClassSetter from "./IosClassSetter.client";
+import ForceUpdateChecker from "../components/ForceUpdateChecker.client";
 
 const geistSans = Geist({
     variable: "--font-geist-sans",
@@ -30,6 +31,7 @@ export default function RootLayout({ children }) {
                 <TopNav />
 
                 <IosClassSetter />
+                <ForceUpdateChecker />
 
                 {children}
 

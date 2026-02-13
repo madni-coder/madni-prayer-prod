@@ -70,8 +70,7 @@ export default function JamatTimesPage() {
     const [hasLoadedSavedMasjid, setHasLoadedSavedMasjid] = useState(false);
     const [reportVisible, setReportVisible] = useState(false);
     const [copied, setCopied] = useState(false);
-    const reportPhone = "96913 02711";
-    const reportWaLink = `https://wa.me/${reportPhone.replace(/\s+/g, "")}`;
+    const reportPhone = "9691302711";
 
     // visibleMasjids respects the Raipur-only toggle
     // Default: show Bilaspur and entries without a city (city === null/undefined/empty)
@@ -376,8 +375,17 @@ export default function JamatTimesPage() {
 
     const getMapUrl = () => {
         if (!selectedMasjidData) return "";
-        // Only return the stored map URL from API data
-        return selectedMasjidData.pasteMapUrl || "";
+        return (
+            selectedMasjidData.mapUrl ||
+            selectedMasjidData.map_url ||
+            selectedMasjidData.map ||
+            selectedMasjidData.pasteMapUrl ||
+            encodeURI(
+                `https://www.google.com/maps/search/?api=1&query=${selectedMasjidData.masjidName
+                } ${selectedMasjidData.colony} ${selectedMasjidData.locality || ""
+                }`
+            )
+        );
     };
 
     const handleLink = async () => {
@@ -455,6 +463,26 @@ export default function JamatTimesPage() {
             setTimeout(() => setCopied(false), 2000);
         } catch (e) {
             console.error("Copy failed", e);
+        }
+    };
+
+    const [copiedMap, setCopiedMap] = useState(false);
+
+    const copyMapUrl = async () => {
+        const mapUrl = getMapUrl();
+        if (!mapUrl) {
+            showToast("Location is not added for this masjid.", "error");
+            return;
+        }
+
+        try {
+            await navigator.clipboard.writeText(mapUrl);
+            setCopiedMap(true);
+            setTimeout(() => setCopiedMap(false), 2000);
+            showToast("Map URL copied to clipboard.", "success");
+        } catch (e) {
+            console.error("Copy failed", e);
+            showToast("Failed to copy map URL.", "error");
         }
     };
 
@@ -866,14 +894,21 @@ export default function JamatTimesPage() {
                 )}
                 {selectedMasjidData && (
                     <div className="mt-4 mb-8 text-center">
-                        <button
-                            type="button"
-                            onClick={handleLink}
-                            className="inline-flex items-center gap-2 px-4 py-3 rounded-md bg-primary/20 hover:bg-primary/30 text-primary transition font-semibold"
-                        >
-                            <MapPin className="w-5 h-5" />
-                            <span>See This Masjid Location On Map</span>
-                        </button>
+                        <div className="inline-flex items-center justify-center">
+                            <button
+                                type="button"
+                                onClick={copyMapUrl}
+                                aria-label="Copy map URL"
+                                className="inline-flex items-center gap-2 px-4 py-3 rounded-md bg-primary/20 hover:bg-primary/30 text-primary transition font-semibold"
+                            >
+                                {copiedMap ? (
+                                    <FaCheck className="w-4 h-4 text-green-600" />
+                                ) : (
+                                    <FaCopy className="w-4 h-4" />
+                                )}
+                                <span>Copy Location Of This Masjid</span>
+                            </button>
+                        </div>
                         <div className="mt-4">
                             <button
                                 type="button"
@@ -889,15 +924,10 @@ export default function JamatTimesPage() {
                                         <div className="text-sm text-base-content dark:text-base-content/80 min-w-0">
                                             <div className="mb-1 md:mb-0 break-words md:truncate">Mistake in Jamat times — report by sending correct Jamat time on WhatsApp</div>
                                             <div className="flex items-center gap-3">
-                                                <a
-                                                    href={reportWaLink}
-                                                    target="_blank"
-                                                    rel="noopener noreferrer"
-                                                    className="inline-flex items-center gap-2 text-green-600 hover:underline"
-                                                >
+                                                <div className="inline-flex items-center gap-2 text-green-600">
                                                     <FaWhatsapp className="w-4 h-4" />
-                                                    <span className="font-mono whitespace-nowrap">{reportPhone}</span>
-                                                </a>
+                                                    <span className="font-mono whitespace-nowrap select-none">{reportPhone}</span>
+                                                </div>
                                                 <button
                                                     type="button"
                                                     onClick={copyNumber}

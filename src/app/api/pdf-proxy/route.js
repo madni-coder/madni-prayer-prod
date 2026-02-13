@@ -1,4 +1,4 @@
-export const dynamic = process.env.NEXT_PUBLIC_TAURI_STATIC_EXPORT === '1' ? 'force-static' : 'force-dynamic';
+export const dynamic = 'force-dynamic';
 export const runtime = "nodejs";
 
 const ALLOWED_PREFIX = process.env.NEXT_PUBLIC_SUPABASE_URL;
