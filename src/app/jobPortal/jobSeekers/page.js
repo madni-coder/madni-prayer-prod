@@ -7,31 +7,37 @@ import {
     FaUser,
     FaEnvelope,
     FaBriefcase,
-    FaDollarSign,
+    FaRupeeSign,
     FaClock,
     FaTools,
     FaMapMarkerAlt,
     FaCity,
     FaCheckCircle,
 } from "react-icons/fa";
-import AnimatedLooader from "../../../components/animatedLooader";
-
+import AnimatedLooader from "../../../components/animatedLooader"; import apiClient from "../../../lib/apiClient";
 // Job categories
 const jobCategories = [
-    "Software Development",
-    "Web Development",
-    "Mobile Development",
-    "Data Science",
-    "Digital Marketing",
-    "Graphic Design",
-    "Content Writing",
-    "Sales & Marketing",
-    "Human Resources",
-    "Customer Support",
-    "Finance & Accounting",
-    "Teaching/Education",
-    "Healthcare",
-    "Engineering",
+    "Office Jobs (Computer work, back office, data entry)",
+    "Masjid Jobs (Imaamat, Moizzani,Mudarris, Masjid Cleaning)",
+    "Delivery Jobs (Courier, food delivery, parcel)",
+    "Driver Jobs (Car, bike, truck, auto)",
+    "Sales Jobs (Shop sales, field sales)",
+    "Customer Support (Call center, help desk)",
+    "Teaching & Education (Tutor, school teacher)",
+    "Hotel & Restaurant Jobs (Cook, waiter, helper)",
+    "Cleaning Jobs (Housekeeping, office cleaning)",
+    "Security Jobs (Security guard, supervisor)",
+    "Construction Jobs (Labour, mason, site helper)",
+    "Factory Jobs (Worker, machine operator)",
+    "Medical & Healthcare (Nurse, compounder, helper)",
+    "Beauty & Salon (Hair stylist, beautician)",
+    "Tailor & Boutique (Stitching, fashion work)",
+    "Electrician & Plumber (Repair & maintenance)",
+    "IT & Computer Jobs (Computer operator, basic IT)",
+    "Marketing Jobs (Promotion, social media)",
+    "Warehouse Jobs (Packing, loading, sorting)",
+    "Home Services (Cook, maid, babysitter)",
+    "Freelance & Part-time (Online work, part-time jobs)",
     "Other",
 ];
 
@@ -43,6 +49,7 @@ export default function JobSeekersPage() {
         fullName: "",
         email: "",
         jobCategory: "",
+        otherCategory: "",
         expectedSalary: "",
         experience: "",
         skills: "",
@@ -81,6 +88,8 @@ export default function JobSeekersPage() {
 
         if (!formData.jobCategory) {
             newErrors.jobCategory = "Please select a job category";
+        } else if (formData.jobCategory === "Other" && !formData.otherCategory.trim()) {
+            newErrors.otherCategory = "Please specify your job category";
         }
 
         if (!formData.expectedSalary.trim()) {
@@ -114,28 +123,36 @@ export default function JobSeekersPage() {
 
         if (validateForm()) {
             setShowLoader(true);
-            // Simulate API call
-            setTimeout(() => {
-                setShowLoader(false);
-                setShowSuccess(true);
-                console.log("Form submitted:", formData);
 
-                // Reset form after 3 seconds and redirect
-                setTimeout(() => {
-                    setShowSuccess(false);
-                    setFormData({
-                        fullName: "",
-                        email: "",
-                        jobCategory: "",
-                        expectedSalary: "",
-                        experience: "",
-                        skills: "",
-                        address: "",
-                        city: "",
-                    });
-                    router.push("/jobPortal/viewJobs");
-                }, 3000);
-            }, 1500);
+            // Submit to API
+            apiClient.post("/api/api-job-seekers", formData)
+                .then(() => {
+                    setShowLoader(false);
+                    setShowSuccess(true);
+                    console.log("Form submitted:", formData);
+
+                    // Reset form after 3 seconds and redirect
+                    setTimeout(() => {
+                        setShowSuccess(false);
+                        setFormData({
+                            fullName: "",
+                            email: "",
+                            jobCategory: "",
+                            otherCategory: "",
+                            expectedSalary: "",
+                            experience: "",
+                            skills: "",
+                            address: "",
+                            city: "",
+                        });
+                        router.push("/jobPortal/viewJobs");
+                    }, 3000);
+                })
+                .catch((error) => {
+                    console.error("Error submitting application:", error);
+                    setShowLoader(false);
+                    alert("Failed to submit application. Please try again.");
+                });
         }
     };
 
@@ -248,11 +265,33 @@ export default function JobSeekersPage() {
                             )}
                         </div>
 
+                        {/* Other Category Input - Shows when "Other" is selected */}
+                        {formData.jobCategory === "Other" && (
+                            <div className="md:col-span-2">
+                                <label className="flex items-center gap-2 text-sm font-semibold mb-2 text-purple-400">
+                                    <FaBriefcase />
+                                    Specify Job Category *
+                                </label>
+                                <input
+                                    type="text"
+                                    name="otherCategory"
+                                    value={formData.otherCategory}
+                                    onChange={handleChange}
+                                    className={`w-full px-4 py-3 bg-[#1e2f3f] border ${errors.otherCategory ? "border-red-500" : "border-[#2d3f54]"
+                                        } rounded-lg focus:outline-none focus:border-purple-500 transition-colors text-white placeholder-gray-500`}
+                                    placeholder="Enter your job category"
+                                />
+                                {errors.otherCategory && (
+                                    <p className="text-red-400 text-xs mt-1">{errors.otherCategory}</p>
+                                )}
+                            </div>
+                        )}
+
                         {/* Expected Salary */}
                         <div>
                             <label className="flex items-center gap-2 text-sm font-semibold mb-2 text-purple-400">
-                                <FaDollarSign />
-                                Expected Salary (PKR) *
+                                <FaRupeeSign />
+                                Expected Salary *
                             </label>
                             <input
                                 type="text"

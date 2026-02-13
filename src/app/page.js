@@ -86,7 +86,7 @@ const sections = [
     },
     {
         name: "Job Portal",
-        href: "/jobPortal/viewJobs",
+        href: "/jobPortal/jobLists",
         icon: (
             <FaBriefcase className="text-3xl lg:text-6xl text-purple-400" />
         ),

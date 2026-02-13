@@ -11,7 +11,9 @@ import {
     Coins,
     LogOut,
     Gauge, Book, UsersRound,
-    Wind
+    Wind,
+    Briefcase,
+    UserCheck
 } from "lucide-react";
 
 const navigation = [
@@ -41,7 +43,7 @@ const navigation = [
         href: "/admin/durood-sharif",
         icon: Coins,
     },
-    
+
     {
         name: "Zikr Records",
         href: "/admin/zikrCounts",
@@ -60,6 +62,16 @@ const navigation = [
         name: "Local Store",
         href: "/admin/local-store",
         icon: Gift,
+    },
+    {
+        name: "Job Lists",
+        href: "/admin/job-lists",
+        icon: Briefcase,
+    },
+    {
+        name: "Job Seekers",
+        href: "/admin/job-seekers",
+        icon: UserCheck,
     },
 ];
 
