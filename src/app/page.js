@@ -11,7 +11,7 @@ import {
     FaGift,
     FaMicrophone,
     FaPhoneSquare,
-    FaHandPointRight, FaUser, FaStore,
+    FaHandPointRight, FaUser, FaStore, FaBriefcase,
 } from "react-icons/fa";
 import { Megaphone } from "lucide-react";
 import Image from "next/image";
@@ -82,6 +82,13 @@ const sections = [
         href: "/local-stores",
         icon: (
             <FaStore className="text-3xl lg:text-6xl text-emerald-400" />
+        ),
+    },
+    {
+        name: "Job Portal",
+        href: "/jobPortal/viewJobs",
+        icon: (
+            <FaBriefcase className="text-3xl lg:text-6xl text-purple-400" />
         ),
     },
 

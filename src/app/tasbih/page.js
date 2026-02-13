@@ -333,7 +333,7 @@ export default function Tasbih() {
                     onPointerDown={(e) => e.stopPropagation()}
                     onClick={(e) => e.stopPropagation()}
                 >
-                    <p className="text-lg font-semibold">Tasbih Counter</p>
+                    <p className="text-lg font-semibold text-primary">Tasbih Counter</p>
                     <button
                         aria-label="Reset"
                         className="btn btn-ghost btn-circle"
@@ -345,7 +345,7 @@ export default function Tasbih() {
                         <RotateCw className="h-6 w-6" />
                     </button>
                 </div>
-                <div className="divider my-4" />
+                <div className="divider my-1" />
 
                 {/* Target setter */}
                 <div className="w-full mb-4 p-3 bg-base-100 rounded-lg flex flex-col md:flex-row items-center gap-3">
