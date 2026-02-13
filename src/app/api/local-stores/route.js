@@ -7,14 +7,19 @@ export async function GET(req) {
         const url = new URL(req.url);
         const id = url.searchParams.get("id");
 
+        // Cache headers for faster loading on slow connections
+        const cacheHeaders = {
+            "Cache-Control": "public, s-maxage=60, stale-while-revalidate=300",
+        };
+
         if (id) {
             const store = await prisma.localStore.findUnique({ where: { id: parseInt(id) } });
             if (!store) return NextResponse.json({ ok: false, error: "Not found" }, { status: 404 });
-            return NextResponse.json({ ok: true, data: store }, { status: 200 });
+            return NextResponse.json({ ok: true, data: store }, { status: 200, headers: cacheHeaders });
         }
 
         const stores = await prisma.localStore.findMany({ orderBy: { createdAt: "desc" } });
-        return NextResponse.json({ ok: true, data: stores }, { status: 200 });
+        return NextResponse.json({ ok: true, data: stores }, { status: 200, headers: cacheHeaders });
     } catch (err) {
         console.error("GET /api/local-stores error", err);
         return NextResponse.json({ ok: false, error: "Failed to fetch stores", details: String(err) }, { status: 500 });

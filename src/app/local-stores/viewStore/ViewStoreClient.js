@@ -1,9 +1,29 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import { FaStore, FaMapMarkerAlt, FaPhone, FaUser, FaArrowLeft, FaInfoCircle, FaCopy, FaCheck } from "react-icons/fa";
 import AnimatedLooader from "../../../components/animatedLooader";
+
+// Try to get store from sessionStorage (passed from list page) or localStorage cache
+function getCachedStore(id) {
+    try {
+        // First check sessionStorage (passed directly from list)
+        const session = sessionStorage.getItem(`store_${id}`);
+        if (session) {
+            sessionStorage.removeItem(`store_${id}`); // Clean up after use
+            return JSON.parse(session);
+        }
+        // Then check the stores list cache
+        const listCache = localStorage.getItem("local_stores_cache");
+        if (listCache) {
+            const { data } = JSON.parse(listCache);
+            const found = data?.find((s) => String(s.id) === String(id));
+            if (found) return found;
+        }
+    } catch { /* ignore */ }
+    return null;
+}
 
 export default function ViewStoreClient() {
     const params = useSearchParams();
@@ -23,9 +43,17 @@ export default function ViewStoreClient() {
             return;
         }
 
+        // 1. Try to get from cache first (instant load)
+        const cached = getCachedStore(id);
+        if (cached) {
+            setStore(cached);
+            setLoading(false);
+            return; // No need to fetch, we have the data
+        }
+
+        // 2. Fetch from API only if not cached
         const load = async () => {
             try {
-                setLoading(true);
                 const apiBase = process.env.NEXT_PUBLIC_TAURI_STATIC_EXPORT === "1" || process.env.NEXT_PUBLIC_TAURI_BUILD === "1"
                     ? (process.env.NEXT_PUBLIC_API_BASE_URL || "")
                     : "";
@@ -33,7 +61,6 @@ export default function ViewStoreClient() {
                 const apiUrl = `${apiBase}/api/local-stores?id=${encodeURIComponent(id)}`.replace(/([^:]?)\/\//g, "$1/");
                 const res = await fetch(apiUrl);
 
-                // ensure response is JSON before attempting to parse
                 const contentType = res.headers.get("content-type") || "";
                 let data;
                 if (contentType.includes("application/json")) {
@@ -153,6 +180,9 @@ export default function ViewStoreClient() {
                             src={img}
                             alt={store.shopName || "store"}
                             className="object-cover w-full h-full"
+                            loading="eager"
+                            decoding="async"
+                            fetchPriority="high"
                         />
                         <div className="absolute inset-0 bg-gradient-to-t from-base-300/90 via-base-300/40 to-transparent" />
                     </>

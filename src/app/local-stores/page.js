@@ -8,6 +8,26 @@ import { FaStore, FaSearch, FaAngleLeft } from "react-icons/fa";
 let storesCache = null;
 let storesPromise = null;
 
+// localStorage cache key and TTL (5 minutes)
+const STORES_CACHE_KEY = "local_stores_cache";
+const STORES_CACHE_TTL = 5 * 60 * 1000;
+
+function getLocalCache() {
+    try {
+        const cached = localStorage.getItem(STORES_CACHE_KEY);
+        if (!cached) return null;
+        const { data, timestamp } = JSON.parse(cached);
+        // Return data even if stale - we'll refresh in background
+        return { data, isStale: Date.now() - timestamp > STORES_CACHE_TTL };
+    } catch { return null; }
+}
+
+function setLocalCache(data) {
+    try {
+        localStorage.setItem(STORES_CACHE_KEY, JSON.stringify({ data, timestamp: Date.now() }));
+    } catch { /* ignore */ }
+}
+
 export default function LocalStoresPage() {
     const [stores, setStores] = useState([]);
     const [loading, setLoading] = useState(true);
@@ -29,6 +49,7 @@ export default function LocalStoresPage() {
         let mounted = true;
 
         const load = async () => {
+            // 1. Check in-memory cache first (instant)
             if (storesCache) {
                 if (!mounted) return;
                 setStores(storesCache);
@@ -36,9 +57,19 @@ export default function LocalStoresPage() {
                 return;
             }
 
-            // if a fetch is already in progress, reuse its promise
-            // When statically exported for Tauri, API routes are not available
-            // so use the external API base if configured.
+            // 2. Check localStorage cache (very fast) - show immediately, refresh if stale
+            const localCache = getLocalCache();
+            if (localCache?.data) {
+                storesCache = localCache.data;
+                if (!mounted) return;
+                setStores(localCache.data);
+                setLoading(false);
+
+                // If cache is fresh, no need to fetch
+                if (!localCache.isStale) return;
+            }
+
+            // 3. Fetch from API (background refresh if we showed cached data)
             const apiBase = process.env.NEXT_PUBLIC_TAURI_STATIC_EXPORT === "1" || process.env.NEXT_PUBLIC_TAURI_BUILD === "1"
                 ? (process.env.NEXT_PUBLIC_API_BASE_URL || "")
                 : "";
@@ -54,17 +85,21 @@ export default function LocalStoresPage() {
                 if (!mounted) return;
                 if (data && data.ok) {
                     storesCache = data.data || [];
+                    setLocalCache(storesCache);
                     setStores(storesCache);
-                } else {
+                } else if (!localCache?.data) {
+                    // Only show error if we don't have cached data
                     setError(data?.error || "Failed to load stores");
                 }
             } catch (err) {
                 if (!mounted) return;
-                setError(String(err));
+                // Only show error if we don't have cached data to display
+                if (!localCache?.data) {
+                    setError(String(err));
+                }
             } finally {
                 if (!mounted) return;
                 setLoading(false);
-                // allow subsequent refetches later if needed
                 storesPromise = null;
             }
         };
@@ -170,7 +205,15 @@ export default function LocalStoresPage() {
 
                                                     <div className="flex items-center gap-2">
                                                         <a href={s.mobile ? `tel:${s.mobile}` : "#"} aria-label={s.mobile ? `Call ${s.mobile}` : "No number"} className="inline-block px-4 py-2 rounded-md bg-emerald-500 text-white text-sm font-medium shadow hover:brightness-95">Call</a>
-                                                        <a href={`/local-stores/viewStore?id=${s.id}`} aria-label={`View ${s.shopName || 'store'}`} className="inline-block px-4 py-2 rounded-md bg-yellow-800 text-white text-sm font-medium shadow hover:brightness-95">View</a>
+                                                        <button
+                                                            onClick={() => {
+                                                                // Pass store data via sessionStorage to avoid refetch
+                                                                try { sessionStorage.setItem(`store_${s.id}`, JSON.stringify(s)); } catch { }
+                                                                router.push(`/local-stores/viewStore?id=${s.id}`);
+                                                            }}
+                                                            aria-label={`View ${s.shopName || 'store'}`}
+                                                            className="inline-block px-4 py-2 rounded-md bg-yellow-800 text-white text-sm font-medium shadow hover:brightness-95"
+                                                        >View</button>
                                                     </div>
                                                 </div>
                                             </div>
