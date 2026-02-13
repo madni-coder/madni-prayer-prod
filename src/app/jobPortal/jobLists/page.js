@@ -6,6 +6,10 @@ import { FaBriefcase, FaMapMarkerAlt, FaClock, FaDollarSign, FaArrowLeft, FaUser
 import AnimatedLooader from "../../../components/animatedLooader";
 import apiClient from "../../../lib/apiClient";
 
+// module-level cache/guard to prevent duplicate requests (helps in dev StrictMode)
+let _jobListsCache = null;
+let _jobListsRequested = false;
+
 export default function ViewJobsPage() {
     const router = useRouter();
     const [selectedJob, setSelectedJob] = useState(null);
@@ -14,15 +18,28 @@ export default function ViewJobsPage() {
     const [loading, setLoading] = useState(true);
     const [currentPage, setCurrentPage] = useState(1);
     const [searchTerm, setSearchTerm] = useState("");
-    const jobsPerPage = 6;
+    const jobsPerPage = 5; // show pagination after every 5 entries
 
     useEffect(() => {
+        if (_jobListsRequested) {
+            // another mount already requested; reuse cached data if available
+            if (_jobListsCache) {
+                setJobs(_jobListsCache);
+                setLoading(false);
+            }
+            return;
+        }
+
+        _jobListsRequested = true;
+
         async function fetchJobs() {
             try {
                 const { data } = await apiClient.get("/api/api-job-lists");
-                setJobs(data || []);
+                _jobListsCache = data || [];
+                setJobs(_jobListsCache);
             } catch (error) {
                 console.error("Error fetching jobs:", error);
+                _jobListsCache = [];
                 setJobs([]);
             } finally {
                 setLoading(false);
@@ -65,7 +82,7 @@ export default function ViewJobsPage() {
     const handleJobSeekerRedirect = () => {
         setShowLoader(true);
         setTimeout(() => {
-            router.push("/jobPortal/jobSeekers");
+            router.push("/jobPortal/applyForJob");
         }, 500);
     };
 
@@ -94,6 +111,8 @@ export default function ViewJobsPage() {
                         <h1 className="text-2xl sm:text-4xl font-extrabold bg-clip-text text-transparent bg-gradient-to-r from-purple-400 via-pink-500 to-purple-600">
                             Job Portal
                         </h1>
+
+
                     </div>
 
                     {/* Action Buttons and Description */}
@@ -180,7 +199,7 @@ export default function ViewJobsPage() {
                                 {/* Results Count */}
                                 <div className="flex items-center justify-between px-2">
                                     <p className="text-gray-400 text-sm">
-                                        Showing <span className="text-purple-400 font-semibold">{indexOfFirstJob + 1}-{Math.min(indexOfLastJob, filteredJobs.length)}</span> of <span className="text-purple-400 font-semibold">{filteredJobs.length}</span> jobs
+                                        <span className="text-purple-400 font-semibold">Total {filteredJobs.length} Jobs</span> 
                                     </p>
                                 </div>
 

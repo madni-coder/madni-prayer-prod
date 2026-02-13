@@ -19,6 +19,10 @@ import {
 import AnimatedLooader from "../../../components/animatedLooader";
 import apiClient from "../../../lib/apiClient";
 
+// module-level cache/guard to prevent duplicate requests (helps in dev StrictMode)
+let _jobSeekersCache = null;
+let _jobSeekersRequested = false;
+
 export default function HirePage() {
     const router = useRouter();
     const [selectedSeeker, setSelectedSeeker] = useState(null);
@@ -28,15 +32,27 @@ export default function HirePage() {
     const [currentPage, setCurrentPage] = useState(1);
     const [searchTerm, setSearchTerm] = useState("");
     const [copied, setCopied] = useState(false);
-    const seekersPerPage = 6;
+    const seekersPerPage = 5; // show pagination after every 5 entries
 
     useEffect(() => {
+        if (_jobSeekersRequested) {
+            if (_jobSeekersCache) {
+                setSeekers(_jobSeekersCache);
+                setLoading(false);
+            }
+            return;
+        }
+
+        _jobSeekersRequested = true;
+
         async function fetchSeekers() {
             try {
                 const { data } = await apiClient.get("/api/api-job-seekers");
-                setSeekers(data || []);
+                _jobSeekersCache = data || [];
+                setSeekers(_jobSeekersCache);
             } catch (error) {
                 console.error("Error fetching job seekers:", error);
+                _jobSeekersCache = [];
                 setSeekers([]);
             } finally {
                 setLoading(false);
@@ -45,6 +61,8 @@ export default function HirePage() {
 
         fetchSeekers();
     }, []);
+
+
 
     // Filter seekers based on search term
     const filteredSeekers = seekers.filter(seeker =>
@@ -129,7 +147,7 @@ export default function HirePage() {
         <div className="min-h-screen bg-gradient-to-br from-[#0a1e1e] via-[#0d1f28] to-[#0a1e1e] text-gray-200 pb-20">
             {/* Header Section */}
             <div className="bg-gradient-to-r from-[#1a3535] to-[#142933] border-b border-teal-500/20 shadow-xl">
-                <div className="max-w-7xl mx-auto px-4 sm:px-6 py-4 sm:py-6">
+                <div className="max-w-7xl mx-auto px-4 sm:px-6 py-3 sm:py-4 mt-4">
                     {/* Back Button and Title Row */}
                     <div className="flex items-center gap-4 mb-6">
                         <button
@@ -140,15 +158,14 @@ export default function HirePage() {
                             <span className="font-medium">Back</span>
                         </button>
 
-                        <h1 className="text-2xl sm:text-4xl font-extrabold bg-clip-text text-transparent bg-gradient-to-r from-teal-400 via-cyan-500 to-teal-600">
+                        <h1 className="text-2xl sm:text-2xl font-extrabold bg-clip-text text-transparent bg-gradient-to-r from-teal-400 via-cyan-500 to-teal-600">
                             Job Seekers
                         </h1>
+
                     </div>
 
                     {/* Description */}
-                    <p className="text-gray-400 text-sm sm:text-base">
-                        Browse through talented job seekers looking for opportunities
-                    </p>
+
                 </div>
             </div>
 
@@ -211,7 +228,7 @@ export default function HirePage() {
                                 {/* Results Count */}
                                 <div className="flex items-center justify-between px-2">
                                     <p className="text-gray-400 text-sm">
-                                        Showing <span className="text-teal-400 font-semibold">{indexOfFirstSeeker + 1}-{Math.min(indexOfLastSeeker, filteredSeekers.length)}</span> of <span className="text-teal-400 font-semibold">{filteredSeekers.length}</span> seekers
+                                        <span className="text-teal-400 font-semibold">Total {filteredSeekers.length} Job Seekers</span> 
                                     </p>
                                 </div>
 
@@ -336,7 +353,7 @@ export default function HirePage() {
                         {/* Seeker Details Card */}
                         <div className="bg-gradient-to-br from-white/5 to-white/[0.02] backdrop-blur-sm rounded-3xl border border-white/10 shadow-2xl">
                             {/* Header Section with User Info */}
-                            <div className="bg-gradient-to-r from-teal-600/10 via-cyan-600/10 to-teal-600/10 p-8 sm:p-10 border-b border-white/10">
+                            <div className="bg-gradient-to-r from-teal-600/10 via-cyan-600/10 to-teal-600/10 p-6 sm:p-8 border-b border-white/10">
                                 <div className="flex items-center gap-5">
                                     <div className="bg-gradient-to-br from-teal-500 to-cyan-600 p-5 rounded-2xl shadow-lg">
                                         <FaUser className="text-4xl text-white" />

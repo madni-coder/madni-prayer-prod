@@ -164,41 +164,41 @@ export default function Page() {
     };
 
     return (
-        <div className="p-6 bg-gray-50 min-h-screen">
+        <div className="p-3 md:p-6 bg-gray-50 min-h-screen">
             {/* Header */}
-            <div className="flex items-center justify-between mb-6">
-                <h1 className="text-2xl font-semibold text-gray-900">All Masjid</h1>
-                <div className="flex items-center gap-3">
+            <div className="flex flex-col md:flex-row items-start md:items-center justify-between mb-4 md:mb-6 gap-3">
+                <h1 className="text-xl md:text-2xl font-semibold text-gray-900">All Masjid</h1>
+                <div className="flex items-center gap-2 md:gap-3 w-full md:w-auto">
                     <button
                         onClick={fetchMasjids}
                         disabled={reloading}
-                        className="flex items-center gap-2 border text-black  font-bold border-black-300 px-3 py-2 rounded-md text-sm hover:bg-gray-100 disabled:opacity-60"
+                        className="flex items-center gap-1 md:gap-2 border text-black font-bold border-black-300 px-2 md:px-3 py-2 rounded-md text-xs md:text-sm hover:bg-gray-100 disabled:opacity-60"
                         title="Refresh list"
                     >
                         <RefreshCw
-                            size={16}
-                            className={reloading ? "animate-spin" : ""}
+                            size={14}
+                            className={reloading ? "animate-spin" : "md:w-4 md:h-4"}
                         />
-                        {reloading ? "Refreshing" : "Refresh"}
+                        <span className="hidden sm:inline">{reloading ? "Refreshing" : "Refresh"}</span>
                     </button>
-                    <Link href="/admin/all-masjids/add">
-                        <button className="bg-green-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-medium transition-colors">
+                    <Link href="/admin/all-masjids/add" className="flex-1 md:flex-none">
+                        <button className="bg-green-600 hover:bg-blue-700 text-white px-3 md:px-4 py-2 rounded-lg text-xs md:text-sm font-medium transition-colors w-full md:w-auto">
                             Add Masjid Entry
                         </button>
                     </Link>
                 </div>
             </div>
             {loading && (
-                <div className="mb-4 p-3 bg-gray-100 border border-gray-300 text-gray-600 text-sm rounded">
+                <div className="mb-4 p-3 bg-gray-100 border border-gray-300 text-gray-600 text-xs md:text-sm rounded">
                     Loading masjids...
                 </div>
             )}
 
             {/* Filters */}
-            <div className="bg-white p-4 rounded-lg shadow-sm mb-6">
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="bg-white p-3 md:p-4 rounded-lg shadow-sm mb-4 md:mb-6">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-3 md:gap-4">
                     <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                        <label className="block text-xs md:text-sm font-medium text-gray-700 mb-1">
                             Masjid Name
                         </label>
                         <div className="relative">
@@ -207,7 +207,7 @@ export default function Page() {
                                 placeholder="Search masjid name"
                                 value={searchQuery}
                                 onChange={(e) => setSearchQuery(e.target.value)}
-                                className="w-full px-3 py-2 pr-8 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-black"
+                                className="w-full px-3 py-2 pr-8 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-black text-sm"
                             />
                             {searchQuery && (
                                 <button
@@ -221,7 +221,7 @@ export default function Page() {
                         </div>
                     </div>
                     <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                        <label className="block text-xs md:text-sm font-medium text-gray-700 mb-1">
                             Colony Address
                         </label>
                         <div className="relative">
@@ -232,7 +232,7 @@ export default function Page() {
                                 onChange={(e) =>
                                     setColonySearch(e.target.value)
                                 }
-                                className="w-full px-3 py-2 pr-8 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-black"
+                                className="w-full px-3 py-2 pr-8 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-black text-sm"
                             />
                             {colonySearch && (
                                 <button
@@ -245,11 +245,11 @@ export default function Page() {
                             )}
                         </div>
                     </div>
-                    <div className="flex items-end gap-3">
-                        <label className="flex items-center gap-2 text-sm text-black font-bold">
+                    <div className="flex items-center md:items-end gap-2 md:gap-3">
+                        <label className="flex items-center gap-2 text-xs md:text-sm text-black font-bold flex-1">
                             <input
                                 type="checkbox"
-                                className="toggle toggle-xl bg-error border-error checked:bg-primary checked:border-primary checked:after:bg-primary"
+                                className="toggle toggle-md md:toggle-xl bg-error border-error checked:bg-primary checked:border-primary checked:after:bg-primary"
                                 checked={showRaipur}
                                 onChange={(e) => setShowRaipur(e.target.checked)}
                                 aria-label="Show only Raipur masjids"
@@ -261,17 +261,17 @@ export default function Page() {
                             className="p-2 border border-gray-300 rounded-md hover:bg-gray-50 transition-colors"
                             title="Reset all filters"
                         >
-                            <RefreshCw size={20} className="text-gray-600" />
+                            <RefreshCw size={18} className="text-gray-600 md:w-5 md:h-5" />
                         </button>
                     </div>
                 </div>
             </div>
 
-            {/* Table */}
-            <div className="bg-white rounded-lg shadow-sm overflow-hidden">
+            {/* Table - Desktop View */}
+            <div className="hidden md:block bg-white rounded-lg shadow-sm overflow-hidden">
                 {/* Table Header */}
                 <div className="bg-yellow-600 text-white">
-                    <div className="grid grid-cols-10 gap-4 px-6 py-4 font-medium">
+                    <div className="grid grid-cols-10 gap-4 px-6 py-4 font-medium text-sm">
                         <div className="">No.</div>
                         <div className="col-span-2">Masjid Names</div>
                         <div className="col-span-2">Colony Address</div>
@@ -383,17 +383,121 @@ export default function Page() {
                     ))}
                 </div>
             </div>
-            {/* Pagination controls - show only when more than one page (i.e., > PAGE_SIZE entries) */}
+
+            {/* Card View - Mobile Only */}
+            <div className="md:hidden space-y-3">
+                {!loading && filteredMasjids.length === 0 && (
+                    <div className="bg-white rounded-lg p-4 text-sm text-gray-500 text-center">
+                        No masjids found.
+                    </div>
+                )}
+                {paginatedMasjids.map((m, idx) => (
+                    <div
+                        key={m.id}
+                        className="bg-white rounded-lg shadow-sm p-4 space-y-3"
+                    >
+                        {/* Header with Number and Actions */}
+                        <div className="flex items-start justify-between border-b pb-3">
+                            <div className="flex items-center gap-3">
+                                <div className="w-10 h-10 bg-yellow-100 rounded-full flex items-center justify-center text-yellow-700 font-bold text-sm">
+                                    {startIndex + idx + 1}
+                                </div>
+                                <div>
+                                    <div className="font-semibold text-gray-900 text-base">
+                                        {m.masjidName}
+                                    </div>
+                                    <div className="text-xs text-gray-500 mt-0.5">
+                                        {m.colony || "-"}
+                                    </div>
+                                </div>
+                            </div>
+                            <Link
+                                href={`/admin/all-masjids/edit-jamatTime?id=${m.id}`}
+                            >
+                                <button
+                                    className="p-2 text-blue-600 hover:text-blue-800 hover:bg-blue-50 rounded-md transition-colors"
+                                    title="Edit Masjid"
+                                >
+                                    <Pencil size={18} />
+                                </button>
+                            </Link>
+                        </div>
+
+                        {/* Details Grid */}
+                        <div className="space-y-2 text-sm">
+                            <div className="flex justify-between py-1">
+                                <span className="text-gray-500 font-medium">Role:</span>
+                                <span className="text-gray-900">
+                                    {displayOrNotAdded(m.role)}
+                                </span>
+                            </div>
+                            <div className="flex justify-between py-1">
+                                <span className="text-gray-500 font-medium">Name:</span>
+                                <span className="text-gray-900">
+                                    {displayOrNotAdded(m.name)}
+                                </span>
+                            </div>
+                            <div className="flex justify-between py-1 items-center">
+                                <span className="text-gray-500 font-medium">Mobile:</span>
+                                <div className="text-gray-900">
+                                    {m.mobile &&
+                                        String(m.mobile).trim().length > 0 ? (
+                                        <div className="flex items-center gap-2">
+                                            <span>{m.mobile}</span>
+                                            <button
+                                                onClick={() =>
+                                                    handleCopy(m.mobile, m.id)
+                                                }
+                                                className="p-1 text-gray-500 hover:text-gray-700 rounded-md"
+                                                title="Copy mobile number"
+                                            >
+                                                <Copy size={14} />
+                                            </button>
+                                            {copiedId === m.id && (
+                                                <Check
+                                                    size={14}
+                                                    className="text-green-600"
+                                                />
+                                            )}
+                                        </div>
+                                    ) : (
+                                        <span className="text-red-600">
+                                            Not Added
+                                        </span>
+                                    )}
+                                </div>
+                            </div>
+                            <div className="flex justify-between py-1">
+                                <span className="text-gray-500 font-medium">
+                                    Location URL:
+                                </span>
+                                <span>
+                                    {m.pasteMapUrl &&
+                                        String(m.pasteMapUrl).trim().length > 0 ? (
+                                        <span className="text-green-600 font-medium text-xs">
+                                            YES
+                                        </span>
+                                    ) : (
+                                        <span className="text-red-600 font-medium text-xs">
+                                            NO
+                                        </span>
+                                    )}
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                ))}
+            </div>
             {filteredMasjids.length > PAGE_SIZE && (
-                <div className="mt-4 flex items-center justify-between px-2">
-                    <div className="text-sm text-gray-600 dark:text-gray-300">
+                <div className="mt-4 flex flex-col sm:flex-row items-center justify-between gap-3 px-2">
+                    <div className="text-xs md:text-sm text-gray-600 dark:text-gray-300">
                         Showing{" "}
                         {Math.min(startIndex + 1, filteredMasjids.length)}-
                         {Math.min(endIndex, filteredMasjids.length)} of{" "}
                         {filteredMasjids.length}
                     </div>
                     <nav
-                        className="flex items-center space-x-2"
+                        className="flex items-center space-x-1 md:space-x-2"
                         aria-label="Pagination"
                     >
                         <button
@@ -401,7 +505,7 @@ export default function Page() {
                                 setCurrentPage((p) => Math.max(1, p - 1))
                             }
                             disabled={currentPage === 1}
-                            className={`px-3 py-1 rounded-md border text-sm transition-colors disabled:opacity-50 ${"bg-white text-gray-700 border-gray-300 hover:bg-gray-100 dark:bg-gray-800 dark:text-gray-200 dark:border-gray-700 dark:hover:bg-gray-700"}`}
+                            className={`px-2 md:px-3 py-1 rounded-md border text-xs md:text-sm transition-colors disabled:opacity-50 ${"bg-white text-gray-700 border-gray-300 hover:bg-gray-100 dark:bg-gray-800 dark:text-gray-200 dark:border-gray-700 dark:hover:bg-gray-700"}`}
                         >
                             Prev
                         </button>
@@ -428,7 +532,7 @@ export default function Page() {
                                         return (
                                             <span
                                                 key={`ell-${pageNum}`}
-                                                className="px-2 text-sm text-gray-500 dark:text-gray-400"
+                                                className="px-1 md:px-2 text-xs md:text-sm text-gray-500 dark:text-gray-400"
                                             >
                                                 …
                                             </span>
@@ -445,7 +549,7 @@ export default function Page() {
                                                 ? "page"
                                                 : undefined
                                         }
-                                        className={`px-3 py-1 rounded-md text-sm border transition-colors ${pageNum === currentPage
+                                        className={`px-2 md:px-3 py-1 rounded-md text-xs md:text-sm border transition-colors ${pageNum === currentPage
                                             ? "bg-blue-600 text-white border-blue-600"
                                             : "bg-white text-gray-700 border-gray-300 hover:bg-gray-100 dark:bg-gray-800 dark:text-gray-200 dark:border-gray-700 dark:hover:bg-gray-700"
                                             }`}
@@ -463,7 +567,7 @@ export default function Page() {
                                 )
                             }
                             disabled={currentPage === totalPages}
-                            className={`px-3 py-1 rounded-md border text-sm transition-colors disabled:opacity-50 ${"bg-white text-gray-700 border-gray-300 hover:bg-gray-100 dark:bg-gray-800 dark:text-gray-200 dark:border-gray-700 dark:hover:bg-gray-700"}`}
+                            className={`px-2 md:px-3 py-1 rounded-md border text-xs md:text-sm transition-colors disabled:opacity-50 ${"bg-white text-gray-700 border-gray-300 hover:bg-gray-100 dark:bg-gray-800 dark:text-gray-200 dark:border-gray-700 dark:hover:bg-gray-700"}`}
                         >
                             Next
                         </button>

@@ -131,7 +131,7 @@ export default function CreateJobPage() {
                                 value={formData.title}
                                 onChange={handleChange}
                                 className={`w-full px-3 py-2 border rounded text-gray-900 ${errors.title ? 'border-red-500' : 'border-gray-300'}`}
-                                placeholder="e.g., Software Engineer"
+                                placeholder=""
                             />
                             {errors.title && <span className="text-red-500 text-xs mt-1">{errors.title}</span>}
                         </div>
@@ -146,7 +146,7 @@ export default function CreateJobPage() {
                                 value={formData.company}
                                 onChange={handleChange}
                                 className={`w-full px-3 py-2 border rounded text-gray-900 ${errors.company ? 'border-red-500' : 'border-gray-300'}`}
-                                placeholder="e.g., Tech Solutions Ltd."
+                                placeholder=""
                             />
                             {errors.company && <span className="text-red-500 text-xs mt-1">{errors.company}</span>}
                         </div>
@@ -161,7 +161,7 @@ export default function CreateJobPage() {
                                 value={formData.location}
                                 onChange={handleChange}
                                 className={`w-full px-3 py-2 border rounded text-gray-900 ${errors.location ? 'border-red-500' : 'border-gray-300'}`}
-                                placeholder="e.g., Karachi, Pakistan"
+                                placeholder=""
                             />
                             {errors.location && <span className="text-red-500 text-xs mt-1">{errors.location}</span>}
                         </div>
@@ -194,7 +194,7 @@ export default function CreateJobPage() {
                                 value={formData.salary}
                                 onChange={handleChange}
                                 className={`w-full px-3 py-2 border rounded text-gray-900 ${errors.salary ? 'border-red-500' : 'border-gray-300'}`}
-                                placeholder="e.g., Rs. 80,000 - 120,000"
+                                placeholder=""
                             />
                             {errors.salary && <span className="text-red-500 text-xs mt-1">{errors.salary}</span>}
                         </div>
@@ -209,7 +209,7 @@ export default function CreateJobPage() {
                             value={formData.description}
                             onChange={handleChange}
                             className={`w-full px-3 py-2 border rounded h-32 text-gray-900 ${errors.description ? 'border-red-500' : 'border-gray-300'}`}
-                            placeholder="Describe the job role and responsibilities..."
+                            placeholder=""
                         />
                         {errors.description && <span className="text-red-500 text-xs mt-1">{errors.description}</span>}
                     </div>
@@ -225,7 +225,7 @@ export default function CreateJobPage() {
                                     value={req}
                                     onChange={(e) => handleArrayChange('requirements', index, e.target.value)}
                                     className="w-full px-3 py-2 border border-gray-300 rounded flex-1 text-gray-900"
-                                    placeholder={`Requirement ${index + 1}`}
+                                    placeholder=""
                                 />
                                 {formData.requirements.length > 1 && (
                                     <button
@@ -259,7 +259,7 @@ export default function CreateJobPage() {
                                     value={resp}
                                     onChange={(e) => handleArrayChange('responsibilities', index, e.target.value)}
                                     className="w-full px-3 py-2 border border-gray-300 rounded flex-1 text-gray-900"
-                                    placeholder={`Responsibility ${index + 1}`}
+                                    placeholder=""
                                 />
                                 {formData.responsibilities.length > 1 && (
                                     <button

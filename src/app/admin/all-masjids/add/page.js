@@ -119,9 +119,9 @@ export default function AddMasjidPage() {
     };
 
     return (
-        <div className="min-h-screen bg-white flex flex-col items-center py-10">
+        <div className="min-h-screen bg-white flex flex-col items-center py-4 px-4 md:py-10 md:px-0">
 
-            <div className="w-full max-w-5xl flex items-center mb-4">
+            <div className="w-full max-w-5xl flex items-center mb-4 px-2 md:px-0">
                 <button
                     className="bg-blue-600 hover:bg-blue-700 text-white btn btn-sm mr-2 flex items-center gap-1"
                     onClick={() => router.push("/admin/all-masjids")}
@@ -129,74 +129,75 @@ export default function AddMasjidPage() {
                     <ArrowLeft size={16} /> Back
                 </button>
             </div>
-            <div className="flex flex-row gap-8 w-full max-w-5xl items-start">
+            <div className="flex flex-col md:flex-row gap-4 md:gap-8 w-full max-w-5xl items-start px-2 md:px-0">
                 {/* Add Masjid Form */}
-                <div className="w-1/2">
-                    <h1 className="text-3xl font-bold mb-8 text-center text-gray-800">
+                <div className="w-full md:w-1/2">
+                    <h1 className="text-2xl md:text-3xl font-bold mb-4 md:mb-8 text-center text-gray-800">
                         Add New Masjid
                     </h1>
                     <div className={
-                        `mb-4 flex items-center gap-3 p-3 rounded-md transition-colors ${isRaipur ? 'bg-primary/10 border border-primary/20' : 'bg-gray-50 border border-gray-100'}`
+                        `mb-4 flex flex-col sm:flex-row items-start sm:items-center gap-2 sm:gap-3 p-3 rounded-md transition-colors ${isRaipur ? 'bg-primary/10 border border-primary/20' : 'bg-gray-50 border border-gray-100'}`
                     }>
                         <label className={`flex items-center cursor-pointer select-none gap-2 ${isRaipur ? 'text-primary' : 'text-gray-700'}`}>
                             <input
                                 type="checkbox"
-                                className="toggle toggle-lg bg-error border-error checked:bg-primary checked:border-primary mr-2"
+                                className="toggle toggle-md sm:toggle-lg bg-error border-error checked:bg-primary checked:border-primary mr-1 sm:mr-2"
                                 checked={isRaipur}
                                 onChange={(e) => setIsRaipur(e.target.checked)}
                             />
-                            <span className="font-medium">Is Raipur</span>
+                            <span className="font-medium text-sm sm:text-base">Is Raipur</span>
                         </label>
-                        <div className={`text-sm ${isRaipur ? 'text-primary' : 'text-gray-500'}`}>
+                        <div className={`text-xs sm:text-sm ${isRaipur ? 'text-primary' : 'text-gray-500'}`}>
                             Default city: <span className={`font-semibold ${isRaipur ? 'text-primary' : 'text-gray-700'}`}>{isRaipur ? 'Raipur' : 'Bilaspur'}</span>
                         </div>
                     </div>
                     <form
-                        className="bg-white p-6 rounded shadow mb-8"
+                        id="masjid-form"
+                        className="bg-white p-4 md:p-6 rounded shadow mb-4 md:mb-8"
                         onSubmit={handleSubmit}
                     >
                         <div className="mb-4">
-                            <label className="block text-gray-700 mb-2">
+                            <label className="block text-gray-700 mb-2 text-sm md:text-base">
                                 Masjid Name{" "}
                                 <span className="text-red-600">*</span>
                             </label>
                             <input
                                 type="text"
-                                className="input input-bordered w-full bg-white text-black border-gray-300 rounded-full"
+                                className="input input-bordered w-full bg-white text-black border-gray-300 rounded-full text-sm md:text-base"
                                 value={masjidName}
                                 onChange={(e) => setMasjidName(e.target.value)}
                                 required
                             />
                         </div>
                         <div className="mb-4">
-                            <label className="block text-gray-700 mb-2">
+                            <label className="block text-gray-700 mb-2 text-sm md:text-base">
                                 Colony <span className="text-red-600">*</span>
                             </label>
                             <input
                                 type="text"
-                                className="input input-bordered w-full bg-white text-black border-gray-300 rounded-full"
+                                className="input input-bordered w-full bg-white text-black border-gray-300 rounded-full text-sm md:text-base"
                                 value={colony}
                                 onChange={(e) => setColony(e.target.value)}
                                 required
                             />
                         </div>
                         <div className="mb-4">
-                            <label className="block text-gray-700 mb-2">
+                            <label className="block text-gray-700 mb-2 text-sm md:text-base">
                                 Locality <span className="text-red-600">*</span>
                             </label>
                             <input
                                 type="text"
-                                className="input input-bordered w-full bg-white text-black border-gray-300 rounded-full"
+                                className="input input-bordered w-full bg-white text-black border-gray-300 rounded-full text-sm md:text-base"
                                 value={locality}
                                 onChange={(e) => setLocality(e.target.value)}
                             />
                         </div>
                         <div className="mb-4">
-                            <label className="block text-gray-700 mb-2">
+                            <label className="block text-gray-700 mb-2 text-sm md:text-base">
                                 Role
                             </label>
                             <select
-                                className="input input-bordered w-full bg-white text-black border-gray-300 rounded-full"
+                                className="input input-bordered w-full bg-white text-black border-gray-300 rounded-full text-sm md:text-base"
                                 value={role}
                                 onChange={handleRoleChange}
                             >
@@ -210,12 +211,12 @@ export default function AddMasjidPage() {
 
                         {/* Name field: show selected role as a badge ahead of the input and persist per-role name */}
                         <div className="mb-4">
-                            <label className="block text-gray-700 mb-2">
+                            <label className="block text-gray-700 mb-2 text-sm md:text-base">
                                 Name
                             </label>
                             <div className="flex">
                                 {role && (
-                                    <div className="px-3 py-2 bg-gray-100 border border-r-0 border-gray-300 rounded-l-full text-gray-700 text-sm flex items-center">
+                                    <div className="px-2 md:px-3 py-2 bg-gray-100 border border-r-0 border-gray-300 rounded-l-full text-gray-700 text-xs md:text-sm flex items-center whitespace-nowrap">
                                         {role.charAt(0).toUpperCase() +
                                             role.slice(1)}
                                     </div>
@@ -223,7 +224,7 @@ export default function AddMasjidPage() {
                                 <input
                                     type="text"
                                     className={
-                                        "input input-bordered w-full bg-white text-black border-gray-300 " +
+                                        "input input-bordered w-full bg-white text-black border-gray-300 text-sm md:text-base " +
                                         (role
                                             ? "rounded-r-full"
                                             : "rounded-full")
@@ -239,12 +240,12 @@ export default function AddMasjidPage() {
 
                         {/* Mobile field: show selected role as a badge ahead of the input and persist per-role mobile */}
                         <div className="mb-4">
-                            <label className="block text-gray-700 mb-2">
+                            <label className="block text-gray-700 mb-2 text-sm md:text-base">
                                 Mobile Number
                             </label>
                             <div className="flex">
                                 {role && (
-                                    <div className="px-3 py-2 bg-gray-100 border border-r-0 border-gray-300 rounded-l-full text-gray-700 text-sm flex items-center">
+                                    <div className="px-2 md:px-3 py-2 bg-gray-100 border border-r-0 border-gray-300 rounded-l-full text-gray-700 text-xs md:text-sm flex items-center whitespace-nowrap">
                                         {role.charAt(0).toUpperCase() +
                                             role.slice(1)}
                                     </div>
@@ -252,7 +253,7 @@ export default function AddMasjidPage() {
                                 <input
                                     type="tel"
                                     className={
-                                        "input input-bordered w-full bg-white text-black border-gray-300 " +
+                                        "input input-bordered w-full bg-white text-black border-gray-300 text-sm md:text-base " +
                                         (role
                                             ? "rounded-r-full"
                                             : "rounded-full")
@@ -270,12 +271,12 @@ export default function AddMasjidPage() {
                             </div>
                         </div>
                         <div className="mb-4">
-                            <label className="block text-gray-700 mb-2">
+                            <label className="block text-gray-700 mb-2 text-sm md:text-base">
                                 Paste Map URL of Masjid Location
                             </label>
                             <input
                                 type="text"
-                                className="input input-bordered w-full bg-white text-black border-gray-300 rounded-full"
+                                className="input input-bordered w-full bg-white text-black border-gray-300 rounded-full text-sm md:text-base"
                                 value={pasteMapUrl}
                                 onChange={(e) => setPasteMapUrl(e.target.value)}
                                 placeholder="Paste Google Map URL here"
@@ -283,12 +284,12 @@ export default function AddMasjidPage() {
                         </div>
 
                         {error && (
-                            <div className="text-red-600 text-sm mb-2">
+                            <div className="text-red-600 text-xs md:text-sm mb-2">
                                 {error}
                             </div>
                         )}
                         {success && (
-                            <div className="text-green-600 text-sm mb-2">
+                            <div className="text-green-600 text-xs md:text-sm mb-2">
                                 {success}
                             </div>
                         )}
@@ -298,7 +299,7 @@ export default function AddMasjidPage() {
                                 <button
                                     type="submit"
                                     disabled={submitting}
-                                    className="btn w-full mt-4 bg-green-500 hover:bg-green-600 text-white rounded-none disabled:opacity-60"
+                                    className="hidden md:block btn w-full mt-4 bg-green-500 hover:bg-green-600 text-white rounded-none disabled:opacity-60 text-sm md:text-base"
                                 >
                                     {submitting ? "Saving..." : "Submit Masjid Info & Jamat Times"}
                                 </button>
@@ -306,17 +307,17 @@ export default function AddMasjidPage() {
                     </form>
                 </div>
                 {/* Jamat Time Table */}
-                <div className="w-1/2">
-                    <h2 className="text-2xl font-bold mb-6 text-center text-gray-800">
+                <div className="w-full md:w-1/2">
+                    <h2 className="text-xl md:text-2xl font-bold mb-4 md:mb-6 text-center text-gray-800">
                         Jamat Time Table
                     </h2>
                     <div className="overflow-x-auto w-full">
-                        <table className="table w-full border border-gray-200 bg-gray-50">
+                        <table className="table w-full border border-gray-200 bg-gray-50 text-sm md:text-base">
                             <thead className="bg-gray-100">
                                 <tr>
-                                    <th className="text-gray-700">Prayer</th>
-                                    <th className="text-gray-700">Time</th>
-                                    <th className="text-gray-700">Actions</th>
+                                    <th className="text-gray-700 text-xs md:text-base">Prayer</th>
+                                    <th className="text-gray-700 text-xs md:text-base">Time</th>
+                                    <th className="text-gray-700 text-xs md:text-base">Actions</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -327,7 +328,7 @@ export default function AddMasjidPage() {
                                     >
                                         <td
                                             className={[
-                                                "font-semibold border-b-2",
+                                                "font-semibold border-b-2 text-xs md:text-base",
                                                 idx === 0
                                                     ? "text-primary border-primary"
                                                     : idx === 1
@@ -347,12 +348,12 @@ export default function AddMasjidPage() {
                                         >
                                             {prayer.name}
                                         </td>
-                                        <td className="text-blue-600 font-semibold">
+                                        <td className="text-blue-600 font-semibold text-xs md:text-base">
                                             {editIdx === idx ? (
-                                                <div className="flex items-center gap-2">
+                                                <div className="flex items-center gap-1 md:gap-2">
                                                     <input
                                                         type="time"
-                                                        className="input input-bordered input-sm bg-white text-gray-800 border-gray-300"
+                                                        className="input input-bordered input-sm bg-white text-gray-800 border-gray-300 text-xs md:text-sm"
                                                         value={editValue}
                                                         onChange={(e) =>
                                                             setEditValue(
@@ -363,13 +364,14 @@ export default function AddMasjidPage() {
                                                     />
                                                     <button
                                                         type="button"
-                                                        className="bg-blue-600 hover:bg-blue-700 text-white px-2 py-1 rounded flex items-center"
+                                                        className="bg-blue-600 hover:bg-blue-700 text-white px-1.5 md:px-2 py-1 rounded flex items-center"
                                                         onClick={() =>
                                                             handleSave(idx)
                                                         }
                                                     >
                                                         <FaCheckCircle
-                                                            size={16}
+                                                            size={14}
+                                                            className="md:w-4 md:h-4"
                                                         />
                                                     </button>
                                                 </div>
@@ -380,10 +382,10 @@ export default function AddMasjidPage() {
                                         <td>
                                             <button
                                                 type="button"
-                                                className="bg-green-600 hover:bg-green-700 text-white px-2 py-1 rounded flex items-center"
+                                                className="bg-green-600 hover:bg-green-700 text-white px-1.5 md:px-2 py-1 rounded flex items-center"
                                                 onClick={() => handleEdit(idx)}
                                             >
-                                                <Plus size={16} />
+                                                <Plus size={14} className="md:w-4 md:h-4" />
                                             </button>
                                         </td>
                                     </tr>
@@ -392,6 +394,19 @@ export default function AddMasjidPage() {
                         </table>
                     </div>
                 </div>
+                {/* Mobile Submit Button - Shows only on mobile below the table */}
+                {masjidName.trim() &&
+                    colony.trim() &&
+                    locality.trim() && (
+                        <button
+                            type="submit"
+                            form="masjid-form"
+                            disabled={submitting}
+                            className="block md:hidden btn w-full mt-4 bg-green-500 hover:bg-green-600 text-white rounded-none disabled:opacity-60 text-sm px-2"
+                        >
+                            {submitting ? "Saving..." : "Submit Masjid Info & Jamat Times"}
+                        </button>
+                    )}
             </div>
         </div>
     );

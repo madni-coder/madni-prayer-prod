@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from "react";
 import { useRouter, useParams } from "next/navigation";
 import apiClient from "../../../../lib/apiClient";
-import { ArrowLeft, Trash2, Mail, MapPin, Briefcase, DollarSign, Clock, Award, Home } from "lucide-react";
+import { ArrowLeft, Trash2, Mail, Phone, Copy, MapPin, Briefcase, DollarSign, Clock, Award, Home } from "lucide-react";
 
 export default function JobSeekerDetailPage() {
     const router = useRouter();
@@ -11,6 +11,7 @@ export default function JobSeekerDetailPage() {
 
     const [loading, setLoading] = useState(true);
     const [seeker, setSeeker] = useState(null);
+    const [copied, setCopied] = useState(false);
 
     useEffect(() => {
         const isAuthenticated = localStorage.getItem("isAuthenticated") === "true";
@@ -84,11 +85,39 @@ export default function JobSeekerDetailPage() {
             <div className="bg-white rounded-xl shadow p-6">
                 <div className="mb-6">
                     <h1 className="text-3xl font-bold text-black mb-2">{seeker.fullName}</h1>
-                    <div className="flex items-center gap-2 text-gray-600">
-                        <Mail className="w-4 h-4" />
-                        <a href={`mailto:${seeker.email}`} className="hover:text-cyan-600">
-                            {seeker.email}
-                        </a>
+                    <div className="flex flex-col text-gray-600">
+                        <div className="flex items-center gap-2">
+                            <Mail className="w-4 h-4" />
+                            <a href={`mailto:${seeker.email}`} className="hover:text-cyan-600">
+                                {seeker.email}
+                            </a>
+                        </div>
+                        {seeker.mobile && (
+                            <div className="flex items-center gap-2 mt-1">
+                                <Phone className="w-4 h-4" />
+                                <a href={`tel:${seeker.mobile}`} className="hover:text-cyan-600">
+                                    {seeker.mobile}
+                                </a>
+                                <button
+                                    onClick={async (e) => {
+                                        e.stopPropagation();
+                                        try {
+                                            await navigator.clipboard.writeText(seeker.mobile);
+                                            setCopied(true);
+                                            setTimeout(() => setCopied(false), 2000);
+                                        } catch (err) {
+                                            console.error("Copy failed", err);
+                                            alert("Failed to copy number");
+                                        }
+                                    }}
+                                    title="Copy number"
+                                    className="ml-2 text-gray-500 hover:text-cyan-600 p-1 rounded"
+                                >
+                                    <Copy className="w-4 h-4" />
+                                </button>
+                                {copied && <span className="text-sm text-green-600 ml-1">Copied</span>}
+                            </div>
+                        )}
                     </div>
                 </div>
 
