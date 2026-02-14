@@ -290,7 +290,7 @@ export default function JamatTimesPage() {
 
     return (
         <div className="min-h-screen bg-white flex flex-col items-center py-10">
-            <div className="flex gap-4 mb-8 w-full max-w-5xl items-center px-4">
+            <div className="flex flex-col md:flex-row gap-4 mb-8 w-full max-w-5xl items-stretch md:items-center px-4">
                 {/* Colony Search Input */}
                 <div className="flex-1 relative">
                     <input
@@ -301,7 +301,7 @@ export default function JamatTimesPage() {
                             setColonySearch(e.target.value);
                             setSelectedColony(e.target.value);
                         }}
-                        className="input w-full bg-white border text-gray-800 text-lg h-14 pr-10"
+                        className="input w-full bg-white border text-gray-800 text-base md:text-lg h-12 md:h-14 pr-10"
                         list="colony-list"
                     />
                     {colonySearch && (
@@ -335,7 +335,7 @@ export default function JamatTimesPage() {
                 <div className="dropdown flex-1 relative">
                     <label
                         tabIndex={0}
-                        className="btn w-full bg-white border text-gray-500 justify-between text-lg h-14"
+                        className="btn w-full bg-white border text-gray-500 justify-between text-left text-base md:text-lg h-12 md:h-14"
                     >
                         {loading
                             ? "Loading..."
@@ -381,10 +381,10 @@ export default function JamatTimesPage() {
                 {/* Reset Button */}
                 <button
                     onClick={handleReset}
-                    className="btn bg-gray-500 hover:bg-gray-600 text-white border-none px-4 h-14 flex items-center justify-center"
+                    className="btn bg-gray-500 hover:bg-gray-600 text-white border-none px-4 h-12 md:h-14 flex items-center justify-center mt-2 md:mt-0 flex-shrink-0"
                     title="Reset all selections"
                 >
-                    <RotateCcw size={24} />
+                    <RotateCcw size={20} />
                 </button>
             </div>
             <h1 className="text-3xl font-bold mb-8 text-center text-gray-800">
@@ -401,12 +401,12 @@ export default function JamatTimesPage() {
                         {saveMessage}
                     </div>
                 )}
-                <table className="table w-full max-w-2xl border border-gray-200 bg-gray-50 text-base">
+                <table className="table w-full border border-gray-200 bg-gray-50 text-sm md:text-base">
                     <thead className="bg-gray-100">
                         <tr>
-                            <th className="text-gray-700 w-32">Prayer</th>
-                            <th className="text-gray-700 w-40">Time</th>
-                            <th className="text-gray-700 w-24">Actions</th>
+                            <th className="text-gray-700 w-24 md:w-32">Prayer</th>
+                            <th className="text-gray-700 w-32 md:w-40">Time</th>
+                            <th className="text-gray-700 w-20 md:w-24">Actions</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -437,11 +437,11 @@ export default function JamatTimesPage() {
                                 >
                                     {prayer.name}
                                 </td>
-                                <td className="text-blue-700 font-semibold text-base py-2 px-2 w-40">
+                                <td className="text-blue-700 font-semibold text-sm md:text-base py-2 px-2 w-32 md:w-40">
                                     {editIdx === idx ? (
                                         <input
                                             type="time"
-                                            className="input input-bordered input-sm bg-white text-gray-800 border-gray-300"
+                                            className="input input-bordered input-sm bg-white text-gray-800 border-gray-300 text-sm md:text-base"
                                             value={editValue}
                                             onChange={(e) =>
                                                 setEditValue(e.target.value)
