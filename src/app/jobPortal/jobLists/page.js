@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { FaBriefcase, FaMapMarkerAlt, FaClock, FaDollarSign, FaArrowLeft, FaUserPlus, FaBullhorn, FaSearch } from "react-icons/fa";
+import { FaBriefcase, FaMapMarkerAlt, FaClock, FaRupeeSign, FaArrowLeft, FaBullhorn, FaSearch, FaCopy, FaPhone, FaUser } from "react-icons/fa";
 import AnimatedLooader from "../../../components/animatedLooader";
 import apiClient from "../../../lib/apiClient";
 
@@ -14,7 +14,49 @@ export default function ViewJobsPage() {
     const router = useRouter();
     const [selectedJob, setSelectedJob] = useState(null);
     const [showLoader, setShowLoader] = useState(false);
+    const [copied, setCopied] = useState(false);
     const [jobs, setJobs] = useState([]);
+    const [isAuthenticated, setIsAuthenticated] = useState(false);
+
+    // Check authentication status on mount and when window gains focus
+    useEffect(() => {
+        const checkAuth = () => {
+            const auth = localStorage.getItem("jobSeekerAuth");
+            setIsAuthenticated(!!auth);
+        };
+
+        checkAuth();
+
+        // Re-check authentication when window gains focus (user comes back to tab)
+        window.addEventListener('focus', checkAuth);
+
+        return () => {
+            window.removeEventListener('focus', checkAuth);
+        };
+    }, []);
+
+    const handleCopy = async (text) => {
+        if (!text) return;
+        try {
+            if (navigator?.clipboard?.writeText) {
+                await navigator.clipboard.writeText(text);
+            } else {
+                const textarea = document.createElement('textarea');
+                textarea.value = text;
+                textarea.setAttribute('readonly', '');
+                textarea.style.position = 'absolute';
+                textarea.style.left = '-9999px';
+                document.body.appendChild(textarea);
+                textarea.select();
+                document.execCommand('copy');
+                document.body.removeChild(textarea);
+            }
+            setCopied(true);
+            setTimeout(() => setCopied(false), 2000);
+        } catch (err) {
+            console.error('Copy failed', err);
+        }
+    };
     const [loading, setLoading] = useState(true);
     const [currentPage, setCurrentPage] = useState(1);
     const [searchTerm, setSearchTerm] = useState("");
@@ -93,49 +135,61 @@ export default function ViewJobsPage() {
         }, 500);
     };
 
+    const handleMyProfile = () => {
+        setShowLoader(true);
+        setTimeout(() => {
+            // Check authentication before redirecting
+            const auth = localStorage.getItem("jobSeekerAuth");
+            if (auth) {
+                router.push("/jobPortal/Resume");
+            } else {
+                router.push("/jobPortal/auth/signin");
+            }
+        }, 500);
+    };
+
     return (
         <div className="min-h-screen bg-gradient-to-br from-[#0a0f1e] via-[#0d1528] to-[#0a0f1e] text-gray-200 pb-20">
             {/* Header Section */}
             <div className="bg-gradient-to-r from-[#1a1f35] to-[#141929] border-b border-purple-500/20 shadow-xl">
-                <div className="max-w-7xl mx-auto px-4 sm:px-6 py-4 sm:py-6">
-                    {/* Back Button and Title Row */}
-                    <div className="flex items-center gap-4 mb-6">
-                        <button
-                            onClick={handleBack}
-                            className="group flex items-center gap-2 px-4 py-2.5 bg-white/5 hover:bg-white/10 backdrop-blur-sm rounded-xl transition-all duration-300 border border-white/10 hover:border-purple-500/50"
-                        >
-                            <FaArrowLeft className="text-sm group-hover:-translate-x-1 transition-transform duration-300" />
-                            <span className="font-medium">Back</span>
-                        </button>
+                <div className="max-w-7xl mx-auto px-3 sm:px-6 py-3 sm:py-6">
+                    {/* Mobile Layout */}
+                    <div className="flex flex-col gap-3">
+                        {/* Row 1: Back Button and Title */}
+                        <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-2 sm:gap-4">
+                                <button
+                                    onClick={handleBack}
+                                    className="group flex items-center gap-1 sm:gap-2 px-2 sm:px-4 py-2 sm:py-2.5 bg-white/5 hover:bg-white/10 backdrop-blur-sm rounded-lg sm:rounded-xl transition-all duration-300 border border-white/10 hover:border-purple-500/50"
+                                >
+                                    <FaArrowLeft className="text-xs sm:text-sm group-hover:-translate-x-1 transition-transform duration-300" />
+                                    <span className="text-xs sm:text-base font-medium hidden xs:inline">Back</span>
+                                </button>
 
-                        <h1 className="text-2xl sm:text-4xl font-extrabold bg-clip-text text-transparent bg-gradient-to-r from-purple-400 via-pink-500 to-purple-600">
-                            Job Portal
-                        </h1>
-
-
-                    </div>
-
-                    {/* Action Buttons and Description */}
-                    <div className="flex flex-col gap-4">
-                        <div className="flex items-center gap-2 sm:gap-3 ml-10">
-                            <button
-                                onClick={handleEmployerRedirect}
-                                className="group flex items-center gap-2 px-4 sm:px-5 py-2.5 bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 rounded-xl transition-all duration-300 transform hover:scale-105 hover:shadow-[0_0_25px_rgba(16,185,129,0.5)] shadow-lg"
-                            >
-                                <FaBullhorn className="text-sm group-hover:scale-110 transition-transform duration-300" />
-                                <span className="font-bold text-sm sm:text-base">Hire</span>
-                            </button>
-
-                            <button
-                                onClick={handleJobSeekerRedirect}
-                                className="group flex items-center gap-2 px-4 sm:px-5 py-2.5 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 rounded-xl transition-all duration-300 transform hover:scale-105 hover:shadow-[0_0_25px_rgba(168,85,247,0.5)] shadow-lg"
-                            >
-                                <FaUserPlus className="text-sm group-hover:scale-110 transition-transform duration-300" />
-                                <span className="font-bold text-sm sm:text-base">Apply For Job</span>
-                            </button>
+                                <h1 className="text-lg xs:text-xl sm:text-3xl lg:text-4xl font-extrabold bg-clip-text text-transparent bg-gradient-to-r from-purple-400 via-pink-500 to-purple-600">
+                                    Job Portal
+                                </h1>
+                            </div>
                         </div>
 
+                        {/* Row 2: Action Buttons */}
+                        <div className="flex items-center justify-center sm:justify-end gap-2 sm:gap-3">
+                            <button
+                                onClick={handleMyProfile}
+                                className="group flex items-center gap-1.5 sm:gap-2 px-3 sm:px-5 py-2 sm:py-2.5 bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 rounded-lg sm:rounded-xl transition-all duration-300 transform hover:scale-105 hover:shadow-[0_0_20px_rgba(59,130,246,0.4)] shadow-lg text-sm sm:text-base"
+                            >
+                                <FaUser className="text-sm sm:text-base group-hover:scale-110 transition-transform duration-300" />
+                                <span className="font-semibold">{isAuthenticated ? "My Profile" : "Apply For Job"}</span>
+                            </button>
 
+                            <button
+                                onClick={handleEmployerRedirect}
+                                className="group flex items-center gap-1.5 sm:gap-2 px-3 sm:px-5 py-2 sm:py-2.5 bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 rounded-lg sm:rounded-xl transition-all duration-300 transform hover:scale-105 hover:shadow-[0_0_20px_rgba(16,185,129,0.4)] shadow-lg text-sm sm:text-base"
+                            >
+                                <FaBullhorn className="text-sm sm:text-base group-hover:scale-110 transition-transform duration-300" />
+                                <span className="font-semibold">Hire Now</span>
+                            </button>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -199,7 +253,7 @@ export default function ViewJobsPage() {
                                 {/* Results Count */}
                                 <div className="flex items-center justify-between px-2">
                                     <p className="text-gray-400 text-sm">
-                                        <span className="text-purple-400 font-semibold">Total {filteredJobs.length} Jobs</span> 
+                                        <span className="text-purple-400 font-semibold">Total {filteredJobs.length} Jobs</span>
                                     </p>
                                 </div>
 
@@ -246,7 +300,7 @@ export default function ViewJobsPage() {
                                                     </div>
                                                     <div className="flex items-center gap-2.5 text-sm text-gray-300">
                                                         <div className="flex items-center justify-center w-8 h-8 bg-purple-500/10 rounded-lg">
-                                                            <FaDollarSign className="text-purple-400 text-xs" />
+                                                            <FaRupeeSign className="text-purple-400 text-xs" />
                                                         </div>
                                                         <span className="font-semibold text-purple-300">{job.salary}</span>
                                                     </div>
@@ -354,7 +408,7 @@ export default function ViewJobsPage() {
 
                                     {/* Salary */}
                                     <div className="flex items-center gap-4 py-4 border-b border-white/5">
-                                        <FaDollarSign className="text-purple-400 text-2xl flex-shrink-0" />
+                                        <FaRupeeSign className="text-purple-400 text-2xl flex-shrink-0" />
                                         <div className="flex-1">
                                             <p className="text-sm text-gray-400 mb-1">Salary</p>
                                             <p className="text-lg font-semibold text-purple-300">{selectedJob.salary}</p>
@@ -399,6 +453,27 @@ export default function ViewJobsPage() {
                                             </ul>
                                         </div>
                                     )}
+
+                                    {/* Contact Mobile */}
+                                    {selectedJob.mobile && (
+                                        <div className="flex items-center gap-4 py-4 border-b border-white/5">
+                                            <div className="flex-1">
+                                                <p className="text-sm text-gray-400 mb-1">Call Us</p>
+                                                <div className="flex items-center gap-3">
+                                                    <FaPhone className="text-purple-400 text-2xl flex-shrink-0" />
+                                                    <p className="text-lg font-semibold text-white">{selectedJob.mobile}</p>
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => handleCopy(selectedJob.mobile)}
+                                                        className="p-2 rounded-md bg-white/5 hover:bg-white/10 text-gray-200 flex items-center gap-2"
+                                                    >
+                                                        <FaCopy />
+                                                        <span className="text-sm">{copied ? 'Copied' : 'Copy'}</span>
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    )}
                                 </div>
 
                                 {/* Action Buttons */}
@@ -410,13 +485,7 @@ export default function ViewJobsPage() {
                                         <FaArrowLeft className="text-sm" />
                                         Back to Jobs
                                     </button>
-                                    <button
-                                        onClick={handleJobSeekerRedirect}
-                                        className="flex items-center justify-center gap-2 flex-1 py-4 bg-gradient-to-r from-purple-500 to-pink-600 hover:from-purple-600 hover:to-pink-700 rounded-xl font-semibold transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-purple-500/50 text-white"
-                                    >
-                                        <FaUserPlus className="text-sm" />
-                                        Apply Now
-                                    </button>
+
                                 </div>
                             </div>
                         </div>

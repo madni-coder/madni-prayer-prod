@@ -45,6 +45,7 @@ export async function POST(request) {
         const {
             fullName,
             email,
+            password,
             mobile,
             jobCategory,
             otherCategory,
@@ -56,9 +57,21 @@ export async function POST(request) {
         } = body;
 
         // Validation
-        if (!fullName || !email || !mobile || !jobCategory || !expectedSalary || !experience || !skills || !address || !city) {
+        if (!fullName || !email || !password || !jobCategory || !expectedSalary || !experience || !skills || !address || !city) {
             return NextResponse.json(
                 { error: "Missing required fields" },
+                { status: 400 }
+            );
+        }
+
+        // Check if email already exists
+        const existingUser = await prisma.jobSeeker.findUnique({
+            where: { email },
+        });
+
+        if (existingUser) {
+            return NextResponse.json(
+                { error: "Email already exists" },
                 { status: 400 }
             );
         }
@@ -67,6 +80,7 @@ export async function POST(request) {
             data: {
                 fullName,
                 email,
+                password,
                 mobile,
                 jobCategory,
                 otherCategory: otherCategory || null,
@@ -78,7 +92,9 @@ export async function POST(request) {
             },
         });
 
-        return NextResponse.json(newSeeker, { status: 201 });
+        // Return without password
+        const { password: _, ...seekerWithoutPassword } = newSeeker;
+        return NextResponse.json(seekerWithoutPassword, { status: 201 });
     } catch (error) {
         console.error("Error creating job seeker:", error);
         return NextResponse.json(
@@ -163,6 +179,63 @@ export async function DELETE(request) {
         console.error("Error deleting job seeker:", error);
         return NextResponse.json(
             { error: "Failed to delete job seeker" },
+            { status: 500 }
+        );
+    }
+}
+
+// PATCH - Partially update a job seeker
+export async function PATCH(request) {
+    try {
+        const { searchParams } = new URL(request.url);
+        const id = searchParams.get("id");
+
+        if (!id) {
+            return NextResponse.json(
+                { error: "Job seeker ID is required" },
+                { status: 400 }
+            );
+        }
+
+        const body = await request.json();
+        const {
+            fullName,
+            email,
+            password,
+            mobile,
+            jobCategory,
+            otherCategory,
+            expectedSalary,
+            experience,
+            skills,
+            address,
+            city,
+        } = body;
+
+        // Build update object only with provided fields
+        const updateData = {};
+        if (fullName !== undefined) updateData.fullName = fullName;
+        if (email !== undefined) updateData.email = email;
+        if (password !== undefined) updateData.password = password;
+        if (mobile !== undefined) updateData.mobile = mobile;
+        if (jobCategory !== undefined) updateData.jobCategory = jobCategory;
+        if (otherCategory !== undefined) updateData.otherCategory = otherCategory;
+        if (expectedSalary !== undefined) updateData.expectedSalary = expectedSalary;
+        if (experience !== undefined) updateData.experience = experience;
+        if (skills !== undefined) updateData.skills = skills;
+        if (address !== undefined) updateData.address = address;
+        if (city !== undefined) updateData.city = city;
+
+        const updatedSeeker = await prisma.jobSeeker.update({
+            where: { id: parseInt(id) },
+            data: updateData,
+        });
+
+        return NextResponse.json(updatedSeeker);
+    } catch (error) {
+        console.error("Error updating job seeker:", error);
+        return NextResponse.json(
+            { error: "Failed to update job seeker" },
             { status: 500 }
         );
     }

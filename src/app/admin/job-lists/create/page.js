@@ -12,6 +12,7 @@ export default function CreateJobPage() {
         title: "",
         company: "",
         location: "",
+        mobile: "",
         type: "Full-time",
         salary: "",
         description: "",
@@ -164,6 +165,20 @@ export default function CreateJobPage() {
                                 placeholder=""
                             />
                             {errors.location && <span className="text-red-500 text-xs mt-1">{errors.location}</span>}
+                        </div>
+
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">
+                                Contact Mobile
+                            </label>
+                            <input
+                                type="text"
+                                name="mobile"
+                                value={formData.mobile}
+                                onChange={handleChange}
+                                className="w-full px-3 py-2 border rounded text-gray-900 border-gray-300"
+                                placeholder=""
+                            />
                         </div>
 
                         <div>

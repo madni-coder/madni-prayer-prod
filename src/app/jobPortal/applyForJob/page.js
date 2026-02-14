@@ -134,9 +134,14 @@ export default function JobSeekersPage() {
             setShowLoader(true);
 
             apiClient.post("/api/api-job-seekers", formData)
-                .then(() => {
+                .then((response) => {
                     setShowLoader(false);
                     setShowSuccess(true);
+
+                    // Save the job seeker ID in localStorage for profile access
+                    if (response.data && response.data.id) {
+                        localStorage.setItem("jobSeekerId", response.data.id);
+                    }
 
                     setTimeout(() => {
                         setShowSuccess(false);

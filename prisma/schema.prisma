@@ -143,6 +143,7 @@ model JobList {
   title           String
   company         String
   location        String
+  mobile          String?
   type            String   // Full-time, Part-time, Contract, etc.
   salary          String
   postedDate      String?
@@ -158,7 +159,8 @@ model JobList {
 model JobSeeker {
   id             Int      @id @default(autoincrement())
   fullName       String
-  email          String
+  email          String   @unique
+  password       String   @default("password123")
   mobile         String?
   jobCategory    String
   otherCategory  String?

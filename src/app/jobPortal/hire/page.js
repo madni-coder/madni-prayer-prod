@@ -248,12 +248,11 @@ export default function HirePage() {
                                             <div className="relative z-10">
                                                 <div className="flex items-start justify-between mb-4">
                                                     <div className="flex-1 pr-3">
-                                                        <h2 className="text-xl font-bold text-white mb-2 line-clamp-2 group-hover:text-teal-400 transition-colors duration-300">
-                                                            {seeker.fullName}
-                                                        </h2>
-                                                        <p className="text-teal-400 font-semibold text-sm line-clamp-1">
+                                                       
+                                                        <p className="text-teal-400 font-semibold text-xl line-clamp-1">
                                                             {seeker.jobCategory}
                                                         </p>
+                                                        
                                                     </div>
                                                     <div className="bg-gradient-to-br from-teal-500/20 to-cyan-500/20 p-3 rounded-xl flex-shrink-0 group-hover:scale-110 transition-transform duration-300">
                                                         <FaUser className="text-xl text-teal-400" />

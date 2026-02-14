@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import apiClient from "../../../lib/apiClient";
-import { Plus } from "lucide-react";
+import { Plus, Pencil } from "lucide-react";
 
 export default function JobListsAdminPage() {
     const router = useRouter();
@@ -22,15 +22,46 @@ export default function JobListsAdminPage() {
     }, [router]);
 
     useEffect(() => {
+        // Prevent duplicate network calls by using a short-lived module cache
+        // Also allow a sessionStorage flag to force refresh after edits
+        const shouldForce = sessionStorage.getItem("jobs_needs_refresh") === "1";
+
         async function fetchJobs() {
             try {
-                const { data } = await apiClient.get("/api/api-job-lists");
+                // use module-level cache if available and not forced
+                if (!shouldForce && globalThis.__jobsCache && Array.isArray(globalThis.__jobsCache.data)) {
+                    setJobs(globalThis.__jobsCache.data);
+                    return;
+                }
+
+                // if a fetch is already in progress, await it
+                if (globalThis.__jobsCache && globalThis.__jobsCache.promise) {
+                    const data = await globalThis.__jobsCache.promise;
+                    setJobs(data || []);
+                    return;
+                }
+
+                // start fetch and store promise on cache
+                const p = apiClient.get("/api/api-job-lists").then(res => {
+                    const data = res.data || [];
+                    globalThis.__jobsCache = { data, promise: null, ts: Date.now() };
+                    return data;
+                }).catch(err => {
+                    // clear promise on error
+                    if (globalThis.__jobsCache) globalThis.__jobsCache.promise = null;
+                    throw err;
+                });
+
+                globalThis.__jobsCache = { data: null, promise: p, ts: Date.now() };
+                const data = await p;
                 setJobs(data || []);
             } catch (e) {
                 console.error("Error fetching jobs:", e);
                 setJobs([]);
             } finally {
                 setJobsLoading(false);
+                // clear force flag so subsequent mounts use cache
+                sessionStorage.removeItem("jobs_needs_refresh");
             }
         }
 
@@ -84,7 +115,7 @@ export default function JobListsAdminPage() {
                                     <th className="text-left text-white px-4 py-3 border-b">Company</th>
                                     <th className="text-left text-white px-4 py-3 border-b">Location</th>
                                     <th className="text-left text-white px-4 py-3 border-b">Type</th>
-                                    <th className="text-left text-white px-4 py-3 border-b">Salary</th>
+                                    <th className="text-left text-white px-4 py-3 border-b">Action</th>
                                     <th className="text-left text-white px-4 py-3 border-b">Posted Date</th>
                                 </tr>
                             </thead>
@@ -97,15 +128,14 @@ export default function JobListsAdminPage() {
                                     </tr>
                                 ) : (
                                     pageItems.map((job, idx) => {
-                                        const handleOpen = () => router.push(`/admin/job-lists/${job.id}`);
                                         return (
                                             <tr
                                                 key={job.id}
                                                 className="border-b last:border-b-0 hover:bg-emerald-50 cursor-pointer"
-                                                onClick={handleOpen}
+                                                onClick={() => router.push(`/admin/job-lists/${job.id}`)}
                                                 tabIndex={0}
                                                 role="button"
-                                                onKeyDown={(e) => { if (e.key === 'Enter') handleOpen(); }}
+                                                onKeyDown={(e) => { if (e.key === 'Enter') router.push(`/admin/job-lists/${job.id}`); }}
                                                 title={`View ${job.title}`}
                                             >
                                                 <td className="px-4 py-3 text-gray-800">{start + idx + 1}</td>
@@ -115,7 +145,15 @@ export default function JobListsAdminPage() {
                                                 <td className="px-4 py-3 text-gray-800">
                                                     <span className="px-2 py-1 bg-cyan-100 text-cyan-800 text-xs rounded">{job.type}</span>
                                                 </td>
-                                                <td className="px-4 py-3 text-gray-800">{job.salary}</td>
+                                                <td className="px-4 py-3 text-gray-800">
+                                                    <button
+                                                        onClick={(e) => { e.stopPropagation(); router.push(`/admin/job-lists/editJob?id=${job.id}`); }}
+                                                        className="p-2 rounded hover:bg-slate-100"
+                                                        title={`Edit ${job.title}`}
+                                                    >
+                                                        <Pencil className="w-4 h-4 text-slate-700" />
+                                                    </button>
+                                                </td>
                                                 <td className="px-4 py-3 text-sm text-gray-500">
                                                     {new Date(job.createdAt).toLocaleDateString()}
                                                 </td>
