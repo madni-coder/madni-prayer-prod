@@ -132,10 +132,10 @@ export default function JobListsAdminPage() {
                                             <tr
                                                 key={job.id}
                                                 className="border-b last:border-b-0 hover:bg-emerald-50 cursor-pointer"
-                                                onClick={() => router.push(`/admin/job-lists/${job.id}`)}
+                                                onClick={() => router.push(`/admin/job-lists/detail?id=${job.id}`)}
                                                 tabIndex={0}
                                                 role="button"
-                                                onKeyDown={(e) => { if (e.key === 'Enter') router.push(`/admin/job-lists/${job.id}`); }}
+                                                onKeyDown={(e) => { if (e.key === 'Enter') router.push(`/admin/job-lists/detail?id=${job.id}`); }}
                                                 title={`View ${job.title}`}
                                             >
                                                 <td className="px-4 py-3 text-gray-800">{start + idx + 1}</td>

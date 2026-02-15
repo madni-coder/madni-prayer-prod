@@ -2,12 +2,12 @@
 
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
-import { useParams, useRouter } from "next/navigation";
+import { useSearchParams, useRouter } from "next/navigation";
 
-export default function JobAdminDetailPage() {
-    const params = useParams();
+export default function JobDetailClient() {
+    const searchParams = useSearchParams();
     const router = useRouter();
-    const id = parseInt(params.id, 10);
+    const id = parseInt(searchParams.get('id'), 10);
 
     const [job, setJob] = useState(null);
     const [loading, setLoading] = useState(true);
@@ -24,6 +24,7 @@ export default function JobAdminDetailPage() {
         const fetchJob = async () => {
             try {
                 setLoading(true);
+                // Using API route, not Prisma
                 const response = await fetch(`/api/api-job-lists?id=${id}`);
 
                 if (!response.ok) {
@@ -49,6 +50,7 @@ export default function JobAdminDetailPage() {
 
         try {
             setDeleting(true);
+            // Using API route, not Prisma
             const response = await fetch(`/api/api-job-lists?id=${id}`, {
                 method: 'DELETE',
             });
@@ -78,9 +80,7 @@ export default function JobAdminDetailPage() {
     }
 
     return (
-
         <div className="max-w-4xl mx-auto p-8 bg-white rounded-xl shadow mt-8 text-black">
-
             <div className="flex items-start justify-between mb-6 gap-6">
                 <div className="flex items-center gap-4">
                     <Link href="/admin/job-lists" className="inline-flex items-center px-3 py-1 bg-orange-500 text-white rounded hover:bg-orange-600">← Back</Link>
