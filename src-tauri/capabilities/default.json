@@ -6,6 +6,7 @@
         "core:default",
         "opener:default",
         "os:default",
+        "haptics:default",
         {
             "identifier": "opener:allow-open-url",
             "allow": [

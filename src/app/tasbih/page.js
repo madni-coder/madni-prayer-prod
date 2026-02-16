@@ -111,6 +111,32 @@ export default function Tasbih() {
         }
     }, []);
 
+    // play a short tick sound using WebAudio (no external assets)
+    const playTick = useCallback(() => {
+        if (typeof window === 'undefined') return;
+        try {
+            const AudioContext = window.AudioContext || window.webkitAudioContext;
+            if (!AudioContext) return;
+            // reuse a single context on window to avoid repeated creations
+            if (!window.__tasbihAudioCtx) window.__tasbihAudioCtx = new AudioContext();
+            const ctx = window.__tasbihAudioCtx;
+            const now = ctx.currentTime;
+            const osc = ctx.createOscillator();
+            const gain = ctx.createGain();
+            osc.type = 'sine';
+            osc.frequency.setValueAtTime(1000, now);
+            gain.gain.setValueAtTime(0.0001, now);
+            gain.gain.exponentialRampToValueAtTime(0.12, now + 0.002);
+            gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.09);
+            osc.connect(gain);
+            gain.connect(ctx.destination);
+            osc.start(now);
+            osc.stop(now + 0.09);
+        } catch (err) {
+            // ignore any audio errors; non-critical
+        }
+    }, []);
+
     // Helper function to show toast (react-toastify)
     const showToast = (t) => {
         if (!t) return;
@@ -150,25 +176,40 @@ export default function Tasbih() {
     };
 
     // Helper function to trigger low intensity vibration on mobile
-    // Tries multiple fallbacks: standard Vibration API, common WebView bridges,
-    // and a Tauri invoke if available. Nothing is done if no API exists.
-    const triggerVibration = useCallback(() => {
+    // Tries multiple fallbacks: standard Vibration API, Tauri haptics plugin,
+    // and other common WebView bridges. Nothing is done if no API exists.
+    const triggerVibration = useCallback(async () => {
         if (typeof window === "undefined") return;
 
         try {
-            // 1) Standard web Vibration API (works in Android Chrome and many browsers)
+            // 1) Tauri Haptics Plugin - For Tauri mobile apps (iOS & Android)
+            // This is the primary method for Tauri v2 mobile apps
+            if (window.__TAURI_INTERNALS__) {
+                try {
+                    // Import haptics dynamically
+                    const { vibrate, ImpactStyle } = await import('@tauri-apps/plugin-haptics');
+                    // Use light impact for subtle feedback
+                    await vibrate(ImpactStyle.Light);
+                    return;
+                } catch (e) {
+                    // Plugin might not be loaded, try other methods
+                    console.debug('Tauri haptics not available:', e);
+                }
+            }
+
+            // 2) Standard web Vibration API (works in Android Chrome and many browsers)
             if (typeof navigator !== "undefined" && typeof navigator.vibrate === "function") {
                 navigator.vibrate(20);
                 return;
             }
 
-            // 2) React Native WebView bridge
+            // 3) React Native WebView bridge
             if (window.ReactNativeWebView && typeof window.ReactNativeWebView.postMessage === "function") {
                 window.ReactNativeWebView.postMessage(JSON.stringify({ type: "vibrate", duration: 20 }));
                 return;
             }
 
-            // 3) Android/JavascriptInterface commonly exposed as `Android` or `android`
+            // 4) Android/JavascriptInterface commonly exposed as `Android` or `android`
             if (window.Android && typeof window.Android.vibrate === "function") {
                 window.Android.vibrate(20);
                 return;
@@ -178,18 +219,9 @@ export default function Tasbih() {
                 return;
             }
 
-            // 4) WKWebView iOS message handler (app must expose a `vibrate` handler)
+            // 5) WKWebView iOS message handler (app must expose a `vibrate` handler)
             if (window.webkit && window.webkit.messageHandlers && window.webkit.messageHandlers.vibrate) {
                 window.webkit.messageHandlers.vibrate.postMessage({ duration: 20 });
-                return;
-            }
-
-            // 5) Tauri: try invoking a vibration command if the host exposes one
-            // Note: plugin name and command depend on your Tauri setup.
-            // This attempts a generic `invoke('vibrate', { duration })` if available.
-            if (window.__TAURI__ && typeof window.__TAURI__.invoke === "function") {
-                // best-effort, ignore errors
-                window.__TAURI__.invoke("vibrate", { duration: 20 }).catch(() => { });
                 return;
             }
         } catch (err) {
@@ -227,15 +259,17 @@ export default function Tasbih() {
                 }
                 if (c + 1 === target) {
                     triggerVibration();
+                    try { playTick(); } catch (e) { }
                     setShowTargetReached(true);
                     return c + 1;
                 }
             }
 
             triggerVibration(); // Add vibration feedback
+            try { playTick(); } catch (e) { }
             return c + 1;
         });
-    }, [triggerVibration, target, allowContinueAfterTarget]);
+    }, [triggerVibration, target, allowContinueAfterTarget, playTick]);
 
     // submit helper used by main submit button and target modal
     const submitCount = async (countToSubmit) => {
