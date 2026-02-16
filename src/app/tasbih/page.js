@@ -50,8 +50,11 @@ export default function Tasbih() {
         return 0;
     });
     const [targetInput, setTargetInput] = useState("");
+    const [showTargetTooltip, setShowTargetTooltip] = useState(false);
     const [showTargetReached, setShowTargetReached] = useState(false);
     const [allowContinueAfterTarget, setAllowContinueAfterTarget] = useState(false);
+    const [showManualInput, setShowManualInput] = useState(false);
+    const [manualTargetValue, setManualTargetValue] = useState("");
 
     // Pagination state
     const [currentPage, setCurrentPage] = useState(1);
@@ -198,6 +201,15 @@ export default function Tasbih() {
 
     // shared increment handler (respects custom target and global 10000 limit)
     const increment = useCallback(() => {
+        // Prevent starting if no target is set
+        if (!target || target <= 0) {
+            // show themed tooltip on target field
+            setShowTargetTooltip(true);
+            // clear after a short delay so mobile users see it
+            setTimeout(() => setShowTargetTooltip(false), 3500);
+            return;
+        }
+
         setCount((c) => {
             // global hard limit
             if (c >= 10000) {
@@ -347,49 +359,58 @@ export default function Tasbih() {
                 </div>
                 <div className="divider my-1" />
 
-                {/* Target setter */}
-                <div className="w-full mb-4 p-3 bg-base-100 rounded-lg flex flex-col md:flex-row items-center gap-3">
-                    <div className="flex items-center gap-2 w-full md:w-auto">
-                        <label className="text-sm font-medium mr-2">Target</label>
-                        <input
-                            aria-label="Set Target Value"
-                            type="number"
-                            min="1"
-                            max="10000"
-                            inputMode="numeric"
-                            className="input input-bordered input-sm w-28"
-                            value={targetInput}
-                            onChange={(e) => setTargetInput(e.target.value.replace(/[^0-9]/g, ''))}
-                            placeholder="e.g. 100"
-                        />
-                        <button
-                            className="btn btn-sm btn-primary"
-                            onClick={() => {
-                                const v = Number(targetInput || 0);
-                                if (!v || v <= 0) {
-                                    showToast({ type: 'error', text: 'Enter a valid target (> 0)' });
-                                    return;
-                                }
-                                if (v > 10000) {
-                                    showToast({ type: 'error', text: 'Target cannot exceed 10000' });
-                                    return;
-                                }
-                                setTarget(v);
-                                setAllowContinueAfterTarget(false);
-                                setTargetInput('');
-                                showToast({ type: 'success', text: `Target set to ${v}` });
-                            }}
-                        >
-                            Set
-                        </button>
-                    </div>
+                {/* Target setter - Beautiful Dropdown */}
+                <div className="w-full mb-4 p-4 bg-gradient-to-r from-primary/5 via-primary/10 to-primary/5 rounded-xl shadow-sm border border-primary/20">
+                    <div className="flex flex-col md:flex-row items-center justify-between gap-3">
+                        <div className="flex items-center gap-3 w-full md:w-auto">
+                            <label className="text-sm font-semibold text-primary">Set Target:</label>
+                            <select
+                                aria-label="Select Target Value"
+                                className="select select-bordered select-sm bg-base-100 border-primary/30 focus:border-primary focus:outline-none w-full md:w-40 font-medium text-primary shadow-sm"
+                                value={target || ""}
+                                onChange={(e) => {
+                                    const value = e.target.value;
+                                    if (value === "manual") {
+                                        setShowManualInput(true);
+                                    } else if (value) {
+                                        const v = Number(value);
+                                        setTarget(v);
+                                        setShowTargetTooltip(false);
+                                        setAllowContinueAfterTarget(false);
+                                        showToast({ type: 'success', text: `Target set to ${v}` });
+                                    }
+                                }}
+                            >
+                                <option value="" disabled>Choose Target</option>
+                                <option value="manual">⚙️ Manual</option>
+                                <option value="100">100</option>
+                                <option value="200">200</option>
+                                <option value="400">400</option>
+                                <option value="500">500</option>
+                                <option value="700">700</option>
+                                <option value="1000">1000</option>
+                            </select>
+                        </div>
 
-                    <div className="ml-auto text-sm text-primary/80 w-full md:w-auto">
-                        {target > 0 ? (
-                            <span>Current Target: <strong className="text-primary">{target}</strong></span>
-                        ) : (
-                            <span>No target set</span>
+                        {/* Tooltip shown when user attempts to start without setting a target */}
+                        {showTargetTooltip && (
+                            <div className={
+                                "text-xs px-3 py-1.5 rounded-lg border font-medium " +
+                                (typeof window !== 'undefined' && effectiveTheme() === 'dark'
+                                    ? 'bg-error text-white border-error/30'
+                                    : 'bg-error/10 text-error border-error/20')
+                            }>
+                                ⚠️ Please set a target first
+                            </div>
                         )}
+
+                        <div className="text-sm font-medium text-primary/90 w-full md:w-auto text-center md:text-right">
+                            {target > 0 ? (
+                                <span className="bg-primary/10 px-3 py-1.5 rounded-lg border border-primary/20">🎯 Target: <strong className="text-primary">{target}</strong></span>
+                            ) : (
+                                <span className="text-primary/60">No target set</span>
+                            )}
+                        </div>
                     </div>
                 </div>
 
@@ -416,7 +437,10 @@ export default function Tasbih() {
                     <div className="absolute inset-0 flex items-center justify-center">
                         <div className="text-center">
                             <div className="text-4xl md:text-5xl font-extrabold text-primary">
-                                {count.toString().padStart(2, "0")}
+                                {target > 0
+                                    ? `${count}/${target}`
+                                    : count.toString().padStart(2, "0")
+                                }
                             </div>
                         </div>
                     </div>
@@ -426,7 +450,13 @@ export default function Tasbih() {
                 <div className="flex flex-col items-center gap-6 w-full">
                     <button
                         onClick={() => increment()}
-                        className="btn btn-circle bg-base-100 border border-primary text-primary shadow-md hover:scale-105 transition-transform w-28 h-28 flex items-center justify-center"
+                        aria-disabled={target <= 0}
+                        className={
+                            "btn btn-circle bg-base-100 border text-primary shadow-md hover:scale-105 transition-transform w-28 h-28 flex items-center justify-center " +
+                            (target <= 0
+                                ? 'border-primary/30 opacity-80'
+                                : 'border-primary')
+                        }
                         aria-label="Increment Tasbih"
                     >
                         <PiHandTapLight className="h-20 w-20" />
@@ -756,6 +786,85 @@ export default function Tasbih() {
                                     onClick={() => setDeleteIndex(null)}
                                 >
                                     No
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Manual Target Input Modal */}
+            {showManualInput && (
+                <div className="fixed inset-0 flex items-center justify-center bg-black/40 z-50 backdrop-blur-sm">
+                    <div className="modal modal-open">
+                        <div className="modal-box text-center border border-primary/20 shadow-2xl">
+                            <h3 className="font-bold text-xl text-primary mb-2">
+                                🎯 Enter Custom Target
+                            </h3>
+                            <p className="text-sm text-primary/70 mb-4">
+                                Set your own custom target count
+                            </p>
+                            <input
+                                type="number"
+                                min="1"
+                                max="10000"
+                                inputMode="numeric"
+                                className="input input-bordered w-full max-w-xs text-center text-lg font-semibold border-primary/30 focus:border-primary"
+                                value={manualTargetValue}
+                                onChange={(e) => setManualTargetValue(e.target.value.replace(/[^0-9]/g, ''))}
+                                placeholder="Enter count"
+                                autoFocus
+                                onKeyDown={(e) => {
+                                    if (e.key === 'Enter') {
+                                        const v = Number(manualTargetValue || 0);
+                                        if (!v || v <= 0) {
+                                            showToast({ type: 'error', text: 'Enter a valid target (> 0)' });
+                                            return;
+                                        }
+                                        if (v > 10000) {
+                                            showToast({ type: 'error', text: 'Target cannot exceed 10,000' });
+                                            return;
+                                        }
+                                        setTarget(v);
+                                        setShowTargetTooltip(false);
+                                        setAllowContinueAfterTarget(false);
+                                        setManualTargetValue('');
+                                        setShowManualInput(false);
+                                        showToast({ type: 'success', text: `Target set to ${v}` });
+                                    }
+                                }}
+                            />
+                            <div className="modal-action justify-center">
+                                <button
+                                    className="btn btn-primary px-6"
+                                    onClick={() => {
+                                        const v = Number(manualTargetValue || 0);
+                                        if (!v || v <= 0) {
+                                            showToast({ type: 'error', text: 'Enter a valid target (> 0)' });
+                                            return;
+                                        }
+                                        if (v > 10000) {
+                                            showToast({ type: 'error', text: 'Target cannot exceed 10,000' });
+                                            return;
+                                        }
+                                        setTarget(v);
+                                        setShowTargetTooltip(false);
+                                        setAllowContinueAfterTarget(false);
+                                        setManualTargetValue('');
+                                        setShowManualInput(false);
+                                        showToast({ type: 'success', text: `Target set to ${v}` });
+                                    }}
+                                >
+                                    Set Target
+                                </button>
+                                <button
+                                    className="btn btn-ghost"
+                                    onClick={() => {
+                                        setShowManualInput(false);
+                                        setManualTargetValue('');
+                                    }}
+                                >
+                                    Cancel
                                 </button>
                             </div>
                         </div>
