@@ -34,7 +34,6 @@ export default function LocalStoresPage() {
     const [error, setError] = useState(null);
     const [query, setQuery] = useState("");
     const router = useRouter();
-
     const filteredStores = useMemo(() => {
         if (!query) return stores || [];
         const q = query.toLowerCase();
@@ -44,7 +43,6 @@ export default function LocalStoresPage() {
     // show a limited number of items initially to reduce render cost
     const INITIAL_VISIBLE = 10;
     const [visibleCount, setVisibleCount] = useState(INITIAL_VISIBLE);
-
     useEffect(() => {
         let mounted = true;
 
@@ -131,9 +129,7 @@ export default function LocalStoresPage() {
                 </div>
                 {loading ? (
                     <div className="min-h-screen flex items-center justify-center bg-base-200">
-                        <style>{`\n                        .loader {\n                            position: relative;\n                            width: 100px;\n                            height: 100px;\n                        }\n                        .loader:before{\n                            content: '';\n                            position: absolute;\n                            width: 48px;\n                            height: 48px;\n                            border-radius: 50%;\n                            top: 50%;\n                            left: 0;\n                            transform: translate(-5px, -50%);\n                            background: linear-gradient(to right, #fff 50%, var(--primary-color, #de3500) 50%) no-repeat;\n                            background-size: 200% auto;\n                            background-position: 100% 0;\n                            animation: colorBallMoveX 1.5s linear infinite alternate;\n                        }\n                        .loader:after{\n                            content: '';\n                            position: absolute;\n                            left: 50%;\n                            top: 0;\n                            transform: translateX(-50%);\n                            width: 2px;\n                            height: 100%;\n                            background: var(--primary-color, #de3500);\n                        }\n                        @keyframes colorBallMoveX {\n                          0%  {\n                            background-position: 0% 0;\n                            transform: translate(-15px, -50%);\n                          }\n                          15%  , 25% {\n                            background-position: 0% 0;\n                            transform: translate(0px, -50%);\n                          }\n                          75% , 85% {\n                            background-position: 100% 0;\n                            transform: translate(50px, -50%);\n                          }\n                          100% {\n                            background-position: 100% 0;\n                            transform: translate(65px, -50%);\n                          }\n                        }\n                        `}</style>
-
-                        <span className="loader" aria-hidden="true"></span>
+                        <div className="w-16 h-16 rounded-full border-4 border-primary border-t-transparent animate-spin" aria-hidden="true" />
                     </div>
                 ) : error ? (
                     <div className="py-12 text-center text-error">{error}</div>
@@ -174,11 +170,11 @@ export default function LocalStoresPage() {
                                 filteredStores.slice(0, visibleCount).map((s) => (
                                     <div key={s.id} className="block">
                                         <div className="relative overflow-hidden rounded-2xl shadow-lg transform transition hover:shadow-2xl bg-transparent border border-primary/100">
-                                            <div className="relative w-full h-40 sm:h-44 md:h-48 bg-gray-100 dark:bg-gray-800">
+                                            <div className="relative w-full h-40 sm:h-44 md:h-48 bg-base-200">
                                                 {s.imageSrcPortrait || s.imageSrc ? (
                                                     <img src={s.imageSrcPortrait || s.imageSrc} alt={s.shopName || "store"} className="object-cover w-full h-full" loading="lazy" decoding="async" />
                                                 ) : (
-                                                    <div className="flex items-center justify-center h-full w-full text-4xl text-emerald-500 bg-gradient-to-br from-emerald-50 to-emerald-100 dark:from-emerald-900 dark:to-emerald-800">
+                                                    <div className="flex items-center justify-center h-full w-full text-4xl text-emerald-500 bg-gradient-to-br from-emerald-50 to-emerald-100">
                                                         <FaStore />
                                                     </div>
                                                 )}
@@ -188,7 +184,7 @@ export default function LocalStoresPage() {
                                                 {/* removed overlaid name/category to keep image clean */}
                                             </div>
 
-                                            <div className="p-4 bg-white/70 dark:bg-base-200/70 backdrop-blur-sm border border-base-200/50">
+                                            <div className="p-4 bg-base-100/70 backdrop-blur-sm border border-base-200/50">
                                                 <div className="flex items-center gap-3 mb-3">
                                                     <div className="flex-1">
                                                         <h2 className="text-lg font-semibold text-emerald-600">{s.shopName || "Untitled Store"}</h2>
