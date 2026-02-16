@@ -442,13 +442,13 @@ export default function Qibla() {
                     </div>
 
                     {/* Calibration guide */}
-                    <div className="mt-8 flex flex-col items-center">
+                    <div className="mt-4 flex flex-col items-center">
                         <div
                             className="border-4 border-primary"
                             style={{
                                 padding: "0",
-                                borderRadius: "16px",
-                                boxShadow: "0 8px 16px rgba(0,0,0,0.2)",
+                                borderRadius: "12px",
+                                boxShadow: "0 4px 8px rgba(0,0,0,0.2)",
                                 overflow: "hidden",
                             }}
                         >
@@ -456,13 +456,13 @@ export default function Qibla() {
                                 src="/eight.gif"
                                 alt="Calibration guide"
                                 style={{
-                                    width: "200px",
-                                    height: "200px",
+                                    width: "160px",
+                                    height: "160px",
                                     display: "block",
                                 }}
                             />
                         </div>
-                        <p className="mt-4 text-sm font-bold text-base-content opacity-80 text-center max-w-xs">
+                        <p className="mt-2 text-xs font-bold text-base-content opacity-80 text-center max-w-xs">
                             Move your device in a figure-8 motion to set Direction
                         </p>
                     </div>
