@@ -6,10 +6,10 @@ import apiClient from "../../../lib/apiClient";
 import { useRouter } from "next/navigation";
 
 const prayers = [
-    { name: "Fajr", defaultTime: "5:00 am" },
-    { name: "Zuhar", defaultTime: "6:10 am" },
+    { name: "Fajr", defaultTime: "6:00 am" },
+    { name: "Zuhar", defaultTime: "1:30 pm" },
     { name: "Asr", defaultTime: "4:30 pm" },
-    { name: "Maghrib", defaultTime: "7:15 pm" },
+    { name: "Maghrib", defaultTime: "6:15 pm" },
     { name: "Isha", defaultTime: "8:45 pm" },
     { name: "Taravih", defaultTime: "00:00" },
     { name: "Juma", defaultTime: "1:30 pm" }, // Added Juma below Isha

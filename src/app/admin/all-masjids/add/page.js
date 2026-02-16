@@ -6,10 +6,10 @@ import { ArrowLeft, Plus } from "lucide-react";
 import apiClient from "../../../../lib/apiClient";
 
 const prayers = [
-    { name: "Fajr", defaultTime: "5:00 am" },
-    { name: "Zuhar", defaultTime: "6:10 am" },
-    { name: "Asr", defaultTime: "4:30 pm" },
-    { name: "Maghrib", defaultTime: "7:15 pm" },
+    { name: "Fajr", defaultTime: "6:00 am" },
+    { name: "Zuhar", defaultTime: "1:30 pm" },
+    { name: "Asr", defaultTime: "4:45 pm" },
+    { name: "Maghrib", defaultTime: "6:10 pm" },
     { name: "Isha", defaultTime: "8:45 pm" },
     { name: "Taravih", defaultTime: "00:00" },
     { name: "Juma", defaultTime: "1:30 pm" },
