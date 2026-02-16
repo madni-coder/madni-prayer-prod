@@ -196,8 +196,6 @@ export default function Qibla() {
                 Qibla Direction
             </h2>
 
-            <style>{`.compass-container::-webkit-scrollbar{display:none} .compass-container{scrollbar-width:none;-ms-overflow-style:none}`}</style>
-
             {permissionError && (
                 <div className="alert alert-warning mb-4 max-w-2xl">
                     <svg xmlns="http://www.w3.org/2000/svg" className="stroke-current shrink-0 h-6 w-6" fill="none" viewBox="0 0 24 24">
@@ -228,10 +226,10 @@ export default function Qibla() {
                 </div>
             )}
 
-            <div className="glass-card p-6 max-w-2xl  text-center text-base-content">
+            <div className="glass-card p-6 max-w-2xl mx-8 text-center text-base-content">
                 <div className="flex flex-col items-center mb-6">
                     <div
-                        className="compass-container overflow-hidden"
+                        className="compass-container"
                         style={{
                             position: "relative",
                             width: 400,
@@ -239,242 +237,234 @@ export default function Qibla() {
                             display: "flex",
                             justifyContent: "center",
                             alignItems: "center",
-                            overflow: "hidden",
-                            msOverflowStyle: "none",
-                            scrollbarWidth: "none",
+                            overflow: "visible",
                         }}
                     >
+                        {/* Compass outer ring (golden/brass) */}
                         <div
-                            className="compass-base"
                             style={{
                                 position: "relative",
                                 width: 350,
                                 height: 350,
                                 borderRadius: "50%",
-                                background:
-                                    "radial-gradient(circle, #2c3e50, #1a1a2e)",
+                                background: "linear-gradient(145deg, #d4af37, #c9a961, #d4af37)",
                                 boxShadow:
-                                    "0 0 50px rgba(0,0,0,0.8), inset 0 0 20px rgba(0,0,0,0.5)",
+                                    "0 20px 40px rgba(0,0,0,0.3), inset 0 2px 5px rgba(255,255,255,0.3), inset 0 -2px 5px rgba(0,0,0,0.3)",
                                 display: "flex",
                                 justifyContent: "center",
                                 alignItems: "center",
-                                border: "8px solid #d4af37",
                             }}
                         >
+                            {/* Inner golden ring */}
                             <div
-                                className="compass-face"
                                 style={{
                                     position: "relative",
-                                    width: 320,
-                                    height: 320,
+                                    width: 330,
+                                    height: 330,
                                     borderRadius: "50%",
-                                    background:
-                                        "radial-gradient(circle, #3a506b, #1c2541)",
+                                    background: "linear-gradient(145deg, #c9a961, #d4af37)",
                                     display: "flex",
                                     justifyContent: "center",
                                     alignItems: "center",
-                                    transform: deviceHeading
-                                        ? `rotate(${-deviceHeading}deg)`
-                                        : "rotate(0deg)",
-                                    transition: "transform 180ms ease-out",
-                                    boxShadow: "inset 0 0 30px rgba(0,0,0,0.7)",
                                 }}
                             >
+                                {/* Compass face */}
                                 <div
+                                    className="compass-face"
                                     style={{
-                                        position: "absolute",
-                                        width: 280,
-                                        height: 280,
-                                        border: "2px solid rgba(212, 175, 55, 0.3)",
+                                        position: "relative",
+                                        width: 310,
+                                        height: 310,
                                         borderRadius: "50%",
-                                    }}
-                                />
-                                <div
-                                    style={{
-                                        position: "absolute",
-                                        width: 240,
-                                        height: 240,
-                                        border: "2px solid rgba(212, 175, 55, 0.3)",
-                                        borderRadius: "50%",
-                                    }}
-                                />
-                                <div
-                                    style={{
-                                        position: "absolute",
-                                        width: 200,
-                                        height: 200,
-                                        border: "2px solid rgba(212, 175, 55, 0.3)",
-                                        borderRadius: "50%",
-                                    }}
-                                />
-                                <div
-                                    className="direction north"
-                                    style={{
-                                        position: "absolute",
-                                        top: 15,
-                                        left: "50%",
-                                        transform: "translateX(-50%)",
-                                        color: "#ff4d4d",
-                                        fontWeight: "bold",
-                                        fontSize: 20,
-                                        textShadow:
-                                            "0 0 10px rgba(212,175,55,0.8)",
-                                        width: 40,
-                                        height: 40,
+                                        background: "radial-gradient(circle, #f5f0e8, #e8dcc8)",
                                         display: "flex",
                                         justifyContent: "center",
                                         alignItems: "center",
+                                        transform: deviceHeading
+                                            ? `rotate(${-deviceHeading}deg)`
+                                            : "rotate(0deg)",
+                                        transition: "transform 180ms ease-out",
+                                        boxShadow: "inset 0 0 20px rgba(0,0,0,0.1)",
                                     }}
                                 >
-                                    N
-                                </div>
-                                <div
-                                    className="direction east"
-                                    style={{
-                                        position: "absolute",
-                                        right: 15,
-                                        top: "50%",
-                                        transform: "translateY(-50%)",
-                                        color: "#fff",
-                                        fontWeight: "bold",
-                                        fontSize: 20,
-                                        textShadow:
-                                            "0 0 10px rgba(212,175,55,0.8)",
-                                        width: 40,
-                                        height: 40,
-                                        display: "flex",
-                                        justifyContent: "center",
-                                        alignItems: "center",
-                                    }}
-                                >
-                                    E
-                                </div>
-                                <div
-                                    className="direction south"
-                                    style={{
-                                        position: "absolute",
-                                        bottom: 15,
-                                        left: "50%",
-                                        transform: "translateX(-50%)",
-                                        color: "#fff",
-                                        fontWeight: "bold",
-                                        fontSize: 20,
-                                        textShadow:
-                                            "0 0 10px rgba(212,175,55,0.8)",
-                                        width: 40,
-                                        height: 40,
-                                        display: "flex",
-                                        justifyContent: "center",
-                                        alignItems: "center",
-                                    }}
-                                >
-                                    S
-                                </div>
-                                <div
-                                    className="direction west"
-                                    style={{
-                                        position: "absolute",
-                                        left: qiblaDirection !== null
-                                            ? `${50 + 45 * Math.sin((qiblaDirection * Math.PI) / 180)}%`
-                                            : 15,
-                                        top: qiblaDirection !== null
-                                            ? `${50 - 45 * Math.cos((qiblaDirection * Math.PI) / 180)}%`
-                                            : "50%",
-                                        transform: qiblaDirection !== null
-                                            ? "translate(-50%, -50%)"
-                                            : "translateY(-50%)",
-                                        color: "#fff",
-                                        fontWeight: "bold",
-                                        fontSize: 20,
-                                        textShadow:
-                                            "0 0 10px rgba(212,175,55,0.8)",
-                                        width: 40,
-                                        height: 40,
-                                        display: "flex",
-                                        justifyContent: "center",
-                                        alignItems: "center",
-                                    }}
-                                >
-                                    {qiblaDirection === null ? "W" : ""}
-                                    <span
+                                    {/* Degree tick marks around the edge */}
+                                    {[...Array(360)].map((_, i) => {
+                                        const angle = i; // Each degree
+                                        const isMajor = angle % 30 === 0; // Major marks every 30 degrees
+                                        const isMinor = angle % 5 === 0; // Minor marks every 5 degrees
+
+                                        if (!isMinor) return null; // Only show every 5 degrees
+
+                                        return (
+                                            <div
+                                                key={i}
+                                                style={{
+                                                    position: "absolute",
+                                                    width: isMajor ? 2.5 : 1.5,
+                                                    height: isMajor ? 18 : 10,
+                                                    background: "#8B4513",
+                                                    transformOrigin: "center",
+                                                    transform: `rotate(${angle}deg) translateY(-147px)`,
+                                                }}
+                                            />
+                                        );
+                                    })}
+
+                                    {/* North - Red */}
+                                    <div
                                         style={{
-                                            marginLeft: qiblaDirection === null ? 4 : 0,
+                                            position: "absolute",
+                                            top: 20,
+                                            left: "50%",
+                                            transform: "translateX(-50%)",
+                                            color: "#dc2626",
+                                            fontWeight: "bold",
                                             fontSize: 28,
-                                            verticalAlign: "middle",
-                                            filter: "drop-shadow(0 0 6px #ffd700cc)",
+                                            fontFamily: "serif",
                                         }}
-                                        aria-label="Kaaba"
-                                        title="Kaaba"
                                     >
-                                        🕋
-                                    </span>
-                                </div>
-                                <div
-                                    className="needle"
-                                    style={{
-                                        position: "absolute",
-                                        left: "50%",
-                                        top: "50%",
-                                        width: 0,
-                                        height: 0,
-                                        transformOrigin: "bottom center",
-                                        zIndex: 5,
-                                        pointerEvents: "none",
-                                        transform: qiblaDirection !== null
-                                            ? `rotate(${qiblaDirection}deg)`
-                                            : "rotate(270deg)",
-                                    }}
-                                >
+                                        N
+                                    </div>
+
+                                    {/* East - Blackish Gray */}
                                     <div
                                         style={{
                                             position: "absolute",
-                                            left: -4,
-                                            top: -90,
-                                            width: 10,
-                                            height: 90,
-                                            background:
-                                                "linear-gradient(90deg, #ff4d4d 60%, #d4af37 100%)",
-                                            borderRadius: 7,
-                                            boxShadow: "0 0 16px #ff4d4d88",
-                                            display: "flex",
-                                            alignItems: "center",
+                                            right: 20,
+                                            top: "50%",
+                                            transform: "translateY(-50%)",
+                                            color: "#374151",
+                                            fontWeight: "bold",
+                                            fontSize: 24,
+                                            fontFamily: "serif",
                                         }}
-                                    />
+                                    >
+                                        E
+                                    </div>
+
+                                    {/* South - Blackish Gray */}
                                     <div
                                         style={{
                                             position: "absolute",
-                                            left: -8,
-                                            top: -105,
+                                            bottom: 20,
+                                            left: "50%",
+                                            transform: "translateX(-50%)",
+                                            color: "#374151",
+                                            fontWeight: "bold",
+                                            fontSize: 24,
+                                            fontFamily: "serif",
+                                        }}
+                                    >
+                                        S
+                                    </div>
+
+                                    {/* West - Blackish Gray */}
+                                    <div
+                                        style={{
+                                            position: "absolute",
+                                            left: 20,
+                                            top: "50%",
+                                            transform: "translateY(-50%)",
+                                            color: "#374151",
+                                            fontWeight: "bold",
+                                            fontSize: 24,
+                                            fontFamily: "serif",
+                                        }}
+                                    >
+                                        W
+                                    </div>
+
+                                    {/* Compass needle */}
+                                    <div
+                                        style={{
+                                            position: "absolute",
+                                            left: "50%",
+                                            top: "50%",
                                             width: 0,
                                             height: 0,
-                                            borderLeft: "18px solid #ff4d4d",
-                                            borderTop: "12px solid transparent",
-                                            borderBottom:
-                                                "12px solid transparent",
-                                            transform: "rotate(-90deg)",
                                             transformOrigin: "center",
+                                            transform: qiblaDirection !== null
+                                                ? `translate(-50%, -50%) rotate(${qiblaDirection}deg)`
+                                                : "translate(-50%, -50%) rotate(0deg)",
+                                            zIndex: 10,
+                                        }}
+                                    >
+                                        {/* Red half of needle (pointing up/north) */}
+                                        <div
+                                            style={{
+                                                position: "absolute",
+                                                left: -4,
+                                                top: -100,
+                                                width: 0,
+                                                height: 0,
+                                                borderLeft: "8px solid transparent",
+                                                borderRight: "8px solid transparent",
+                                                borderBottom: "100px solid #ef4444",
+                                                filter: "drop-shadow(0 2px 4px rgba(0,0,0,0.3))",
+                                            }}
+                                        />
+
+                                        {/* Blackish gray half of needle (pointing down/south) */}
+                                        <div
+                                            style={{
+                                                position: "absolute",
+                                                left: -4,
+                                                top: 0,
+                                                width: 0,
+                                                height: 0,
+                                                borderLeft: "8px solid transparent",
+                                                borderRight: "8px solid transparent",
+                                                borderTop: "100px solid #1c1a1a",
+                                                filter: "drop-shadow(0 2px 4px rgba(0,0,0,0.3))",
+                                            }}
+                                        />
+                                    </div>
+
+                                    {/* Center golden circle */}
+                                    <div
+                                        style={{
+                                            position: "absolute",
+                                            width: 30,
+                                            height: 30,
+                                            background: "radial-gradient(circle, #d4af37, #b8942c)",
+                                            borderRadius: "50%",
+                                            boxShadow:
+                                                "0 2px 8px rgba(0,0,0,0.3), inset 0 1px 2px rgba(255,255,255,0.3)",
+                                            zIndex: 11,
+                                            left: "50%",
+                                            top: "50%",
+                                            transform: "translate(-50%, -50%)",
                                         }}
                                     />
                                 </div>
-                                <div
-                                    className="center-point"
-                                    style={{
-                                        position: "absolute",
-                                        width: 25,
-                                        height: 25,
-                                        background: "#d4af37",
-                                        borderRadius: "50%",
-                                        boxShadow:
-                                            "0 0 15px rgba(212,175,55,0.8)",
-                                        zIndex: 6,
-                                        border: "3px solid #8B4513",
-                                        left: "50%",
-                                        top: "50%",
-                                        transform: "translate(-50%, -50%)",
-                                    }}
-                                />
                             </div>
                         </div>
+                    </div>
+
+                    {/* Calibration guide */}
+                    <div className="mt-8 flex flex-col items-center">
+                        <div
+                            className="border-4 border-primary"
+                            style={{
+                                padding: "0",
+                                borderRadius: "16px",
+                                boxShadow: "0 8px 16px rgba(0,0,0,0.2)",
+                                overflow: "hidden",
+                            }}
+                        >
+                            <img
+                                src="/eight.gif"
+                                alt="Calibration guide"
+                                style={{
+                                    width: "200px",
+                                    height: "200px",
+                                    display: "block",
+                                }}
+                            />
+                        </div>
+                        <p className="mt-4 text-sm font-bold text-base-content opacity-80 text-center max-w-xs">
+                            Move your device in a figure-8 motion to set Direction
+                        </p>
                     </div>
                 </div>
             </div>
