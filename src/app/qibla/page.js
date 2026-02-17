@@ -12,6 +12,7 @@ export default function Qibla() {
     const [qiblaDirection, setQiblaDirection] = useState(null);
     const [location, setLocation] = useState(null);
     const [locationError, setLocationError] = useState(null);
+
     const [compassAccuracy, setCompassAccuracy] = useState(null);
     const [isIOS, setIsIOS] = useState(false);
     const normalize = (n) => ((n % 360) + 360) % 360;
@@ -284,6 +285,8 @@ export default function Qibla() {
                             justifyContent: "center",
                             alignItems: "center",
                             overflow: "visible",
+                            marginLeft: "40px",
+                            marginRight: "40px",
                         }}
                     >
                         {/* Compass outer ring (golden/brass) */}
@@ -301,6 +304,78 @@ export default function Qibla() {
                                 alignItems: "center",
                             }}
                         >
+                            {/* North - Red - Fixed on golden ring */}
+                            <div
+                                style={{
+                                    position: "absolute",
+                                    top: -7,
+                                    left: "50%",
+                                    transform: "translateX(-50%)",
+                                    color: "#dc2626",
+                                    fontWeight: "bold",
+                                    fontSize: 22,
+                                    fontFamily: "serif",
+                                    zIndex: 15,
+                                    textShadow: "0 1px 2px rgba(0,0,0,0.3)",
+                                }}
+                            >
+                                N
+                            </div>
+
+                            {/* East - Blackish Gray - Fixed on golden ring */}
+                            <div
+                                style={{
+                                    position: "absolute",
+                                    right: 2,
+                                    top: "50%",
+                                    transform: "translateY(-50%)",
+                                    color: "#374151",
+                                    fontWeight: "bold",
+                                    fontSize: 26,
+                                    fontFamily: "serif",
+                                    zIndex: 15,
+                                    textShadow: "0 1px 2px rgba(0,0,0,0.3)",
+                                }}
+                            >
+                                E
+                            </div>
+
+                            {/* South - Blackish Gray - Fixed on golden ring */}
+                            <div
+                                style={{
+                                    position: "absolute",
+                                    bottom: -10,
+                                    left: "50%",
+                                    transform: "translateX(-50%)",
+                                    color: "#374151",
+                                    fontWeight: "bold",
+                                    fontSize: 26,
+                                    fontFamily: "serif",
+                                    zIndex: 15,
+                                    textShadow: "0 1px 2px rgba(0,0,0,0.3)",
+                                }}
+                            >
+                                S
+                            </div>
+
+                            {/* West - Blackish Gray - Fixed on golden ring */}
+                            <div
+                                style={{
+                                    position: "absolute",
+                                    left: -1,
+                                    top: "50%",
+                                    transform: "translateY(-50%)",
+                                    color: "#374151",
+                                    fontWeight: "bold",
+                                    fontSize: 20,
+                                    fontFamily: "serif",
+                                    zIndex: 15,
+                                    textShadow: "0 1px 2px rgba(0,0,0,0.3)",
+                                }}
+                            >
+                                W
+                            </div>
+
                             {/* Inner golden ring */}
                             <div
                                 style={{
@@ -356,69 +431,40 @@ export default function Qibla() {
                                         );
                                     })}
 
-                                    {/* North - Red */}
-                                    <div
-                                        style={{
-                                            position: "absolute",
-                                            top: 20,
-                                            left: "50%",
-                                            transform: "translateX(-50%)",
-                                            color: "#dc2626",
-                                            fontWeight: "bold",
-                                            fontSize: 28,
-                                            fontFamily: "serif",
-                                        }}
-                                    >
-                                        N
-                                    </div>
-
-                                    {/* East - Blackish Gray */}
-                                    <div
-                                        style={{
-                                            position: "absolute",
-                                            right: 20,
-                                            top: "50%",
-                                            transform: "translateY(-50%)",
-                                            color: "#374151",
-                                            fontWeight: "bold",
-                                            fontSize: 24,
-                                            fontFamily: "serif",
-                                        }}
-                                    >
-                                        E
-                                    </div>
-
-                                    {/* South - Blackish Gray */}
-                                    <div
-                                        style={{
-                                            position: "absolute",
-                                            bottom: 20,
-                                            left: "50%",
-                                            transform: "translateX(-50%)",
-                                            color: "#374151",
-                                            fontWeight: "bold",
-                                            fontSize: 24,
-                                            fontFamily: "serif",
-                                        }}
-                                    >
-                                        S
-                                    </div>
-
-                                    {/* West - Blackish Gray */}
-                                    <div
-                                        style={{
-                                            position: "absolute",
-                                            left: 20,
-                                            top: "50%",
-                                            transform: "translateY(-50%)",
-                                            color: "#374151",
-                                            fontWeight: "bold",
-                                            fontSize: 24,
-                                            fontFamily: "serif",
-                                        }}
-                                    >
-                                        W
-                                    </div>
+                                    {/* Kaaba Icon - positioned at Qibla direction, always upright */}
+                                    {qiblaDirection !== null && (
+                                        <div
+                                            style={{
+                                                position: "absolute",
+                                                left: "50%",
+                                                top: "50%",
+                                                width: "40px",
+                                                height: "40px",
+                                                transformOrigin: "center",
+                                                transform: `translate(-50%, -50%) rotate(${qiblaDirection}deg)`,
+                                                zIndex: 9,
+                                                pointerEvents: "none",
+                                            }}
+                                        >
+                                            <img
+                                                src="/kaabaIcon.png"
+                                                alt="Kaaba"
+                                                style={{
+                                                    position: "absolute",
+                                                    left: "50%",
+                                                    top: -95,
+                                                    width: "30px",
+                                                    height: "30px",
+                                                    display: "block",
+                                                    transform: deviceHeading
+                                                        ? `translate(-50%, -50%) rotate(${-qiblaDirection + deviceHeading}deg)`
+                                                        : "translate(-50%, -50%) rotate(0deg)",
+                                                    transition: "transform 180ms ease-out",
+                                                    filter: "drop-shadow(0 2px 4px rgba(0,0,0,0.4))",
+                                                }}
+                                            />
+                                        </div>
+                                    )}
 
                                     {/* Compass needle - Red only shows when pointing at Qibla (iOS) */}
                                     {(() => {
