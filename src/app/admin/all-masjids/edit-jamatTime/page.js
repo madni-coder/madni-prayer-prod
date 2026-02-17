@@ -167,8 +167,8 @@ function EditJamatTimePage() {
     }
 
     return (
-        <div className="min-h-screen bg-white flex flex-col items-center py-10">
-            <div className="w-full max-w-5xl flex items-center mb-4">
+        <div className="min-h-screen bg-white flex flex-col items-center py-8 px-2">
+            <div className="w-full max-w-5xl flex items-center mb-4 px-4 sm:px-0">
                 <button
                     className="bg-blue-600 hover:bg-blue-700 text-white btn btn-sm mr-2 flex items-center gap-1"
                     onClick={() => router.push("/admin/all-masjids")}
@@ -176,14 +176,14 @@ function EditJamatTimePage() {
                     <ArrowLeft size={16} /> Back
                 </button>
             </div>
-            <div className="flex flex-row gap-8 w-full max-w-5xl items-start">
+            <div className="flex flex-col md:flex-row gap-8 w-full max-w-5xl items-start px-4 sm:px-0">
                 {/* Edit Masjid Form */}
-                <div className="w-1/2">
-                    <h1 className="text-3xl font-bold mb-8 text-center text-gray-800">
+                <div className="w-full md:w-1/2">
+                    <h1 className="text-2xl sm:text-3xl font-bold mb-6 text-center text-gray-800">
                         Edit Masjid Details
                     </h1>
                     <form
-                        className="bg-white p-6 rounded shadow mb-8"
+                        className="bg-white p-4 sm:p-6 rounded-lg shadow mb-6"
                         onSubmit={handleSubmit}
                     >
                         <div className="mb-4">
@@ -192,7 +192,7 @@ function EditJamatTimePage() {
                             </label>
                             <input
                                 type="text"
-                                className="input input-bordered w-full bg-white text-black border-gray-300 rounded-full"
+                                className="input input-bordered w-full bg-white text-black border-gray-300 rounded-full py-2"
                                 value={masjidName}
                                 onChange={(e) => setMasjidName(e.target.value)}
                                 required
@@ -204,7 +204,7 @@ function EditJamatTimePage() {
                             </label>
                             <input
                                 type="text"
-                                className="input input-bordered w-full bg-white text-black border-gray-300 rounded-full"
+                                className="input input-bordered w-full bg-white text-black border-gray-300 rounded-full py-2"
                                 value={colony}
                                 onChange={(e) => setColony(e.target.value)}
                                 required
@@ -216,7 +216,7 @@ function EditJamatTimePage() {
                             </label>
                             <input
                                 type="text"
-                                className="input input-bordered w-full bg-white text-black border-gray-300 rounded-full"
+                                className="input input-bordered w-full bg-white text-black border-gray-300 rounded-full py-2"
                                 value={locality}
                                 onChange={(e) => setLocality(e.target.value)}
                             />
@@ -226,7 +226,7 @@ function EditJamatTimePage() {
                                 Role
                             </label>
                             <select
-                                className="input input-bordered w-full bg-white text-black border-gray-300 rounded-full"
+                                className="input input-bordered w-full bg-white text-black border-gray-300 rounded-full py-2"
                                 value={role}
                                 onChange={(e) => setRole(e.target.value)}
                             >
@@ -243,7 +243,7 @@ function EditJamatTimePage() {
                             </label>
                             <input
                                 type="text"
-                                className="input input-bordered w-full bg-white text-black border-gray-300 rounded-full"
+                                className="input input-bordered w-full bg-white text-black border-gray-300 rounded-full py-2"
                                 value={name}
                                 onChange={(e) => setName(e.target.value)}
                             />
@@ -254,7 +254,7 @@ function EditJamatTimePage() {
                             </label>
                             <input
                                 type="number"
-                                className="input input-bordered w-full bg-white text-black border-gray-300 rounded-full"
+                                className="input input-bordered w-full bg-white text-black border-gray-300 rounded-full py-2"
                                 value={mobile}
                                 onChange={(e) => setMobile(e.target.value)}
                                 minLength={10}
@@ -267,7 +267,7 @@ function EditJamatTimePage() {
                             </label>
                             <input
                                 type="text"
-                                className="input input-bordered w-full bg-white text-black border-gray-300 rounded-full"
+                                className="input input-bordered w-full bg-white text-black border-gray-300 rounded-full py-2"
                                 value={pasteMapUrl}
                                 onChange={(e) => setPasteMapUrl(e.target.value)}
                                 placeholder="Paste Google Map URL here"
@@ -287,7 +287,7 @@ function EditJamatTimePage() {
                             <button
                                 type="submit"
                                 disabled={submitting}
-                                className="btn w-full mt-4 bg-blue-500 hover:bg-blue-600 text-white rounded-none disabled:opacity-60"
+                                className="btn w-full mt-4 bg-blue-500 hover:bg-blue-600 text-white rounded-md py-2 disabled:opacity-60"
                             >
                                 {submitting
                                     ? "Updating..."
@@ -297,17 +297,17 @@ function EditJamatTimePage() {
                     </form>
                 </div>
                 {/* Jamat Time Table */}
-                <div className="w-1/2">
-                    <h2 className="text-2xl font-bold mb-6 text-center text-gray-800">
+                <div className="w-full md:w-1/2">
+                    <h2 className="text-xl sm:text-2xl font-bold mb-4 text-center text-gray-800">
                         Jamat Time Table
                     </h2>
                     <div className="overflow-x-auto w-full">
-                        <table className="table w-full border border-gray-200 bg-gray-50">
+                        <table className="table w-full min-w-[320px] border border-gray-200 bg-gray-50 text-sm sm:text-base">
                             <thead className="bg-gray-100">
                                 <tr>
-                                    <th className="text-gray-700">Prayer</th>
-                                    <th className="text-gray-700">Time</th>
-                                    <th className="text-gray-700">Actions</th>
+                                    <th className="text-gray-700 whitespace-normal">Prayer</th>
+                                    <th className="text-gray-700 whitespace-normal">Time</th>
+                                    <th className="text-gray-700 whitespace-normal">Actions</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -338,9 +338,9 @@ function EditJamatTimePage() {
                                         >
                                             {prayer.name}
                                         </td>
-                                        <td className="text-blue-600 font-semibold">
+                                        <td className="text-blue-600 font-semibold whitespace-normal">
                                             {editIdx === idx ? (
-                                                <div className="flex items-center gap-2">
+                                                <div className="flex flex-col sm:flex-row items-center gap-2">
                                                     <input
                                                         type="time"
                                                         className="input input-bordered input-sm bg-white text-gray-800 border-gray-300"
@@ -354,7 +354,7 @@ function EditJamatTimePage() {
                                                     />
                                                     <button
                                                         type="button"
-                                                        className="bg-blue-600 hover:bg-blue-700 text-white px-2 py-1 rounded flex items-center"
+                                                        className="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded flex items-center"
                                                         onClick={() =>
                                                             handleSave(idx)
                                                         }

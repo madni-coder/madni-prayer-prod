@@ -447,10 +447,11 @@ export default function Qibla() {
                                                     <div
                                                         style={{
                                                             position: "absolute",
-                                                            left: -4,
+                                                            left: "50%",
                                                             top: -100,
                                                             width: 0,
                                                             height: 0,
+                                                            transform: "translateX(-50%)",
                                                             borderLeft: "8px solid transparent",
                                                             borderRight: "8px solid transparent",
                                                             borderBottom: "100px solid #ef4444",
@@ -465,10 +466,11 @@ export default function Qibla() {
                                                 <div
                                                     style={{
                                                         position: "absolute",
-                                                        left: -4,
+                                                        left: "50%",
                                                         top: 0,
                                                         width: 0,
                                                         height: 0,
+                                                        transform: "translateX(-50%)",
                                                         borderLeft: "8px solid transparent",
                                                         borderRight: "8px solid transparent",
                                                         borderTop: "100px solid #1c1a1a",
