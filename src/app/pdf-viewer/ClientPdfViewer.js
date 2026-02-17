@@ -8,6 +8,9 @@ export default function ClientPdfViewer({ file: fileProp }) {
     const paramFile = searchParams ? searchParams.get("file") : null;
     const file = fileProp || paramFile || "";
 
+    // Detect iOS devices
+    const [isIOS, setIsIOS] = useState(false);
+
     const [loading, setLoading] = useState(true);
     const [loadingProgress, setLoadingProgress] = useState(0);
     const [currentPage, setCurrentPage] = useState(0);
@@ -19,6 +22,14 @@ export default function ClientPdfViewer({ file: fileProp }) {
     const [renderedPages, setRenderedPages] = useState(new Set());
     const observerRef = useRef(null);
     const pageRefsRef = useRef({});
+
+    // Detect iOS on mount
+    useEffect(() => {
+        const iOS = /iPad|iPhone|iPod/.test(navigator.userAgent) ||
+            (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+        setIsIOS(iOS);
+        console.log("iOS detected:", iOS);
+    }, []);
 
     useEffect(() => {
         setErr(null);
@@ -43,6 +54,14 @@ export default function ClientPdfViewer({ file: fileProp }) {
 
     useEffect(() => {
         if (!url) return;
+
+        // For iOS, skip PDF.js rendering and use native viewer
+        if (isIOS) {
+            console.log("iOS detected - using native PDF viewer");
+            setLoading(false);
+            return;
+        }
+
         let cancelled = false;
 
         async function loadPdf() {
@@ -160,7 +179,7 @@ export default function ClientPdfViewer({ file: fileProp }) {
         return () => {
             cancelled = true;
         };
-    }, [url]);
+    }, [url, isIOS]);
 
     // Lazy render pages for large PDFs
     const renderPage = useCallback(async (pageNum) => {
@@ -258,7 +277,15 @@ export default function ClientPdfViewer({ file: fileProp }) {
                 }
             />
 
-            {err ? (
+            {isIOS ? (
+                // Native iOS PDF viewer using iframe
+                <iframe
+                    src={url}
+                    className="w-full h-full min-h-screen"
+                    title="PDF Viewer"
+                    style={{ border: 'none' }}
+                />
+            ) : err ? (
                 <div className="p-6 text-center">
                     <div className="mb-4 text-red-500">
                         <p className="font-semibold mb-2">Unable to display PDF</p>

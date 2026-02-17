@@ -4,6 +4,7 @@ import axios from "axios";
 import { useRouter } from "next/navigation";
 import { FaAngleLeft } from "react-icons/fa";
 import apiClient from "../../lib/apiClient";
+import ClientPdfViewer from "../pdf-viewer/ClientPdfViewer";
 
 // Detect Tauri environment
 const isTauri = process.env.NEXT_PUBLIC_TAURI_BUILD === "1";
@@ -207,20 +208,15 @@ export default function Page() {
                     fileUrl
                 )}`
                 : `/api/pdf-proxy?url=${encodeURIComponent(fileUrl)}`;
-            const viewer = isTauri
-                ? `${REMOTE_API_BASE}/pdf-viewer?file=${encodeURIComponent(
-                    proxied
-                )}`
-                : `/pdf-viewer?file=${encodeURIComponent(proxied)}`;
 
-            console.log("PDF viewer URLs", { proxied, viewer });
-            const finalUrl = viewer;
+            console.log("PDF proxied URL", { proxied });
             setCurrentPara(surah.number);
             setCurrentTitle(`${surah.number}. ${surah.name}`);
-            setReaderUrl(finalUrl);
+            setReaderUrl(proxied);
             setShowReader(true);
         } catch (error) {
-
+            console.error("Error opening surah:", error);
+            alert("Error loading surah PDF. Please check your connection.");
         }
     };
 
@@ -279,16 +275,11 @@ export default function Page() {
                 }
             }
 
-            // Use the proxied URL directly for the viewer (not blob URL)
-            // This works reliably across page navigations on mobile/Tauri
-            const viewer = isTauri
-                ? `${REMOTE_API_BASE}/pdf-viewer?file=${encodeURIComponent(proxiedFinal)}`
-                : `/pdf-viewer?file=${encodeURIComponent(proxiedFinal)}`;
-
-            console.log("PDF viewer URLs", { proxied: proxiedFinal, viewer });
+            // Use the proxied URL directly for ClientPdfViewer component
+            console.log("PDF proxied URL", { proxied: proxiedFinal });
             setCurrentPara(p.number);
             setCurrentTitle(`Para ${p.number}`);
-            setReaderUrl(viewer);
+            setReaderUrl(proxiedFinal);
             setShowReader(true);
         } catch (error) {
             console.error("Error opening para:", error);
@@ -492,11 +483,8 @@ export default function Page() {
                                                     const blob = new Blob([byteArray], { type: "application/pdf" });
                                                     const objUrl = URL.createObjectURL(blob);
                                                     setCurrentObjectUrl(objUrl);
-                                                    const viewer = isTauri
-                                                        ? `${REMOTE_API_BASE}/pdf-viewer?file=${encodeURIComponent(objUrl)}`
-                                                        : `/pdf-viewer?file=${encodeURIComponent(objUrl)}`;
                                                     setCurrentTitle('Kanzul Imaan');
-                                                    setReaderUrl(viewer);
+                                                    setReaderUrl(objUrl);
                                                     setShowReader(true);
                                                     return;
                                                 }
@@ -516,18 +504,14 @@ export default function Page() {
 
                                         if (!rawFileUrl) throw new Error('No file URL returned from server');
 
-                                        // Proxy the PDF and use it directly (don't fetch as blob - Kanzul Imaan is too large)
+                                        // Proxy the PDF and use it directly for ClientPdfViewer
                                         const proxied = isTauri
                                             ? `${REMOTE_API_BASE}/api/pdf-proxy?url=${encodeURIComponent(rawFileUrl)}`
                                             : `/api/pdf-proxy?url=${encodeURIComponent(rawFileUrl)}`;
 
-                                        const viewer = isTauri
-                                            ? `${REMOTE_API_BASE}/pdf-viewer?file=${encodeURIComponent(proxied)}`
-                                            : `/pdf-viewer?file=${encodeURIComponent(proxied)}`;
-
-                                        console.log("Kanzul Imaan PDF viewer URLs", { proxied, viewer });
+                                        console.log("Kanzul Imaan PDF proxied URL", { proxied });
                                         setCurrentTitle('Kanzul Imaan');
-                                        setReaderUrl(viewer);
+                                        setReaderUrl(proxied);
                                         setShowReader(true);
                                     } catch (err) {
                                         console.error('Failed to open Kanzul Imaan', err);
@@ -568,13 +552,8 @@ export default function Page() {
                                     </button>
                                 </div>
                             </header>
-                            <main className="relative flex-1 overflow-hidden bg-base-100">
-                                <iframe
-                                    src={readerUrl}
-                                    className="w-full h-full min-h-0"
-                                    title={`${currentTitle || `Para ${currentPara}`
-                                        } preview`}
-                                />
+                            <main className="relative flex-1 overflow-auto bg-base-100">
+                                <ClientPdfViewer file={readerUrl} />
                             </main>
                         </div>
                     </div>
