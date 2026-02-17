@@ -23,8 +23,28 @@ const defaultBase =
         : windowOrigin) ||
     "http://localhost:3000";
 
+function mapLocalhostForAndroidEmulator(base) {
+    if (typeof navigator === "undefined" || !base) return base;
+    const ua = navigator.userAgent || "";
+    const isAndroid = /Android/i.test(ua);
+    if (!isAndroid) return base;
+    try {
+        const url = new URL(base, window.location?.origin || undefined);
+        if (url.hostname === "localhost" || url.hostname === "127.0.0.1") {
+            url.hostname = "10.0.2.2"; // Android emulator host alias
+            return url.toString();
+        }
+    } catch (e) {
+        // If base isn't a full URL, fallback to simple replace
+        if (base.includes("localhost")) return base.replace("localhost", "10.0.2.2");
+    }
+    return base;
+}
+
+const resolvedBase = mapLocalhostForAndroidEmulator(defaultBase);
+
 const apiClient = axios.create({
-    baseURL: defaultBase,
+    baseURL: resolvedBase,
     withCredentials: false,
     headers: {
         "Content-Type": "application/json",

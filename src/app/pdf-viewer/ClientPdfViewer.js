@@ -26,6 +26,7 @@ export default function ClientPdfViewer({ file: fileProp }) {
     const [renderedPages, setRenderedPages] = useState(new Set());
     const observerRef = useRef(null);
     const pageRefsRef = useRef({});
+    const renderedPagesRef = useRef(new Set());
 
     useEffect(() => {
         setErr(null);
@@ -146,8 +147,14 @@ export default function ClientPdfViewer({ file: fileProp }) {
                         }
                     }
 
+                    // reset refs for the new document and update pages/rendered pages
+                    pageRefsRef.current = {};
                     setPages([...pageArray]);
                     setRenderedPages(newRenderedPages);
+                    renderedPagesRef.current = newRenderedPages;
+
+                    // set the current page to the first rendered page (if any)
+                    setCurrentPage(initialPagesToRender >= 1 ? 1 : 0);
 
                 } catch (renderError) {
                     console.error("Failed to render PDF:", renderError);
@@ -181,7 +188,7 @@ export default function ClientPdfViewer({ file: fileProp }) {
             console.log(`Cannot render page ${pageNum}: pdfDoc not loaded`);
             return;
         }
-        if (renderedPages.has(pageNum)) {
+        if (renderedPagesRef.current.has(pageNum)) {
             console.log(`Page ${pageNum} already rendered, skipping`);
             return;
         }
@@ -203,7 +210,12 @@ export default function ClientPdfViewer({ file: fileProp }) {
                 newPages[pageNum - 1] = dataUrl;
                 return newPages;
             });
-            setRenderedPages(prev => new Set([...prev, pageNum]));
+            setRenderedPages(prev => {
+                const next = new Set(prev);
+                next.add(pageNum);
+                renderedPagesRef.current = next;
+                return next;
+            });
         } catch (e) {
             console.error(`Error rendering page ${pageNum}:`, e);
         }
@@ -216,9 +228,12 @@ export default function ClientPdfViewer({ file: fileProp }) {
         observerRef.current = new IntersectionObserver(
             (entries) => {
                 entries.forEach(entry => {
+                    const pageNum = parseInt(entry.target.dataset.page);
+                    console.log(`Observer: page ${pageNum} intersecting=${entry.isIntersecting}`);
                     if (entry.isIntersecting) {
-                        const pageNum = parseInt(entry.target.dataset.page);
                         renderPage(pageNum);
+                        // update visible page indicator
+                        setCurrentPage(pageNum);
                     }
                 });
             },
@@ -239,6 +254,11 @@ export default function ClientPdfViewer({ file: fileProp }) {
             if (el) observerRef.current.observe(el);
         });
     }, [pages, totalPages]);
+
+    // debug: log current page changes
+    useEffect(() => {
+        console.log("currentPage ->", currentPage);
+    }, [currentPage]);
 
     if (!file) {
         return (

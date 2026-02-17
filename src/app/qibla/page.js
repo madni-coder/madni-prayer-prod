@@ -12,7 +12,19 @@ export default function Qibla() {
     const [qiblaDirection, setQiblaDirection] = useState(null);
     const [location, setLocation] = useState(null);
     const [locationError, setLocationError] = useState(null);
+    const [compassAccuracy, setCompassAccuracy] = useState(null);
+    const [isIOS, setIsIOS] = useState(false);
     const normalize = (n) => ((n % 360) + 360) % 360;
+
+    // Detect iOS
+    useEffect(() => {
+        const checkIOS = () => {
+            const isIOSDevice = /iPad|iPhone|iPod/.test(navigator.userAgent) ||
+                (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+            setIsIOS(isIOSDevice);
+        };
+        checkIOS();
+    }, []);
 
     // Get user's location and fetch Qibla direction
     useEffect(() => {
@@ -56,13 +68,26 @@ export default function Qibla() {
 
     useEffect(() => {
         let mounted = true;
+        let orientationHandler = null;
 
         const handleOrientation = (e) => {
+            if (!mounted) return;
+
             let heading = null;
 
-            // iOS devices with webkitCompassHeading
+            // iOS devices with webkitCompassHeading (most reliable for iOS)
             if (typeof e.webkitCompassHeading === "number") {
+                // webkitCompassHeading gives 0-360 where 0 is magnetic north
                 heading = e.webkitCompassHeading;
+                // iOS-specific: Get compass accuracy
+                if (typeof e.webkitCompassAccuracy === "number") {
+                    setCompassAccuracy(e.webkitCompassAccuracy);
+                }
+            }
+            // iOS absolute orientation with alpha
+            else if (e.absolute && typeof e.alpha === "number" && e.alpha !== null) {
+                // For absolute orientation, alpha represents the z-axis rotation
+                heading = e.alpha;
             }
             // Other devices using alpha
             else if (typeof e.alpha === "number" && e.alpha !== null) {
@@ -76,10 +101,12 @@ export default function Qibla() {
                 heading = 360 - (alpha + screenAngle);
             }
 
-            if (heading != null && mounted) {
+            if (heading != null) {
                 setDeviceHeading(normalize(heading));
             }
         };
+
+        orientationHandler = handleOrientation;
 
         const initCompass = async () => {
             // Check if permission was previously granted
@@ -94,10 +121,11 @@ export default function Qibla() {
                             if (permission === "granted") {
                                 setPermissionGranted(true);
                                 setNeedsPermission(false);
+                                // iOS prefers deviceorientationabsolute for compass
                                 if ("ondeviceorientationabsolute" in window) {
-                                    window.addEventListener("deviceorientationabsolute", handleOrientation, true);
+                                    window.addEventListener("deviceorientationabsolute", orientationHandler, true);
                                 } else {
-                                    window.addEventListener("deviceorientation", handleOrientation, true);
+                                    window.addEventListener("deviceorientation", orientationHandler, true);
                                 }
                             } else {
                                 setNeedsPermission(true);
@@ -115,9 +143,9 @@ export default function Qibla() {
                     setPermissionGranted(true);
                     localStorage.setItem('qiblaCompassPermission', 'granted');
                     if ("ondeviceorientationabsolute" in window) {
-                        window.addEventListener("deviceorientationabsolute", handleOrientation, true);
+                        window.addEventListener("deviceorientationabsolute", orientationHandler, true);
                     } else {
-                        window.addEventListener("deviceorientation", handleOrientation, true);
+                        window.addEventListener("deviceorientation", orientationHandler, true);
                     }
                 }
             }
@@ -127,8 +155,10 @@ export default function Qibla() {
 
         return () => {
             mounted = false;
-            window.removeEventListener("deviceorientation", handleOrientation, true);
-            window.removeEventListener("deviceorientationabsolute", handleOrientation, true);
+            if (orientationHandler) {
+                window.removeEventListener("deviceorientation", orientationHandler, true);
+                window.removeEventListener("deviceorientationabsolute", orientationHandler, true);
+            }
         };
     }, []);
 
@@ -144,13 +174,24 @@ export default function Qibla() {
                     setPermissionError(null);
                     localStorage.setItem('qiblaCompassPermission', 'granted');
 
-                    // Start listening to orientation events
+                    // Define the orientation handler for iOS
                     const handleOrientation = (e) => {
                         let heading = null;
 
+                        // iOS devices with webkitCompassHeading (most reliable)
                         if (typeof e.webkitCompassHeading === "number") {
                             heading = e.webkitCompassHeading;
-                        } else if (typeof e.alpha === "number" && e.alpha !== null) {
+                            // iOS-specific: Get compass accuracy
+                            if (typeof e.webkitCompassAccuracy === "number") {
+                                setCompassAccuracy(e.webkitCompassAccuracy);
+                            }
+                        }
+                        // iOS absolute orientation with alpha
+                        else if (e.absolute && typeof e.alpha === "number" && e.alpha !== null) {
+                            heading = e.alpha;
+                        }
+                        // Other devices using alpha
+                        else if (typeof e.alpha === "number" && e.alpha !== null) {
                             const screenAngle =
                                 (window.screen &&
                                     window.screen.orientation &&
@@ -166,11 +207,16 @@ export default function Qibla() {
                         }
                     };
 
+                    // Start listening to orientation events
+                    // iOS prefers deviceorientationabsolute for compass
                     if ("ondeviceorientationabsolute" in window) {
                         window.addEventListener("deviceorientationabsolute", handleOrientation, true);
                     } else {
                         window.addEventListener("deviceorientation", handleOrientation, true);
                     }
+
+                    // Force a check to see if events are firing
+                    console.log("iOS compass permission granted, listeners attached");
                 } else {
                     setPermissionError("Permission denied. Please enable motion sensors in Settings > Privacy > Motion & Fitness.");
                     localStorage.setItem('qiblaCompassPermission', 'denied');
@@ -374,51 +420,64 @@ export default function Qibla() {
                                         W
                                     </div>
 
-                                    {/* Compass needle */}
-                                    <div
-                                        style={{
-                                            position: "absolute",
-                                            left: "50%",
-                                            top: "50%",
-                                            width: 0,
-                                            height: 0,
-                                            transformOrigin: "center",
-                                            transform: qiblaDirection !== null
-                                                ? `translate(-50%, -50%) rotate(${qiblaDirection}deg)`
-                                                : "translate(-50%, -50%) rotate(0deg)",
-                                            zIndex: 10,
-                                        }}
-                                    >
-                                        {/* Red half of needle (pointing up/north) */}
-                                        <div
-                                            style={{
-                                                position: "absolute",
-                                                left: -4,
-                                                top: -100,
-                                                width: 0,
-                                                height: 0,
-                                                borderLeft: "8px solid transparent",
-                                                borderRight: "8px solid transparent",
-                                                borderBottom: "100px solid #ef4444",
-                                                filter: "drop-shadow(0 2px 4px rgba(0,0,0,0.3))",
-                                            }}
-                                        />
+                                    {/* Compass needle - Red only shows when pointing at Qibla (iOS) */}
+                                    {(() => {
+                                        const isPointingAtQibla = isIOS && qiblaDirection !== null && deviceHeading !== null
+                                            ? Math.abs(normalize(deviceHeading - qiblaDirection)) < 15 ||
+                                            Math.abs(normalize(deviceHeading - qiblaDirection)) > 345
+                                            : false;
 
-                                        {/* Blackish gray half of needle (pointing down/south) */}
-                                        <div
-                                            style={{
-                                                position: "absolute",
-                                                left: -4,
-                                                top: 0,
-                                                width: 0,
-                                                height: 0,
-                                                borderLeft: "8px solid transparent",
-                                                borderRight: "8px solid transparent",
-                                                borderTop: "100px solid #1c1a1a",
-                                                filter: "drop-shadow(0 2px 4px rgba(0,0,0,0.3))",
-                                            }}
-                                        />
-                                    </div>
+                                        return (
+                                            <div
+                                                style={{
+                                                    position: "absolute",
+                                                    left: "50%",
+                                                    top: "50%",
+                                                    width: 0,
+                                                    height: 0,
+                                                    transformOrigin: "center",
+                                                    transform: qiblaDirection !== null
+                                                        ? `translate(-50%, -50%) rotate(${qiblaDirection}deg)`
+                                                        : "translate(-50%, -50%) rotate(0deg)",
+                                                    zIndex: 10,
+                                                }}
+                                            >
+                                                {/* Red half of needle (pointing up/north) - Only visible when pointing at Qibla on iOS */}
+                                                {(isPointingAtQibla || !isIOS) && (
+                                                    <div
+                                                        style={{
+                                                            position: "absolute",
+                                                            left: -4,
+                                                            top: -100,
+                                                            width: 0,
+                                                            height: 0,
+                                                            borderLeft: "8px solid transparent",
+                                                            borderRight: "8px solid transparent",
+                                                            borderBottom: "100px solid #ef4444",
+                                                            filter: "drop-shadow(0 2px 4px rgba(0,0,0,0.3))",
+                                                            transition: "opacity 200ms ease-in-out",
+                                                            opacity: isIOS ? (isPointingAtQibla ? 1 : 0) : 1,
+                                                        }}
+                                                    />
+                                                )}
+
+                                                {/* Blackish gray half of needle (pointing down/south) */}
+                                                <div
+                                                    style={{
+                                                        position: "absolute",
+                                                        left: -4,
+                                                        top: 0,
+                                                        width: 0,
+                                                        height: 0,
+                                                        borderLeft: "8px solid transparent",
+                                                        borderRight: "8px solid transparent",
+                                                        borderTop: "100px solid #1c1a1a",
+                                                        filter: "drop-shadow(0 2px 4px rgba(0,0,0,0.3))",
+                                                    }}
+                                                />
+                                            </div>
+                                        );
+                                    })()}
 
                                     {/* Center golden circle */}
                                     <div
@@ -440,6 +499,39 @@ export default function Qibla() {
                             </div>
                         </div>
                     </div>
+
+                    {/* iOS Compass Accuracy Display */}
+                    {isIOS && compassAccuracy !== null && (
+                        <div className="mt-4 mb-2">
+                            <div className="badge badge-lg"
+                                style={{
+                                    backgroundColor: compassAccuracy < 15 ? '#10b981' :
+                                        compassAccuracy < 25 ? '#f59e0b' : '#ef4444',
+                                    color: 'white',
+                                    fontWeight: 'bold'
+                                }}>
+                                {compassAccuracy < 15 ? '✓ High' :
+                                    compassAccuracy < 25 ? '⚠ Medium' : '⚠ Low'} Accuracy: {compassAccuracy.toFixed(0)}°
+                            </div>
+                        </div>
+                    )}
+
+                    {/* iOS Direction Indicator */}
+                    {isIOS && qiblaDirection !== null && deviceHeading !== null && (
+                        <div className="mt-2 mb-4">
+                            {(() => {
+                                const diff = Math.abs(normalize(deviceHeading - qiblaDirection));
+                                const isAligned = diff < 15 || diff > 345;
+                                return (
+                                    <div className={`alert ${isAligned ? 'alert-success' : 'alert-info'} py-2 px-4`}>
+                                        <span className="text-sm font-semibold">
+                                            {isAligned ? '✓ Pointing at Qibla!' : `Turn ${diff < 180 ? 'right' : 'left'} ${Math.min(diff, 360 - diff).toFixed(0)}°`}
+                                        </span>
+                                    </div>
+                                );
+                            })()}
+                        </div>
+                    )}
 
                     {/* Calibration guide */}
                     <div className="mt-4 flex flex-col items-center">
