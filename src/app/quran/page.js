@@ -94,6 +94,7 @@ export default function Page() {
     const [currentTitle, setCurrentTitle] = useState("");
     const [readerUrl, setReaderUrl] = useState("");
     const [currentObjectUrl, setCurrentObjectUrl] = useState(null);
+    const [loadingPara, setLoadingPara] = useState(null);
     const router = useRouter();
 
     // Theme note: allow user to record how many para they completed
@@ -227,7 +228,6 @@ export default function Page() {
         const file = files.find((f) => f.id === p.number);
         if (!file) {
             console.error('Para file not found:', p.number);
-            alert('Para file not found. Please try again.');
             return;
         }
         const urlBase = file.fileUrl;
@@ -242,6 +242,9 @@ export default function Page() {
             : proxied;
         
         console.log('[openReader] Proxied URL:', proxiedFinal);
+
+        // indicate loading state for this para card
+        setLoadingPara(p.number);
 
         try {
             const storageKey = `para_pdf_${p.number}`;
@@ -294,7 +297,10 @@ export default function Page() {
             setShowReader(true);
         } catch (error) {
             console.error("Error opening para:", error);
-            alert("Error loading para PDF. Please check your connection.");
+            // Swallow alert popups; errors are logged to console instead
+        } finally {
+            // clear loading indicator for this para
+            setLoadingPara(null);
         }
     };
 
@@ -438,10 +444,11 @@ export default function Page() {
                         ))
                     ) : view === "para" ? (
                         filteredParas.map((p) => {
+                            const isLoading = loadingPara === p.number;
                             return (
                                 <div
                                     key={p.number}
-                                    className="neumorph-card flex flex-col items-center justify-between transition hover:scale-105 active:scale-95 hover:shadow-lg active:shadow-md cursor-pointer bg-base-100 border border-primary"
+                                    className={`neumorph-card flex flex-col items-center justify-between transition hover:scale-105 active:scale-95 hover:shadow-lg active:shadow-md ${isLoading ? 'opacity-70 pointer-events-none' : 'cursor-pointer'} bg-base-100 border border-primary`}
                                     style={{
                                         minHeight: 140,
                                         height: 140,
@@ -460,9 +467,21 @@ export default function Page() {
                                             ◤
                                         </span>
                                     </div>
-                                    <span className="text-2xl mb-1 mt-2 text-center text-white" style={{ fontWeight: 600 }}>
-                                        {p.arabic}
-                                    </span>
+
+                                    {isLoading ? (
+                                        <div className="flex flex-col items-center justify-center w-full mt-2">
+                                            <svg className="animate-spin h-8 w-8 text-primary" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                                                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"></path>
+                                            </svg>
+                                            <div className="text-sm text-primary mt-2">Opening...</div>
+                                        </div>
+                                    ) : (
+                                        <span className="text-2xl mb-1 mt-2 text-center text-white" style={{ fontWeight: 600 }}>
+                                            {p.arabic}
+                                        </span>
+                                    )}
+
                                     <div className="w-full flex justify-end items-end mt-auto">
                                         <span className="text-xs text-primary" style={{ fontFamily: "serif" }}>
                                             ◢
