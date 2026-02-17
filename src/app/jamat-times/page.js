@@ -71,6 +71,18 @@ export default function JamatTimesPage() {
     const [reportVisible, setReportVisible] = useState(false);
     const [copied, setCopied] = useState(false);
     const reportPhone = "9691302711";
+    // Ensure phone has country code for WhatsApp links (default to India +91)
+    const formatPhoneForWhatsApp = (phone) => {
+        if (!phone) return "";
+        let num = phone.toString().trim();
+        // remove non-digit characters
+        num = num.replace(/\D/g, "");
+        // If already has country code (length > 10), return as-is
+        if (num.length > 10) return num;
+        // If 10 digits, assume India +91
+        if (num.length === 10) return `91${num}`;
+        return num;
+    };
 
     // visibleMasjids respects the Raipur-only toggle
     // Default: show Bilaspur and entries without a city (city === null/undefined/empty)
@@ -457,12 +469,42 @@ export default function JamatTimesPage() {
     };
 
     const copyNumber = async () => {
+        const text = reportPhone || "";
+        if (!text) return;
+        // Prefer modern clipboard API
         try {
-            await navigator.clipboard.writeText(reportPhone);
+            if (navigator.clipboard && navigator.clipboard.writeText) {
+                await navigator.clipboard.writeText(text);
+            } else {
+                throw new Error("navigator.clipboard not available");
+            }
             setCopied(true);
             setTimeout(() => setCopied(false), 2000);
         } catch (e) {
-            console.error("Copy failed", e);
+            // Fallback for older browsers: use a temporary textarea + execCommand
+            try {
+                const ta = document.createElement("textarea");
+                ta.value = text;
+                // Prevent scrolling to bottom
+                ta.style.position = "fixed";
+                ta.style.top = "0";
+                ta.style.left = "0";
+                ta.style.opacity = "0";
+                document.body.appendChild(ta);
+                ta.focus();
+                ta.select();
+                const successful = document.execCommand("copy");
+                document.body.removeChild(ta);
+                if (successful) {
+                    setCopied(true);
+                    setTimeout(() => setCopied(false), 2000);
+                } else {
+                    showToast("Copy failed. Please copy manually.", "error");
+                }
+            } catch (err) {
+                console.error("Copy failed", err);
+                showToast("Copy failed. Please copy manually.", "error");
+            }
         }
     };
 
@@ -474,15 +516,40 @@ export default function JamatTimesPage() {
             showToast("Location is not added for this masjid.", "error");
             return;
         }
-
+        const text = mapUrl;
         try {
-            await navigator.clipboard.writeText(mapUrl);
-            setCopiedMap(true);
-            setTimeout(() => setCopiedMap(false), 2000);
-            showToast("Map URL copied to clipboard.", "success");
+            if (navigator.clipboard && navigator.clipboard.writeText) {
+                await navigator.clipboard.writeText(text);
+                setCopiedMap(true);
+                setTimeout(() => setCopiedMap(false), 2000);
+                showToast("Map URL copied to clipboard.", "success");
+                return;
+            }
+            throw new Error("navigator.clipboard not available");
         } catch (e) {
-            console.error("Copy failed", e);
-            showToast("Failed to copy map URL.", "error");
+            try {
+                const ta = document.createElement("textarea");
+                ta.value = text;
+                ta.style.position = "fixed";
+                ta.style.top = "0";
+                ta.style.left = "0";
+                ta.style.opacity = "0";
+                document.body.appendChild(ta);
+                ta.focus();
+                ta.select();
+                const successful = document.execCommand("copy");
+                document.body.removeChild(ta);
+                if (successful) {
+                    setCopiedMap(true);
+                    setTimeout(() => setCopiedMap(false), 2000);
+                    showToast("Map URL copied to clipboard.", "success");
+                } else {
+                    showToast("Failed to copy map URL.", "error");
+                }
+            } catch (err) {
+                console.error("Copy failed", err);
+                showToast("Failed to copy map URL.", "error");
+            }
         }
     };
 
@@ -916,40 +983,52 @@ export default function JamatTimesPage() {
                                 className="inline-flex items-center gap-2 px-4 py-3 btn btn-error text-white transition font-semibold"
                             >
                                 <FaWhatsapp className="w-5 h-5" />
-                                <span>Jamat Time Changed ? Report Us</span>
+                                <span>Jamat Time Changed ? Tell Us</span>
                             </button>
                             {reportVisible && (
-                                <div className="mt-3 w-full max-w-full p-3 rounded-md flex flex-col md:flex-row items-start md:items-center justify-between gap-3 border border-base-200 bg-base-100 dark:bg-base-900 dark:border-base-700 text-left relative">
-                                    <div className="flex items-start md:items-center gap-3 flex-1 min-w-0">
-                                        <div className="text-sm text-base-content dark:text-base-content/80 min-w-0">
-                                            <div className="mb-1 md:mb-0 break-words md:truncate">Mistake in Jamat times — report by sending correct Jamat time on WhatsApp</div>
-                                            <div className="flex items-center gap-3">
-                                                <div className="inline-flex items-center gap-2 text-green-600">
-                                                    <FaWhatsapp className="w-4 h-4" />
-                                                    <span className="font-mono whitespace-nowrap select-none">{reportPhone}</span>
+                                <div className="relative mt-3 w-full max-w-full">
+                                    <div className="p-3 rounded-md flex flex-col md:flex-row items-start md:items-center justify-between gap-3 border border-base-200 bg-base-100 dark:bg-base-900 dark:border-base-700 text-left">
+                                        <div className="flex items-start md:items-center gap-3 flex-1 min-w-0">
+                                            <div className="text-sm text-base-content dark:text-base-content/80 min-w-0">
+                                                <div className="mb-1 md:mb-0 break-words whitespace-normal">Mistake in Jamat times — report us by sending correct Jamat time on WhatsApp</div>
+                                                <div className="flex flex-col sm:flex-row sm:items-center gap-2">
+                                                    <div className="inline-flex items-center gap-2 text-green-600 break-words">
+                                                        <FaWhatsapp className="w-4 h-4" />
+                                                        <a
+                                                            href={`https://wa.me/${formatPhoneForWhatsApp(reportPhone)}`}
+                                                            target="_blank"
+                                                            rel="noopener noreferrer"
+                                                            className="font-mono select-none underline underline-offset-2 break-words"
+                                                            aria-label={`Open WhatsApp chat with ${reportPhone}`}
+                                                        >
+                                                            {reportPhone}
+                                                        </a>
+                                                        <button
+                                                            type="button"
+                                                            onClick={copyNumber}
+                                                            aria-label="Copy phone number"
+                                                            className="inline-flex items-center justify-center p-1 rounded-md text-base-content hover:bg-base-200 dark:hover:bg-base-800"
+                                                        >
+                                                            {copied ? (
+                                                                <FaCheck className="w-4 h-4 text-green-600" />
+                                                            ) : (
+                                                                <FaCopy className="w-4 h-4" />
+                                                            )}
+                                                        </button>
+                                                    </div>
+
                                                 </div>
-                                                <button
-                                                    type="button"
-                                                    onClick={copyNumber}
-                                                    aria-label="Copy phone number"
-                                                    className="inline-flex items-center justify-center p-1 rounded-md text-base-content hover:bg-base-200 dark:hover:bg-base-800"
-                                                >
-                                                    {copied ? (
-                                                        <FaCheck className="w-4 h-4 text-green-600" />
-                                                    ) : (
-                                                        <FaCopy className="w-4 h-4" />
-                                                    )}
-                                                </button>
                                             </div>
                                         </div>
                                     </div>
+
                                     <button
                                         type="button"
                                         onClick={() => setReportVisible(false)}
                                         aria-label="Close report message"
-                                        className="absolute top-2 right-2 text-base-content dark:text-base-content/80 hover:text-primary p-1 rounded"
+                                        className="absolute -top-3 -right-3 w-8 h-8 flex items-center justify-center bg-base-200 dark:bg-base-800 text-base-content rounded-full shadow-sm hover:bg-primary hover:text-white transition"
                                     >
-                                        <FaTimes />
+                                        <FaTimes className="w-3 h-3" />
                                     </button>
                                 </div>
                             )}

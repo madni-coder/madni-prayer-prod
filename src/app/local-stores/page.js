@@ -200,7 +200,6 @@ export default function LocalStoresPage() {
                                                     </div>
 
                                                     <div className="flex items-center gap-2">
-                                                        <a href={s.mobile ? `tel:${s.mobile}` : "#"} aria-label={s.mobile ? `Call ${s.mobile}` : "No number"} className="inline-block px-4 py-2 rounded-md bg-emerald-500 text-white text-sm font-medium shadow hover:brightness-95">Call</a>
                                                         <button
                                                             onClick={() => {
                                                                 // Pass store data via sessionStorage to avoid refetch
