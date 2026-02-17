@@ -21,7 +21,23 @@ open class BuildTask : DefaultTask() {
             runTauriCli(executable)
         } catch (e: Exception) {
             if (Os.isFamily(Os.FAMILY_WINDOWS)) {
-                runTauriCli("$executable.cmd")
+                // Try different Windows-specific extensions
+                val fallbacks = listOf(
+                    "$executable.exe",
+                    "$executable.cmd",
+                    "$executable.bat",
+                )
+                
+                var lastException: Exception = e
+                for (fallback in fallbacks) {
+                    try {
+                        runTauriCli(fallback)
+                        return
+                    } catch (fallbackException: Exception) {
+                        lastException = fallbackException
+                    }
+                }
+                throw lastException
             } else {
                 throw e;
             }
@@ -29,13 +45,6 @@ open class BuildTask : DefaultTask() {
     }
 
     fun runTauriCli(executable: String) {
-        // allow skipping the native/tauri CLI step from Gradle
-        val skipProp = project.findProperty("skipTauriNative")?.toString()?.toBoolean()
-        val skipEnv = System.getenv("SKIP_TAURI_NATIVE") != null
-        if (skipProp == true || skipEnv) {
-            project.logger.lifecycle("Skipping Tauri native build (skipTauriNative=true or SKIP_TAURI_NATIVE set)")
-            return
-        }
         val rootDirRel = rootDirRel ?: throw GradleException("rootDirRel cannot be null")
         val target = target ?: throw GradleException("target cannot be null")
         val release = release ?: throw GradleException("release cannot be null")
