@@ -55,6 +55,11 @@ export default function Tasbih() {
     const [allowContinueAfterTarget, setAllowContinueAfterTarget] = useState(false);
     const [showManualInput, setShowManualInput] = useState(false);
     const [manualTargetValue, setManualTargetValue] = useState("");
+    // Warn user if they try to set a new target while an active one exists
+    const [showActiveTargetWarning, setShowActiveTargetWarning] = useState(false);
+    const [pendingTarget, setPendingTarget] = useState(null);
+    const [showIncompleteTargetWarning, setShowIncompleteTargetWarning] = useState(false);
+    const [allowFreeCounting, setAllowFreeCounting] = useState(false);
 
     // Pagination state
     const [currentPage, setCurrentPage] = useState(1);
@@ -164,6 +169,7 @@ export default function Tasbih() {
         if (typeof window !== 'undefined') localStorage.removeItem('tasbihTarget');
         setShowTargetReached(false);
         setAllowContinueAfterTarget(false);
+        setAllowFreeCounting(false);
         showToast({ type: 'success', text: 'Count saved locally' });
     };
 
@@ -233,8 +239,8 @@ export default function Tasbih() {
 
     // shared increment handler (respects custom target and global 10000 limit)
     const increment = useCallback(() => {
-        // Prevent starting if no target is set
-        if (!target || target <= 0) {
+        // Prevent starting if no target is set (unless free counting is enabled)
+        if (!allowFreeCounting && (!target || target <= 0)) {
             // show themed tooltip on target field
             setShowTargetTooltip(true);
             // clear after a short delay so mobile users see it
@@ -269,12 +275,18 @@ export default function Tasbih() {
             try { playTick(); } catch (e) { }
             return c + 1;
         });
-    }, [triggerVibration, target, allowContinueAfterTarget, playTick]);
+    }, [triggerVibration, target, allowContinueAfterTarget, playTick, allowFreeCounting]);
 
     // submit helper used by main submit button and target modal
     const submitCount = async (countToSubmit) => {
         if (!countToSubmit || Number(countToSubmit) <= 0) {
             showToast({ type: 'error', text: 'Count Value must be greater than 0' });
+            return;
+        }
+
+        // If user has an active target that's not yet completed, warn them instead of submitting
+        if (target > 0 && count < target) {
+            setShowIncompleteTargetWarning(true);
             return;
         }
 
@@ -308,6 +320,7 @@ export default function Tasbih() {
                     if (typeof window !== 'undefined') localStorage.removeItem('tasbihTarget');
                     setShowTargetReached(false);
                     setAllowContinueAfterTarget(false);
+                    setAllowFreeCounting(false);
                     showToast({ type: 'success', text: 'Durood Counts Submitted Successfully' });
                 } else {
                     showToast({ type: 'error', text: (data && data.message) || 'Failed to submit. Please try again.' });
@@ -401,21 +414,38 @@ export default function Tasbih() {
                             <select
                                 aria-label="Select Target Value"
                                 className="select select-bordered select-sm bg-base-100 border-primary/30 focus:border-primary focus:outline-none w-full md:w-40 font-medium text-primary shadow-sm"
-                                value={target || ""}
+                                value={allowFreeCounting ? "no-target" : (target || "")}
                                 onChange={(e) => {
                                     const value = e.target.value;
+                                    // If there's an active target that isn't completed, block changing it
+                                    if (target > 0 && count < target) {
+                                        setPendingTarget(value);
+                                        setShowActiveTargetWarning(true);
+                                        return;
+                                    }
+
                                     if (value === "manual") {
                                         setShowManualInput(true);
+                                        setAllowFreeCounting(false);
+                                    } else if (value === "no-target") {
+                                        // Allow free counting without any target restrictions
+                                        setTarget(0);
+                                        setAllowFreeCounting(true);
+                                        setShowTargetTooltip(false);
+                                        setAllowContinueAfterTarget(false);
+                                        if (typeof window !== 'undefined') localStorage.removeItem('tasbihTarget');
+                                        showToast({ type: 'success', text: `No target — free counting enabled` });
                                     } else if (value) {
                                         const v = Number(value);
                                         setTarget(v);
                                         setShowTargetTooltip(false);
                                         setAllowContinueAfterTarget(false);
+                                        setAllowFreeCounting(false);
                                         showToast({ type: 'success', text: `Target set to ${v}` });
                                     }
                                 }}
                             >
-                                <option value="" disabled>Choose Target</option>
+                                <option value="" disabled hidden>Please Select</option>
                                 <option value="manual">⚙️ Manual</option>
                                 <option value="100">100</option>
                                 <option value="200">200</option>
@@ -423,6 +453,7 @@ export default function Tasbih() {
                                 <option value="500">500</option>
                                 <option value="700">700</option>
                                 <option value="1000">1000</option>
+                                <option value="no-target">No Target</option>
                             </select>
                         </div>
 
@@ -439,7 +470,9 @@ export default function Tasbih() {
                         )}
 
                         <div className="text-sm font-medium text-primary/90 w-full md:w-auto text-center md:text-right">
-                            {target > 0 ? (
+                            {allowFreeCounting ? (
+                                <span className="bg-primary/10 px-3 py-1.5 rounded-lg border border-primary/20">🆓 No Target (Free)</span>
+                            ) : target > 0 ? (
                                 <span className="bg-primary/10 px-3 py-1.5 rounded-lg border border-primary/20">🎯 Target: <strong className="text-primary">{target}</strong></span>
                             ) : (
                                 <span className="text-primary/60">No target set</span>
@@ -484,10 +517,10 @@ export default function Tasbih() {
                 <div className="flex flex-col items-center gap-6 w-full">
                     <button
                         onClick={() => increment()}
-                        aria-disabled={target <= 0}
+                        aria-disabled={!allowFreeCounting && target <= 0}
                         className={
                             "btn btn-circle bg-base-100 border text-primary shadow-md hover:scale-105 transition-transform w-28 h-28 flex items-center justify-center " +
-                            (target <= 0
+                            (!allowFreeCounting && target <= 0
                                 ? 'border-primary/30 opacity-80'
                                 : 'border-primary')
                         }
@@ -496,7 +529,7 @@ export default function Tasbih() {
                         <PiHandTapLight className="h-20 w-20" />
                     </button>
 
-                    <div className="text-xl font-bold">Tap Below</div>
+                    <div className="text-xl font-bold">Tap Above</div>
                 </div>
             </div>
 
@@ -517,7 +550,14 @@ export default function Tasbih() {
                                     className="btn btn-primary"
                                     onClick={() => {
                                         setCount(0);
+                                        setTarget(0);
+                                        if (typeof window !== 'undefined') localStorage.removeItem('tasbihTarget');
+                                        setShowManualInput(false);
                                         setShowLimitReached(false);
+                                        setShowTargetReached(false);
+                                        setAllowContinueAfterTarget(false);
+                                        setAllowFreeCounting(false);
+                                        setPendingTarget(null);
                                     }}
                                 >
                                     Reset Counter
@@ -549,7 +589,14 @@ export default function Tasbih() {
                                     className="btn btn-primary"
                                     onClick={() => {
                                         setCount(0);
+                                        setTarget(0);
+                                        if (typeof window !== 'undefined') localStorage.removeItem('tasbihTarget');
+                                        setShowManualInput(false);
                                         setShowResetConfirm(false);
+                                        setShowTargetReached(false);
+                                        setAllowContinueAfterTarget(false);
+                                        setAllowFreeCounting(false);
+                                        setPendingTarget(null);
                                     }}
                                 >
                                     Yes
@@ -594,6 +641,92 @@ export default function Tasbih() {
                                     onClick={() => skipSubmit(target > 0 ? target : count)}
                                 >
                                     Skip
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Warning shown when user tries to change target while an active one exists */}
+            {showActiveTargetWarning && (
+                <div className="fixed inset-0 flex items-center justify-center bg-black/40 z-50">
+                    <div className="modal modal-open">
+                        <div className={
+                            "modal-box text-center " +
+                            (typeof window !== 'undefined' && effectiveTheme() === 'dark'
+                                ? 'bg-neutral text-neutral-content'
+                                : 'bg-base-100 text-primary')
+                        }>
+                            <h3 className="font-bold text-lg">Active Target In Progress</h3>
+                            <p className="py-4">
+                                You already have an active target of <strong className="text-primary">{target}</strong>.
+                                Please reset or complete the current target before setting a new one.
+                            </p>
+                            <div className="modal-action justify-center flex gap-3">
+                                <button
+                                    className="btn btn-error w-36"
+                                    onClick={() => {
+                                        // Reset current progress and apply pending target
+                                        setCount(0);
+                                        setShowActiveTargetWarning(false);
+                                        setShowTargetReached(false);
+                                        setAllowContinueAfterTarget(false);
+                                        if (pendingTarget === 'manual') {
+                                            setTarget(0);
+                                            setShowManualInput(true);
+                                            setAllowFreeCounting(false);
+                                        } else if (pendingTarget === 'no-target') {
+                                            setTarget(0);
+                                            setAllowFreeCounting(true);
+                                            if (typeof window !== 'undefined') localStorage.removeItem('tasbihTarget');
+                                            showToast({ type: 'success', text: `No target — free counting enabled` });
+                                        } else if (pendingTarget) {
+                                            const v = Number(pendingTarget);
+                                            setTarget(v);
+                                            setAllowFreeCounting(false);
+                                            showToast({ type: 'success', text: `Target set to ${v}` });
+                                        }
+                                        setPendingTarget(null);
+                                    }}
+                                >
+                                    Reset & Set
+                                </button>
+                                <button
+                                    className="btn btn-ghost w-36"
+                                    onClick={() => {
+                                        setShowActiveTargetWarning(false);
+                                        setPendingTarget(null);
+                                    }}
+                                >
+                                    Cancel
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Warning shown when user tries to submit before completing the active target */}
+            {showIncompleteTargetWarning && (
+                <div className="fixed inset-0 flex items-center justify-center bg-black/40 z-50">
+                    <div className="modal modal-open">
+                        <div className={
+                            "modal-box text-center " +
+                            (typeof window !== 'undefined' && effectiveTheme() === 'dark'
+                                ? 'bg-neutral text-neutral-content'
+                                : 'bg-base-100 text-primary')
+                        }>
+                            <h3 className="font-bold text-lg">Target Incomplete</h3>
+                            <p className="py-4">
+                                Your target is not completed.
+                            </p>
+                            <div className="modal-action justify-center">
+                                <button
+                                    className="btn btn-primary"
+                                    onClick={() => setShowIncompleteTargetWarning(false)}
+                                >
+                                    Close
                                 </button>
                             </div>
                         </div>
