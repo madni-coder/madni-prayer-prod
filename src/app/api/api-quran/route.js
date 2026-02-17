@@ -31,15 +31,10 @@ export async function GET(request) {
         // Default behavior: return para files from database
         const data = await prisma.fileTable.findMany();
         const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL;
-
-        // Normalize stored paths to avoid double slashes (e.g., host//storage/...)
-        const files = data.map((file) => {
-            const cleanPath = (file.fileUrl || "").replace(/^\//, "");
-            return {
-                ...file,
-                fileUrl: `${SUPABASE_URL}/${cleanPath}`,
-            };
-        });
+        const files = data.map((file) => ({
+            ...file,
+            fileUrl: `${SUPABASE_URL}/${file.fileUrl}`,
+        }));
         return new Response(JSON.stringify({ files }), { status: 200 });
     } catch (err) {
         return new Response(JSON.stringify({ error: err.message }), {
