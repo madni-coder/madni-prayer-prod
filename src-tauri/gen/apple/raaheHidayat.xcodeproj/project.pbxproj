@@ -272,7 +272,6 @@
 /* Begin PBXShellScriptBuildPhase section */
 		03CDD8ACD14818179939E6AE /* Build Rust Code */ = {
 			isa = PBXShellScriptBuildPhase;
-			alwaysOutOfDate = 0;
 			buildActionMask = 2147483647;
 			files = (
 			);
@@ -379,10 +378,8 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_ENTITLEMENTS = raaheHidayat_iOS/raaheHidayat_iOS.entitlements;
 				CODE_SIGN_IDENTITY = "Apple Development";
-				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Distribution";
-				CODE_SIGN_STYLE = Manual;
+				CODE_SIGN_STYLE = Automatic;
 				DEVELOPMENT_TEAM = "R8953SWC87";
-				"DEVELOPMENT_TEAM[sdk=iphoneos*]" = R8953SWC87;
 				ENABLE_BITCODE = NO;
 				"EXCLUDED_ARCHS[sdk=iphoneos*]" = x86_64;
 				FRAMEWORK_SEARCH_PATHS = (
@@ -411,7 +408,6 @@
 				PRODUCT_BUNDLE_IDENTIFIER = com.prayer.raahe;
 				PRODUCT_NAME = "raaheHidayat";
 				PROVISIONING_PROFILE_SPECIFIER = "";
-				"PROVISIONING_PROFILE_SPECIFIER[sdk=iphoneos*]" = "Raahe Hidayat";
 				SDKROOT = iphoneos;
 				TARGETED_DEVICE_FAMILY = "1,2";
 				VALID_ARCHS = "arm64  x86_64";
@@ -485,10 +481,8 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_ENTITLEMENTS = raaheHidayat_iOS/raaheHidayat_iOS.entitlements;
 				CODE_SIGN_IDENTITY = "Apple Development";
-				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Distribution";
-				CODE_SIGN_STYLE = Manual;
+				CODE_SIGN_STYLE = Automatic;
 				DEVELOPMENT_TEAM = "R8953SWC87";
-				"DEVELOPMENT_TEAM[sdk=iphoneos*]" = R8953SWC87;
 				ENABLE_BITCODE = NO;
 				"EXCLUDED_ARCHS[sdk=iphoneos*]" = x86_64;
 				FRAMEWORK_SEARCH_PATHS = (
@@ -517,7 +511,6 @@
 				PRODUCT_BUNDLE_IDENTIFIER = com.prayer.raahe;
 				PRODUCT_NAME = "raaheHidayat";
 				PROVISIONING_PROFILE_SPECIFIER = "";
-				"PROVISIONING_PROFILE_SPECIFIER[sdk=iphoneos*]" = "Raahe Hidayat";
 				SDKROOT = iphoneos;
 				TARGETED_DEVICE_FAMILY = "1,2";
 				VALID_ARCHS = "arm64  x86_64";

@@ -232,22 +232,20 @@ export default function Page() {
             )}`
             : proxied;
 
+        // Show the reader immediately so a failed prefetch on Safari/iOS doesn't block UI
+        setCurrentPara(p.number);
+        setCurrentTitle(`Para ${p.number}`);
+        setReaderUrl(proxiedFinal);
+        setShowReader(true);
+
+        // Prefetch/cache in the background; errors here should not block the viewer
+        const storageKey = `para_pdf_${p.number}`;
         try {
-            const storageKey = `para_pdf_${p.number}`;
-            const saved = localStorage.getItem(storageKey);
-
-            // Note: We no longer use blob URLs from localStorage cache because
-            // blob URLs don't work across page navigations in mobile/Tauri environments.
-            // Instead, we always fetch via the proxied URL.
-            // The cache is still useful for offline scenarios but we'll handle that differently.
-
-            // Fetch the proxied PDF and try to save it (if small enough) for offline use
             const resp = await axios.get(proxiedFinal, {
                 responseType: "blob",
             });
             const blob = resp.data;
 
-            // If blob is small enough (approx < 4.5MB), store as base64 in localStorage (async)
             const maxSaveBytes = 4.5 * 1024 * 1024; // 4.5 MB
             if (blob.size <= maxSaveBytes) {
                 const reader = new FileReader();
@@ -255,35 +253,22 @@ export default function Page() {
                     try {
                         const result = e.target.result; // data:application/pdf;base64,....
                         const payload = JSON.stringify({ type: "base64", data: result, size: blob.size, savedAt: Date.now() });
-                        try {
-                            localStorage.setItem(storageKey, payload);
-                            console.log(`Para ${p.number} PDF saved to localStorage`);
-                        } catch (err) {
-                            console.warn("Failed to save para PDF to localStorage", err);
-                        }
+                        localStorage.setItem(storageKey, payload);
+                        console.log(`Para ${p.number} PDF saved to localStorage`);
                     } catch (err) {
                         console.warn("Error converting blob to base64", err);
                     }
                 };
                 reader.readAsDataURL(blob);
             } else {
-                // Save metadata with URL for fallback
                 try {
                     localStorage.setItem(storageKey, JSON.stringify({ type: "url", url: proxiedFinal, size: blob.size, savedAt: Date.now() }));
                 } catch (err) {
                     // ignore
                 }
             }
-
-            // Use the proxied URL directly for ClientPdfViewer component
-            console.log("PDF proxied URL", { proxied: proxiedFinal });
-            setCurrentPara(p.number);
-            setCurrentTitle(`Para ${p.number}`);
-            setReaderUrl(proxiedFinal);
-            setShowReader(true);
         } catch (error) {
-            console.error("Error opening para:", error);
-            alert("Error loading para PDF. Please check your connection.");
+            console.warn("Prefetch para PDF failed (viewer already open):", error);
         }
     };
 
