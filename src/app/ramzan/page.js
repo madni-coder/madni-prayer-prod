@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { Calendar, Calculator, Heart } from "lucide-react";
+import { Calendar, Calculator, Heart, Star } from "lucide-react";
 import { FaAngleLeft } from 'react-icons/fa';
 import { useRouter } from 'next/navigation';
 
@@ -23,6 +23,14 @@ const ramzanSections = [
         bgHover: "hover:bg-green-600",
     },
     {
+        name: "Islamic Star",
+        href: "/islamicStar",
+        icon: <Star className="w-10 h-10 lg:w-16 lg:h-16" />,
+        description: "Exam & prizes at your nearby masjid",
+        gradient: "from-yellow-400 to-yellow-600",
+        bgHover: "hover:bg-yellow-500",
+    },
+    {
         name: "Free Services",
         href: "/ramzan/freeService",
         icon: <Heart className="w-10 h-10 lg:w-16 lg:h-16" />,
@@ -30,6 +38,7 @@ const ramzanSections = [
         gradient: "from-blue-500 to-cyan-500",
         bgHover: "hover:bg-blue-600",
     },
+   
 ];
 
 export default function RamzanPage() {

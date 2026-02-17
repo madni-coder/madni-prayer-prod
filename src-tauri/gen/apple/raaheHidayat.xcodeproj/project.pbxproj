@@ -379,7 +379,7 @@
 				CODE_SIGN_ENTITLEMENTS = raaheHidayat_iOS/raaheHidayat_iOS.entitlements;
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
-				DEVELOPMENT_TEAM = R8953SWC87;
+				DEVELOPMENT_TEAM = "R8953SWC87";
 				ENABLE_BITCODE = NO;
 				"EXCLUDED_ARCHS[sdk=iphoneos*]" = x86_64;
 				FRAMEWORK_SEARCH_PATHS = (
@@ -406,7 +406,7 @@
 					"$(TOOLCHAIN_DIR)/usr/lib/swift-5.0/$(PLATFORM_NAME)",
 				);
 				PRODUCT_BUNDLE_IDENTIFIER = com.prayer.raahe;
-				PRODUCT_NAME = raaheHidayat;
+				PRODUCT_NAME = "raaheHidayat";
 				PROVISIONING_PROFILE_SPECIFIER = "";
 				SDKROOT = iphoneos;
 				TARGETED_DEVICE_FAMILY = "1,2";
@@ -482,7 +482,7 @@
 				CODE_SIGN_ENTITLEMENTS = raaheHidayat_iOS/raaheHidayat_iOS.entitlements;
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
-				DEVELOPMENT_TEAM = R8953SWC87;
+				DEVELOPMENT_TEAM = "R8953SWC87";
 				ENABLE_BITCODE = NO;
 				"EXCLUDED_ARCHS[sdk=iphoneos*]" = x86_64;
 				FRAMEWORK_SEARCH_PATHS = (
@@ -509,7 +509,7 @@
 					"$(TOOLCHAIN_DIR)/usr/lib/swift-5.0/$(PLATFORM_NAME)",
 				);
 				PRODUCT_BUNDLE_IDENTIFIER = com.prayer.raahe;
-				PRODUCT_NAME = raaheHidayat;
+				PRODUCT_NAME = "raaheHidayat";
 				PROVISIONING_PROFILE_SPECIFIER = "";
 				SDKROOT = iphoneos;
 				TARGETED_DEVICE_FAMILY = "1,2";
