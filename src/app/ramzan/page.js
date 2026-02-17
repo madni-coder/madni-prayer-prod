@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { Calendar, Calculator, Heart, Star } from "lucide-react";
+import { Calendar, Calculator, Heart, Star, BookOpenText } from "lucide-react";
 import { FaAngleLeft } from 'react-icons/fa';
 import { useRouter } from 'next/navigation';
 
@@ -13,6 +13,14 @@ const ramzanSections = [
         description: "View Sehri & Iftar timings",
         gradient: "from-purple-500 to-pink-500",
         bgHover: "hover:bg-purple-600",
+    },
+    {
+        name: "Roza Ke Masaa-il",
+        href: "/ramzan/masla",
+        icon: <BookOpenText className="w-10 h-10 lg:w-16 lg:h-16" />,
+        description: "Religious rulings and guidance on fasting",
+        gradient: "from-indigo-500 to-violet-500",
+        bgHover: "hover:bg-indigo-600",
     },
     {
         name: "Zakat Calculator",
@@ -39,6 +47,7 @@ const ramzanSections = [
         bgHover: "hover:bg-blue-600",
     },
    
+
 ];
 
 export default function RamzanPage() {
