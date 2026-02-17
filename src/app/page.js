@@ -107,7 +107,7 @@ export default function Home() {
             <header className="text-center mb-10 ">
                 <h1 className="text-4xl sm:text-5xl lg:text-6xl font-extrabold tracking-tight">
                     <span className="bg-clip-text text-transparent bg-gradient-to-r from-green-500 to-teal-600">
-                        RAAH-Ess-HIDAYAT{" "}
+                        RAAH-E-HIDAYAT{" "}
                     </span>{" "}
                 </h1>
                 <CardLink

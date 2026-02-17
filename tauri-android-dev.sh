@@ -114,8 +114,16 @@ echo "📝 Edit files in src/ and see changes instantly!"
 echo ""
 
 # Ensure tauri.devUrl is set to this machine's IP so device WebView can reach it
-echo -e "${BLUE}🔧 Running set-dev-url to update src-tauri/tauri.conf.json...${NC}"
-export NEXT_PUBLIC_TAURI_DEV_HOST=192.168.0.221
+echo -e "${BLUE}🔧 Resolving local LAN IP to update src-tauri/tauri.conf.json...${NC}"
+# Detect local IPv4 address (prefer en0, en1), fallback to first non-loopback IPv4
+LOCAL_IP=$(ipconfig getifaddr en0 2>/dev/null || ipconfig getifaddr en1 2>/dev/null || ifconfig | awk '/inet / && $2 != "127.0.0.1" {print $2; exit}')
+if [ -z "$LOCAL_IP" ]; then
+    echo -e "${YELLOW}⚠️  Could not detect local IP automatically.${NC}"
+    echo "You can set NEXT_PUBLIC_TAURI_DEV_HOST to override."
+else
+    export NEXT_PUBLIC_TAURI_DEV_HOST="$LOCAL_IP"
+    echo "Using NEXT_PUBLIC_TAURI_DEV_HOST=$NEXT_PUBLIC_TAURI_DEV_HOST"
+fi
 npm run set-dev-url || echo "Warning: set-dev-url failed or is unavailable"
 
 # Tauri will automatically start Next.js dev server via beforeDevCommand

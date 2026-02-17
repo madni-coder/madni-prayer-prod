@@ -3,15 +3,22 @@
 # iOS App Store Build Script for raaheHidayat
 # Usage: ./build-ios-appstore.sh
 
-set -e
+set -euo pipefail
 
 echo "🍎 Building raaheHidayat for App Store..."
 
-cd "$(dirname "$0")"
+ROOT_DIR="$(cd "$(dirname "$0")" && pwd)"
+SRC_TAURI_DIR="$ROOT_DIR/src-tauri"
+APPLE_GEN_DIR="$SRC_TAURI_DIR/gen/apple"
+WORKSPACE_PATH="$APPLE_GEN_DIR/raaheHidayat.xcodeproj/project.xcworkspace"
+ARCHIVE_PATH="$ROOT_DIR/ipa_output/raaheHidayat.xcarchive"
+EXPORT_PATH="$ROOT_DIR/ipa_output"
+PRIMARY_EXPORT_OPTIONS="$ROOT_DIR/ExportOptions.plist"
+FALLBACK_EXPORT_OPTIONS="$APPLE_GEN_DIR/exportOptionsAppStore.plist"
 
 # Step 1: Build the Rust libraries if needed
 echo "📦 Building Rust libraries..."
-cd src-tauri
+cd "$SRC_TAURI_DIR"
 
 # Build for device (arm64) - required for App Store
 cargo build --release --target aarch64-apple-ios --lib
@@ -30,12 +37,44 @@ cd ..
 echo "🔨 Running Tauri iOS build..."
 npm run tauri ios build -- --target aarch64
 
+# Step 3: Archive
+echo "📦 Creating Xcode archive..."
+mkdir -p "$EXPORT_PATH"
+rm -rf "$ARCHIVE_PATH"
+
+xcodebuild \
+	-workspace "$WORKSPACE_PATH" \
+	-scheme raaheHidayat_iOS \
+	-configuration Release \
+	-destination "generic/platform=iOS" \
+	-archivePath "$ARCHIVE_PATH" \
+	-allowProvisioningUpdates \
+	archive
+
+# Step 4: Export IPA
+echo "📤 Exporting IPA..."
+
+EXPORT_OPTIONS_TO_USE="$FALLBACK_EXPORT_OPTIONS"
+if [ ! -f "$EXPORT_OPTIONS_TO_USE" ]; then
+	EXPORT_OPTIONS_TO_USE="$PRIMARY_EXPORT_OPTIONS"
+fi
+
+if [ ! -f "$EXPORT_OPTIONS_TO_USE" ]; then
+	echo "❌ Could not find ExportOptions.plist"
+	exit 1
+fi
+
+xcodebuild \
+	-exportArchive \
+	-archivePath "$ARCHIVE_PATH" \
+	-exportPath "$EXPORT_PATH" \
+	-exportOptionsPlist "$EXPORT_OPTIONS_TO_USE" \
+	-allowProvisioningUpdates
+
 echo ""
-echo "✅ Build complete!"
+echo "✅ Build + archive + export complete!"
 echo ""
-echo "📱 Next steps:"
-echo "   1. Open Xcode: src-tauri/gen/apple/raaheHidayat.xcodeproj"
-echo "   2. Product → Archive"
-echo "   3. Distribute App → App Store Connect"
+echo "📦 Archive: $ARCHIVE_PATH"
+echo "📱 Export folder: $EXPORT_PATH"
 echo ""
-echo "   OR use Transporter app to upload the IPA from ipa_output/"
+ls -lh "$EXPORT_PATH" | sed 's/^/   /'

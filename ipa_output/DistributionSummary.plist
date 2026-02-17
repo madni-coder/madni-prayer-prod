@@ -10,7 +10,7 @@
 				<string>arm64</string>
 			</array>
 			<key>buildNumber</key>
-			<string>4</string>
+			<string>12</string>
 			<key>certificate</key>
 			<dict>
 				<key>SHA1</key>
@@ -36,11 +36,11 @@
 			<key>profile</key>
 			<dict>
 				<key>UUID</key>
-				<string>4d9251f1-51ac-4f91-bfae-b9ef2b9db311</string>
+				<string>c4e29820-25c1-4044-a0ea-986e380b831a</string>
 				<key>dateExpires</key>
 				<string>04/02/27</string>
 				<key>name</key>
-				<string>Raahe Hidayat</string>
+				<string>iOS Team Store Provisioning Profile: com.prayer.raahe</string>
 			</dict>
 			<key>symbols</key>
 			<true/>
@@ -49,10 +49,10 @@
 				<key>id</key>
 				<string>R8953SWC87</string>
 				<key>name</key>
-				<string></string>
+				<string>Abdul Nadim</string>
 			</dict>
 			<key>versionNumber</key>
-			<string>3.0.0</string>
+			<string>5.0.0</string>
 		</dict>
 	</array>
 </dict>
