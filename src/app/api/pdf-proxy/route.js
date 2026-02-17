@@ -27,13 +27,18 @@ function corsHeaders(origin) {
 async function proxy(request) {
     const { searchParams } = new URL(request.url);
     const target = searchParams.get("url");
+    
+    console.log('[pdf-proxy] Request received for URL:', target);
+    
     if (!target) {
+        console.error('[pdf-proxy] Missing url parameter');
         return new Response(JSON.stringify({ error: "Missing url param" }), {
             status: 400,
         });
     }
     if (!isAllowedUrl(target)) {
-        return new Response(JSON.stringify({ error: "URL not allowed" }), {
+        console.error('[pdf-proxy] URL not allowed:', target);
+        return new Response(JSON.stringify({ error: "URL not allowed", attempted: target }), {
             status: 400,
         });
     }
@@ -46,7 +51,9 @@ async function proxy(request) {
     if (ifRange) headers.set("If-Range", ifRange);
 
     // Upstream fetch
+    console.log('[pdf-proxy] Fetching from upstream:', target);
     const upstream = await fetch(target, { headers, method: "GET" });
+    console.log('[pdf-proxy] Upstream response:', upstream.status, upstream.statusText);
 
     // Prepare downstream headers
     const outHeaders = new Headers();

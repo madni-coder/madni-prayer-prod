@@ -3,6 +3,13 @@ import React, { useEffect, useState, useRef, useCallback } from "react";
 import { useSearchParams } from "next/navigation";
 import QuranLoader from "../../components/QuranLoader";
 
+// Detect iOS devices
+const isIOS = () => {
+    if (typeof window === 'undefined') return false;
+    return /iPad|iPhone|iPod/.test(navigator.userAgent) || 
+           (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+};
+
 export default function ClientPdfViewer({ file: fileProp }) {
     const searchParams = useSearchParams?.();
     const paramFile = searchParams ? searchParams.get("file") : null;
@@ -149,6 +156,12 @@ export default function ClientPdfViewer({ file: fileProp }) {
 
             } catch (e) {
                 console.error("PDF render error:", e);
+                console.error("PDF render error details:", {
+                    message: e.message,
+                    url: url,
+                    isIOS: isIOS(),
+                    userAgent: typeof navigator !== 'undefined' ? navigator.userAgent : 'N/A'
+                });
                 setErr(e.message || String(e));
             } finally {
                 setLoading(false);
@@ -263,6 +276,12 @@ export default function ClientPdfViewer({ file: fileProp }) {
                     <div className="mb-4 text-red-500">
                         <p className="font-semibold mb-2">Unable to display PDF</p>
                         <p className="text-sm text-base-content/70">{err}</p>
+                        {isIOS() && (
+                            <p className="text-sm text-base-content/70 mt-2">
+                                iOS Safari has limitations with inline PDF preview. 
+                                Please use the button below to open in a new tab.
+                            </p>
+                        )}
                     </div>
                     <a
                         className="btn btn-primary"
@@ -270,7 +289,7 @@ export default function ClientPdfViewer({ file: fileProp }) {
                         target="_blank"
                         rel="noreferrer"
                     >
-                        Open PDF in External Viewer
+                        Open PDF in {isIOS() ? 'Safari' : 'External Viewer'}
                     </a>
                 </div>
             ) : (

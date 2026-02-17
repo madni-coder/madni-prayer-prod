@@ -201,7 +201,10 @@ export default function Page() {
     const openSurahReader = async (surah) => {
         try {
             const surahFileName = surah.name;
+            console.log('[openSurahReader] Opening surah:', surahFileName);
+            
             const fileUrl = await getSurahPdf(surahFileName);
+            console.log('[openSurahReader] Got fileUrl:', fileUrl);
 
             const proxied = isTauri
                 ? `${REMOTE_API_BASE}/api/pdf-proxy?url=${encodeURIComponent(
@@ -209,21 +212,27 @@ export default function Page() {
                 )}`
                 : `/api/pdf-proxy?url=${encodeURIComponent(fileUrl)}`;
 
-            console.log("PDF proxied URL", { proxied });
+            console.log("[openSurahReader] PDF proxied URL:", proxied);
             setCurrentPara(surah.number);
             setCurrentTitle(`${surah.number}. ${surah.name}`);
             setReaderUrl(proxied);
             setShowReader(true);
         } catch (error) {
             console.error("Error opening surah:", error);
-            alert("Error loading surah PDF. Please check your connection.");
+            alert(`Error loading surah PDF: ${error.message || 'Unknown error'}. Please check your connection.`);
         }
     };
 
     const openReader = async (p) => {
         const file = files.find((f) => f.id === p.number);
-        if (!file) return;
+        if (!file) {
+            console.error('Para file not found:', p.number);
+            alert('Para file not found. Please try again.');
+            return;
+        }
         const urlBase = file.fileUrl;
+        
+        console.log('[openReader] Para:', p.number, 'URL:', urlBase);
 
         const proxied = `/api/pdf-proxy?url=${encodeURIComponent(urlBase)}`;
         const proxiedFinal = isTauri
@@ -231,6 +240,8 @@ export default function Page() {
                 urlBase
             )}`
             : proxied;
+        
+        console.log('[openReader] Proxied URL:', proxiedFinal);
 
         try {
             const storageKey = `para_pdf_${p.number}`;
