@@ -14,23 +14,11 @@ export default function ClientPdfViewer({ file: fileProp }) {
     const [totalPages, setTotalPages] = useState(0);
     const [err, setErr] = useState(null);
     const [url, setUrl] = useState("");
-    const [objectUrl, setObjectUrl] = useState("");
     const [pages, setPages] = useState([]);
     const [pdfDoc, setPdfDoc] = useState(null);
     const [renderedPages, setRenderedPages] = useState(new Set());
-    const [isIOS, setIsIOS] = useState(false);
     const observerRef = useRef(null);
     const pageRefsRef = useRef({});
-    const objectUrlRef = useRef("");
-
-    useEffect(() => {
-        const ua = typeof navigator !== "undefined" ? navigator.userAgent : "";
-        const isIpadOs =
-            typeof navigator !== "undefined" &&
-            navigator.platform === "MacIntel" &&
-            navigator.maxTouchPoints > 1;
-        setIsIOS(/iPad|iPhone|iPod/.test(ua) || isIpadOs);
-    }, []);
 
     useEffect(() => {
         setErr(null);
@@ -104,10 +92,6 @@ export default function ClientPdfViewer({ file: fileProp }) {
                     }
                     arrayBuffer = await resp.arrayBuffer();
                     console.log("PDF data loaded, size:", arrayBuffer.byteLength, "bytes");
-                    // Build a Blob URL so iOS can render inline without handing off to external viewer
-                    const blobUrl = URL.createObjectURL(new Blob([arrayBuffer], { type: "application/pdf" }));
-                    objectUrlRef.current = blobUrl;
-                    setObjectUrl(blobUrl);
                 } catch (fetchError) {
                     console.error("Failed to fetch PDF:", fetchError);
                     throw new Error(`Failed to load PDF file: ${fetchError.message}`);
@@ -175,22 +159,8 @@ export default function ClientPdfViewer({ file: fileProp }) {
 
         return () => {
             cancelled = true;
-            if (objectUrlRef.current) {
-                URL.revokeObjectURL(objectUrlRef.current);
-                objectUrlRef.current = "";
-            }
         };
     }, [url]);
-
-    useEffect(() => {
-        // Revoke previous blob URL when objectUrl changes
-        return () => {
-            if (objectUrlRef.current) {
-                URL.revokeObjectURL(objectUrlRef.current);
-                objectUrlRef.current = "";
-            }
-        };
-    }, [objectUrl]);
 
     // Lazy render pages for large PDFs
     const renderPage = useCallback(async (pageNum) => {
@@ -294,44 +264,39 @@ export default function ClientPdfViewer({ file: fileProp }) {
                         <p className="font-semibold mb-2">Unable to display PDF</p>
                         <p className="text-sm text-base-content/70">{err}</p>
                     </div>
+                    <a
+                        className="btn btn-primary"
+                        href={url}
+                        target="_blank"
+                        rel="noreferrer"
+                    >
+                        Open PDF in External Viewer
+                    </a>
                 </div>
             ) : (
-                <>
-                    {isIOS && objectUrl ? (
-                        <object
-                            data={objectUrl}
-                            type="application/pdf"
-                            className="w-full min-h-screen bg-black"
+                <div className="flex flex-col items-stretch">
+                    {pages.map((dataUrl, idx) => (
+                        <div
+                            key={idx}
+                            ref={el => pageRefsRef.current[idx] = el}
+                            data-page={idx + 1}
+                            className="w-full flex items-center justify-center bg-black"
+                            style={{ minHeight: dataUrl ? 'auto' : '100vh' }}
                         >
-                            <div className="p-6 text-center text-base-content/60">
-                                Inline PDF preview is not available.
-                            </div>
-                        </object>
-                    ) : null}
-                    <div className="flex flex-col items-stretch">
-                        {pages.map((dataUrl, idx) => (
-                            <div
-                                key={idx}
-                                ref={el => pageRefsRef.current[idx] = el}
-                                data-page={idx + 1}
-                                className="w-full flex items-center justify-center bg-black"
-                                style={{ minHeight: dataUrl ? 'auto' : '100vh' }}
-                            >
-                                {dataUrl ? (
-                                    <img
-                                        src={dataUrl}
-                                        alt={`page-${idx + 1}`}
-                                        className="w-full h-auto block"
-                                    />
-                                ) : (
-                                    <div className="text-base-content/40">
-                                        Page {idx + 1}
-                                    </div>
-                                )}
-                            </div>
-                        ))}
-                    </div>
-                </>
+                            {dataUrl ? (
+                                <img
+                                    src={dataUrl}
+                                    alt={`page-${idx + 1}`}
+                                    className="w-full h-auto block"
+                                />
+                            ) : (
+                                <div className="text-base-content/40">
+                                    Page {idx + 1}
+                                </div>
+                            )}
+                        </div>
+                    ))}
+                </div>
             )}
         </div>
     );

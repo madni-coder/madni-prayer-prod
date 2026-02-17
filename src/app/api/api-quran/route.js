@@ -1,7 +1,7 @@
+import { NextResponse } from "next/server";
 import prisma from "../../../../lib/prisma";
 
-// Required for static export
-// export const dynamic = "force-static";
+export const runtime = "nodejs";
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
 const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
@@ -20,7 +20,7 @@ export async function GET(request) {
             // Use hardcoded Supabase storage URL
             const fileUrl = `${supabaseUrl}/storage/v1/object/public/Quran/${surahName}.pdf`;
 
-            return Response.json({
+            return NextResponse.json({
                 success: true,
                 fileUrl: fileUrl,
                 fileName: `${surahName}.pdf`,
@@ -35,9 +35,9 @@ export async function GET(request) {
             ...file,
             fileUrl: `${SUPABASE_URL}/${file.fileUrl}`,
         }));
-        return new Response(JSON.stringify({ files }), { status: 200 });
+        return NextResponse.json({ files }, { status: 200 });
     } catch (err) {
-        return new Response(JSON.stringify({ error: err.message }), {
+        return NextResponse.json({ error: err.message }, {
             status: 500,
         });
     }
