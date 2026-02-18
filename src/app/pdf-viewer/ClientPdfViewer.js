@@ -6,8 +6,8 @@ import QuranLoader from "../../components/QuranLoader";
 // Detect iOS devices
 const isIOS = () => {
     if (typeof window === 'undefined') return false;
-    return /iPad|iPhone|iPod/.test(navigator.userAgent) || 
-           (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+    return /iPad|iPhone|iPod/.test(navigator.userAgent) ||
+        (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
 };
 
 export default function ClientPdfViewer({ file: fileProp, zoom = 1 }) {
@@ -298,7 +298,7 @@ export default function ClientPdfViewer({ file: fileProp, zoom = 1 }) {
                         <p className="text-sm text-base-content/70">{err}</p>
                         {isIOS() && (
                             <p className="text-sm text-base-content/70 mt-2">
-                                iOS Safari has limitations with inline PDF preview. 
+                                iOS Safari has limitations with inline PDF preview.
                                 Please use the button below to open in a new tab.
                             </p>
                         )}

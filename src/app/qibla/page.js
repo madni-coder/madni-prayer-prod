@@ -41,38 +41,50 @@ export default function Qibla() {
     };
 
     const getHeadingFromEvent = (e, prefersIOSHeading = false) => {
+        // iOS Compass Coordinate System:
+        // - webkitCompassHeading: 0° = North, 90° = East, 180° = South, 270° = West
+        // - This gives us the device's heading relative to True North
+        // - The value is already corrected for screen orientation and magnetic declination
+        
+        // For iOS devices, prefer webkitCompassHeading as it provides true magnetic heading
         if (prefersIOSHeading && typeof e.webkitCompassHeading === "number") {
             if (typeof e.webkitCompassAccuracy === "number") {
                 setCompassAccuracy(e.webkitCompassAccuracy);
             }
-            return normalize(e.webkitCompassHeading);
+            // webkitCompassHeading already gives us 0-360 degrees from true north
+            // No need to invert or add screen angle as it's already corrected
+            return e.webkitCompassHeading;
         }
 
+        // Fallback check for webkitCompassHeading (shouldn't reach here on iOS)
         if (typeof e.webkitCompassHeading === "number") {
             if (typeof e.webkitCompassAccuracy === "number") {
                 setCompassAccuracy(e.webkitCompassAccuracy);
             }
-            return normalize(e.webkitCompassHeading);
+            return e.webkitCompassHeading;
         }
 
+        // Android and other browsers use deviceorientation alpha
         if (typeof e.alpha === "number" && e.alpha !== null) {
-            if (prefersIOSHeading) {
-                return normalize(360 - e.alpha);
-            }
-
+            // Get screen orientation angle (for Android)
             const screenAngle =
                 (window.screen &&
                     window.screen.orientation &&
                     typeof window.screen.orientation.angle === "number"
                     ? window.screen.orientation.angle
                     : window.orientation) || 0;
-            return normalize(360 - (e.alpha + screenAngle));
+            
+            // For Android: compensate for screen rotation
+            // The alpha value represents rotation around Z-axis
+            return normalize(360 - e.alpha - screenAngle);
         }
 
         return null;
     };
 
     const attachOrientationListener = (handler, prefersIOSHeading = false) => {
+        // For iOS, always use "deviceorientation" (not "deviceorientationabsolute")
+        // because webkitCompassHeading is only available on the standard deviceorientation event
         const eventName = prefersIOSHeading
             ? "deviceorientation"
             : ("ondeviceorientationabsolute" in window ? "deviceorientationabsolute" : "deviceorientation");
@@ -323,7 +335,13 @@ export default function Qibla() {
                             marginRight: "40px",
                         }}
                     >
-                        {/* Compass outer ring (golden/brass) */}
+                        {/* Compass outer ring (golden/brass)
+                            Rotation Logic:
+                            - Compass ring rotates by -deviceHeading degrees
+                            - This keeps North (N) pointing upward as device rotates
+                            - Example: Device pointing East (90°) → ring rotates -90° → N points left
+                            - All elements inside (N, E, S, W markers and compass face) rotate with the ring
+                        */}
                         <div
                             style={{
                                 position: "relative",
@@ -465,7 +483,14 @@ export default function Qibla() {
                                         );
                                     })}
 
-                                    {/* Kaaba Icon - positioned at Qibla direction, always upright */}
+                                    {/* Kaaba Icon - positioned at Qibla direction, always upright 
+                                        Rotation Compensation Logic:
+                                        - qiblaDirection: absolute bearing to Mecca from user's location (e.g., 45° = Northeast)
+                                        - deviceHeading: device's current heading (e.g., 90° = pointing East)
+                                        - Compass ring rotates by: -deviceHeading
+                                        - iOS: To position icon at Qibla, container must rotate by (qiblaDirection + deviceHeading)
+                                        - Android: Uses original rotation logic (working perfectly)
+                                    */}
                                     {qiblaDirection !== null && (
                                         <div
                                             style={{
@@ -475,7 +500,10 @@ export default function Qibla() {
                                                 width: "40px",
                                                 height: "40px",
                                                 transformOrigin: "center",
-                                                transform: `translate(-50%, -50%) rotate(${qiblaDirection}deg)`,
+                                                // iOS-specific fix: compensate for compass ring rotation
+                                                transform: (isIOS && deviceHeading)
+                                                    ? `translate(-50%, -50%) rotate(${qiblaDirection + deviceHeading}deg)`
+                                                    : `translate(-50%, -50%) rotate(${qiblaDirection}deg)`,
                                                 zIndex: 9,
                                                 pointerEvents: "none",
                                             }}
@@ -490,9 +518,12 @@ export default function Qibla() {
                                                     width: "30px",
                                                     height: "30px",
                                                     display: "block",
-                                                    transform: deviceHeading
+                                                    // Counter-rotate to keep icon upright
+                                                    transform: (isIOS && deviceHeading)
+                                                        ? `translate(-50%, -50%) rotate(${-qiblaDirection - deviceHeading}deg)`
+                                                        : deviceHeading
                                                         ? `translate(-50%, -50%) rotate(${-qiblaDirection + deviceHeading}deg)`
-                                                        : "translate(-50%, -50%) rotate(0deg)",
+                                                        : `translate(-50%, -50%) rotate(${-qiblaDirection}deg)`,
                                                     transition: "transform 180ms ease-out",
                                                     filter: "drop-shadow(0 2px 4px rgba(0,0,0,0.4))",
                                                 }}
@@ -500,7 +531,11 @@ export default function Qibla() {
                                         </div>
                                     )}
 
-                                    {/* Compass needle */}
+                                    {/* Compass needle - points to Qibla direction
+                                        iOS: The needle rotates by (qiblaDirection + deviceHeading) to compensate
+                                        for the compass ring rotation and point to the actual Qibla direction.
+                                        Android: Uses original rotation logic (working perfectly)
+                                    */}
                                     {(() => {
                                         return (
                                             <div
@@ -511,7 +546,10 @@ export default function Qibla() {
                                                     width: 0,
                                                     height: 0,
                                                     transformOrigin: "center",
-                                                    transform: qiblaDirection !== null
+                                                    // iOS-specific fix: add deviceHeading to compensate for ring rotation
+                                                    transform: (isIOS && qiblaDirection !== null && deviceHeading !== null)
+                                                        ? `translate(-50%, -50%) rotate(${qiblaDirection + deviceHeading}deg)`
+                                                        : qiblaDirection !== null
                                                         ? `translate(-50%, -50%) rotate(${qiblaDirection}deg)`
                                                         : "translate(-50%, -50%) rotate(0deg)",
                                                     zIndex: 10,

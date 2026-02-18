@@ -96,6 +96,7 @@ export default function Page() {
     const [zoom, setZoom] = useState(1);
     const [currentObjectUrl, setCurrentObjectUrl] = useState(null);
     const [loadingPara, setLoadingPara] = useState(null);
+    const [kanzulLoading, setKanzulLoading] = useState(false);
     const router = useRouter();
 
     // Theme note: allow user to record how many para they completed
@@ -204,7 +205,7 @@ export default function Page() {
         try {
             const surahFileName = surah.name;
             console.log('[openSurahReader] Opening surah:', surahFileName);
-            
+
             const fileUrl = await getSurahPdf(surahFileName);
             console.log('[openSurahReader] Got fileUrl:', fileUrl);
 
@@ -245,7 +246,7 @@ export default function Page() {
             return;
         }
         const urlBase = file.fileUrl;
-        
+
         console.log('[openReader] Para:', p.number, 'URL:', urlBase);
 
         const proxied = `/api/pdf-proxy?url=${encodeURIComponent(urlBase)}`;
@@ -254,7 +255,7 @@ export default function Page() {
                 urlBase
             )}`
             : proxied;
-        
+
         console.log('[openReader] Proxied URL:', proxiedFinal);
 
         // indicate loading state for this para card
@@ -315,6 +316,57 @@ export default function Page() {
         } finally {
             // clear loading indicator for this para
             setLoadingPara(null);
+        }
+    };
+
+    const openKanzul = async () => {
+        setKanzulLoading(true);
+        try {
+            const storageKey = `kanzul_imaan_pdf`;
+            const saved = localStorage.getItem(storageKey);
+
+            if (saved) {
+                try {
+                    const parsed = JSON.parse(saved);
+                    if (parsed && parsed.type === "base64" && parsed.data) {
+                        const byteCharacters = atob(parsed.data.split(",")[1] || parsed.data);
+                        const byteNumbers = new Array(byteCharacters.length);
+                        for (let i = 0; i < byteCharacters.length; i++) {
+                            byteNumbers[i] = byteCharacters.charCodeAt(i);
+                        }
+                        const byteArray = new Uint8Array(byteNumbers);
+                        const blob = new Blob([byteArray], { type: "application/pdf" });
+                        const objUrl = URL.createObjectURL(blob);
+                        setCurrentObjectUrl(objUrl);
+                        setCurrentTitle('Kanzul Imaan');
+                        setReaderUrl(objUrl);
+                        setShowReader(true);
+                        return;
+                    }
+                } catch (e) {
+                    console.warn("Failed to parse saved Kanzul Imaan PDF", e);
+                }
+            }
+
+            const apiUrl = isTauri
+                ? `${REMOTE_API_BASE}/api/kanzul`
+                : '/api/kanzul';
+            const { data } = await axios.get(apiUrl);
+            const rawFileUrl = data.fileUrl || data.publicUrl || data.signedUrl || data.fallback;
+            if (!rawFileUrl) throw new Error('No file URL returned from server');
+
+            const proxied = isTauri
+                ? `${REMOTE_API_BASE}/api/pdf-proxy?url=${encodeURIComponent(rawFileUrl)}`
+                : `/api/pdf-proxy?url=${encodeURIComponent(rawFileUrl)}`;
+
+            setCurrentTitle('Kanzul Imaan');
+            setReaderUrl(proxied);
+            setShowReader(true);
+        } catch (err) {
+            console.error('Failed to open Kanzul Imaan', err);
+            alert(err.message || 'Failed to open Kanzul Imaan PDF');
+        } finally {
+            setKanzulLoading(false);
         }
     };
 
@@ -507,63 +559,21 @@ export default function Page() {
                     ) : (
                         <div className="col-span-2 sm:col-span-4 flex justify-center">
                             <button
-                                className="btn btn-error"
-                                onClick={async () => {
-                                    try {
-                                        const storageKey = `kanzul_imaan_pdf`;
-                                        const saved = localStorage.getItem(storageKey);
-
-                                        // If we have a saved base64 PDF, use it to create an object URL
-                                        if (saved) {
-                                            try {
-                                                const parsed = JSON.parse(saved);
-                                                if (parsed && parsed.type === "base64" && parsed.data) {
-                                                    const byteCharacters = atob(parsed.data.split(",")[1] || parsed.data);
-                                                    const byteNumbers = new Array(byteCharacters.length);
-                                                    for (let i = 0; i < byteCharacters.length; i++) {
-                                                        byteNumbers[i] = byteCharacters.charCodeAt(i);
-                                                    }
-                                                    const byteArray = new Uint8Array(byteNumbers);
-                                                    const blob = new Blob([byteArray], { type: "application/pdf" });
-                                                    const objUrl = URL.createObjectURL(blob);
-                                                    setCurrentObjectUrl(objUrl);
-                                                    setCurrentTitle('Kanzul Imaan');
-                                                    setReaderUrl(objUrl);
-                                                    setShowReader(true);
-                                                    return;
-                                                }
-                                            } catch (e) {
-                                                console.warn("Failed to parse saved Kanzul Imaan PDF", e);
-                                            }
-                                        }
-
-                                        // Fetch Kanzul Imaan file URL from API
-                                        const apiUrl = isTauri
-                                            ? `${REMOTE_API_BASE}/api/kanzul`
-                                            : '/api/kanzul';
-                                        const { data } = await axios.get(apiUrl);
-                                        console.log('Kanzul API response:', data);
-
-                                        const rawFileUrl = data.fileUrl || data.publicUrl || data.signedUrl || data.fallback;
-
-                                        if (!rawFileUrl) throw new Error('No file URL returned from server');
-
-                                        // Proxy the PDF and use it directly for ClientPdfViewer
-                                        const proxied = isTauri
-                                            ? `${REMOTE_API_BASE}/api/pdf-proxy?url=${encodeURIComponent(rawFileUrl)}`
-                                            : `/api/pdf-proxy?url=${encodeURIComponent(rawFileUrl)}`;
-
-                                        console.log("Kanzul Imaan PDF proxied URL", { proxied });
-                                        setCurrentTitle('Kanzul Imaan');
-                                        setReaderUrl(proxied);
-                                        setShowReader(true);
-                                    } catch (err) {
-                                        console.error('Failed to open Kanzul Imaan', err);
-                                        alert(err.message || 'Failed to open Kanzul Imaan PDF');
-                                    }
-                                }}
+                                className={`btn btn-error ${kanzulLoading ? 'opacity-70 pointer-events-none' : ''}`}
+                                onClick={openKanzul}
+                                disabled={kanzulLoading}
                             >
-                                Open Kanzul Imaan
+                                {kanzulLoading ? (
+                                    <span className="flex items-center gap-2">
+                                        <svg className="animate-spin h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                                            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"></path>
+                                        </svg>
+                                        <span>Opening...</span>
+                                    </span>
+                                ) : (
+                                    'Open Kanzul Imaan'
+                                )}
                             </button>
                         </div>
                     )}

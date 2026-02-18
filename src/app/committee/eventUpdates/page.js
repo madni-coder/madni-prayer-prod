@@ -154,7 +154,7 @@ export default function EventUpdates() {
                     </div>
                     <div className="flex gap-2">
                         <button
-                            onClick={() => router.back()}
+                            onClick={() => router.push('/')}
                             className="px-3 py-2 sm:px-4 rounded-lg bg-slate-700/50 hover:bg-slate-700 text-white text-sm font-medium transition-all"
                         >
                             Back
