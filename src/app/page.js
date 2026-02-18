@@ -11,7 +11,7 @@ import {
     FaGift,
     FaMicrophone,
     FaPhoneSquare,
-    FaHandPointRight, FaUser, FaStore, FaBriefcase,
+    FaHandPointRight, FaUser, FaStore, FaBriefcase, FaRegIdBadge
 } from "react-icons/fa";
 import { Megaphone, UsersRound } from "lucide-react";
 import Image from "next/image";
@@ -96,6 +96,13 @@ const sections = [
         href: "/committee",
         icon: (
             <UsersRound className="text-3xl lg:text-6xl text-indigo-400" />
+        ),
+    },
+    {
+        name: "Contact Us",
+        href: "/contactUs",
+        icon: (
+            <FaRegIdBadge className="text-3xl lg:text-6xl text-yellow-400" />
         ),
     },
 

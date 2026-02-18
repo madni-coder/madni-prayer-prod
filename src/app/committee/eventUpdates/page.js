@@ -2,7 +2,7 @@
 
 export const dynamic = 'force-dynamic';
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { useRouter } from "next/navigation";
 import apiClient from "../../../lib/apiClient";
 
@@ -69,14 +69,15 @@ export default function EventUpdates() {
     const router = useRouter();
     const [currentMasjidId, setCurrentMasjidId] = useState(null);
 
-    // Read query param on client to avoid useSearchParams SSR bailout issues
+    // Determine masjid id from query param or localStorage (single effect to avoid duplicate sets)
     useEffect(() => {
         try {
-            if (typeof window !== "undefined") {
-                const sp = new URLSearchParams(window.location.search || "");
-                const id = sp.get("masjidId");
-                if (id) setCurrentMasjidId(id);
-            }
+            if (typeof window === "undefined") return;
+            const sp = new URLSearchParams(window.location.search || "");
+            const paramId = sp.get("masjidId");
+            const stored = window.localStorage.getItem("masjidCommittee_masjidId");
+            const id = paramId || stored;
+            if (id) setCurrentMasjidId(id);
         } catch (e) {
             // ignore
         }
@@ -87,6 +88,7 @@ export default function EventUpdates() {
     const [error, setError] = useState(null);
     const [copied, setCopied] = useState(false);
     const [showDetails, setShowDetails] = useState(false);
+    const fetchingRef = useRef(null);
 
     const handleCopyMasjidId = () => {
         if (currentMasjidId) {
@@ -96,20 +98,15 @@ export default function EventUpdates() {
         }
     };
 
-    // fallback: use localStorage masjid id when query param is not present
-    useEffect(() => {
-        if (!currentMasjidId) {
-            try {
-                const stored = typeof window !== "undefined" ? window.localStorage.getItem("masjidCommittee_masjidId") : null;
-                if (stored) setCurrentMasjidId(stored);
-            } catch (e) {
-                // ignore
-            }
-        }
-    }, [currentMasjidId]);
+    // (removed separate fallback effect) single effect above handles both param and fallback
 
     useEffect(() => {
         if (!currentMasjidId) return;
+
+        // avoid duplicate identical fetches when effect runs multiple times
+        if (fetchingRef.current === currentMasjidId) return;
+        fetchingRef.current = currentMasjidId;
+
         const fetchMasjid = async () => {
             setLoading(true);
             setError(null);
@@ -127,6 +124,8 @@ export default function EventUpdates() {
                 setError(err?.response?.data?.error || err.message || "Failed to load masjid details");
             } finally {
                 setLoading(false);
+                // clear in-flight marker
+                if (fetchingRef.current === currentMasjidId) fetchingRef.current = null;
             }
         };
         fetchMasjid();
