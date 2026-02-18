@@ -91,6 +91,13 @@ const sections = [
             <FaBriefcase className="text-3xl lg:text-6xl text-purple-400" />
         ),
     },
+    {
+        name: "Masjid Committee",
+        href: "/committee",
+        icon: (
+            <FaUser className="text-3xl lg:text-6xl text-indigo-400" />
+        ),
+    },
 
 ];
 

@@ -31,6 +31,7 @@ model AllMasjid {
   mobile     String?  // optional
   pasteMapUrl String? // Google Map URL for the masjid
   city        String?
+  masjidCommittee MasjidCommittee?
   createdAt  DateTime @default(now())
   updatedAt  DateTime @updatedAt
 
@@ -173,4 +174,22 @@ model JobSeeker {
   updatedAt      DateTime @updatedAt
 
   @@map("job_seekers")
+}
+
+model MasjidCommittee {
+  id               Int       @id @default(autoincrement())
+  masjidName       String
+  fullAddress      String
+  city             String
+  mutwalliName     String
+  committeeMembers String[]  @default([])
+  mobileNumbers    String[]  @default([])
+  imaamName        String?   
+  masjidId         Int      @unique
+  password         String
+  masjid           AllMasjid @relation(fields: [masjidId], references: [id])
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
+
+  @@map("masjid_committee")
 }

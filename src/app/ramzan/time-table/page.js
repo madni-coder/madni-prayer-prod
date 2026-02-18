@@ -12,6 +12,8 @@ export default function Page() {
     const [onlyRaipur, setOnlyRaipur] = useState(false);
     const [soundEnabled, setSoundEnabled] = useState(false);
     const [showLoader, setShowLoader] = useState(false);
+    // tick to force re-render so `isToday` updates when system date/time changes
+    const [, setNowTick] = useState(0);
     const timerRef = useRef(null);
     const soundEnabledRef = useRef(false);
 
@@ -59,6 +61,12 @@ export default function Page() {
         return () => {
             if (timerRef.current) clearTimeout(timerRef.current);
         };
+    }, []);
+
+    // periodic re-render to refresh highlighting if system date changes
+    useEffect(() => {
+        const id = setInterval(() => setNowTick((n) => n + 1), 30 * 1000);
+        return () => clearInterval(id);
     }, []);
 
     // helper: check if a date string in format "D Mon" (e.g. "28 Feb", "1 Mar") refers to today

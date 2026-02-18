@@ -10,7 +10,7 @@ const isIOS = () => {
            (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
 };
 
-export default function ClientPdfViewer({ file: fileProp }) {
+export default function ClientPdfViewer({ file: fileProp, zoom = 1 }) {
     const searchParams = useSearchParams?.();
     const paramFile = searchParams ? searchParams.get("file") : null;
     const file = fileProp || paramFile || "";
@@ -327,6 +327,11 @@ export default function ClientPdfViewer({ file: fileProp }) {
                                     src={dataUrl}
                                     alt={`page-${idx + 1}`}
                                     className="w-full h-auto block"
+                                    style={{
+                                        transform: `scale(${zoom})`,
+                                        transformOrigin: 'top center',
+                                        display: 'block'
+                                    }}
                                 />
                             ) : (
                                 <div className="text-base-content/40">

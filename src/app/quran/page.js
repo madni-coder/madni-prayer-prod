@@ -93,6 +93,7 @@ export default function Page() {
     const [currentPara, setCurrentPara] = useState(null);
     const [currentTitle, setCurrentTitle] = useState("");
     const [readerUrl, setReaderUrl] = useState("");
+    const [zoom, setZoom] = useState(1);
     const [currentObjectUrl, setCurrentObjectUrl] = useState(null);
     const [loadingPara, setLoadingPara] = useState(null);
     const router = useRouter();
@@ -223,6 +224,19 @@ export default function Page() {
             alert(`Error loading surah PDF: ${error.message || 'Unknown error'}. Please check your connection.`);
         }
     };
+
+    const closeReader = () => {
+        setShowReader(false);
+        setZoom(1);
+    };
+
+    const isKanzul = (currentTitle || "").toLowerCase().includes("kanzul");
+
+    const zoomStep = 0.25;
+    const zoomMin = 0.5;
+    const zoomMax = 3.0;
+    const increaseZoom = () => setZoom(z => Math.min(zoomMax, +(z + zoomStep).toFixed(2)));
+    const decreaseZoom = () => setZoom(z => Math.max(zoomMin, +(z - zoomStep).toFixed(2)));
 
     const openReader = async (p) => {
         const file = files.find((f) => f.id === p.number);
@@ -573,17 +587,24 @@ export default function Page() {
                                             `Para ${currentPara ?? 2}`}
                                     </span>
                                 </div>
-                                <div>
+                                <div className="flex items-center gap-2">
+                                    {isKanzul && (
+                                        <div className="flex items-center gap-2">
+                                            <button className="btn btn-sm" onClick={decreaseZoom} aria-label="Zoom out">-</button>
+                                            <div className="text-sm px-2">{Math.round(zoom * 100)}%</div>
+                                            <button className="btn btn-sm" onClick={increaseZoom} aria-label="Zoom in">+</button>
+                                        </div>
+                                    )}
                                     <button
                                         className="btn btn-sm btn-error"
-                                        onClick={() => setShowReader(false)}
+                                        onClick={closeReader}
                                     >
                                         Close
                                     </button>
                                 </div>
                             </header>
                             <main className="relative flex-1 overflow-auto bg-base-100">
-                                <ClientPdfViewer file={readerUrl} />
+                                <ClientPdfViewer file={readerUrl} zoom={isKanzul ? zoom : 1} />
                             </main>
                         </div>
                     </div>
