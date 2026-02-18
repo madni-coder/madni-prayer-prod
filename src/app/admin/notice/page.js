@@ -22,9 +22,12 @@ export default function NoticeAdmin() {
     const router = useRouter();
     const [loading, setLoading] = useState(true);
     const [images, setImages] = useState([]);
+    const [eventImages, setEventImages] = useState([]);
     const [error, setError] = useState(null);
     const [showDeleteModal, setShowDeleteModal] = useState(false);
     const [imageToDelete, setImageToDelete] = useState(null);
+    const [eventImageToDelete, setEventImageToDelete] = useState(null);
+    const [showEventDeleteModal, setShowEventDeleteModal] = useState(false);
     // Removed noticeTitle and isSaving state (save-notice functionality removed)
     const [isPostingImage, setIsPostingImage] = useState(false);
     const [contentError, setContentError] = useState(null);
@@ -36,6 +39,7 @@ export default function NoticeAdmin() {
     const [showEmojiPicker, setShowEmojiPicker] = useState(false); // Emoji picker visibility
     const [editorKey, setEditorKey] = useState(0); // Force toolbar re-render
     const [pendingImage, setPendingImage] = useState(null); // image selected but not uploaded
+    const [postingToCommittee, setPostingToCommittee] = useState(false); // posting image to masjid committee
 
     // TipTap Editor
     const editor = useEditor({
@@ -156,9 +160,33 @@ export default function NoticeAdmin() {
         setError(null);
         try {
             const { data } = await apiClient.get("/api/api-notice");
-            setImages(data?.images || []);
+            // Show latest uploaded image first
+            const imgs = data?.images || [];
+            setImages(Array.isArray(imgs) ? imgs.slice().reverse() : imgs);
         } catch (err) {
             setError(err?.response?.data?.error || err.message || String(err));
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const fetchEventImages = async () => {
+        setLoading(true);
+        setError(null);
+        try {
+            // Get all committees that may contain committeeImages
+            const { data } = await apiClient.get('/api/masjid-committee');
+            const list = data?.data || data || [];
+            // Flatten committeeImages arrays and dedupe
+            const all = [];
+            for (const c of list) {
+                const imgs = Array.isArray(c.committeeImages) ? c.committeeImages.filter(Boolean) : [];
+                for (const u of imgs) all.push(u);
+            }
+            const uniq = Array.from(new Set(all));
+            setEventImages(uniq.slice().reverse());
+        } catch (err) {
+            console.error('Failed to fetch event images', err);
         } finally {
             setLoading(false);
         }
@@ -193,6 +221,29 @@ export default function NoticeAdmin() {
     const cancelDelete = () => {
         setShowDeleteModal(false);
         setImageToDelete(null);
+    };
+
+    const handleEventDelete = (imageUrl) => {
+        setEventImageToDelete(imageUrl);
+        setShowEventDeleteModal(true);
+    };
+
+    const confirmEventDelete = async () => {
+        if (!eventImageToDelete) return;
+        setLoading(true);
+        setError(null);
+        setShowEventDeleteModal(false);
+        try {
+            await apiClient.delete('/api/masjid-committee-event', { data: { imageUrl: eventImageToDelete } });
+            setEventImages((prev) => prev.filter((u) => u !== eventImageToDelete));
+            toast.success('Event image removed');
+        } catch (err) {
+            console.error('Failed to delete event image', err);
+            setError(err?.response?.data?.error || err?.message || String(err));
+        } finally {
+            setLoading(false);
+            setEventImageToDelete(null);
+        }
     };
 
     // save-notice handler removed; notices are saved by posting content as images only
@@ -396,6 +447,166 @@ export default function NoticeAdmin() {
         }
     };
 
+    // Handle post image to masjid committee
+    const handlePostToCommittee = async (imageUrl) => {
+        if (!imageUrl) {
+            toast.error("Image URL is required");
+            return;
+        }
+
+        setPostingToCommittee(true);
+        try {
+            const { data } = await apiClient.post("/api/masjid-committee-event", {
+                imageUrl,
+            });
+            toast.success(`Posted to ${data.count} masjid committees`);
+        } catch (err) {
+            const errorMsg = err?.response?.data?.error || err.message || String(err);
+            toast.error(`Failed to post: ${errorMsg}`);
+        } finally {
+            setPostingToCommittee(false);
+        }
+    };
+
+    // Render editor content to an image and post directly to masjid committee
+    const handlePostEditorToCommittee = async () => {
+        if (!editor || !contentRef.current) {
+            toast.error("Editor content not available");
+            return;
+        }
+
+        // If there's no meaningful editor content, fallback to latest uploaded image
+        const rawHtml = editor.getHTML();
+        const plain = rawHtml.replace(/<[^>]*>/g, "").trim();
+        if (!plain && images.length > 0) {
+            const latestImage = images[0];
+            handlePostToCommittee(latestImage.imageSrcPortrait || latestImage.imageSrc);
+            return;
+        }
+
+        setPostingToCommittee(true);
+        setContentError(null);
+
+        try {
+            const cleaned = rawHtml
+                .replace(/<script[\s\S]*?>[\s\S]*?<\/script>/gi, "")
+                .replace(/ style=("|')(.*?)("|')/gi, "");
+
+            const SCALE = 3; // upscale for crisp image
+            const W = 360;
+            const H = 640;
+            const MIN_SCALE = 0.9;
+
+            const iframe = document.createElement("iframe");
+            iframe.setAttribute("aria-hidden", "true");
+            iframe.style.position = "fixed";
+            iframe.style.left = "-99999px";
+            iframe.style.top = "0";
+            iframe.style.width = W + "px";
+            iframe.style.height = H + "px";
+            iframe.style.border = "0";
+            document.body.appendChild(iframe);
+
+            const doc = iframe.contentDocument;
+            if (!doc) throw new Error("Failed to create isolated renderer");
+            doc.open();
+            doc.write(`<!DOCTYPE html>
+                                <html>
+                                <head>
+                                    <meta charset="utf-8" />
+                                    <style>
+                                        html, body { margin: 0; padding: 0; width: ${W}px; height: ${H}px; }
+                                        body { background: ${selectedBgColor}; color: #000000; font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial; }
+                                        * { box-sizing: border-box; }
+                                        .content{ width: 100%; height: 100%; padding: 0 36px; overflow: hidden; background: ${selectedBgColor}; }
+                                        #fit{ display: block; }
+                                        .ProseMirror { outline: none; color: black; }
+                                        .ProseMirror p { margin-top: 0; margin-bottom: 0; font-size: 22px; line-height: 1.45; }
+                                        .ProseMirror > :first-child { margin-top: 0 !important; }
+                                        .ProseMirror > :last-child { margin-bottom: 0 !important; }
+                                    </style>
+                                </head>
+                                <body>
+                                    <div class="content">
+                                        <div id="fit"><div class="ProseMirror">${cleaned}</div></div>
+                                    </div>
+                                </body>
+                                </html>`);
+            doc.close();
+
+            await new Promise((resolve) => setTimeout(resolve, 50));
+
+            const container = doc.querySelector(".content");
+            const prose = doc.querySelector(".ProseMirror");
+            const fitWrap = doc.getElementById("fit");
+            if (!container || !prose) throw new Error("Renderer container missing");
+
+            const available = H;
+            const required = Math.ceil(prose.getBoundingClientRect().height || 0);
+            const fitsWithMinScale = required <= available / MIN_SCALE;
+            if (!fitsWithMinScale) {
+                document.body.removeChild(iframe);
+                setContentError(
+                    "Notice is too long to fit in 9:16 even after slight auto-fit. Please shorten the text so nothing gets cut."
+                );
+                setPostingToCommittee(false);
+                return;
+            }
+
+            const rawScale = Math.min(1, available / Math.max(required, 1));
+            const applyScale = rawScale < 1 ? Math.max(rawScale, MIN_SCALE) : 1;
+
+            if (fitWrap) {
+                fitWrap.style.transform = "none";
+                fitWrap.style.transformOrigin = "top left";
+                fitWrap.style.width = `100%`;
+                fitWrap.style.height = `${required}px`;
+            }
+
+            container.style.display = "block";
+            container.style.alignItems = "flex-start";
+            container.style.height = `${H}px`;
+
+            const captureWidth = Math.ceil(W);
+            const captureHeight = Math.ceil(H);
+
+            const canvas = await html2canvas(container, {
+                width: captureWidth,
+                height: captureHeight,
+                scale: SCALE,
+                backgroundColor: null,
+                useCORS: true,
+                logging: false,
+                windowWidth: W,
+                windowHeight: H,
+            });
+
+            document.body.removeChild(iframe);
+
+            const blob = await new Promise((resolve) => {
+                canvas.toBlob(resolve, "image/png", 1.0);
+            });
+
+            if (!blob) throw new Error("Failed to create image from content");
+
+            const formData = new FormData();
+            const fileName = `committee_${Date.now()}.png`;
+            formData.append("image", blob, fileName);
+
+            // Post to masjid-committee-event endpoint
+            const committeeRes = await apiClient.post("/api/masjid-committee-event", formData, {
+                headers: { "Content-Type": "multipart/form-data" },
+            });
+
+            toast.success(`Posted to ${committeeRes.data.count} committees`);
+        } catch (err) {
+            console.error("Post to committee failed", err);
+            toast.error(err?.response?.data?.error || err?.message || String(err));
+        } finally {
+            setPostingToCommittee(false);
+        }
+    };
+
     const MenuBar = ({ editor }) => {
         if (!editor) return null;
 
@@ -553,6 +764,7 @@ export default function NoticeAdmin() {
 
     useEffect(() => {
         fetchImages();
+        fetchEventImages();
     }, []);
 
     // Show loading while checking authentication
@@ -971,7 +1183,7 @@ export default function NoticeAdmin() {
                         </div>
 
                         {/* Action Buttons */}
-                        <div className="mt-4 flex  gap-3">
+                        <div className="mt-4 flex gap-3">
                             {/* Clear Content button: left/corner of the action group */}
                             <button
                                 onClick={async () => {
@@ -1002,6 +1214,33 @@ export default function NoticeAdmin() {
                                     ? "Posting..."
                                     : "Post this content"}
                             </button>
+
+                            <button
+                                onClick={handlePostEditorToCommittee}
+                                disabled={postingToCommittee}
+                                className={`px-6 py-2 rounded-md disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 ${postingToCommittee
+                                    ? "bg-gray-400 text-white"
+                                    : "bg-blue-600 text-white hover:bg-blue-700"
+                                    }`}
+                            >
+                                <svg
+                                    xmlns="http://www.w3.org/2000/svg"
+                                    width="16"
+                                    height="16"
+                                    viewBox="0 0 24 24"
+                                    fill="none"
+                                    stroke="currentColor"
+                                    strokeWidth="2"
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                >
+                                    <path d="M22 2L11 13"></path>
+                                    <path d="M22 2L15 22L11 13L2 9L22 2Z"></path>
+                                </svg>
+                                {postingToCommittee
+                                    ? "Posting to Committee..."
+                                    : "Post to Committee"}
+                            </button>
                         </div>
                         {contentError && (
                             <p className="mt-3 text-sm text-red-600">
@@ -1025,7 +1264,7 @@ export default function NoticeAdmin() {
                                     autoUploadToServer={false}
                                     onUploadComplete={(img) => setPendingImage(img)}
                                 />
-                                <div className="mt-3 flex items-center gap-2">
+                                <div className="mt-3 flex items-center gap-2 flex-wrap">
                                     <button
                                         onClick={async () => {
                                             if (!pendingImage) return;
@@ -1056,8 +1295,57 @@ export default function NoticeAdmin() {
                                     >
                                         {isPostingImage ? 'Uploading...' : 'Upload'}
                                     </button>
+
+                                    <button
+                                        onClick={async () => {
+                                            if (!pendingImage) return;
+                                            setPostingToCommittee(true);
+                                            try {
+                                                // Convert data URL to blob and send directly to masjid-committee-event
+                                                // so it is stored in the `committee` bucket and NOT the `notice` bucket.
+                                                const res = await fetch(pendingImage.imageSrc);
+                                                const blob = await res.blob();
+                                                const formData = new FormData();
+                                                const fileName = pendingImage.fileName || `committee_${Date.now()}.jpg`;
+                                                formData.append('image', blob, fileName);
+
+                                                // Send multipart/form-data directly to masjid-committee-event
+                                                const committeeRes = await apiClient.post('/api/masjid-committee-event', formData, {
+                                                    headers: { 'Content-Type': 'multipart/form-data' },
+                                                });
+
+                                                toast.success(`Posted to ${committeeRes.data.count} committees`);
+                                                setPendingImage(null);
+                                                // Do NOT call fetchImages() here — we intentionally avoid saving to the notice bucket
+                                            } catch (err) {
+                                                console.error('Post to committee failed', err);
+                                                toast.error(err?.response?.data?.error || err?.message || String(err));
+                                            } finally {
+                                                setPostingToCommittee(false);
+                                            }
+                                        }}
+                                        disabled={!pendingImage || postingToCommittee}
+                                        className={`px-4 py-2 rounded-md flex items-center gap-2 ${!pendingImage || postingToCommittee ? 'bg-gray-200 text-gray-600' : 'bg-green-600 text-white hover:bg-green-700'}`}
+                                    >
+                                        <svg
+                                            xmlns="http://www.w3.org/2000/svg"
+                                            width="16"
+                                            height="16"
+                                            viewBox="0 0 24 24"
+                                            fill="none"
+                                            stroke="currentColor"
+                                            strokeWidth="2"
+                                            strokeLinecap="round"
+                                            strokeLinejoin="round"
+                                        >
+                                            <path d="M22 2L11 13"></path>
+                                            <path d="M22 2L15 22L11 13L2 9L22 2Z"></path>
+                                        </svg>
+                                        {postingToCommittee ? 'Posting...' : 'Post to Committee'}
+                                    </button>
+
                                     {pendingImage && (
-                                        <div className="text-sm text-gray-600">Ready to upload: {pendingImage.fileName}</div>
+                                        <div className="text-sm text-gray-600">Ready: {pendingImage.fileName}</div>
                                     )}
                                 </div>
                             </div>
@@ -1094,8 +1382,8 @@ export default function NoticeAdmin() {
                                 key={img.id || index}
                                 className="border rounded overflow-hidden relative"
                             >
-                                {/* Edit and Delete Icons */}
-                                <div className="absolute top-2 right-2 flex space-x-2 z-10">
+                                {/* Delete Icon */}
+                                <div className="absolute top-2 right-2 z-10">
                                     <button
                                         className="bg-white rounded-full p-1 shadow hover:bg-gray-100"
                                         title="Delete"
@@ -1135,6 +1423,49 @@ export default function NoticeAdmin() {
                 )}
             </div>
 
+            {/* Events images list (from masjid committees) */}
+            <div className="bg-white shadow sm:rounded-md p-4 mt-6">
+                <div className="flex items-center justify-between mb-4">
+                    <h2 className="text-lg font-medium text-gray-900">Events Images</h2>
+                </div>
+
+                {loading && (
+                    <p className="text-sm text-gray-500">Loading images...</p>
+                )}
+
+                {!loading && eventImages.length === 0 && (
+                    <p className="text-sm text-gray-500">No event images found.</p>
+                )}
+
+                {!loading && eventImages.length > 0 && (
+                    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
+                        {eventImages.map((src, idx) => (
+                            <div key={src || idx} className="border rounded overflow-hidden relative">
+                                <div className="absolute top-2 right-2 z-10 flex gap-2">
+                                    <button
+                                        className="bg-white rounded-full p-1 shadow hover:bg-gray-100"
+                                        title="Delete"
+                                        onClick={() => handleEventDelete(src)}
+                                    >
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                            <polyline points="3 6 5 6 21 6"></polyline>
+                                            <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"></path>
+                                            <path d="M10 11v6"></path>
+                                            <path d="M14 11v6"></path>
+                                        </svg>
+                                    </button>
+                                </div>
+                                <div className="w-full">
+                                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                                    <img src={src} alt={`Event ${idx + 1}`} className="w-full h-40 object-contain bg-gray-50" />
+                                </div>
+                                <div className="p-1 text-xs text-gray-700 truncate">Event image</div>
+                            </div>
+                        ))}
+                    </div>
+                )}
+            </div>
+
             {/* Delete Confirmation Modal */}
             {showDeleteModal && (
                 <div className="fixed inset-0 flex items-center justify-center z-50">
@@ -1158,6 +1489,18 @@ export default function NoticeAdmin() {
                             >
                                 Delete
                             </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+            {showEventDeleteModal && (
+                <div className="fixed inset-0 flex items-center justify-center z-50">
+                    <div className="bg-white p-6 rounded shadow-lg border">
+                        <h2 className="text-lg font-medium text-gray-900 mb-4">Confirm Delete</h2>
+                        <p className="text-sm text-gray-600 mb-4">Are you sure you want to remove this event image from all committees?</p>
+                        <div className="flex justify-end space-x-2">
+                            <button onClick={() => { setShowEventDeleteModal(false); setEventImageToDelete(null); }} className="px-3 py-1 bg-gray-300 text-gray-700 rounded hover:bg-gray-400">Cancel</button>
+                            <button onClick={confirmEventDelete} className="px-3 py-1 bg-red-600 text-white rounded hover:bg-red-700">Delete</button>
                         </div>
                     </div>
                 </div>

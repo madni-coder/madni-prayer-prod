@@ -15,7 +15,9 @@ export default function NoticeFeed() {
         async function fetchImages() {
             try {
                 const { data } = await apiClient.get("/api/api-notice");
-                setImages(data.images || []);
+                // Show newest images first
+                const imgs = data.images || [];
+                setImages(Array.isArray(imgs) ? imgs.slice().reverse() : imgs);
                 setLoading(false); // Stop loading on API success
             } catch (err) {
                 setError(err.message || "An error occurred");
@@ -38,7 +40,7 @@ export default function NoticeFeed() {
                     </button>
 
                     <h1 className="text-3xl md:text-4xl font-bold bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent ml-2 text-left">
-                      Aelaan
+                        Aelaan
                     </h1>
                 </div>
             </div>

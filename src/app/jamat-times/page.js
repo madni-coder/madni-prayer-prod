@@ -22,13 +22,13 @@ function DigitalClock() {
 
     return (
         <div className="flex flex-col items-center mb-4">
-            <span className="mt-1 text-xl text-amber-100 tracking-widest">
+            <span className="mt-1 text-xl text-white font-bold  tracking-widest">
                 Current Time
             </span>
             <br />
             <div className="flex items-end gap-2">
                 <span
-                    className="text-4xl md:text-5xl font-mono font-extrabold text-primary bg-black/80 px-6 py-3 rounded-xl shadow-lg border-4 border-primary"
+                    className="text-4xl md:text-5xl font-mono font-extrabold text-warning bg-black/80 px-6 py-3 rounded-xl shadow-lg border-4 border-warning"
                     style={{
                         fontFamily: "'Orbitron', 'Fira Mono', monospace",
                         letterSpacing: "0.08em",
@@ -37,7 +37,7 @@ function DigitalClock() {
                 >
                     {hours}:{minutes}:{seconds}
                 </span>
-                <span className="text-xl md:text-xl font-bold text-primary ml-1 mb-2 select-none">
+                <span className="text-xl md:text-xl font-bold text-warning ml-1 mb-2 select-none">
                     {ampm}
                 </span>
             </div>

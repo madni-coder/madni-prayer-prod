@@ -23,6 +23,7 @@ export async function POST(request) {
             mobileNumbers = [],
             password,
             imaamName = null,
+            committeeImages = [],
         } = body;
 
         const required = [
@@ -93,6 +94,7 @@ export async function POST(request) {
                 mobileNumbers,
                 password,
                 imaamName,
+                committeeImages,
             },
         });
 
@@ -119,7 +121,7 @@ export async function PATCH(request) {
         if (!existing) return NextResponse.json({ error: "Record not found" }, { status: 404 });
 
         const updateData = {};
-        const updatable = ["masjidId", "masjidName", "fullAddress", "city", "mutwalliName", "committeeMembers", "mobileNumbers", "password", "imaamName"];
+        const updatable = ["masjidId", "masjidName", "fullAddress", "city", "mutwalliName", "committeeMembers", "mobileNumbers", "password", "imaamName", "committeeImages"];
         updatable.forEach((k) => {
             if (body[k] !== undefined) updateData[k] = body[k];
         });
