@@ -1,5 +1,5 @@
 "use client";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { FaCheckCircle } from "react-icons/fa";
 import { useRouter } from "next/navigation";
 import { ArrowLeft, Plus } from "lucide-react";
@@ -17,6 +17,7 @@ const prayers = [
 
 export default function AddMasjidPage() {
     const router = useRouter();
+    const LOCAL_CITY_KEY = "masjid_city_isRaipur";
     const [masjidName, setMasjidName] = useState("");
     const [colony, setColony] = useState("");
     const [locality, setLocality] = useState("");
@@ -91,6 +92,31 @@ export default function AddMasjidPage() {
         }
     };
 
+    // initialize isRaipur from localStorage (persist user preference)
+    useEffect(() => {
+        try {
+            if (typeof window !== "undefined") {
+                const stored = localStorage.getItem(LOCAL_CITY_KEY);
+                if (stored !== null) {
+                    setIsRaipur(stored === "true");
+                }
+            }
+        } catch (err) {
+            console.warn("Could not read localStorage for city key", err);
+        }
+    }, []);
+
+    const handleCityToggle = (checked) => {
+        setIsRaipur(checked);
+        try {
+            if (typeof window !== "undefined") {
+                localStorage.setItem(LOCAL_CITY_KEY, checked ? "true" : "false");
+            }
+        } catch (err) {
+            console.warn("Could not write localStorage for city key", err);
+        }
+    };
+
     // new handler to load/save per-role mobiles and names
     const handleRoleChange = (e) => {
         const newRole = e.target.value;
@@ -143,7 +169,7 @@ export default function AddMasjidPage() {
                                 type="checkbox"
                                 className="toggle toggle-md sm:toggle-lg bg-error border-error checked:bg-primary checked:border-primary mr-1 sm:mr-2"
                                 checked={isRaipur}
-                                onChange={(e) => setIsRaipur(e.target.checked)}
+                                onChange={(e) => handleCityToggle(e.target.checked)}
                             />
                             <span className="font-medium text-sm sm:text-base">Is Raipur</span>
                         </label>

@@ -42,6 +42,8 @@ function EditJamatTimePage() {
     const [name, setName] = useState("");
     const [mobile, setMobile] = useState("");
     const [pasteMapUrl, setPasteMapUrl] = useState("");
+    const LOCAL_CITY_KEY = "masjid_city_isRaipur";
+    const [isRaipur, setIsRaipur] = useState(false);
     const [times, setTimes] = useState(prayers.map((p) => p.defaultTime));
     const [editIdx, setEditIdx] = useState(null);
     const [editValue, setEditValue] = useState("");
@@ -66,6 +68,23 @@ function EditJamatTimePage() {
                 setName(data.name || "");
                 setMobile(data.mobile || "");
                 setPasteMapUrl(data.pasteMapUrl || "");
+                // Respect user's persisted toggle preference. If there is a
+                // stored preference in localStorage, use that. Otherwise
+                // fall back to the value from the server.
+                try {
+                    if (typeof window !== "undefined") {
+                        const stored = localStorage.getItem(LOCAL_CITY_KEY);
+                        if (stored === null) {
+                            setIsRaipur((data.city || "Bilaspur") === "Raipur");
+                        } else {
+                            setIsRaipur(stored === "true");
+                        }
+                    } else {
+                        setIsRaipur((data.city || "Bilaspur") === "Raipur");
+                    }
+                } catch (err) {
+                    setIsRaipur((data.city || "Bilaspur") === "Raipur");
+                }
                 setTimes([
                     data.fazar || prayers[0].defaultTime,
                     data.zuhar || prayers[1].defaultTime,
@@ -103,6 +122,29 @@ function EditJamatTimePage() {
         fetchMasjidData();
     }, [masjidId, fetchMasjidData]);
 
+    // initialize isRaipur from localStorage (persist user preference)
+    useEffect(() => {
+        try {
+            if (typeof window !== "undefined") {
+                const stored = localStorage.getItem(LOCAL_CITY_KEY);
+                if (stored !== null) setIsRaipur(stored === "true");
+            }
+        } catch (err) {
+            console.warn("Could not read localStorage for city key", err);
+        }
+    }, []);
+
+    const handleCityToggle = (checked) => {
+        setIsRaipur(checked);
+        try {
+            if (typeof window !== "undefined") {
+                localStorage.setItem(LOCAL_CITY_KEY, checked ? "true" : "false");
+            }
+        } catch (err) {
+            console.warn("Could not write localStorage for city key", err);
+        }
+    };
+
     const handleTimeChange = (idx, value) => {
         setTimes((times) => times.map((t, i) => (i === idx ? value : t)));
     };
@@ -134,6 +176,7 @@ function EditJamatTimePage() {
                 name: name.trim(),
                 mobile: mobile,
                 pasteMapUrl: pasteMapUrl.trim(),
+                city: isRaipur ? 'Raipur' : 'Bilaspur',
                 // map times
                 fazar: times[0],
                 zuhar: times[1],
@@ -182,6 +225,22 @@ function EditJamatTimePage() {
                     <h1 className="text-2xl sm:text-3xl font-bold mb-6 text-center text-gray-800">
                         Edit Masjid Details
                     </h1>
+                    <div className={
+                        `mb-4 flex flex-col sm:flex-row items-start sm:items-center gap-2 sm:gap-3 p-3 rounded-md transition-colors ${isRaipur ? 'bg-primary/10 border border-primary/20' : 'bg-gray-50 border border-gray-100'}`
+                    }>
+                        <label className={`flex items-center cursor-pointer select-none gap-2 ${isRaipur ? 'text-primary' : 'text-gray-700'}`}>
+                            <input
+                                type="checkbox"
+                                className="toggle toggle-md sm:toggle-lg bg-error border-error checked:bg-primary checked:border-primary mr-1 sm:mr-2"
+                                checked={isRaipur}
+                                onChange={(e) => handleCityToggle(e.target.checked)}
+                            />
+                            <span className="font-medium text-sm sm:text-base">Is Raipur</span>
+                        </label>
+                        <div className={`text-xs sm:text-sm ${isRaipur ? 'text-primary' : 'text-gray-500'}`}>
+                            Default city: <span className={`font-semibold ${isRaipur ? 'text-primary' : 'text-gray-700'}`}>{isRaipur ? 'Raipur' : 'Bilaspur'}</span>
+                        </div>
+                    </div>
                     <form
                         className="bg-white p-4 sm:p-6 rounded-lg shadow mb-6"
                         onSubmit={handleSubmit}
