@@ -34,19 +34,47 @@ export async function POST(request) {
                 const buffer = Buffer.from(arrayBuffer);
                 const mimeType = file.type || "image/jpeg";
 
-                const { error: uploadErr } = await supabase.storage.from("committee").upload(fileName, buffer, {
-                    contentType: mimeType,
-                    upsert: false,
-                });
-                if (uploadErr) {
-                    console.error("Supabase upload error", uploadErr);
-                    // Provide actionable message when bucket isn't found or permissions denied
-                    if (String(uploadErr.message || uploadErr).toLowerCase().includes("bucket")) {
-                        return NextResponse.json({ error: "Supabase storage error: bucket 'committee' not found. Please create the bucket named 'committee' in your Supabase project and ensure the service role key has access." }, { status: 500 });
+                // Try upload, and if bucket is missing attempt to create it (requires service role key)
+                let uploadErr = null;
+                for (let attempt = 0; attempt < 2; attempt++) {
+                    const res = await supabase.storage.from("committee").upload(fileName, buffer, {
+                        contentType: mimeType,
+                        upsert: false,
+                    });
+                    uploadErr = res.error;
+                    if (!uploadErr) break;
+
+                    const msg = String(uploadErr.message || uploadErr).toLowerCase();
+                    // If bucket not found, try to create it once (only when using service role key)
+                    if (msg.includes("bucket") && supabaseServiceKey && attempt === 0) {
+                        try {
+                            const { error: createErr } = await supabase.storage.createBucket("committee", { public: true });
+                            if (createErr) {
+                                console.error("Failed to create 'committee' bucket", createErr);
+                                return NextResponse.json({ error: "Supabase storage error: failed to create bucket 'committee'. Ensure the service role key has permissions or create the bucket manually in Supabase." }, { status: 500 });
+                            }
+                            // bucket created, retry upload
+                            continue;
+                        } catch (e) {
+                            console.error("Error creating bucket 'committee'", e);
+                            return NextResponse.json({ error: "Supabase storage error: failed to create bucket 'committee'. Ensure the service role key has permissions or create the bucket manually in Supabase." }, { status: 500 });
+                        }
                     }
-                    if (uploadErr.status === 403 || String(uploadErr.message || "").toLowerCase().includes("permission")) {
+
+                    // Permission denied
+                    if (uploadErr.status === 403 || msg.includes("permission")) {
+                        console.error("Supabase upload error", uploadErr);
                         return NextResponse.json({ error: "Supabase storage error: permission denied. Ensure SUPABASE_SERVICE_ROLE_KEY is set and has storage permissions." }, { status: 500 });
                     }
+
+                    // Other upload error: break and return
+                    console.error("Supabase upload error", uploadErr);
+                    return NextResponse.json({ error: uploadErr.message || String(uploadErr) }, { status: 500 });
+                }
+
+                if (uploadErr) {
+                    // If after retries there's still an error, it's handled above; this is a safeguard
+                    console.error("Supabase upload unrecoverable error", uploadErr);
                     return NextResponse.json({ error: uploadErr.message || String(uploadErr) }, { status: 500 });
                 }
 
