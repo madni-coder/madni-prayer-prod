@@ -447,13 +447,13 @@ export default function Tasbih() {
                             >
                                 <option value="" disabled hidden>Please Select</option>
                                 <option value="manual">⚙️ Manual</option>
+                                <option value="no-target" className="text-error">No Target</option>
                                 <option value="100">100</option>
                                 <option value="200">200</option>
                                 <option value="400">400</option>
                                 <option value="500">500</option>
                                 <option value="700">700</option>
                                 <option value="1000">1000</option>
-                                <option value="no-target">No Target</option>
                             </select>
                         </div>
 
@@ -471,7 +471,7 @@ export default function Tasbih() {
 
                         <div className="text-sm font-medium text-primary/90 w-full md:w-auto text-center md:text-right">
                             {allowFreeCounting ? (
-                                <span className="bg-primary/10 px-3 py-1.5 rounded-lg border border-primary/20">🆓 No Target (Free)</span>
+                                <span className="bg-primary/10 px-3 py-1.5 rounded-lg border border-primary/20">No Target</span>
                             ) : target > 0 ? (
                                 <span className="bg-primary/10 px-3 py-1.5 rounded-lg border border-primary/20">🎯 Target: <strong className="text-primary">{target}</strong></span>
                             ) : (
