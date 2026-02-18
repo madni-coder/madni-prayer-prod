@@ -110,10 +110,17 @@ export default function Qibla() {
                 return;
             }
 
+            const geolocationOptions = {
+                enableHighAccuracy: true,
+                timeout: 10000, // 10 seconds
+                maximumAge: 0
+            };
+
             navigator.geolocation.getCurrentPosition(
                 async (position) => {
                     const { latitude, longitude } = position.coords;
                     setLocation({ latitude, longitude });
+                    setLocationError(null); // Clear any previous errors
 
                     try {
                         // Fetch Qibla direction from Aladhan API
@@ -136,8 +143,25 @@ export default function Qibla() {
                 },
                 (error) => {
                     console.error("Geolocation error:", error);
-                    setLocationError("Failed to get your location. Please enable location services.");
-                }
+                    let errorMessage = "Failed to get your location. Please enable location services.";
+
+                    switch (error.code) {
+                        case error.PERMISSION_DENIED:
+                            errorMessage = "Failed to get your location. Please enable location services.";
+                            break;
+                        case error.POSITION_UNAVAILABLE:
+                            errorMessage = "Location information is unavailable. Please try again.";
+                            break;
+                        case error.TIMEOUT:
+                            errorMessage = "Location request timed out. Please try again.";
+                            break;
+                        default:
+                            errorMessage = "Failed to get your location. Please enable location services.";
+                    }
+
+                    setLocationError(errorMessage);
+                },
+                geolocationOptions
             );
         };
 
@@ -277,7 +301,7 @@ export default function Qibla() {
                         onClick={requestPermissionAndStartListening}
                         className="btn btn-primary btn-lg"
                     >
-                        🧭 Enable Compass
+                        🧭 Enable GPS
                     </button>
                     <p className="text-sm mt-2 opacity-70">Tap the button above to activate the Qibla compass</p>
                 </div>
