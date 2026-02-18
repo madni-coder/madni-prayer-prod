@@ -1,5 +1,5 @@
 "use client"
-import { FaAngleLeft } from 'react-icons/fa';
+import { FaAngleLeft, FaVolumeUp, FaVolumeMute } from 'react-icons/fa';
 import { useRouter } from 'next/navigation';
 import { useState, useEffect, useRef } from 'react';
 import BackLoader from '../../../components/BackLoader.client';
@@ -8,14 +8,22 @@ import RaipurTimeTable from '../../../components/raipurTimeTable';
 export default function Page() {
     const router = useRouter();
     const STORAGE_KEY = "ramzan_only_raipur";
+    const SOUND_KEY = "ramzan_sound_enabled";
     const [onlyRaipur, setOnlyRaipur] = useState(false);
+    const [soundEnabled, setSoundEnabled] = useState(false);
     const [showLoader, setShowLoader] = useState(false);
     const timerRef = useRef(null);
+    const soundEnabledRef = useRef(false);
 
     useEffect(() => {
         try {
             const v = localStorage.getItem(STORAGE_KEY);
             if (v === "true") setOnlyRaipur(true);
+            const s = localStorage.getItem(SOUND_KEY);
+            if (s === "true") {
+                setSoundEnabled(true);
+                soundEnabledRef.current = true;
+            }
         } catch (e) {
             // ignore
         }
@@ -36,6 +44,15 @@ export default function Page() {
             setShowLoader(false);
             timerRef.current = null;
         }, 500);
+    };
+
+    const handleSoundChange = (checked) => {
+        setSoundEnabled(checked);
+        soundEnabledRef.current = checked;
+        try {
+            if (checked) localStorage.setItem(SOUND_KEY, "true");
+            else localStorage.removeItem(SOUND_KEY);
+        } catch (e) { }
     };
 
     useEffect(() => {
@@ -62,6 +79,111 @@ export default function Page() {
         }
     };
 
+    // Play audio announcement when sehri or iftari time hits
+    const sehriAudioRef = useRef(null);
+    const iftariAudioRef = useRef(null);
+    const playedRef = useRef({ sehri: null, iftari: null });
+
+    useEffect(() => {
+        // create Audio objects (expects files in public/ named sehri.mp3 and irftari.mp3)
+        sehriAudioRef.current = new Audio('/sehri.mp3');
+        iftariAudioRef.current = new Audio('/irftari.mp3');
+
+        let checker = null;
+
+        const getTodayLabel = () => {
+            const today = new Date();
+            const day = today.getDate();
+            const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+            return `${day} ${months[today.getMonth()]}`;
+        };
+
+        const parseTimeStr = (timeStr) => {
+            // accepts formats like "5:10", "05:17" or "5:10" with optional spaces
+            if (!timeStr) return null;
+            const m = timeStr.trim().match(/(\d{1,2}):(\d{2})/);
+            if (!m) return null;
+            const hh = parseInt(m[1], 10);
+            const mm = parseInt(m[2], 10);
+            const d = new Date();
+            d.setHours(hh);
+            d.setMinutes(mm);
+            d.setSeconds(0);
+            d.setMilliseconds(0);
+            return d;
+        };
+
+        const findTodayRowTimes = () => {
+            const label = getTodayLabel();
+            // look through all tables on page for a matching date cell
+            const tables = document.querySelectorAll('table');
+            for (const table of tables) {
+                const rows = table.querySelectorAll('tbody tr');
+                for (const r of rows) {
+                    const tds = r.querySelectorAll('td');
+                    if (tds.length < 5) continue;
+                    const dateText = tds[1].textContent.trim();
+                    if (dateText === label) {
+                        const sehriText = tds[3].textContent.trim();
+                        const iftariText = tds[4].textContent.trim();
+                        return { sehriText, iftariText };
+                    }
+                }
+            }
+            return null;
+        };
+
+        const tryNotify = async (title, body) => {
+            try {
+                if (typeof Notification !== 'undefined' && Notification.permission === 'granted') {
+                    new Notification(title, { body });
+                }
+            } catch (e) {
+                // ignore
+            }
+        };
+
+        const check = () => {
+            const times = findTodayRowTimes();
+            if (!times) return;
+            const now = new Date();
+            const sehriTime = parseTimeStr(times.sehriText);
+            const iftariTime = parseTimeStr(times.iftariText);
+
+            if (sehriTime && now >= sehriTime) {
+                const key = (new Date()).toDateString();
+                if (playedRef.current.sehri !== key) {
+                    playedRef.current.sehri = key;
+                    // try play only if user enabled sound
+                    if (soundEnabledRef.current) sehriAudioRef.current?.play().catch(() => { });
+                    tryNotify('Sehri Time', `Sehri time has started (${times.sehriText})`);
+                }
+            }
+
+            if (iftariTime && now >= iftariTime) {
+                const key = (new Date()).toDateString();
+                if (playedRef.current.iftari !== key) {
+                    playedRef.current.iftari = key;
+                    if (soundEnabledRef.current) iftariAudioRef.current?.play().catch(() => { });
+                    tryNotify('Iftari Time', `Iftari time has started (${times.iftariText})`);
+                }
+            }
+        };
+
+        // ask notification permission once
+        if (typeof Notification !== 'undefined' && Notification.permission === 'default') {
+            try { Notification.requestPermission().catch(() => { }); } catch (e) { }
+        }
+
+        // run immediately and then every 10 seconds
+        check();
+        checker = setInterval(check, 10000);
+
+        return () => {
+            if (checker) clearInterval(checker);
+        };
+    }, []);
+
     return (
         <main className="min-h-screen p-4 md:p-8 bg-base-200 text-base-content">
             <button
@@ -87,6 +209,19 @@ export default function Page() {
                     aria-label="Show Raipur timetable"
                 />
                 <span className="select-none">Show Raipur's Time Table</span>
+            </label>
+            <label className="flex items-center gap-2 text-sm text-primary mt-2">
+                <input
+                    type="checkbox"
+                    className="toggle toggle-2xl checked:bg-primary checked:border-primary checked:after:bg-primary"
+                    checked={soundEnabled}
+                    onChange={(e) => handleSoundChange(e.target.checked)}
+                    aria-label="Enable Ramzan sounds"
+                />
+                <span className="flex items-center gap-2 select-none">
+                    {soundEnabled ? <FaVolumeUp /> : <FaVolumeMute />}
+                    <span>Enable Sehri / Iftari Announcement</span>
+                </span>
             </label>
             {showLoader && <BackLoader message="Switching..." />}
             {onlyRaipur ? (

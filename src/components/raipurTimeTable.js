@@ -1,3 +1,6 @@
+"use client"
+import { useEffect, useRef } from 'react';
+
 export default function RaipurTimeTable() {
     // helper: check if a date string in format "D Mon" (e.g. "28 Feb", "1 Mar") refers to today
     const isToday = (dateStr) => {
@@ -17,8 +20,110 @@ export default function RaipurTimeTable() {
         }
     };
 
+    // audio & testing helpers (same behaviour as page-level implementation)
+    const sehriAudioRef = useRef(null);
+    const iftariAudioRef = useRef(null);
+    const playedRef = useRef({ sehri: null, iftari: null });
+
+    useEffect(() => {
+        sehriAudioRef.current = new Audio('/sehri.mp3');
+        iftariAudioRef.current = new Audio('/irftari.mp3');
+
+        let checker = null;
+
+        const getTodayLabel = () => {
+            const today = new Date();
+            const day = today.getDate();
+            const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+            return `${day} ${months[today.getMonth()]}`;
+        };
+
+        const parseTimeStr = (timeStr) => {
+            if (!timeStr) return null;
+            const m = timeStr.trim().match(/(\d{1,2}):(\d{2})/);
+            if (!m) return null;
+            const hh = parseInt(m[1], 10);
+            const mm = parseInt(m[2], 10);
+            const d = new Date();
+            d.setHours(hh);
+            d.setMinutes(mm);
+            d.setSeconds(0);
+            d.setMilliseconds(0);
+            return d;
+        };
+
+        const findTodayRowTimes = () => {
+            const label = getTodayLabel();
+            const table = document.querySelector('table');
+            if (!table) return null;
+            const rows = table.querySelectorAll('tbody tr');
+            for (const r of rows) {
+                const tds = r.querySelectorAll('td');
+                if (tds.length < 5) continue;
+                const dateText = tds[1].textContent.trim();
+                if (dateText === label) {
+                    const sehriText = tds[3].textContent.trim();
+                    const iftariText = tds[4].textContent.trim();
+                    return { sehriText, iftariText };
+                }
+            }
+            return null;
+        };
+
+        const tryNotify = (title, body) => {
+            try {
+                if (typeof Notification !== 'undefined' && Notification.permission === 'granted') new Notification(title, { body });
+            } catch (e) { }
+        };
+
+        const check = () => {
+            const times = findTodayRowTimes();
+            if (!times) return;
+            const now = new Date();
+            const sehriTime = parseTimeStr(times.sehriText);
+            const iftariTime = parseTimeStr(times.iftariText);
+
+            if (sehriTime && now >= sehriTime) {
+                const key = (new Date()).toDateString();
+                if (playedRef.current.sehri !== key) {
+                    playedRef.current.sehri = key;
+                    try {
+                        const s = typeof localStorage !== 'undefined' ? localStorage.getItem('ramzan_sound_enabled') : null;
+                        if (s === 'true') sehriAudioRef.current?.play().catch(() => { });
+                    } catch (e) { }
+                    tryNotify('Sehri Time', `Sehri time has started (${times.sehriText})`);
+                }
+            }
+
+            if (iftariTime && now >= iftariTime) {
+                const key = (new Date()).toDateString();
+                if (playedRef.current.iftari !== key) {
+                    playedRef.current.iftari = key;
+                    try {
+                        const s = typeof localStorage !== 'undefined' ? localStorage.getItem('ramzan_sound_enabled') : null;
+                        if (s === 'true') iftariAudioRef.current?.play().catch(() => { });
+                    } catch (e) { }
+                    tryNotify('Iftari Time', `Iftari time has started (${times.iftariText})`);
+                }
+            }
+        };
+
+        if (typeof Notification !== 'undefined' && Notification.permission === 'default') {
+            try { Notification.requestPermission().catch(() => { }); } catch (e) { }
+        }
+
+        check();
+        checker = setInterval(check, 10000);
+
+        return () => {
+            if (checker) clearInterval(checker);
+        };
+    }, []);
+
     return (
         <>
+
+
 
             {/* ##############################Mobile single stacked table showing all 30 rows */}
             <div className="mt-6 md:hidden">
