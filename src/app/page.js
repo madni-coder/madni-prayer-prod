@@ -13,7 +13,7 @@ import {
     FaPhoneSquare,
     FaHandPointRight, FaUser, FaStore, FaBriefcase,
 } from "react-icons/fa";
-import { Megaphone } from "lucide-react";
+import { Megaphone, UsersRound } from "lucide-react";
 import Image from "next/image";
 import TasbihSvgIcon from "../components/TasbihSvgIcon";
 
@@ -95,7 +95,7 @@ const sections = [
         name: "Masjid Committee",
         href: "/committee",
         icon: (
-            <FaUser className="text-3xl lg:text-6xl text-indigo-400" />
+            <UsersRound className="text-3xl lg:text-6xl text-indigo-400" />
         ),
     },
 
