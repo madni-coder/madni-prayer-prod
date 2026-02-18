@@ -1,6 +1,6 @@
 "use client";
 import React, { useEffect, useRef, useState } from "react";
-import { FaAngleLeft } from "react-icons/fa";
+import { FaAngleLeft, FaMapMarkerAlt } from "react-icons/fa";
 import { useRouter } from "next/navigation";
 
 export default function Qibla() {
@@ -15,6 +15,7 @@ export default function Qibla() {
 
     const [compassAccuracy, setCompassAccuracy] = useState(null);
     const [isIOS, setIsIOS] = useState(false);
+    const [isAndroid, setIsAndroid] = useState(false);
     const orientationListenerRef = useRef(null);
     const orientationEventNameRef = useRef(null);
     const normalize = (n) => ((n % 360) + 360) % 360;
@@ -45,7 +46,7 @@ export default function Qibla() {
         // - webkitCompassHeading: 0° = North, 90° = East, 180° = South, 270° = West
         // - This gives us the device's heading relative to True North
         // - The value is already corrected for screen orientation and magnetic declination
-        
+
         // For iOS devices, prefer webkitCompassHeading as it provides true magnetic heading
         if (prefersIOSHeading && typeof e.webkitCompassHeading === "number") {
             if (typeof e.webkitCompassAccuracy === "number") {
@@ -73,7 +74,7 @@ export default function Qibla() {
                     typeof window.screen.orientation.angle === "number"
                     ? window.screen.orientation.angle
                     : window.orientation) || 0;
-            
+
             // For Android: compensate for screen rotation
             // The alpha value represents rotation around Z-axis
             return normalize(360 - e.alpha - screenAngle);
@@ -110,6 +111,7 @@ export default function Qibla() {
             const isIOSDevice = /iPad|iPhone|iPod/.test(navigator.userAgent) ||
                 (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
             setIsIOS(isIOSDevice);
+            setIsAndroid(/Android/.test(navigator.userAgent));
         };
         checkIOS();
     }, []);
@@ -154,7 +156,7 @@ export default function Qibla() {
                     }
                 },
                 (error) => {
-                    console.error("Geolocation error:", error);
+                    // removed debug logging
                     let errorMessage = "Failed to get your location. Please enable location services.";
 
                     switch (error.code) {
@@ -275,6 +277,22 @@ export default function Qibla() {
         }
     };
 
+    const openAndroidLocationSettings = () => {
+        // Attempt to open Android location settings via an intent URL.
+        // This works in many Android WebViews / Chrome. If it fails, fall back to a generic settings URL.
+        try {
+            const intentUrl = 'intent:#Intent;action=android.settings.LOCATION_SOURCE_SETTINGS;end';
+            window.location.href = intentUrl;
+        } catch (e) {
+            try {
+                window.open('android.settings.LOCATION_SOURCE_SETTINGS', '_blank');
+            } catch (e2) {
+                // final fallback: open a help/search page
+                window.open('https://support.google.com/accounts/answer/3467281', '_blank');
+            }
+        }
+    };
+
     return (
         <section className="flex flex-col items-center justify-center min-h-[70vh] px-4 animate-fade-in bg-base-100">
             <button
@@ -298,12 +316,24 @@ export default function Qibla() {
                 </div>
             )}
 
-            {locationError && (
+            {locationError && !isAndroid && (
                 <div className="alert alert-error mb-4 max-w-2xl">
                     <svg xmlns="http://www.w3.org/2000/svg" className="stroke-current shrink-0 h-6 w-6" fill="none" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" />
                     </svg>
                     <span>{locationError}</span>
+                </div>
+            )}
+
+            {isAndroid && locationError && (
+                <div className="mb-4">
+                    <button
+                        className="btn btn-warning flex items-center gap-2"
+                        onClick={openAndroidLocationSettings}
+                    >
+                        <FaMapMarkerAlt />
+                        Turn On GPS
+                    </button>
                 </div>
             )}
 
@@ -522,8 +552,8 @@ export default function Qibla() {
                                                     transform: (isIOS && deviceHeading)
                                                         ? `translate(-50%, -50%) rotate(${-qiblaDirection - deviceHeading}deg)`
                                                         : deviceHeading
-                                                        ? `translate(-50%, -50%) rotate(${-qiblaDirection + deviceHeading}deg)`
-                                                        : `translate(-50%, -50%) rotate(${-qiblaDirection}deg)`,
+                                                            ? `translate(-50%, -50%) rotate(${-qiblaDirection + deviceHeading}deg)`
+                                                            : `translate(-50%, -50%) rotate(${-qiblaDirection}deg)`,
                                                     transition: "transform 180ms ease-out",
                                                     filter: "drop-shadow(0 2px 4px rgba(0,0,0,0.4))",
                                                 }}
@@ -550,8 +580,8 @@ export default function Qibla() {
                                                     transform: (isIOS && qiblaDirection !== null && deviceHeading !== null)
                                                         ? `translate(-50%, -50%) rotate(${qiblaDirection + deviceHeading}deg)`
                                                         : qiblaDirection !== null
-                                                        ? `translate(-50%, -50%) rotate(${qiblaDirection}deg)`
-                                                        : "translate(-50%, -50%) rotate(0deg)",
+                                                            ? `translate(-50%, -50%) rotate(${qiblaDirection}deg)`
+                                                            : "translate(-50%, -50%) rotate(0deg)",
                                                     zIndex: 10,
                                                 }}
                                             >
