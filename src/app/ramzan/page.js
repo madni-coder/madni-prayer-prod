@@ -38,14 +38,7 @@ const ramzanSections = [
         gradient: "from-yellow-400 to-yellow-600",
         bgHover: "hover:bg-yellow-500",
     },
-    {
-        name: "Free Services",
-        href: "/ramzan/freeService",
-        icon: <Heart className="w-10 h-10 lg:w-16 lg:h-16" />,
-        description: "Community support & services",
-        gradient: "from-blue-500 to-cyan-500",
-        bgHover: "hover:bg-blue-600",
-    },
+    
    
 
 ];

@@ -160,8 +160,10 @@ export default function Page() {
 
             if (sehriTime && now >= sehriTime) {
                 const key = (new Date()).toDateString();
-                if (playedRef.current.sehri !== key) {
+                const persisted = (typeof localStorage !== 'undefined') ? localStorage.getItem('ramzan_played_sehri') : null;
+                if (playedRef.current.sehri !== key && persisted !== key) {
                     playedRef.current.sehri = key;
+                    try { if (typeof localStorage !== 'undefined') localStorage.setItem('ramzan_played_sehri', key); } catch (e) { }
                     // try play only if user enabled sound
                     if (soundEnabledRef.current) sehriAudioRef.current?.play().catch(() => { });
                     tryNotify('Sehri Time', `Sehri time has started (${times.sehriText})`);
@@ -170,8 +172,10 @@ export default function Page() {
 
             if (iftariTime && now >= iftariTime) {
                 const key = (new Date()).toDateString();
-                if (playedRef.current.iftari !== key) {
+                const persisted = (typeof localStorage !== 'undefined') ? localStorage.getItem('ramzan_played_iftari') : null;
+                if (playedRef.current.iftari !== key && persisted !== key) {
                     playedRef.current.iftari = key;
+                    try { if (typeof localStorage !== 'undefined') localStorage.setItem('ramzan_played_iftari', key); } catch (e) { }
                     if (soundEnabledRef.current) iftariAudioRef.current?.play().catch(() => { });
                     tryNotify('Iftari Time', `Iftari time has started (${times.iftariText})`);
                 }

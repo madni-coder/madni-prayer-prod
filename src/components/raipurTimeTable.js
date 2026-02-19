@@ -85,8 +85,10 @@ export default function RaipurTimeTable() {
 
             if (sehriTime && now >= sehriTime) {
                 const key = (new Date()).toDateString();
-                if (playedRef.current.sehri !== key) {
+                const persisted = (typeof localStorage !== 'undefined') ? localStorage.getItem('ramzan_played_sehri') : null;
+                if (playedRef.current.sehri !== key && persisted !== key) {
                     playedRef.current.sehri = key;
+                    try { if (typeof localStorage !== 'undefined') localStorage.setItem('ramzan_played_sehri', key); } catch (e) { }
                     try {
                         const s = typeof localStorage !== 'undefined' ? localStorage.getItem('ramzan_sound_enabled') : null;
                         if (s === 'true') sehriAudioRef.current?.play().catch(() => { });
@@ -97,8 +99,10 @@ export default function RaipurTimeTable() {
 
             if (iftariTime && now >= iftariTime) {
                 const key = (new Date()).toDateString();
-                if (playedRef.current.iftari !== key) {
+                const persisted = (typeof localStorage !== 'undefined') ? localStorage.getItem('ramzan_played_iftari') : null;
+                if (playedRef.current.iftari !== key && persisted !== key) {
                     playedRef.current.iftari = key;
+                    try { if (typeof localStorage !== 'undefined') localStorage.setItem('ramzan_played_iftari', key); } catch (e) { }
                     try {
                         const s = typeof localStorage !== 'undefined' ? localStorage.getItem('ramzan_sound_enabled') : null;
                         if (s === 'true') iftariAudioRef.current?.play().catch(() => { });
