@@ -42,6 +42,24 @@ export default function ForceUpdateChecker() {
                     return;
                 }
 
+                // ✅ Detect platform: iOS or Android
+                let isIos = false;
+                try {
+                    const { platform } = await import("@tauri-apps/plugin-os");
+                    const os = await platform();
+                    isIos = os === "ios";
+                    console.log("[ForceUpdate] Platform:", os);
+                } catch {
+                    // Fallback: use userAgent if Tauri OS plugin unavailable
+                    isIos =
+                        typeof navigator !== "undefined" &&
+                        /iPad|iPhone|iPod/.test(navigator.userAgent);
+                    console.log(
+                        "[ForceUpdate] OS plugin unavailable, userAgent iOS:",
+                        isIos,
+                    );
+                }
+
                 // Get current version via Tauri if available, otherwise fallback to env/window value
                 let currentVersion = null;
 
@@ -147,11 +165,23 @@ export default function ForceUpdateChecker() {
                     );
                 }
 
-                const storeUrl =
-                    cfg?.store_url ||
-                    cfg?.storeUrl ||
-                    cfg?.play_store_url ||
-                    null;
+                // ✅ Pick correct store URL based on platform
+                const storeUrl = isIos
+                    ? cfg?.ios_store_url ||
+                      cfg?.app_store_url ||
+                      cfg?.storeUrl ||
+                      null
+                    : cfg?.store_url ||
+                      cfg?.play_store_url ||
+                      cfg?.storeUrl ||
+                      null;
+
+                console.log(
+                    "[ForceUpdate] Platform:",
+                    isIos ? "iOS" : "Android",
+                    "| Store URL:",
+                    storeUrl,
+                );
 
                 console.log(
                     "[ForceUpdate] Comparison:",
@@ -222,10 +252,15 @@ export default function ForceUpdateChecker() {
                                     cache: "no-store",
                                 });
                                 const cfg = await res.json();
-                                const storeUrl =
-                                    cfg?.store_url ||
-                                    cfg?.play_store_url ||
-                                    cfg?.storeUrl;
+                                const storeUrl = isIos
+                                    ? cfg?.ios_store_url ||
+                                      cfg?.app_store_url ||
+                                      cfg?.storeUrl ||
+                                      null
+                                    : cfg?.store_url ||
+                                      cfg?.play_store_url ||
+                                      cfg?.storeUrl ||
+                                      null;
                                 if (storeUrl) {
                                     try {
                                         const { openUrl } = await import(
