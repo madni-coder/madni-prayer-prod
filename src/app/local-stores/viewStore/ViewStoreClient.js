@@ -15,7 +15,7 @@ function getCachedStore(id) {
             return JSON.parse(session);
         }
         // Then check the stores list cache
-        const listCache = localStorage.getItem("local_stores_cache");
+        const listCache = localStorage.getItem("local_stores_cache_v2");
         if (listCache) {
             const { data } = JSON.parse(listCache);
             const found = data?.find((s) => String(s.id) === String(id));
@@ -43,16 +43,7 @@ export default function ViewStoreClient() {
             return;
         }
 
-        // 1. Try to get from cache first (instant load)
-        const cached = getCachedStore(id);
-        if (cached) {
-            setStore(cached);
-            setLoading(false);
-            return; // No need to fetch, we have the data
-        }
-
-        // 2. Fetch from API only if not cached
-        const load = async () => {
+        const fetchFull = async (showLoading) => {
             try {
                 const apiBase = process.env.NEXT_PUBLIC_TAURI_STATIC_EXPORT === "1" || process.env.NEXT_PUBLIC_TAURI_BUILD === "1"
                     ? (process.env.NEXT_PUBLIC_API_BASE_URL || "")
@@ -73,19 +64,32 @@ export default function ViewStoreClient() {
                 if (!mounted) return;
                 if (data && data.ok) {
                     setStore(data.data);
-                } else {
+                } else if (showLoading) {
                     setError(data?.error || "Failed to load store");
                 }
             } catch (err) {
                 if (!mounted) return;
-                setError(String(err));
+                if (showLoading) setError(String(err));
             } finally {
                 if (!mounted) return;
-                setLoading(false);
+                if (showLoading) setLoading(false);
             }
         };
 
-        load();
+        // 1. Try to get from cache first (instant load)
+        const cached = getCachedStore(id);
+        if (cached) {
+            setStore(cached);
+            setLoading(false);
+            // Background-fetch full data to get imageSrc (not included in list cache)
+            if (!cached.imageSrc) {
+                fetchFull(false);
+            }
+            return;
+        }
+
+        // 2. Fetch from API if no cache
+        fetchFull(true);
 
         return () => {
             mounted = false;

@@ -18,7 +18,26 @@ export async function GET(req) {
             return NextResponse.json({ ok: true, data: store }, { status: 200, headers: cacheHeaders });
         }
 
-        const stores = await prisma.localStore.findMany({ orderBy: { createdAt: "desc" } });
+        // Select only lightweight fields for the list view.
+        // imageSrc can be a full Base64 image (huge payload) — skip it here.
+        // The single-store endpoint fetches all fields including imageSrc.
+        const stores = await prisma.localStore.findMany({
+            orderBy: { createdAt: "desc" },
+            select: {
+                id: true,
+                fullName: true,
+                mobile: true,
+                shopName: true,
+                shopAddress: true,
+                workType: true,
+                description: true,
+                imageName: true,
+                imageSrcPortrait: true, // smaller portrait image for card thumbnails
+                // imageSrc intentionally excluded from list – too large
+                createdAt: true,
+                updatedAt: true,
+            },
+        });
         return NextResponse.json({ ok: true, data: stores }, { status: 200, headers: cacheHeaders });
     } catch (err) {
         console.error("GET /api/local-stores error", err);

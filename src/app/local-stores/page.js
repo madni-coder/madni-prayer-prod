@@ -9,7 +9,8 @@ let storesCache = null;
 let storesPromise = null;
 
 // localStorage cache key and TTL (5 minutes)
-const STORES_CACHE_KEY = "local_stores_cache";
+// v2: key bumped to invalidate old cache that included heavy imageSrc field
+const STORES_CACHE_KEY = "local_stores_cache_v2";
 const STORES_CACHE_TTL = 5 * 60 * 1000;
 
 function getLocalCache() {
@@ -47,27 +48,25 @@ export default function LocalStoresPage() {
         let mounted = true;
 
         const load = async () => {
-            // 1. Check in-memory cache first (instant)
+            // 1. Show cached data instantly (in-memory first, then localStorage)
+            const localCache = getLocalCache();
+            const hasCached = !!(storesCache || localCache?.data);
+
             if (storesCache) {
                 if (!mounted) return;
                 setStores(storesCache);
                 setLoading(false);
-                return;
-            }
-
-            // 2. Check localStorage cache (very fast) - show immediately, refresh if stale
-            const localCache = getLocalCache();
-            if (localCache?.data) {
+                // fall through to always fetch fresh data below
+            } else if (localCache?.data) {
                 storesCache = localCache.data;
                 if (!mounted) return;
                 setStores(localCache.data);
                 setLoading(false);
-
-                // If cache is fresh, no need to fetch
-                if (!localCache.isStale) return;
+                // fall through to always fetch fresh data below
             }
 
-            // 3. Fetch from API (background refresh if we showed cached data)
+            // 2. ALWAYS fetch fresh data from API in the background
+            //    This ensures new stores/updates always appear
             const apiBase = process.env.NEXT_PUBLIC_TAURI_STATIC_EXPORT === "1" || process.env.NEXT_PUBLIC_TAURI_BUILD === "1"
                 ? (process.env.NEXT_PUBLIC_API_BASE_URL || "")
                 : "";
@@ -85,14 +84,12 @@ export default function LocalStoresPage() {
                     storesCache = data.data || [];
                     setLocalCache(storesCache);
                     setStores(storesCache);
-                } else if (!localCache?.data) {
-                    // Only show error if we don't have cached data
+                } else if (!hasCached) {
                     setError(data?.error || "Failed to load stores");
                 }
             } catch (err) {
                 if (!mounted) return;
-                // Only show error if we don't have cached data to display
-                if (!localCache?.data) {
+                if (!hasCached) {
                     setError(String(err));
                 }
             } finally {
