@@ -397,7 +397,7 @@ export default function Page() {
         <section className="flex flex-col items-center justify-center min-h-[70vh] px-4 pb-20 animate-fade-in bg-base-100">
             <div style={{ alignSelf: "flex-start" }}>
                 <button
-                    className="flex items-center gap-2 mb-4 text-lg text-primary hover:text-green-600 font-semibold"
+                    className="flex items-center gap-2 mb-4 mt-2 text-lg text-primary hover:text-green-600 font-semibold"
                     onClick={() => router.push("/")}
                     aria-label="Back to Home"
                 >

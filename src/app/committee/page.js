@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import apiClient from "../../lib/apiClient";
 import Link from "next/link";
+import { FaAngleLeft } from "react-icons/fa";
 
 export default function MasjidCommitteeLogin() {
     const [masjidId, setMasjidId] = useState("");
@@ -110,11 +111,21 @@ export default function MasjidCommitteeLogin() {
 
     return (
         <main className="min-h-screen flex items-center justify-center p-4 sm:p-6 bg-[radial-gradient(ellipse_at_top_left,_var(--tw-gradient-stops))] from-[#021029] to-[#061628] text-white">
+
             <div className="w-full max-w-sm sm:max-w-md md:max-w-lg">
-                <div className="card bg-[rgba(255,255,255,0.04)] shadow-xl rounded-xl p-6 sm:p-8 text-white">
+                <button
+                    className="flex items-center gap-2 mb-2 text-xl text-primary hover:text-green-600 font-semibold p-0 h-6 leading-none"
+                    onClick={() => router.push("/")}
+                    aria-label="Back to Home"
+                >
+                    <FaAngleLeft size={26} /> Back
+                </button>
+                <div className="card bg-[rgba(255,255,255,0.04)] shadow-xl rounded-xl p-6 sm:p-8 text-white mb-100 mt-5">
                     <div className="mb-4">
                         <h1 className="text-2xl sm:text-3xl font-semibold">Only For Masjid Committee Login</h1>
                     </div>
+
+
 
                     <form onSubmit={handleSubmit} className="space-y-4">
                         <div className="form-control">
