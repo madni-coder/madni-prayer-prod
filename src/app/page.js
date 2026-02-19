@@ -16,6 +16,8 @@ import {
 import { Megaphone, UsersRound } from "lucide-react";
 import Image from "next/image";
 import TasbihSvgIcon from "../components/TasbihSvgIcon";
+import apiClient from "../lib/apiClient";
+import { useEffect } from "react";
 
 const sections = [
     {
@@ -110,6 +112,35 @@ const sections = [
 
 export default function Home() {
     const [showLoader, setShowLoader] = useState(false);
+    const [unseenCount, setUnseenCount] = useState(0);
+
+    useEffect(() => {
+        let mounted = true;
+
+        async function fetchNoticeCount() {
+            try {
+                const { data } = await apiClient.get("/api/api-notice");
+                const imgs = data?.images || [];
+                const total = Array.isArray(imgs) ? imgs.length : 0;
+                const lastSeen = parseInt(localStorage.getItem("notice_last_seen_count") || "0", 10) || 0;
+                const unseen = Math.max(0, total - lastSeen);
+                if (mounted) setUnseenCount(unseen);
+            } catch (e) {
+                // ignore errors for badge
+                if (mounted) setUnseenCount(0);
+            }
+        }
+
+        fetchNoticeCount();
+
+        const onFocus = () => fetchNoticeCount();
+        window.addEventListener("focus", onFocus);
+
+        return () => {
+            mounted = false;
+            window.removeEventListener("focus", onFocus);
+        };
+    }, []);
 
     return (
         <main
@@ -136,21 +167,37 @@ export default function Home() {
                 </CardLink>
             </header>
             <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 gap-4 w-full max-w-6xl ">
-                {sections.map((section) => (
-                    <CardLink
-                        key={section.name}
-                        href={section.href}
-                        className="group relative flex flex-col items-center justify-center gap-3 p-6 bg-[#243447] rounded-2xl shadow-lg border border-[#2d3f54] hover:shadow-xl transform transition-all duration-300 hover:scale-105 hover:bg-green-600 dark:hover:bg-green-700 active:bg-green-600 dark:active:bg-green-800 focus:bg-green-600 dark:focus:bg-green-800 min-h-[140px] aspect-square"
-                        onDelayedShow={setShowLoader}
-                    >
-                        <div className="flex-shrink-0 p-1 rounded-full bg-[#1e2f3f] mb-1">
-                            {section.icon}
-                        </div>
-                        <h2 className="text-base font-semibold text-center text-white transition-colors">
-                            {section.name}
-                        </h2>
-                    </CardLink>
-                ))}
+                {sections.map((section) => {
+                    const isNotice = section.href === "/notice";
+                    const baseClass =
+                        "group relative flex flex-col items-center justify-center gap-3 p-6 bg-[#243447] rounded-2xl shadow-lg border border-[#2d3f54] hover:shadow-xl transform transition-all duration-300 hover:scale-105 hover:bg-green-600 dark:hover:bg-green-700 active:bg-green-600 dark:active:bg-green-800 focus:bg-green-600 dark:focus:bg-green-800 min-h-[140px] aspect-square";
+                    const noticeHighlight = isNotice && unseenCount > 0 ? " ring-2 ring-offset-2 ring-yellow-400 border-yellow-300 shadow-xl" : "";
+                    return (
+                        <CardLink
+                            key={section.name}
+                            href={section.href}
+                            className={baseClass + noticeHighlight}
+                            onDelayedShow={setShowLoader}
+                        >
+                            <div className="w-full h-full relative flex flex-col items-center justify-center">
+                                {isNotice && unseenCount > 0 && (
+                                    <div className="absolute top-[-20px] right-[-20px]">
+                                        <span className="badge badge-error text-l font-bold text-white py-1 px-2 animate-pulse shadow-sm">
+                                            {unseenCount > 3 ? "3+" : unseenCount}
+                                        </span>
+                                    </div>
+                                )}
+
+                                <div className="flex-shrink-0 p-1 rounded-full bg-[#1e2f3f] mb-1">
+                                    {section.icon}
+                                </div>
+                                <h2 className="text-base font-semibold text-center text-white transition-colors">
+                                    {section.name}
+                                </h2>
+                            </div>
+                        </CardLink>
+                    );
+                })}
             </div>
             {showLoader && <AnimatedLooader message="Please wait..." />}
         </main>

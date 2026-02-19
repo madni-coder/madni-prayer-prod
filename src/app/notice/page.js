@@ -17,7 +17,15 @@ export default function NoticeFeed() {
                 const { data } = await apiClient.get("/api/api-notice");
                 // Show newest images first
                 const imgs = data.images || [];
-                setImages(Array.isArray(imgs) ? imgs.slice().reverse() : imgs);
+                const list = Array.isArray(imgs) ? imgs.slice().reverse() : imgs;
+                setImages(list);
+                // mark as seen: store the total count (not reversed length)
+                try {
+                    const total = Array.isArray(imgs) ? imgs.length : (imgs ? 1 : 0);
+                    localStorage.setItem("notice_last_seen_count", String(total));
+                } catch (e) {
+                    // ignore storage errors
+                }
                 setLoading(false); // Stop loading on API success
             } catch (err) {
                 setError(err.message || "An error occurred");
