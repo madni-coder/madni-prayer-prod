@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { createClient } from "@supabase/supabase-js";
 import CardLink from "../components/CardLink.client";
 import AnimatedLooader from "../components/animatedLooader";
 import {
@@ -110,6 +111,34 @@ const sections = [
 
 ];
 
+// ─── Supabase client (client-side, anon key only) ───────────────────────────
+const supabase = createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+);
+
+// Cache TTL: only re-fetch from the API if the cached value is older than this
+const CACHE_TTL_MS = 2 * 60 * 1000; // 2 minutes
+
+function getCachedTotal() {
+    try {
+        const raw = sessionStorage.getItem("notice_total_cache");
+        if (!raw) return null;
+        const { total, ts } = JSON.parse(raw);
+        if (Date.now() - ts < CACHE_TTL_MS) return total;
+    } catch (_) {/* ignore */ }
+    return null; // cache miss or expired
+}
+
+function setCachedTotal(total) {
+    try {
+        sessionStorage.setItem(
+            "notice_total_cache",
+            JSON.stringify({ total, ts: Date.now() })
+        );
+    } catch (_) {/* ignore */ }
+}
+
 export default function Home() {
     const [showLoader, setShowLoader] = useState(false);
     const [unseenCount, setUnseenCount] = useState(0);
@@ -117,28 +146,59 @@ export default function Home() {
     useEffect(() => {
         let mounted = true;
 
-        async function fetchNoticeCount() {
+        function computeUnseen(total) {
+            const lastSeen =
+                parseInt(localStorage.getItem("notice_last_seen_count") || "0", 10) || 0;
+            return Math.max(0, total - lastSeen);
+        }
+
+        async function fetchAndCache() {
             try {
                 const { data } = await apiClient.get("/api/api-notice");
                 const imgs = data?.images || [];
                 const total = Array.isArray(imgs) ? imgs.length : 0;
-                const lastSeen = parseInt(localStorage.getItem("notice_last_seen_count") || "0", 10) || 0;
-                const unseen = Math.max(0, total - lastSeen);
-                if (mounted) setUnseenCount(unseen);
+                setCachedTotal(total);
+                if (mounted) setUnseenCount(computeUnseen(total));
             } catch (e) {
-                // ignore errors for badge
                 if (mounted) setUnseenCount(0);
             }
         }
 
-        fetchNoticeCount();
+        // On mount: use cache if fresh, otherwise fetch
+        const cached = getCachedTotal();
+        if (cached !== null) {
+            setUnseenCount(computeUnseen(cached));
+        } else {
+            fetchAndCache();
+        }
 
-        const onFocus = () => fetchNoticeCount();
+        // On focus: only re-fetch if cache is stale (avoids repeated API calls)
+        const onFocus = () => {
+            if (getCachedTotal() === null) fetchAndCache();
+        };
         window.addEventListener("focus", onFocus);
+
+        // ── Supabase Realtime: instant badge update when admin uploads ──────
+        const channel = supabase
+            .channel("notice-updates")
+            .on("broadcast", { event: "new-notice" }, ({ payload }) => {
+                if (!mounted) return;
+                const newTotal = payload?.total;
+                if (typeof newTotal === "number") {
+                    setCachedTotal(newTotal);
+                    setUnseenCount(computeUnseen(newTotal));
+                } else {
+                    // Fallback: invalidate cache so next focus re-fetches
+                    try { sessionStorage.removeItem("notice_total_cache"); } catch (_) { }
+                    fetchAndCache();
+                }
+            })
+            .subscribe();
 
         return () => {
             mounted = false;
             window.removeEventListener("focus", onFocus);
+            supabase.removeChannel(channel);
         };
     }, []);
 

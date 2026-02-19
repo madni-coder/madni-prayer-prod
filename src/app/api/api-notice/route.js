@@ -68,6 +68,19 @@ export async function POST(request) {
             ? `${imageSrc}?width=900&height=1600&fit=crop`
             : null;
 
+        // ── Broadcast Realtime event so home-page badge updates instantly ──
+        try {
+            const { data: listData } = await supabase.storage.from("notice").list();
+            const newTotal = listData?.length ?? 0;
+            await supabase.channel("notice-updates").send({
+                type: "broadcast",
+                event: "new-notice",
+                payload: { total: newTotal },
+            });
+        } catch (_) {
+            // non-fatal – badge will update on next cache expiry
+        }
+
         return NextResponse.json({ fileName, imageSrc, imageSrcPortrait });
     } catch (err) {
         return NextResponse.json(
