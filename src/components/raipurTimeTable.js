@@ -79,6 +79,9 @@ export default function RaipurTimeTable() {
         const check = () => {
             const times = findTodayRowTimes();
             if (!times) return;
+            // only play from this Raipur component when user explicitly selected Raipur
+            const onlyRaipur = (typeof localStorage !== 'undefined') ? localStorage.getItem('ramzan_only_raipur') === 'true' : false;
+            if (!onlyRaipur) return;
             const now = new Date();
             const sehriTime = parseTimeStr(times.sehriText);
             const iftariTime = parseTimeStr(times.iftariText);
@@ -88,12 +91,22 @@ export default function RaipurTimeTable() {
                 const persisted = (typeof localStorage !== 'undefined') ? localStorage.getItem('ramzan_played_sehri') : null;
                 if (playedRef.current.sehri !== key && persisted !== key) {
                     playedRef.current.sehri = key;
-                    try { if (typeof localStorage !== 'undefined') localStorage.setItem('ramzan_played_sehri', key); } catch (e) { }
+                    tryNotify('Sehri Time', `Sehri time has started (${times.sehriText})`);
                     try {
                         const s = typeof localStorage !== 'undefined' ? localStorage.getItem('ramzan_sound_enabled') : null;
-                        if (s === 'true') sehriAudioRef.current?.play().catch(() => { });
+                        if (s === 'true') {
+                            const p = sehriAudioRef.current?.play();
+                            if (p && typeof p.then === 'function') {
+                                p.then(() => {
+                                    try { if (typeof localStorage !== 'undefined') localStorage.setItem('ramzan_played_sehri', key); } catch (e) { }
+                                }).catch(() => { });
+                            } else {
+                                try { if (typeof localStorage !== 'undefined') localStorage.setItem('ramzan_played_sehri', key); } catch (e) { }
+                            }
+                        } else {
+                            try { if (typeof localStorage !== 'undefined') localStorage.setItem('ramzan_played_sehri', key); } catch (e) { }
+                        }
                     } catch (e) { }
-                    tryNotify('Sehri Time', `Sehri time has started (${times.sehriText})`);
                 }
             }
 
@@ -102,12 +115,22 @@ export default function RaipurTimeTable() {
                 const persisted = (typeof localStorage !== 'undefined') ? localStorage.getItem('ramzan_played_iftari') : null;
                 if (playedRef.current.iftari !== key && persisted !== key) {
                     playedRef.current.iftari = key;
-                    try { if (typeof localStorage !== 'undefined') localStorage.setItem('ramzan_played_iftari', key); } catch (e) { }
+                    tryNotify('Iftari Time', `Iftari time has started (${times.iftariText})`);
                     try {
                         const s = typeof localStorage !== 'undefined' ? localStorage.getItem('ramzan_sound_enabled') : null;
-                        if (s === 'true') iftariAudioRef.current?.play().catch(() => { });
+                        if (s === 'true') {
+                            const p = iftariAudioRef.current?.play();
+                            if (p && typeof p.then === 'function') {
+                                p.then(() => {
+                                    try { if (typeof localStorage !== 'undefined') localStorage.setItem('ramzan_played_iftari', key); } catch (e) { }
+                                }).catch(() => { });
+                            } else {
+                                try { if (typeof localStorage !== 'undefined') localStorage.setItem('ramzan_played_iftari', key); } catch (e) { }
+                            }
+                        } else {
+                            try { if (typeof localStorage !== 'undefined') localStorage.setItem('ramzan_played_iftari', key); } catch (e) { }
+                        }
                     } catch (e) { }
-                    tryNotify('Iftari Time', `Iftari time has started (${times.iftariText})`);
                 }
             }
         };
@@ -126,9 +149,6 @@ export default function RaipurTimeTable() {
 
     return (
         <>
-
-
-
             {/* ##############################Mobile single stacked table showing all 30 rows */}
             <div className="mt-6 md:hidden">
                 <div className="overflow-x-auto overflow-y-auto max-h-[75vh] touch-auto">

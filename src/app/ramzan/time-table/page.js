@@ -26,6 +26,7 @@ export default function Page() {
                 setSoundEnabled(true);
                 soundEnabledRef.current = true;
             }
+            // no test overrides in production
         } catch (e) {
             // ignore
         }
@@ -152,8 +153,12 @@ export default function Page() {
         };
 
         const check = () => {
+            // allow manual overrides (for testing) stored in localStorage
             const times = findTodayRowTimes();
             if (!times) return;
+            // if user selected only Raipur, do not play sounds from the main (Bilaspur) player
+            const onlyRaipur = (typeof localStorage !== 'undefined') ? localStorage.getItem(STORAGE_KEY) === 'true' : false;
+            if (onlyRaipur) return;
             const now = new Date();
             const sehriTime = parseTimeStr(times.sehriText);
             const iftariTime = parseTimeStr(times.iftariText);
@@ -163,10 +168,19 @@ export default function Page() {
                 const persisted = (typeof localStorage !== 'undefined') ? localStorage.getItem('ramzan_played_sehri') : null;
                 if (playedRef.current.sehri !== key && persisted !== key) {
                     playedRef.current.sehri = key;
-                    try { if (typeof localStorage !== 'undefined') localStorage.setItem('ramzan_played_sehri', key); } catch (e) { }
-                    // try play only if user enabled sound
-                    if (soundEnabledRef.current) sehriAudioRef.current?.play().catch(() => { });
                     tryNotify('Sehri Time', `Sehri time has started (${times.sehriText})`);
+                    try {
+                        if (soundEnabledRef.current) {
+                            const p = sehriAudioRef.current?.play();
+                            if (p && typeof p.then === 'function') {
+                                p.then(() => { try { if (typeof localStorage !== 'undefined') localStorage.setItem('ramzan_played_sehri', key); } catch (e) { } }).catch(() => { });
+                            } else {
+                                try { if (typeof localStorage !== 'undefined') localStorage.setItem('ramzan_played_sehri', key); } catch (e) { }
+                            }
+                        } else {
+                            try { if (typeof localStorage !== 'undefined') localStorage.setItem('ramzan_played_sehri', key); } catch (e) { }
+                        }
+                    } catch (e) { }
                 }
             }
 
@@ -175,9 +189,19 @@ export default function Page() {
                 const persisted = (typeof localStorage !== 'undefined') ? localStorage.getItem('ramzan_played_iftari') : null;
                 if (playedRef.current.iftari !== key && persisted !== key) {
                     playedRef.current.iftari = key;
-                    try { if (typeof localStorage !== 'undefined') localStorage.setItem('ramzan_played_iftari', key); } catch (e) { }
-                    if (soundEnabledRef.current) iftariAudioRef.current?.play().catch(() => { });
                     tryNotify('Iftari Time', `Iftari time has started (${times.iftariText})`);
+                    try {
+                        if (soundEnabledRef.current) {
+                            const p = iftariAudioRef.current?.play();
+                            if (p && typeof p.then === 'function') {
+                                p.then(() => { try { if (typeof localStorage !== 'undefined') localStorage.setItem('ramzan_played_iftari', key); } catch (e) { } }).catch(() => { });
+                            } else {
+                                try { if (typeof localStorage !== 'undefined') localStorage.setItem('ramzan_played_iftari', key); } catch (e) { }
+                            }
+                        } else {
+                            try { if (typeof localStorage !== 'undefined') localStorage.setItem('ramzan_played_iftari', key); } catch (e) { }
+                        }
+                    } catch (e) { }
                 }
             }
         };
@@ -222,6 +246,7 @@ export default function Page() {
                 />
                 <span className="select-none">Show Raipur's Time Table</span>
             </label>
+
             <label className="flex items-center gap-2 text-sm text-primary mt-2">
                 <input
                     type="checkbox"

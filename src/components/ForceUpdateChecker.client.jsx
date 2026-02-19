@@ -30,32 +30,64 @@ export default function ForceUpdateChecker() {
 
         async function runCheck() {
             try {
+                // ✅ Only run inside Tauri app — skip in browser/web
+                const isTauri =
+                    typeof window !== "undefined" &&
+                    (window.__TAURI__ !== undefined ||
+                        window.__TAURI_INTERNALS__ !== undefined);
+                if (!isTauri) {
+                    console.log(
+                        "[ForceUpdate] Not running in Tauri — skipping check.",
+                    );
+                    return;
+                }
+
                 // Get current version via Tauri if available, otherwise fallback to env/window value
                 let currentVersion = null;
+
+                // Try Tauri API first (works in production APK)
                 try {
-                    const { app } = await import(
-                        "@" + "tauri-apps" + "/api/app"
-                    );
-                    currentVersion = await app.getVersion();
+                    const tauriApp = await import("@tauri-apps/api/app");
+                    currentVersion = await tauriApp.getVersion();
                     console.log(
                         "[ForceUpdate] Got version from Tauri:",
                         currentVersion,
                     );
-                } catch (e) {
+                } catch (e1) {
                     console.log(
-                        "[ForceUpdate] Tauri not available, using fallback",
+                        "[ForceUpdate] Tauri getVersion failed:",
+                        e1?.message,
                     );
-                    currentVersion =
-                        process?.env?.NEXT_PUBLIC_APP_VERSION ||
-                        window?.__APP_VERSION ||
-                        null;
                 }
 
+                // Fallback 1: env variable (set in .env as NEXT_PUBLIC_APP_VERSION)
+                if (!currentVersion) {
+                    currentVersion =
+                        process?.env?.NEXT_PUBLIC_APP_VERSION || null;
+                    if (currentVersion)
+                        console.log(
+                            "[ForceUpdate] Version from env:",
+                            currentVersion,
+                        );
+                }
+
+                // Fallback 2: window variable (can be set manually for testing)
+                if (!currentVersion && typeof window !== "undefined") {
+                    currentVersion = window?.__APP_VERSION || null;
+                    if (currentVersion)
+                        console.log(
+                            "[ForceUpdate] Version from window:",
+                            currentVersion,
+                        );
+                }
+
+                // ⚠️ If still no version: DO NOT SKIP — assume very old version
+                // so the check always runs on devices where Tauri API fails
                 if (!currentVersion) {
                     console.log(
-                        "[ForceUpdate] No version found, skipping check",
+                        "[ForceUpdate] ⚠️ No version found! Assuming '0.0.0' so check always runs.",
                     );
-                    return;
+                    currentVersion = "0.0.0";
                 }
 
                 const currentCode = versionToCode(currentVersion);
