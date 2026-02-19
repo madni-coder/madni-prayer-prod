@@ -8,6 +8,21 @@ export default function ForceUpdateChecker() {
     useEffect(() => {
         let mounted = true;
 
+        // Convert semantic version to comparable integer (e.g., "5.2.0" -> 5002000)
+        const versionToCode = (version) => {
+            try {
+                const parts = String(version)
+                    .split(".")
+                    .map((n) => parseInt(n, 10) || 0);
+                const major = parts[0] || 0;
+                const minor = parts[1] || 0;
+                const patch = parts[2] || 0;
+                return major * 1000000 + minor * 1000 + patch;
+            } catch {
+                return 0;
+            }
+        };
+
         async function runCheck() {
             try {
                 // Get current version via Tauri if available, otherwise fallback to env/window value
@@ -17,17 +32,34 @@ export default function ForceUpdateChecker() {
                         "@" + "tauri-apps" + "/api/app"
                     );
                     currentVersion = await app.getVersion();
+                    console.log(
+                        "[ForceUpdate] Got version from Tauri:",
+                        currentVersion,
+                    );
                 } catch (e) {
+                    console.log(
+                        "[ForceUpdate] Tauri not available, using fallback",
+                    );
                     currentVersion =
                         process?.env?.NEXT_PUBLIC_APP_VERSION ||
                         window?.__APP_VERSION ||
                         null;
                 }
 
-                if (!currentVersion) return;
+                if (!currentVersion) {
+                    console.log(
+                        "[ForceUpdate] No version found, skipping check",
+                    );
+                    return;
+                }
 
-                const currentCode =
-                    parseInt(String(currentVersion).split(".")[0], 10) || 0;
+                const currentCode = versionToCode(currentVersion);
+                console.log(
+                    "[ForceUpdate] Current version code:",
+                    currentCode,
+                    "from version:",
+                    currentVersion,
+                );
 
                 const configUrl =
                     process?.env?.NEXT_PUBLIC_UPDATE_CONFIG_URL ||
@@ -35,21 +67,53 @@ export default function ForceUpdateChecker() {
                         ? `${window.location.origin}/app-config.json`
                         : "/app-config.json");
 
+                console.log("[ForceUpdate] Fetching config from:", configUrl);
                 const res = await fetch(configUrl, { cache: "no-store" });
-                if (!res.ok) return;
+                if (!res.ok) {
+                    console.log(
+                        "[ForceUpdate] Config fetch failed:",
+                        res.status,
+                    );
+                    return;
+                }
                 const cfg = await res.json();
-                const minCode =
-                    parseInt(
-                        cfg?.min_version_code ?? cfg?.minVersion ?? 0,
-                        10,
-                    ) || 0;
+                console.log("[ForceUpdate] Config loaded:", cfg);
+
+                // Support both min_version (semantic) and min_version_code (integer)
+                let minCode = 0;
+                if (cfg?.min_version) {
+                    minCode = versionToCode(cfg.min_version);
+                    console.log(
+                        "[ForceUpdate] Min version from semantic:",
+                        cfg.min_version,
+                        "-> code:",
+                        minCode,
+                    );
+                } else if (cfg?.min_version_code) {
+                    minCode = parseInt(cfg.min_version_code, 10) || 0;
+                    console.log(
+                        "[ForceUpdate] Min version code from config:",
+                        minCode,
+                    );
+                }
+
                 const storeUrl =
                     cfg?.store_url ||
                     cfg?.storeUrl ||
                     cfg?.play_store_url ||
                     null;
 
+                console.log(
+                    "[ForceUpdate] Comparison:",
+                    currentCode,
+                    "<",
+                    minCode,
+                    "=",
+                    currentCode < minCode,
+                );
+
                 if (currentCode < minCode && mounted) {
+                    console.log("[ForceUpdate] BLOCKING: Version too old!");
                     setMessage(
                         cfg?.message ||
                             "A new mandatory update is required to continue using the app.",
@@ -65,9 +129,13 @@ export default function ForceUpdateChecker() {
                             window.open(storeUrl, "_blank");
                         }
                     }
+                } else {
+                    console.log(
+                        "[ForceUpdate] Version check passed. App is up to date.",
+                    );
                 }
             } catch (err) {
-                // fail silently
+                console.error("[ForceUpdate] Error during version check:", err);
             }
         }
 

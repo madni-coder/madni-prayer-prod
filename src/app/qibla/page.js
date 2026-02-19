@@ -530,10 +530,9 @@ export default function Qibla() {
                                                 width: "40px",
                                                 height: "40px",
                                                 transformOrigin: "center",
-                                                // iOS-specific fix: compensate for compass ring rotation
-                                                transform: (isIOS && deviceHeading)
-                                                    ? `translate(-50%, -50%) rotate(${qiblaDirection + deviceHeading}deg)`
-                                                    : `translate(-50%, -50%) rotate(${qiblaDirection}deg)`,
+                                                // Use same rotation logic for iOS as Android so the
+                                                // needle/icon positioning matches Android behavior.
+                                                transform: `translate(-50%, -50%) rotate(${qiblaDirection}deg)`,
                                                 zIndex: 9,
                                                 pointerEvents: "none",
                                             }}
@@ -548,12 +547,10 @@ export default function Qibla() {
                                                     width: "30px",
                                                     height: "30px",
                                                     display: "block",
-                                                    // Counter-rotate to keep icon upright
-                                                    transform: (isIOS && deviceHeading)
-                                                        ? `translate(-50%, -50%) rotate(${-qiblaDirection - deviceHeading}deg)`
-                                                        : deviceHeading
-                                                            ? `translate(-50%, -50%) rotate(${-qiblaDirection + deviceHeading}deg)`
-                                                            : `translate(-50%, -50%) rotate(${-qiblaDirection}deg)`,
+                                                    // Counter-rotate to keep icon upright (same on iOS/Android)
+                                                    transform: deviceHeading
+                                                        ? `translate(-50%, -50%) rotate(${-qiblaDirection + deviceHeading}deg)`
+                                                        : `translate(-50%, -50%) rotate(${-qiblaDirection}deg)`,
                                                     transition: "transform 180ms ease-out",
                                                     filter: "drop-shadow(0 2px 4px rgba(0,0,0,0.4))",
                                                 }}
@@ -576,12 +573,11 @@ export default function Qibla() {
                                                     width: 0,
                                                     height: 0,
                                                     transformOrigin: "center",
-                                                    // iOS-specific fix: add deviceHeading to compensate for ring rotation
-                                                    transform: (isIOS && qiblaDirection !== null && deviceHeading !== null)
-                                                        ? `translate(-50%, -50%) rotate(${qiblaDirection + deviceHeading}deg)`
-                                                        : qiblaDirection !== null
-                                                            ? `translate(-50%, -50%) rotate(${qiblaDirection}deg)`
-                                                            : "translate(-50%, -50%) rotate(0deg)",
+                                                    // Use same needle rotation as Android so it points
+                                                    // correctly towards Qibla on both platforms.
+                                                    transform: qiblaDirection !== null
+                                                        ? `translate(-50%, -50%) rotate(${qiblaDirection}deg)`
+                                                        : "translate(-50%, -50%) rotate(0deg)",
                                                     zIndex: 10,
                                                 }}
                                             >
