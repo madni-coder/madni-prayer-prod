@@ -1,6 +1,11 @@
 "use client";
 import React, { useEffect, useState } from "react";
 
+// ✅ IMPORTANT: This must always point to your Vercel-hosted app-config.json
+// On Android (Tauri), window.location.origin is NOT Vercel — it's a local asset
+// server like "https://tauri.localhost". So we MUST use an absolute URL here.
+const HARDCODED_CONFIG_URL = "https://raahehidayat.vercel.app/app-config.json";
+
 export default function ForceUpdateChecker() {
     const [blocked, setBlocked] = useState(false);
     const [message, setMessage] = useState("");
@@ -61,14 +66,27 @@ export default function ForceUpdateChecker() {
                     currentVersion,
                 );
 
+                // ✅ Always use the absolute Vercel URL — env var is an override.
+                // Never use window.location.origin here: on Android Tauri it
+                // resolves to the local asset server, NOT your Vercel deployment.
                 const configUrl =
                     process?.env?.NEXT_PUBLIC_UPDATE_CONFIG_URL ||
-                    (typeof window !== "undefined"
-                        ? `${window.location.origin}/app-config.json`
-                        : "/app-config.json");
+                    HARDCODED_CONFIG_URL;
 
                 console.log("[ForceUpdate] Fetching config from:", configUrl);
-                const res = await fetch(configUrl, { cache: "no-store" });
+
+                // Add a timeout so a bad network doesn't hang the app forever
+                const controller = new AbortController();
+                const timeoutId = setTimeout(() => controller.abort(), 10000);
+                let res;
+                try {
+                    res = await fetch(configUrl, {
+                        cache: "no-store",
+                        signal: controller.signal,
+                    });
+                } finally {
+                    clearTimeout(timeoutId);
+                }
                 if (!res.ok) {
                     console.log(
                         "[ForceUpdate] Config fetch failed:",
@@ -167,9 +185,7 @@ export default function ForceUpdateChecker() {
                                 const configUrl =
                                     process?.env
                                         ?.NEXT_PUBLIC_UPDATE_CONFIG_URL ||
-                                    (typeof window !== "undefined"
-                                        ? `${window.location.origin}/app-config.json`
-                                        : "/app-config.json");
+                                    HARDCODED_CONFIG_URL;
                                 const res = await fetch(configUrl, {
                                     cache: "no-store",
                                 });
