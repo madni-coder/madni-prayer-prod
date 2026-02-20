@@ -2,7 +2,7 @@
 
 import Link from "next/link"
 import { useRouter } from "next/navigation"
-import { FaAngleLeft } from 'react-icons/fa'
+import { FaAngleLeft, FaCopy, FaCheck } from 'react-icons/fa'
 import { useState } from "react"
 
 export default function MaslaPage() {
@@ -63,6 +63,7 @@ export default function MaslaPage() {
     // Pagination state (10 entries per page)
     const entriesPerPage = 10
     const [currentPage, setCurrentPage] = useState(1)
+    const [copied, setCopied] = useState(false)
     const totalPages = Math.ceil(masail.length / entriesPerPage)
     const paginatedMasail = masail.slice((currentPage - 1) * entriesPerPage, currentPage * entriesPerPage)
 
@@ -134,6 +135,38 @@ export default function MaslaPage() {
                     >
                         Next
                     </button>
+                </div>
+
+                {/* Contact / Copy number (improved design) */}
+                <div className="mt-6 flex items-center justify-center">
+                    <div className="w-full max-w-xl bg-card/60 border border-border p-4 rounded-lg shadow-md flex items-center gap-4">
+                        <div className="flex-1">
+                            <p className="text-sm text-info">If you have any doubts, please contact</p>
+                            <div className="mt-1 flex items-center gap-3">
+                                <span className="text-base font-semibold text-primary">Mufti Mukrram Raza</span>
+                                <span className="text-lg font-bold text-white">79835 25841</span>
+                            </div>
+                        </div>
+
+                        <div className="flex flex-col items-center">
+                            <button
+                                onClick={async () => {
+                                    try {
+                                        await navigator.clipboard.writeText('79835 25841')
+                                        setCopied(true)
+                                        setTimeout(() => setCopied(false), 2000)
+                                    } catch (e) {
+                                        /* ignore */
+                                    }
+                                }}
+                                className="p-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-md transition-shadow shadow-sm"
+                                aria-label="Copy phone number"
+                            >
+                                {copied ? <FaCheck /> : <FaCopy />}
+                            </button>
+                            <span className="text-xs text-emerald-400 mt-1" aria-live="polite">{copied ? 'Copied' : ''}</span>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>

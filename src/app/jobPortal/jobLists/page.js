@@ -304,6 +304,7 @@ export default function ViewJobsPage() {
                                                         </div>
                                                         <span className="font-semibold text-purple-300">{job.salary}</span>
                                                     </div>
+
                                                 </div>
 
                                                 <button
@@ -457,10 +458,10 @@ export default function ViewJobsPage() {
                                     {/* Contact Mobile */}
                                     {selectedJob.mobile && (
                                         <div className="flex items-center gap-4 py-4 border-b border-white/5">
+                                            <FaPhone className="text-purple-400 text-2xl flex-shrink-0" />
                                             <div className="flex-1">
                                                 <p className="text-sm text-gray-400 mb-1">Call Us</p>
                                                 <div className="flex items-center gap-3">
-                                                    <FaPhone className="text-purple-400 text-2xl flex-shrink-0" />
                                                     <p className="text-lg font-semibold text-white">{selectedJob.mobile}</p>
                                                     <button
                                                         type="button"

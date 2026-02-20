@@ -1,6 +1,7 @@
 "use client";
 import React, { useState } from "react";
 import apiClient from "../../lib/apiClient";
+import AnimatedLooader from "../../components/animatedLooader";
 import {
     FaAngleLeft,
     FaArrowDown,
@@ -90,9 +91,11 @@ const RewardsPage = () => {
     const [showModal, setShowModal] = useState(false);
     const [showRoadmap, setShowRoadmap] = useState(false);
     const [rewardList, setRewardList] = useState([]);
+    const [isLoading, setIsLoading] = useState(true);
 
     React.useEffect(() => {
         async function fetchRewards() {
+            setIsLoading(true);
             try {
                 const { data } = await apiClient.get("/api/api-rewards");
 
@@ -106,6 +109,8 @@ const RewardsPage = () => {
                 setRewardList(list);
             } catch (err) {
                 setRewardList([]);
+            } finally {
+                setIsLoading(false);
             }
         }
         fetchRewards();
@@ -149,7 +154,7 @@ const RewardsPage = () => {
     return (
         <div className="min-h-screen flex flex-col items-center justify-center bg-base-200">
             <div className="w-full max-w-md px-4">
-                <div className="mb-8 flex items-center gap-4">
+                <div className="mb-2 flex items-center gap-4">
                     <button
                         className="flex items-center gap-2 text-lg text-primary hover:text-green-600 font-semibold"
                         onClick={() => router.push("/")}
@@ -165,7 +170,7 @@ const RewardsPage = () => {
             </div>
             {/* Winner Announcement Card */}
             <div
-                className="w-full max-w-md mx-auto bg-base-100 rounded-2xl p-6 mb-6 shadow-xl"
+                className="w-full max-w-md mx-auto bg-base-100 rounded-2xl p-3 mb-2 shadow-lg"
                 style={{
                     textAlign: "center",
                     position: "relative",
@@ -173,10 +178,10 @@ const RewardsPage = () => {
                 }}
             >
                 {/* Gold Medal SVG with rays */}
-                <div style={{ marginBottom: 24 }}>
+                <div style={{ marginBottom: 6 }}>
                     <svg
-                        width="96"
-                        height="96"
+                        width="80"
+                        height="80"
                         viewBox="0 0 96 96"
                         style={{ display: "block", margin: "0 auto" }}
                     >
@@ -281,7 +286,7 @@ const RewardsPage = () => {
                         </g>
                     </svg>
                 </div>
-                <div className="flex justify-center mb-2">
+                <div className="flex justify-center mb-1">
                     <div className="alert alert-success py-2 px-4 rounded-lg shadow text-lg text-white font-bold w-fit mx-auto">
                         🎉 Congratulations!
                     </div>
@@ -290,16 +295,21 @@ const RewardsPage = () => {
                     style={{
                         color: "#FFD700",
                         fontWeight: 700,
-                        fontSize: 40,
-                        marginBottom: 4,
+                        fontSize: 32,
+                        marginBottom: 2,
+                        lineHeight: 1.05,
                     }}
                 >
                     {goldWinner ? goldWinner.fullName : "No winner"}
                 </div>
+
+                <div className="text-sm font-semibold mb-2" style={{ color: "#93C5FD" }}>
+                    To Get Rank 1 on Durood Sharif Reciting
+                </div>
                 {/* Theme-based address for gold winner */}
                 {goldWinner && goldWinner.address && (
                     <div
-                        className="mx-auto mb-2 px-4 py-2 rounded-lg font-semibold text-base"
+                        className="mx-auto mb-1 px-3 py-1 rounded-lg font-semibold text-base"
                         style={{
                             background:
                                 "linear-gradient(90deg, #FFD700 60%, #FFFBEA 100%)",
@@ -323,13 +333,13 @@ const RewardsPage = () => {
                 </div> */}
             </div>
 
-            <div className="text-center text-xxl text-yellow-400 mb-3 mt-1">
+            <div className="text-center text-xxl text-yellow-400 mb-1 mt-0">
                 Top 10 Winners of this week
             </div>
 
             {/* Week range (from / to) displayed with theme-based colors and fonts, formatted as dd/mm/yyyy */}
             {weekRange ? (
-                <div className="w-full max-w-md mx-auto flex items-center justify-center gap-3 mb-4">
+                <div className="w-full max-w-md mx-auto flex items-center justify-center gap-2 mb-2">
                     <div className="text-sm  text-white-content/60 font-semibold tracking-wide uppercase">
                         From
                     </div>
@@ -343,100 +353,82 @@ const RewardsPage = () => {
                 </div>
             ) : null}
 
-            <div className="bg-base-200 rounded-xl p-2 w-full max-w-md ">
-                {/* Label Row */}
-                <div className="flex items-center  border-b border-yellow-100 font-semibold text-xs text-yellow-400 uppercase tracking-wide">
-                    <div style={{ width: 48, textAlign: "center" }}>Rank</div>
-                    <div style={{ width: 16 }}></div>
-                    <div style={{ flex: 1, textAlign: "left" }}>Names</div>
-                    <div style={{ flex: 1, textAlign: "left" }}>Address</div>
-                    <div style={{ textAlign: "right", marginLeft: 10 }}>
-                        Durood
-                        <br />
-                        Counts
+            <div className="bg-base-200 rounded-xl p-1 w-full max-w-md">
+                <table className="w-full" style={{ tableLayout: "fixed" }}>
+                    <thead>
+                        <tr className="border-b border-yellow-100 font-semibold text-xs text-yellow-400 uppercase tracking-wide">
+                            <th className="px-2 text-center" style={{ width: 48 }}>Rank</th>
+                            <th className="px-0" style={{ width: 8 }} />
+                            <th className="px-2 text-left" style={{ width: '42%' }}>Names</th>
+                            <th className="px-2 text-left" style={{ width: '40%' }}>Address</th>
+                            <th className="px-2 text-right" style={{ width: 70 }}>Durood<br />Counts</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {isLoading ? (
+                            <tr>
+                                <td colSpan={5} className="py-3 text-center">
+                                    <AnimatedLooader className="mx-auto" message="Loading winners..." />
+                                </td>
+                            </tr>
+                        ) : rewardList.length === 0 ? (
+                            <tr>
+                                <td colSpan={5} className="py-2 text-center text-base-content/60">
+                                    No winners found.
+                                </td>
+                            </tr>
+                        ) : (
+                            positionsList.map((user, idx) => {
+                                const pos = idx + 1;
+                                let rankDisplay = null;
+                                if (pos === 1) rankDisplay = medalSVG[0];
+                                else if (pos === 2) rankDisplay = medalSVG[1];
+                                else if (pos === 3) rankDisplay = medalSVG[2];
+                                else
+                                    rankDisplay = (
+                                        <span className="font-bold text-[16px]" style={{ color: "var(--theme-rank-color, #FFD700)" }}>
+                                            {pos}
+                                        </span>
+                                    );
+                                return (
+                                    <tr key={user.id || `pos-${pos}`} className="border-b last:border-b-0 border-base-300 align-top">
+                                        <td className="px-1 py-1 text-center align-middle align-top " style={{ width: 48 }}>{rankDisplay}</td>
+                                        <td style={{ width: 8 }} />
+                                        <td className="px-0 py-1 align-top break-words whitespace-normal font-medium text-[15px]" style={{ width: '42%' }}>
+                                            {user.empty ? "-" : user.fullName}
+                                        </td>
+                                        <td className="py-1 align-top text-gray-400 break-words whitespace-normal">
+                                            {user.empty ? "-" : user.address || "-"}
+                                        </td>
+                                        <td className="px-0 py-1 text-right font-semibold whitespace-nowrap" style={{ width: 70 }}>
+                                            {user.empty ? "--" : String(user.weeklyCounts ?? 0).padStart(2, "0")}
+                                        </td>
+                                    </tr>
+                                );
+                            })
+                        )}
+                    </tbody>
+                </table>
+            </div>
+
+            <div className="w-full max-w-md mx-auto my-1">
+                <div
+                    className="px-3 py-2 rounded-lg text-center"
+                    style={{
+                        background: "linear-gradient(90deg, rgba(79,70,229,0.06), rgba(245,158,11,0.04))",
+                        border: "1px solid rgba(255,215,0,0.08)",
+                    }}
+                >
+                    <div style={{ color: "#FFD700", fontWeight: 600 }}>
+                        We will announce winner names on every Friday At 3 PM
                     </div>
                 </div>
-                {/* Data Rows */}
-                {rewardList.length === 0 ? (
-                    <div className="text-center py-4 text-base-content/60">
-                        No winners found.
-                    </div>
-                ) : (
-                    positionsList.map((user, idx) => {
-                        // idx corresponds to position - 1
-                        const pos = idx + 1;
-                        let rankDisplay = null;
-                        if (pos === 1) rankDisplay = medalSVG[0];
-                        else if (pos === 2) rankDisplay = medalSVG[1];
-                        else if (pos === 3) rankDisplay = medalSVG[2];
-                        else
-                            rankDisplay = (
-                                <span
-                                    style={{
-                                        fontWeight: 700,
-                                        fontSize: 16,
-                                        color: "var(--theme-rank-color, #FFD700)",
-                                    }}
-                                >
-                                    {pos}
-                                </span>
-                            );
-                        return (
-                            <div
-                                key={user.id || `pos-${pos}`}
-                                className="flex items-center py-2 border-b last:border-b-0 border-base-300"
-                            >
-                                <div
-                                    style={{
-                                        width: 48,
-                                        textAlign: "center",
-                                    }}
-                                >
-                                    {rankDisplay}
-                                </div>
-                                <div
-                                    style={{
-                                        flex: 1,
-                                        fontWeight: 500,
-                                        fontSize: 15,
-                                    }}
-                                >
-                                    {user.empty ? "-" : user.fullName}
-                                </div>
-                                <div
-                                    style={{
-                                        flex: 1,
-                                        fontWeight: 400,
-                                        fontSize: 14,
-                                        color: "#888",
-                                    }}
-                                >
-                                    {user.empty ? "-" : user.address || "-"}
-                                </div>
-                                <div
-                                    style={{
-                                        fontWeight: 600,
-                                        fontSize: 15,
-                                        minWidth: 100,
-                                        textAlign: "right",
-                                    }}
-                                >
-                                    {user.empty
-                                        ? "--"
-                                        : String(
-                                            user.weeklyCounts ?? 0
-                                        ).padStart(2, "0")}
-                                </div>
-                            </div>
-                        );
-                    })
-                )}
             </div>
 
             {/* Collapsible Roadmap UI below winners list */}
-            <div className="w-full max-w-md mx-auto my-6">
+            <div className="w-full max-w-md mx-auto my-2">
                 <button
-                    className="btn btn-outline btn-info w-full mb-2 font-semibold"
+                    className="btn btn-outline btn-info w-full mb-1 font-semibold"
                     onClick={() => setShowRoadmap((v) => !v)}
                     aria-label="See  how to register"
                 >
@@ -446,11 +438,11 @@ const RewardsPage = () => {
                 </button>
                 {showRoadmap && (
                     <div className="relative bg-base-100 rounded-xl p-4 shadow-sm overflow-visible animate-fadeIn">
-                        <div className="text-center text-lg font-bold mb-3">
+                        <div className="text-center text-lg font-bold mb-2">
                             How to register
                         </div>
-                        <div className="flex flex-col gap-4">
-                            <div className="flex items-center gap-4">
+                        <div className="flex flex-col gap-2">
+                            <div className="flex items-center gap-2">
                                 <div>
                                     <div className="w-14 h-14 rounded-full bg-gradient-to-br from-yellow-400 to-yellow-600 flex items-center justify-center text-white text-xl shadow-lg">
                                         🎗️
@@ -466,14 +458,13 @@ const RewardsPage = () => {
                                     </div>
                                 </div>
                             </div>
-
                             <div className="flex flex-col items-center">
-                                <div className="w-0.5 h-6 bg-gradient-to-b from-yellow-200 to-yellow-400 rounded" />
-                                <FaArrowDown className="my-1 text-yellow-500" />
-                                <div className="w-0.5 h-6 bg-gradient-to-b from-yellow-200 to-yellow-400 rounded" />
+                                <div className="w-0.5 h-4 bg-gradient-to-b from-yellow-200 to-yellow-400 rounded" />
+                                <FaArrowDown className="my-0 text-yellow-500" />
+                                <div className="w-0.5 h-4 bg-gradient-to-b from-yellow-200 to-yellow-400 rounded" />
                             </div>
 
-                            <div className="flex items-center gap-4">
+                            <div className="flex items-center gap-2">
                                 <div>
                                     <div className="w-14 h-14 rounded-full bg-gradient-to-br from-indigo-400 to-indigo-600 flex items-center justify-center text-white text-xl shadow-lg">
                                         📍
@@ -489,14 +480,13 @@ const RewardsPage = () => {
                                     </div>
                                 </div>
                             </div>
-
                             <div className="flex flex-col items-center">
-                                <div className="w-0.5 h-6 bg-gradient-to-b from-indigo-200 to-indigo-400 rounded" />
-                                <FaArrowDown className="my-1 text-indigo-500" />
-                                <div className="w-0.5 h-6 bg-gradient-to-b from-indigo-200 to-indigo-400 rounded" />
+                                <div className="w-0.5 h-4 bg-gradient-to-b from-indigo-200 to-indigo-400 rounded" />
+                                <FaArrowDown className="my-0 text-indigo-500" />
+                                <div className="w-0.5 h-4 bg-gradient-to-b from-indigo-200 to-indigo-400 rounded" />
                             </div>
 
-                            <div className="flex items-center gap-4">
+                            <div className="flex items-center gap-2">
                                 <div>
                                     <div className="w-14 h-14 rounded-full bg-gradient-to-br from-green-400 to-green-600 flex items-center justify-center text-white text-xl shadow-lg">
                                         <FaRegCheckCircle />
@@ -512,14 +502,13 @@ const RewardsPage = () => {
                                     </div>
                                 </div>
                             </div>
-
                             <div className="flex flex-col items-center">
-                                <div className="w-0.5 h-6 bg-gradient-to-b from-green-200 to-green-400 rounded" />
-                                <FaArrowDown className="my-1 text-green-500" />
-                                <div className="w-0.5 h-6 bg-gradient-to-b from-green-200 to-green-400 rounded" />
+                                <div className="w-0.5 h-4 bg-gradient-to-b from-green-200 to-green-400 rounded" />
+                                <FaArrowDown className="my-0 text-green-500" />
+                                <div className="w-0.5 h-4 bg-gradient-to-b from-green-200 to-green-400 rounded" />
                             </div>
 
-                            <div className="flex items-center gap-4">
+                            <div className="flex items-center gap-2">
                                 <div>
                                     <div className="w-14 h-14 rounded-full bg-gradient-to-br from-pink-400 to-pink-600 flex items-center justify-center text-white text-xl shadow-lg">
                                         <FaStar />
@@ -583,13 +572,13 @@ const RewardsPage = () => {
           animation: modalPop 0.3s;
         }
       `}</style>
-            <p className="text-center text-xl font-bold mb-2">
+            <p className="text-center text-xl font-bold mb-1">
                 Click Register button below to participate For Weekly Durood
                 Sharif
             </p>
             <div className="flex justify-center mb-4">
                 <button
-                    className="btn btn-primary px-6 py-2 rounded-lg font-semibold text-white shadow mb-20"
+                    className="btn btn-primary px-6 py-2 rounded-lg font-semibold text-white shadow mb-4"
                     onClick={() => router.push("/tasbih")}
                     aria-label="Go to Tasbih page to register"
                 >

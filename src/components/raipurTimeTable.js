@@ -108,7 +108,7 @@ export default function RaipurTimeTable({ onlyRaipur }) {
             if (!onlyRaipur) return;
             const now = new Date();
             const sehriTime = parseTimeStr(times.sehriText);
-            const iftariTime = parseTimeStr(times.iftariText);
+            const iftariTime = parseTimeStr(times.iftariText, true);
 
             if (sehriTime && now >= sehriTime) {
                 const key = (new Date()).toDateString();

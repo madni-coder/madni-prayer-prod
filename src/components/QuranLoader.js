@@ -1,11 +1,11 @@
 "use client";
 import React from "react";
 
-const QuranLoader = ({ 
-    isVisible, 
-    progress = 0, 
-    title = "Loading...", 
-    subtitle = "Please wait while we prepare your content" 
+const QuranLoader = ({
+    isVisible,
+    progress = 0,
+    title = "Loading...",
+    subtitle = "Please wait while we prepare your content"
 }) => {
     if (!isVisible) return null;
 
@@ -23,7 +23,7 @@ const QuranLoader = ({
                         <div className="absolute inset-0 flex items-center justify-center">
                             <div className="w-8 h-8 text-primary animate-pulse">
                                 <svg viewBox="0 0 24 24" fill="currentColor" className="w-full h-full">
-                                    <path d="M12 2L15.09 8.26L22 9L17 14L18.18 21L12 17.77L5.82 21L7 14L2 9L8.91 8.26L12 2Z"/>
+                                    <path d="M12 2L15.09 8.26L22 9L17 14L18.18 21L12 17.77L5.82 21L7 14L2 9L8.91 8.26L12 2Z" />
                                 </svg>
                             </div>
                         </div>
@@ -34,7 +34,7 @@ const QuranLoader = ({
                 <h3 className="text-xl font-bold text-primary text-center mb-2">
                     {title}
                 </h3>
-                
+
                 {/* Subtitle */}
                 <p className="text-base-content/70 text-center text-sm mb-6">
                     {subtitle}
@@ -50,11 +50,11 @@ const QuranLoader = ({
                             {Math.round(progress)}%
                         </span>
                     </div>
-                    
+
                     {/* Progress bar track */}
                     <div className="w-full bg-base-300 rounded-full h-3 overflow-hidden shadow-inner">
                         {/* Progress bar fill */}
-                        <div 
+                        <div
                             className="h-full bg-gradient-to-r from-primary to-primary-focus rounded-full transition-all duration-300 ease-out relative overflow-hidden"
                             style={{ width: `${Math.min(progress, 100)}%` }}
                         >
