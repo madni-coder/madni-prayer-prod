@@ -64,22 +64,10 @@ const sections = [
         href: "/notice",
         icon: <Megaphone className="text-3xl lg:text-6xl text-blue-400" />,
     },
-    {
-        name: "Contact Us",
-        href: "/contactUs",
-        icon: (
-            <FaPhoneSquare className="text-3xl lg:text-6xl text-orange-400" />
-        ),
-    },
+   
 
 
-    {
-        name: "My Profile",
-        href: "/myProfile",
-        icon: (
-            <FaUser className="text-3xl lg:text-6xl text-cyan-500" />
-        ),
-    },
+    
     {
         name: "Olmaa's Stores",
         href: "/local-stores",
@@ -108,7 +96,13 @@ const sections = [
             <FaRegIdBadge className="text-3xl lg:text-6xl text-yellow-400" />
         ),
     },
-
+    {
+        name: "My Profile",
+        href: "/myProfile",
+        icon: (
+            <FaUser className="text-3xl lg:text-6xl text-cyan-500" />
+        ),
+    },
 ];
 
 // ─── Supabase client (client-side, anon key only) ───────────────────────────
