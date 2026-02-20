@@ -2,6 +2,9 @@
 
 # Script to add NSMotionUsageDescription to iOS Info.plist for Qibla compass functionality
 
+# Ensure tauri devUrl points to local dev server when running this helper directly
+node "$(dirname "$0")/scripts/set-dev-url.js" || true
+
 PLIST_FILE="src-tauri/gen/apple/raaheHidayat_iOS/Info.plist"
 
 if [ ! -f "$PLIST_FILE" ]; then

@@ -19,9 +19,9 @@
         "set-dev-url": "node scripts/set-dev-url.js",
         "android:dev": "npm run set-dev-url && ./tauri-android-dev.sh",
         "android:hot": "npm run set-dev-url && ./tauri-android-dev.sh",
-        "ios:build": "./fix-ios-plist.sh && npm run tauri ios build",
-        "ios:dev": "./fix-ios-plist.sh && npm run tauri ios dev -- --open",
-        "ios:appstore": "./fix-ios-plist.sh && ./build-ios-appstore.sh"
+        "ios:build": "npm run set-dev-url && ./fix-ios-plist.sh && npm run tauri ios build",
+        "ios:dev": "npm run set-dev-url && ./fix-ios-plist.sh && npm run tauri ios dev -- --open",
+        "ios:appstore": "npm run set-dev-url && ./fix-ios-plist.sh && ./build-ios-appstore.sh"
     },
     "dependencies": {
         "@prisma/client": "^6.16.2",
