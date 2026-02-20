@@ -118,7 +118,10 @@ export async function GET() {
         const safeJson = JSON.stringify(cleaned, (key, value) =>
             typeof value === "bigint" ? value.toString() : value
         );
-        return new Response(safeJson, { status: 200 });
+        return new Response(safeJson, {
+            status: 200,
+            headers: { "Content-Type": "application/json" }
+        });
     } catch (error) {
         return new Response(JSON.stringify({ error: error.message }), {
             status: 500,

@@ -95,8 +95,12 @@ const RewardsPage = () => {
         async function fetchRewards() {
             try {
                 const { data } = await apiClient.get("/api/api-rewards");
+
+                // Axios returns data as string if the API doesn't set Content-Type: application/json
+                const parsedData = typeof data === "string" ? JSON.parse(data) : data;
+
                 // Ensure we only keep top 10 by position (ascending)
-                const list = Array.isArray(data) ? data : [];
+                const list = Array.isArray(parsedData) ? parsedData : [];
                 // keep the full normalized list in state; we'll select best per position
                 list.sort((a, b) => (a.position ?? 0) - (b.position ?? 0));
                 setRewardList(list);
