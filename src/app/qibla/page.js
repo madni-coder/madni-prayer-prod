@@ -1,6 +1,6 @@
 "use client";
 import React, { useEffect, useRef, useState } from "react";
-import { FaAngleLeft, FaMapMarkerAlt } from "react-icons/fa";
+import { FaAngleLeft } from "react-icons/fa";
 import { useRouter } from "next/navigation";
 
 export default function Qibla() {
@@ -9,7 +9,8 @@ export default function Qibla() {
     const [permissionGranted, setPermissionGranted] = useState(false);
     const [permissionError, setPermissionError] = useState(null);
     const [needsPermission, setNeedsPermission] = useState(false);
-    const [qiblaDirection, setQiblaDirection] = useState(null);
+    const [qiblaDirection, setQiblaDirection] = useState(270); // Default 270° (West) — approx Qibla for South Asia
+    const [isApproximateQibla, setIsApproximateQibla] = useState(true);
     const [location, setLocation] = useState(null);
     const [locationError, setLocationError] = useState(null);
 
@@ -145,36 +146,20 @@ export default function Qibla() {
 
                         if (data.code === 200 && data.data && data.data.direction) {
                             setQiblaDirection(data.data.direction);
+                            setIsApproximateQibla(false);
                         } else {
                             const computedDirection = computeQiblaDirectionFromLocation(latitude, longitude);
                             setQiblaDirection(computedDirection);
+                            setIsApproximateQibla(false);
                         }
                     } catch (error) {
                         console.error("Error fetching Qibla direction:", error);
                         const computedDirection = computeQiblaDirectionFromLocation(latitude, longitude);
                         setQiblaDirection(computedDirection);
+                        setIsApproximateQibla(false);
                     }
                 },
-                (error) => {
-                    // removed debug logging
-                    let errorMessage = "Failed to get your location. Please enable location services.";
 
-                    switch (error.code) {
-                        case error.PERMISSION_DENIED:
-                            errorMessage = "Failed to get your location. Please enable location services.";
-                            break;
-                        case error.POSITION_UNAVAILABLE:
-                            errorMessage = "Location information is unavailable. Please try again.";
-                            break;
-                        case error.TIMEOUT:
-                            errorMessage = "Location request timed out. Please try again.";
-                            break;
-                        default:
-                            errorMessage = "Failed to get your location. Please enable location services.";
-                    }
-
-                    setLocationError(errorMessage);
-                },
                 geolocationOptions
             );
         };
@@ -277,22 +262,6 @@ export default function Qibla() {
         }
     };
 
-    const openAndroidLocationSettings = () => {
-        // Attempt to open Android location settings via an intent URL.
-        // This works in many Android WebViews / Chrome. If it fails, fall back to a generic settings URL.
-        try {
-            const intentUrl = 'intent:#Intent;action=android.settings.LOCATION_SOURCE_SETTINGS;end';
-            window.location.href = intentUrl;
-        } catch (e) {
-            try {
-                window.open('android.settings.LOCATION_SOURCE_SETTINGS', '_blank');
-            } catch (e2) {
-                // final fallback: open a help/search page
-                window.open('https://support.google.com/accounts/answer/3467281', '_blank');
-            }
-        }
-    };
-
     return (
         <section className="flex flex-col items-center justify-center min-h-[70vh] px-4 animate-fade-in bg-base-100">
             <button
@@ -304,7 +273,7 @@ export default function Qibla() {
                 <FaAngleLeft /> Back
             </button>
             <h2 className="text-2xl md:text-3xl font-bold text-primary mb-4">
-                Qibla Direction
+                Qibla Direction.
             </h2>
 
             {permissionError && (
@@ -325,19 +294,19 @@ export default function Qibla() {
                 </div>
             )}
 
+            {/* Android GPS error - show inline message only, no button */}
             {isAndroid && locationError && (
-                <div className="mb-4">
-                    <button
-                        className="btn btn-warning flex items-center gap-2"
-                        onClick={openAndroidLocationSettings}
-                    >
-                        <FaMapMarkerAlt />
-                        Turn On GPS
-                    </button>
+                <div className="alert alert-warning mb-4 max-w-2xl">
+                    <svg xmlns="http://www.w3.org/2000/svg" className="stroke-current shrink-0 h-6 w-6" fill="none" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                    </svg>
+                    <span>Please enable location services for accurate Qibla direction.</span>
                 </div>
             )}
 
-            {needsPermission && !permissionGranted && (
+            {/* iOS only: Enable Compass button (requires user gesture for DeviceOrientation permission) */}
+            {isIOS && needsPermission && !permissionGranted && (
                 <div className="mb-4 text-center">
                     <button
                         onClick={requestPermissionAndStartListening}
@@ -352,7 +321,7 @@ export default function Qibla() {
             <div className="glass-card p-6 max-w-2xl mx-8 text-center text-base-content">
                 <div className="flex flex-col items-center mb-6">
                     <div
-                        className="compass-container"
+                        className="compass-container mt-[-40px]"
                         style={{
                             position: "relative",
                             width: 400,
@@ -397,7 +366,7 @@ export default function Qibla() {
                                     top: -7,
                                     left: "50%",
                                     transform: "translateX(-50%)",
-                                    color: "#dc2626",
+                                    color: "#374151",
                                     fontWeight: "bold",
                                     fontSize: 22,
                                     fontFamily: "serif",
@@ -521,42 +490,40 @@ export default function Qibla() {
                                         - iOS: To position icon at Qibla, container must rotate by (qiblaDirection + deviceHeading)
                                         - Android: Uses original rotation logic (working perfectly)
                                     */}
-                                    {qiblaDirection !== null && (
-                                        <div
+                                    {/* Kaaba Icon - always visible, uses fallback 270° (West) until GPS provides exact direction */}
+                                    <div
+                                        style={{
+                                            position: "absolute",
+                                            left: "50%",
+                                            top: "50%",
+                                            width: "40px",
+                                            height: "40px",
+                                            transformOrigin: "center",
+                                            transform: `translate(-50%, -50%) rotate(${qiblaDirection}deg)`,
+                                            zIndex: 9,
+                                            pointerEvents: "none",
+                                            opacity: isApproximateQibla ? 0.75 : 1,
+                                        }}
+                                    >
+                                        <img
+                                            src="/kaabaIcon.png"
+                                            alt="Kaaba"
                                             style={{
                                                 position: "absolute",
                                                 left: "50%",
-                                                top: "50%",
-                                                width: "40px",
-                                                height: "40px",
-                                                transformOrigin: "center",
-                                                // Use same rotation logic for iOS as Android so the
-                                                // needle/icon positioning matches Android behavior.
-                                                transform: `translate(-50%, -50%) rotate(${qiblaDirection}deg)`,
-                                                zIndex: 9,
-                                                pointerEvents: "none",
+                                                top: -95,
+                                                width: "30px",
+                                                height: "30px",
+                                                display: "block",
+                                                // Counter-rotate to keep icon upright (same on iOS/Android)
+                                                transform: deviceHeading
+                                                    ? `translate(-50%, -50%) rotate(${-qiblaDirection + deviceHeading}deg)`
+                                                    : `translate(-50%, -50%) rotate(${-qiblaDirection}deg)`,
+                                                transition: "transform 180ms ease-out",
+                                                filter: "drop-shadow(0 2px 4px rgba(0,0,0,0.4))",
                                             }}
-                                        >
-                                            <img
-                                                src="/kaabaIcon.png"
-                                                alt="Kaaba"
-                                                style={{
-                                                    position: "absolute",
-                                                    left: "50%",
-                                                    top: -95,
-                                                    width: "30px",
-                                                    height: "30px",
-                                                    display: "block",
-                                                    // Counter-rotate to keep icon upright (same on iOS/Android)
-                                                    transform: deviceHeading
-                                                        ? `translate(-50%, -50%) rotate(${-qiblaDirection + deviceHeading}deg)`
-                                                        : `translate(-50%, -50%) rotate(${-qiblaDirection}deg)`,
-                                                    transition: "transform 180ms ease-out",
-                                                    filter: "drop-shadow(0 2px 4px rgba(0,0,0,0.4))",
-                                                }}
-                                            />
-                                        </div>
-                                    )}
+                                        />
+                                    </div>
 
                                     {/* Compass needle - points to Qibla direction
                                         iOS: The needle rotates by (qiblaDirection + deviceHeading) to compensate
@@ -575,9 +542,8 @@ export default function Qibla() {
                                                     transformOrigin: "center",
                                                     // Use same needle rotation as Android so it points
                                                     // correctly towards Qibla on both platforms.
-                                                    transform: qiblaDirection !== null
-                                                        ? `translate(-50%, -50%) rotate(${qiblaDirection}deg)`
-                                                        : "translate(-50%, -50%) rotate(0deg)",
+                                                    transform: `translate(-50%, -50%) rotate(${qiblaDirection}deg)`,
+                                                    opacity: isApproximateQibla ? 0.75 : 1,
                                                     zIndex: 10,
                                                 }}
                                             >
@@ -592,8 +558,7 @@ export default function Qibla() {
                                                         transform: "translateX(-50%)",
                                                         borderLeft: "8px solid transparent",
                                                         borderRight: "8px solid transparent",
-                                                        borderBottom: "100px solid #ef4444",
-                                                        filter: "drop-shadow(0 2px 4px rgba(0,0,0,0.3))",
+                                                        borderBottom: "100px solid var(--color-error )",
                                                         zIndex: 12,
                                                     }}
                                                 />
@@ -673,9 +638,9 @@ export default function Qibla() {
                     )}
 
                     {/* Calibration guide */}
-                    <div className="mt-4 flex flex-col items-center">
+                    <div className="mt-4 flex flex-col items-center mt-[-5px]">
                         <div
-                            className="border-4 border-primary"
+                            className="border-4 border-info"
                             style={{
                                 padding: "0",
                                 borderRadius: "12px",

@@ -1,7 +1,7 @@
 "use client"
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 
-export default function RaipurTimeTable() {
+export default function RaipurTimeTable({ onlyRaipur }) {
     // helper: check if a date string in format "D Mon" (e.g. "28 Feb", "1 Mar") refers to today
     const isToday = (dateStr) => {
         try {
@@ -24,6 +24,7 @@ export default function RaipurTimeTable() {
     const sehriAudioRef = useRef(null);
     const iftariAudioRef = useRef(null);
     const playedRef = useRef({ sehri: null, iftari: null });
+    const [debugMsg, setDebugMsg] = useState('');
 
     useEffect(() => {
         sehriAudioRef.current = new Audio('/sehri.mp3');
@@ -38,12 +39,22 @@ export default function RaipurTimeTable() {
             return `${day} ${months[today.getMonth()]}`;
         };
 
-        const parseTimeStr = (timeStr) => {
+        // parse a time string like "5:10", "05:10", or with am/pm like "5:10 pm".
+        // if `treatAsPM` is true and no am/pm is present, times with hour < 12 are treated as PM (hour += 12).
+        const parseTimeStr = (timeStr, treatAsPM = false) => {
             if (!timeStr) return null;
-            const m = timeStr.trim().match(/(\d{1,2}):(\d{2})/);
+            const m = timeStr.trim().toLowerCase().match(/(\d{1,2}):(\d{2})\s*(am|pm)?/);
             if (!m) return null;
-            const hh = parseInt(m[1], 10);
+            let hh = parseInt(m[1], 10);
             const mm = parseInt(m[2], 10);
+            const suffix = m[3];
+            if (suffix === 'am') {
+                if (hh === 12) hh = 0;
+            } else if (suffix === 'pm') {
+                if (hh < 12) hh += 12;
+            } else if (treatAsPM && hh < 12) {
+                hh += 12;
+            }
             const d = new Date();
             d.setHours(hh);
             d.setMinutes(mm);
@@ -51,6 +62,8 @@ export default function RaipurTimeTable() {
             d.setMilliseconds(0);
             return d;
         };
+
+
 
         const findTodayRowTimes = () => {
             const label = getTodayLabel();
@@ -79,8 +92,19 @@ export default function RaipurTimeTable() {
         const check = () => {
             const times = findTodayRowTimes();
             if (!times) return;
-            // only play from this Raipur component when user explicitly selected Raipur
-            const onlyRaipur = (typeof localStorage !== 'undefined') ? localStorage.getItem('ramzan_only_raipur') === 'true' : false;
+            // debug
+            try {
+                const now = new Date();
+                const sehriTime = parseTimeStr(times.sehriText);
+                // treat iftari as PM when no am/pm is provided
+                const iftariTime = parseTimeStr(times.iftariText, true);
+                const persistedSehri = (typeof localStorage !== 'undefined') ? localStorage.getItem('ramzan_played_sehri') : null;
+                const persistedIftari = (typeof localStorage !== 'undefined') ? localStorage.getItem('ramzan_played_iftari') : null;
+                const dbg = `raipur now=${now.toTimeString().slice(0, 8)} sehri=${times.sehriText} sehriTs=${sehriTime ? sehriTime.toTimeString().slice(0, 8) : 'null'} iftari=${times.iftariText} iftariTs=${iftariTime ? iftariTime.toTimeString().slice(0, 8) : 'null'} persistedSehri=${persistedSehri} persistedIftari=${persistedIftari}`;
+                console.debug('Raipur schedule check', dbg);
+                setDebugMsg(dbg);
+            } catch (e) { console.debug(e); }
+            // only play from this Raipur component when page indicates Raipur selected
             if (!onlyRaipur) return;
             const now = new Date();
             const sehriTime = parseTimeStr(times.sehriText);
@@ -150,6 +174,7 @@ export default function RaipurTimeTable() {
     return (
         <>
             {/* ##############################Mobile single stacked table showing all 30 rows */}
+
             <div className="mt-6 md:hidden">
                 <div className="overflow-x-auto overflow-y-auto max-h-[75vh] touch-auto">
                     <table className="table table-compact table-fixed w-full whitespace-nowrap divide-y divide-primary">
@@ -163,36 +188,36 @@ export default function RaipurTimeTable() {
                             </tr>
                         </thead>
                         <tbody className=" [&>tr>td]:border-t [&>tr>td]:border-primary">
-                            <tr className={isToday('19 Feb') ? 'ring-4 ring-success/40 bg-success/20 border-2 border-success/60 rounded-md' : ''}><td className="font-semibold">1</td><td className="text-sm">19 Feb</td><td className="text-sm">Thu</td><td className="font-medium text-success">05:17</td><td className="font-medium text-warning">06:06</td></tr>
-                            <tr className={isToday('20 Feb') ? 'ring-4 ring-success/40 bg-success/20 border-2 border-success/60 rounded-md' : ''}><td className="font-semibold">2</td><td className="text-sm">20 Feb</td><td className="text-sm">Fri</td><td className="font-medium text-success">05:17</td><td className="font-medium text-warning">06:06</td></tr>
-                            <tr className={isToday('21 Feb') ? 'ring-4 ring-success/40 bg-success/20 border-2 border-success/60 rounded-md' : ''}><td className="font-semibold">3</td><td className="text-sm">21 Feb</td><td className="text-sm">Sat</td><td className="font-medium text-success">05:16</td><td className="font-medium text-warning">06:07</td></tr>
-                            <tr className={isToday('22 Feb') ? 'ring-4 ring-success/40 bg-success/20 border-2 border-success/60 rounded-md' : ''}><td className="font-semibold">4</td><td className="text-sm">22 Feb</td><td className="text-sm">Sun</td><td className="font-medium text-success">05:16</td><td className="font-medium text-warning">06:07</td></tr>
-                            <tr className={isToday('23 Feb') ? 'ring-4 ring-success/40 bg-success/20 border-2 border-success/60 rounded-md' : ''}><td className="font-semibold">5</td><td className="text-sm">23 Feb</td><td className="text-sm">Mon</td><td className="font-medium text-success">05:15</td><td className="font-medium text-warning">06:08</td></tr>
-                            <tr className={isToday('24 Feb') ? 'ring-4 ring-success/40 bg-success/20 border-2 border-success/60 rounded-md' : ''}><td className="font-semibold">6</td><td className="text-sm">24 Feb</td><td className="text-sm">Tue</td><td className="font-medium text-success">05:15</td><td className="font-medium text-warning">06:08</td></tr>
-                            <tr className={isToday('25 Feb') ? 'ring-4 ring-success/40 bg-success/20 border-2 border-success/60 rounded-md' : ''}><td className="font-semibold">7</td><td className="text-sm">25 Feb</td><td className="text-sm">Wed</td><td className="font-medium text-success">05:14</td><td className="font-medium text-warning">06:08</td></tr>
-                            <tr className={isToday('26 Feb') ? 'ring-4 ring-success/40 bg-success/20 border-2 border-success/60 rounded-md' : ''}><td className="font-semibold">8</td><td className="text-sm">26 Feb</td><td className="text-sm">Thu</td><td className="font-medium text-success">05:14</td><td className="font-medium text-warning">06:08</td></tr>
-                            <tr className={isToday('27 Feb') ? 'ring-4 ring-success/40 bg-success/20 border-2 border-success/60 rounded-md' : ''}><td className="font-semibold">9</td><td className="text-sm">27 Feb</td><td className="text-sm">Fri</td><td className="font-medium text-success">05:13</td><td className="font-medium text-warning">06:09</td></tr>
-                            <tr className={isToday('28 Feb') ? 'ring-4 ring-success/40 bg-success/20 border-2 border-success/60 rounded-md' : ''}><td className="font-semibold">10</td><td className="text-sm">28 Feb</td><td className="text-sm">Sat</td><td className="font-medium text-success">05:13</td><td className="font-medium text-warning">06:09</td></tr>
-                            <tr className={isToday('1 Mar') ? 'ring-4 ring-success/40 bg-success/20 border-2 border-success/60 rounded-md' : ''}><td className="font-semibold">11</td><td className="text-sm">1 Mar</td><td className="text-sm">Sun</td><td className="font-medium text-success">05:11</td><td className="font-medium text-warning">06:10</td></tr>
-                            <tr className={isToday('2 Mar') ? 'ring-4 ring-success/40 bg-success/20 border-2 border-success/60 rounded-md' : ''}><td className="font-semibold">12</td><td className="text-sm">2 Mar</td><td className="text-sm">Mon</td><td className="font-medium text-success">05:11</td><td className="font-medium text-warning">06:10</td></tr>
-                            <tr className={isToday('3 Mar') ? 'ring-4 ring-success/40 bg-success/20 border-2 border-success/60 rounded-md' : ''}><td className="font-semibold">13</td><td className="text-sm">3 Mar</td><td className="text-sm">Tue</td><td className="font-medium text-success">05:09</td><td className="font-medium text-warning">06:11</td></tr>
-                            <tr className={isToday('4 Mar') ? 'ring-4 ring-success/40 bg-success/20 border-2 border-success/60 rounded-md' : ''}><td className="font-semibold">14</td><td className="text-sm">4 Mar</td><td className="text-sm">Wed</td><td className="font-medium text-success">05:09</td><td className="font-medium text-warning">06:11</td></tr>
-                            <tr className={isToday('5 Mar') ? 'ring-4 ring-success/40 bg-success/20 border-2 border-success/60 rounded-md' : ''}><td className="font-semibold">15</td><td className="text-sm">5 Mar</td><td className="text-sm">Thu</td><td className="font-medium text-success">05:07</td><td className="font-medium text-warning">06:12</td></tr>
-                            <tr className={isToday('6 Mar') ? 'ring-4 ring-success/40 bg-success/20 border-2 border-success/60 rounded-md' : ''}><td className="font-semibold">16</td><td className="text-sm">6 Mar</td><td className="text-sm">Fri</td><td className="font-medium text-success">05:07</td><td className="font-medium text-warning">06:12</td></tr>
-                            <tr className={isToday('7 Mar') ? 'ring-4 ring-success/40 bg-success/20 border-2 border-success/60 rounded-md' : ''}><td className="font-semibold">17</td><td className="text-sm">7 Mar</td><td className="text-sm">Sat</td><td className="font-medium text-success">05:06</td><td className="font-medium text-warning">06:13</td></tr>
-                            <tr className={isToday('8 Mar') ? 'ring-4 ring-success/40 bg-success/20 border-2 border-success/60 rounded-md' : ''}><td className="font-semibold">18</td><td className="text-sm">8 Mar</td><td className="text-sm">Sun</td><td className="font-medium text-success">05:06</td><td className="font-medium text-warning">06:13</td></tr>
-                            <tr className={isToday('9 Mar') ? 'ring-4 ring-success/40 bg-success/20 border-2 border-success/60 rounded-md' : ''}><td className="font-semibold">19</td><td className="text-sm">9 Mar</td><td className="text-sm">Mon</td><td className="font-medium text-success">05:05</td><td className="font-medium text-warning">06:14</td></tr>
-                            <tr className={isToday('10 Mar') ? 'ring-4 ring-success/40 bg-success/20 border-2 border-success/60 rounded-md' : ''}><td className="font-semibold">20</td><td className="text-sm">10 Mar</td><td className="text-sm">Tue</td><td className="font-medium text-success">05:05</td><td className="font-medium text-warning">06:14</td></tr>
-                            <tr className={isToday('11 Mar') ? 'ring-4 ring-success/40 bg-success/20 border-2 border-success/60 rounded-md' : ''}><td className="font-semibold">21</td><td className="text-sm">11 Mar</td><td className="text-sm">Wed</td><td className="font-medium text-success">05:03</td><td className="font-medium text-warning">06:14</td></tr>
-                            <tr className={isToday('12 Mar') ? 'ring-4 ring-success/40 bg-success/20 border-2 border-success/60 rounded-md' : ''}><td className="font-semibold">22</td><td className="text-sm">12 Mar</td><td className="text-sm">Thu</td><td className="font-medium text-success">05:03</td><td className="font-medium text-warning">06:14</td></tr>
-                            <tr className={isToday('13 Mar') ? 'ring-4 ring-success/40 bg-success/20 border-2 border-success/60 rounded-md' : ''}><td className="font-semibold">23</td><td className="text-sm">13 Mar</td><td className="text-sm">Fri</td><td className="font-medium text-success">05:01</td><td className="font-medium text-warning">06:15</td></tr>
-                            <tr className={isToday('14 Mar') ? 'ring-4 ring-success/40 bg-success/20 border-2 border-success/60 rounded-md' : ''}><td className="font-semibold">24</td><td className="text-sm">14 Mar</td><td className="text-sm">Sat</td><td className="font-medium text-success">05:01</td><td className="font-medium text-warning">06:15</td></tr>
-                            <tr className={isToday('15 Mar') ? 'ring-4 ring-success/40 bg-success/20 border-2 border-success/60 rounded-md' : ''}><td className="font-semibold">25</td><td className="text-sm">15 Mar</td><td className="text-sm">Sun</td><td className="font-medium text-success">04:59</td><td className="font-medium text-warning">06:16</td></tr>
-                            <tr className={isToday('16 Mar') ? 'ring-4 ring-success/40 bg-success/20 border-2 border-success/60 rounded-md' : ''}><td className="font-semibold">26</td><td className="text-sm">16 Mar</td><td className="text-sm">Mon</td><td className="font-medium text-success">04:59</td><td className="font-medium text-warning">06:16</td></tr>
-                            <tr className={isToday('17 Mar') ? 'ring-4 ring-success/40 bg-success/20 border-2 border-success/60 rounded-md' : ''}><td className="font-semibold">27</td><td className="text-sm">17 Mar</td><td className="text-sm">Tue</td><td className="font-medium text-success">04:57</td><td className="font-medium text-warning">06:16</td></tr>
-                            <tr className={isToday('18 Mar') ? 'ring-4 ring-success/40 bg-success/20 border-2 border-success/60 rounded-md' : ''}><td className="font-semibold">28</td><td className="text-sm">18 Mar</td><td className="text-sm">Wed</td><td className="font-medium text-success">04:57</td><td className="font-medium text-warning">06:16</td></tr>
-                            <tr className={isToday('19 Mar') ? 'ring-4 ring-success/40 bg-success/20 border-2 border-success/60 rounded-md' : ''}><td className="font-semibold">29</td><td className="text-sm">19 Mar</td><td className="text-sm">Thu</td><td className="font-medium text-success">04:55</td><td className="font-medium text-warning">06:17</td></tr>
-                            <tr className={isToday('20 Mar') ? 'ring-4 ring-success/40 bg-success/20 border-2 border-success/60 rounded-md' : ''}><td className="font-semibold">30</td><td className="text-sm">20 Mar</td><td className="text-sm">Fri</td><td className="font-medium text-success">04:55</td><td className="font-medium text-warning">06:17</td></tr>
+                            <tr className={isToday('19 Feb') ? 'ring-4 ring-success/40 bg-success/20 border-2 border-success/60 rounded-md' : ''}><td className="font-semibold">1</td><td className="text-sm">19 Feb</td><td className="text-sm">Thu</td><td className="font-medium text-success">05:13</td><td className="font-medium text-warning">06:08</td></tr>
+                            <tr className={isToday('20 Feb') ? 'ring-4 ring-success/40 bg-success/20 border-2 border-success/60 rounded-md' : ''}><td className="font-semibold">2</td><td className="text-sm">20 Feb</td><td className="text-sm">Fri</td><td className="font-medium text-success">05:12</td><td className="font-medium text-warning">06:08</td></tr>
+                            <tr className={isToday('21 Feb') ? 'ring-4 ring-success/40 bg-success/20 border-2 border-success/60 rounded-md' : ''}><td className="font-semibold">3</td><td className="text-sm">21 Feb</td><td className="text-sm">Sat</td><td className="font-medium text-success">05:11</td><td className="font-medium text-warning">06:09</td></tr>
+                            <tr className={isToday('22 Feb') ? 'ring-4 ring-success/40 bg-success/20 border-2 border-success/60 rounded-md' : ''}><td className="font-semibold">4</td><td className="text-sm">22 Feb</td><td className="text-sm">Sun</td><td className="font-medium text-success">05:11</td><td className="font-medium text-warning">06:09</td></tr>
+                            <tr className={isToday('23 Feb') ? 'ring-4 ring-success/40 bg-success/20 border-2 border-success/60 rounded-md' : ''}><td className="font-semibold">5</td><td className="text-sm">23 Feb</td><td className="text-sm">Mon</td><td className="font-medium text-success">05:10</td><td className="font-medium text-warning">06:10</td></tr>
+                            <tr className={isToday('24 Feb') ? 'ring-4 ring-success/40 bg-success/20 border-2 border-success/60 rounded-md' : ''}><td className="font-semibold">6</td><td className="text-sm">24 Feb</td><td className="text-sm">Tue</td><td className="font-medium text-success">05:09</td><td className="font-medium text-warning">06:10</td></tr>
+                            <tr className={isToday('25 Feb') ? 'ring-4 ring-success/40 bg-success/20 border-2 border-success/60 rounded-md' : ''}><td className="font-semibold">7</td><td className="text-sm">25 Feb</td><td className="text-sm">Wed</td><td className="font-medium text-success">05:09</td><td className="font-medium text-warning">06:11</td></tr>
+                            <tr className={isToday('26 Feb') ? 'ring-4 ring-success/40 bg-success/20 border-2 border-success/60 rounded-md' : ''}><td className="font-semibold">8</td><td className="text-sm">26 Feb</td><td className="text-sm">Thu</td><td className="font-medium text-success">05:08</td><td className="font-medium text-warning">06:11</td></tr>
+                            <tr className={isToday('27 Feb') ? 'ring-4 ring-success/40 bg-success/20 border-2 border-success/60 rounded-md' : ''}><td className="font-semibold">9</td><td className="text-sm">27 Feb</td><td className="text-sm">Fri</td><td className="font-medium text-success">05:07</td><td className="font-medium text-warning">06:11</td></tr>
+                            <tr className={isToday('28 Feb') ? 'ring-4 ring-success/40 bg-success/20 border-2 border-success/60 rounded-md' : ''}><td className="font-semibold">10</td><td className="text-sm">28 Feb</td><td className="text-sm">Sat</td><td className="font-medium text-success">05:07</td><td className="font-medium text-warning">06:12</td></tr>
+                            <tr className={isToday('1 Mar') ? 'ring-4 ring-success/40 bg-success/20 border-2 border-success/60 rounded-md' : ''}><td className="font-semibold">11</td><td className="text-sm">1 Mar</td><td className="text-sm">Sun</td><td className="font-medium text-success">05:06</td><td className="font-medium text-warning">06:12</td></tr>
+                            <tr className={isToday('2 Mar') ? 'ring-4 ring-success/40 bg-success/20 border-2 border-success/60 rounded-md' : ''}><td className="font-semibold">12</td><td className="text-sm">2 Mar</td><td className="text-sm">Mon</td><td className="font-medium text-success">05:05</td><td className="font-medium text-warning">06:13</td></tr>
+                            <tr className={isToday('3 Mar') ? 'ring-4 ring-success/40 bg-success/20 border-2 border-success/60 rounded-md' : ''}><td className="font-semibold">13</td><td className="text-sm">3 Mar</td><td className="text-sm">Tue</td><td className="font-medium text-success">05:04</td><td className="font-medium text-warning">06:13</td></tr>
+                            <tr className={isToday('4 Mar') ? 'ring-4 ring-success/40 bg-success/20 border-2 border-success/60 rounded-md' : ''}><td className="font-semibold">14</td><td className="text-sm">4 Mar</td><td className="text-sm">Wed</td><td className="font-medium text-success">05:04</td><td className="font-medium text-warning">06:13</td></tr>
+                            <tr className={isToday('5 Mar') ? 'ring-4 ring-success/40 bg-success/20 border-2 border-success/60 rounded-md' : ''}><td className="font-semibold">15</td><td className="text-sm">5 Mar</td><td className="text-sm">Thu</td><td className="font-medium text-success">05:03</td><td className="font-medium text-warning">06:14</td></tr>
+                            <tr className={isToday('6 Mar') ? 'ring-4 ring-success/40 bg-success/20 border-2 border-success/60 rounded-md' : ''}><td className="font-semibold">16</td><td className="text-sm">6 Mar</td><td className="text-sm">Fri</td><td className="font-medium text-success">05:02</td><td className="font-medium text-warning">06:14</td></tr>
+                            <tr className={isToday('7 Mar') ? 'ring-4 ring-success/40 bg-success/20 border-2 border-success/60 rounded-md' : ''}><td className="font-semibold">17</td><td className="text-sm">7 Mar</td><td className="text-sm">Sat</td><td className="font-medium text-success">05:01</td><td className="font-medium text-warning">06:15</td></tr>
+                            <tr className={isToday('8 Mar') ? 'ring-4 ring-success/40 bg-success/20 border-2 border-success/60 rounded-md' : ''}><td className="font-semibold">18</td><td className="text-sm">8 Mar</td><td className="text-sm">Sun</td><td className="font-medium text-success">05:00</td><td className="font-medium text-warning">06:15</td></tr>
+                            <tr className={isToday('9 Mar') ? 'ring-4 ring-success/40 bg-success/20 border-2 border-success/60 rounded-md' : ''}><td className="font-semibold">19</td><td className="text-sm">9 Mar</td><td className="text-sm">Mon</td><td className="font-medium text-success">04:59</td><td className="font-medium text-warning">06:15</td></tr>
+                            <tr className={isToday('10 Mar') ? 'ring-4 ring-success/40 bg-success/20 border-2 border-success/60 rounded-md' : ''}><td className="font-semibold">20</td><td className="text-sm">10 Mar</td><td className="text-sm">Tue</td><td className="font-medium text-success">04:59</td><td className="font-medium text-warning">06:16</td></tr>
+                            <tr className={isToday('11 Mar') ? 'ring-4 ring-success/40 bg-success/20 border-2 border-success/60 rounded-md' : ''}><td className="font-semibold">21</td><td className="text-sm">11 Mar</td><td className="text-sm">Wed</td><td className="font-medium text-success">04:58</td><td className="font-medium text-warning">06:16</td></tr>
+                            <tr className={isToday('12 Mar') ? 'ring-4 ring-success/40 bg-success/20 border-2 border-success/60 rounded-md' : ''}><td className="font-semibold">22</td><td className="text-sm">12 Mar</td><td className="text-sm">Thu</td><td className="font-medium text-success">04:57</td><td className="font-medium text-warning">06:16</td></tr>
+                            <tr className={isToday('13 Mar') ? 'ring-4 ring-success/40 bg-success/20 border-2 border-success/60 rounded-md' : ''}><td className="font-semibold">23</td><td className="text-sm">13 Mar</td><td className="text-sm">Fri</td><td className="font-medium text-success">04:56</td><td className="font-medium text-warning">06:17</td></tr>
+                            <tr className={isToday('14 Mar') ? 'ring-4 ring-success/40 bg-success/20 border-2 border-success/60 rounded-md' : ''}><td className="font-semibold">24</td><td className="text-sm">14 Mar</td><td className="text-sm">Sat</td><td className="font-medium text-success">04:55</td><td className="font-medium text-warning">06:17</td></tr>
+                            <tr className={isToday('15 Mar') ? 'ring-4 ring-success/40 bg-success/20 border-2 border-success/60 rounded-md' : ''}><td className="font-semibold">25</td><td className="text-sm">15 Mar</td><td className="text-sm">Sun</td><td className="font-medium text-success">04:54</td><td className="font-medium text-warning">06:17</td></tr>
+                            <tr className={isToday('16 Mar') ? 'ring-4 ring-success/40 bg-success/20 border-2 border-success/60 rounded-md' : ''}><td className="font-semibold">26</td><td className="text-sm">16 Mar</td><td className="text-sm">Mon</td><td className="font-medium text-success">04:53</td><td className="font-medium text-warning">06:18</td></tr>
+                            <tr className={isToday('17 Mar') ? 'ring-4 ring-success/40 bg-success/20 border-2 border-success/60 rounded-md' : ''}><td className="font-semibold">27</td><td className="text-sm">17 Mar</td><td className="text-sm">Tue</td><td className="font-medium text-success">04:52</td><td className="font-medium text-warning">06:18</td></tr>
+                            <tr className={isToday('18 Mar') ? 'ring-4 ring-success/40 bg-success/20 border-2 border-success/60 rounded-md' : ''}><td className="font-semibold">28</td><td className="text-sm">18 Mar</td><td className="text-sm">Wed</td><td className="font-medium text-success">04:51</td><td className="font-medium text-warning">06:18</td></tr>
+                            <tr className={isToday('19 Mar') ? 'ring-4 ring-success/40 bg-success/20 border-2 border-success/60 rounded-md' : ''}><td className="font-semibold">29</td><td className="text-sm">19 Mar</td><td className="text-sm">Thu</td><td className="font-medium text-success">04:50</td><td className="font-medium text-warning">06:19</td></tr>
+                            <tr className={isToday('20 Mar') ? 'ring-4 ring-success/40 bg-success/20 border-2 border-success/60 rounded-md' : ''}><td className="font-semibold">30</td><td className="text-sm">20 Mar</td><td className="text-sm">Fri</td><td className="font-medium text-success">04:50</td><td className="font-medium text-warning">06:19</td></tr>
                         </tbody>
                     </table>
                 </div>

@@ -12,6 +12,7 @@ export default function Page() {
     const [onlyRaipur, setOnlyRaipur] = useState(false);
     const [soundEnabled, setSoundEnabled] = useState(false);
     const [showLoader, setShowLoader] = useState(false);
+
     // tick to force re-render so `isToday` updates when system date/time changes
     const [, setNowTick] = useState(0);
     const timerRef = useRef(null);
@@ -26,6 +27,7 @@ export default function Page() {
                 setSoundEnabled(true);
                 soundEnabledRef.current = true;
             }
+            // no test UI state to load
             // no test overrides in production
         } catch (e) {
             // ignore
@@ -57,6 +59,8 @@ export default function Page() {
             else localStorage.removeItem(SOUND_KEY);
         } catch (e) { }
     };
+
+
 
     useEffect(() => {
         return () => {
@@ -107,13 +111,22 @@ export default function Page() {
             return `${day} ${months[today.getMonth()]}`;
         };
 
-        const parseTimeStr = (timeStr) => {
-            // accepts formats like "5:10", "05:17" or "5:10" with optional spaces
+        // parse a time string like "5:10", "05:10", or with am/pm like "5:10 pm".
+        // if `treatAsPM` is true and no am/pm is present, times with hour < 12 are treated as PM (hour += 12).
+        const parseTimeStr = (timeStr, treatAsPM = false) => {
             if (!timeStr) return null;
-            const m = timeStr.trim().match(/(\d{1,2}):(\d{2})/);
+            const m = timeStr.trim().toLowerCase().match(/(\d{1,2}):(\d{2})\s*(am|pm)?/);
             if (!m) return null;
-            const hh = parseInt(m[1], 10);
+            let hh = parseInt(m[1], 10);
             const mm = parseInt(m[2], 10);
+            const suffix = m[3];
+            if (suffix === 'am') {
+                if (hh === 12) hh = 0;
+            } else if (suffix === 'pm') {
+                if (hh < 12) hh += 12;
+            } else if (treatAsPM && hh < 12) {
+                hh += 12;
+            }
             const d = new Date();
             d.setHours(hh);
             d.setMinutes(mm);
@@ -121,6 +134,8 @@ export default function Page() {
             d.setMilliseconds(0);
             return d;
         };
+
+
 
         const findTodayRowTimes = () => {
             const label = getTodayLabel();
@@ -153,15 +168,26 @@ export default function Page() {
         };
 
         const check = () => {
-            // allow manual overrides (for testing) stored in localStorage
+
+            // allow manual overrides (for normal flow) stored in localStorage
             const times = findTodayRowTimes();
             if (!times) return;
             // if user selected only Raipur, do not play sounds from the main (Bilaspur) player
             const onlyRaipur = (typeof localStorage !== 'undefined') ? localStorage.getItem(STORAGE_KEY) === 'true' : false;
             if (onlyRaipur) return;
             const now = new Date();
+            // debug info for diagnosis
+            try {
+                const sehriTime = parseTimeStr(times.sehriText);
+                // treat iftari as PM when no am/pm is provided
+                const iftariTime = parseTimeStr(times.iftariText, true);
+                const persistedSehri = (typeof localStorage !== 'undefined') ? localStorage.getItem('ramzan_played_sehri') : null;
+                const persistedIftari = (typeof localStorage !== 'undefined') ? localStorage.getItem('ramzan_played_iftari') : null;
+                const dbg = `now=${now.toTimeString().slice(0, 8)} sehriText=${times.sehriText} sehri=${sehriTime ? sehriTime.toTimeString().slice(0, 8) : 'null'} iftariText=${times.iftariText} iftari=${iftariTime ? iftariTime.toTimeString().slice(0, 8) : 'null'} onlyRaipur=${onlyRaipur} soundEnabled=${soundEnabledRef.current} persistedSehri=${persistedSehri} persistedIftari=${persistedIftari}`;
+                console.debug('Ramzan schedule check', dbg);
+            } catch (e) { console.debug(e); }
             const sehriTime = parseTimeStr(times.sehriText);
-            const iftariTime = parseTimeStr(times.iftariText);
+            const iftariTime = parseTimeStr(times.iftariText, true);
 
             if (sehriTime && now >= sehriTime) {
                 const key = (new Date()).toDateString();
@@ -260,9 +286,12 @@ export default function Page() {
                     <span>Enable Sehri / Iftari Announcement</span>
                 </span>
             </label>
+
+            {/* debug message removed */}
+
             {showLoader && <BackLoader message="Switching..." />}
             {onlyRaipur ? (
-                <RaipurTimeTable />
+                <RaipurTimeTable onlyRaipur={onlyRaipur} />
             ) : (
                 <>
                     {/* ##############################Mobile single stacked table showing all 30 rows */}

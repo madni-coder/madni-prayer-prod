@@ -31,7 +31,7 @@ const nextConfig = {
             return [
                 {
                     source: "/api/:path*",
-                    destination: "https://madni-prayer.vercel.app/api/:path*",
+                    destination: "https://raahehidayat.vercel.app/api/:path*",
                 },
             ];
         }
