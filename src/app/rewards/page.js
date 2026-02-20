@@ -1,5 +1,6 @@
 "use client";
 import React, { useState } from "react";
+import apiClient from "../../lib/apiClient";
 import {
     FaAngleLeft,
     FaArrowDown,
@@ -93,15 +94,12 @@ const RewardsPage = () => {
     React.useEffect(() => {
         async function fetchRewards() {
             try {
-                const res = await fetch("/api/api-rewards", { method: "GET" });
-                if (res.ok) {
-                    const data = await res.json();
-                    // Ensure we only keep top 10 by position (ascending)
-                    const list = Array.isArray(data) ? data : [];
-                    // keep the full normalized list in state; we'll select best per position
-                    list.sort((a, b) => (a.position ?? 0) - (b.position ?? 0));
-                    setRewardList(list);
-                }
+                const { data } = await apiClient.get("/api/api-rewards");
+                // Ensure we only keep top 10 by position (ascending)
+                const list = Array.isArray(data) ? data : [];
+                // keep the full normalized list in state; we'll select best per position
+                list.sort((a, b) => (a.position ?? 0) - (b.position ?? 0));
+                setRewardList(list);
             } catch (err) {
                 setRewardList([]);
             }
