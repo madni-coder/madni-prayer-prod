@@ -50,17 +50,11 @@ export default function JamatTimesPage() {
     const router = useRouter();
     const [masjids, setMasjids] = useState([]);
     const [onlyRaipur, setOnlyRaipur] = useState(false);
-    const [selectedMasjid, setSelectedMasjid] = useState("");
+    const [selectedMasjid, setSelectedMasjid] = useState(""); // acts as unified search query
     const [selectedMasjidData, setSelectedMasjidData] = useState(null);
-    const [selectedColony, setSelectedColony] = useState("");
-    const [masjidSuggestionsVisible, setMasjidSuggestionsVisible] =
-        useState(false);
+    const [masjidSuggestionsVisible, setMasjidSuggestionsVisible] = useState(false);
     const [filteredMasjids, setFilteredMasjids] = useState([]);
     const [masjidHighlight, setMasjidHighlight] = useState(-1);
-    const [colonySuggestionsVisible, setColonySuggestionsVisible] =
-        useState(false);
-    const [filteredColonies, setFilteredColonies] = useState([]);
-    const [colonyHighlight, setColonyHighlight] = useState(-1);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState("");
     const [isOffline, setIsOffline] = useState(
@@ -159,7 +153,6 @@ export default function JamatTimesPage() {
     useEffect(() => {
         if (savedMasjid && !hasLoadedSavedMasjid) {
             setSelectedMasjid(savedMasjid.masjidName || "");
-            setSelectedColony(savedMasjid.colony || "");
             setSelectedMasjidData(savedMasjid);
             setHasLoadedSavedMasjid(true);
         }
@@ -251,7 +244,6 @@ export default function JamatTimesPage() {
     useEffect(() => {
         // reset suggestion lists
         setFilteredMasjids([]);
-        setFilteredColonies([]);
 
         // if selected masjid is outside the visible set, clear it
         if (
@@ -261,7 +253,6 @@ export default function JamatTimesPage() {
         ) {
             setSelectedMasjid("");
             setSelectedMasjidData(null);
-            setSelectedColony("");
         }
     }, [onlyRaipur]);
 
@@ -376,22 +367,45 @@ export default function JamatTimesPage() {
         }
     };
 
+    // Unified search: matches masjidName, colony or locality with ranking
     const handleMasjidChange = (e) => {
-        const masjidName = e.target.value;
-        setSelectedMasjid(masjidName);
-        const filtered = visibleMasjids.filter((m) =>
-            m.masjidName.toLowerCase().includes(masjidName.toLowerCase())
-        );
+        const q = e.target.value;
+        setSelectedMasjid(q);
+        const qi = q.trim().toLowerCase();
+
+        if (qi.length === 0) {
+            setFilteredMasjids([]);
+            setMasjidSuggestionsVisible(false);
+            setMasjidHighlight(-1);
+            setSelectedMasjidData(null);
+            return;
+        }
+
+        // scoring: exact full-match > startsWith > includes
+        const score = (m) => {
+            const name = (m.masjidName || "").toLowerCase();
+            const colony = (m.colony || "").toLowerCase();
+            const locality = (m.locality || "").toLowerCase();
+            if (qi === name || qi === colony || qi === locality) return 100;
+            if (name.startsWith(qi) || colony.startsWith(qi) || locality.startsWith(qi)) return 80;
+            if (name.includes(qi) || colony.includes(qi) || locality.includes(qi)) return 50;
+            return 0;
+        };
+
+        const filtered = visibleMasjids
+            .map((m) => ({ m, s: score(m) }))
+            .filter((x) => x.s > 0)
+            .sort((a, b) => b.s - a.s || a.m.masjidName.localeCompare(b.m.masjidName))
+            .map((x) => x.m);
+
         setFilteredMasjids(filtered);
-        setMasjidSuggestionsVisible(
-            masjidName.trim().length > 0 && filtered.length > 0
-        );
+        setMasjidSuggestionsVisible(qi.length >= 1 && (filtered.length > 0 || qi.length >= 4));
         setMasjidHighlight(-1);
 
-        const exact = visibleMasjids.find((m) => m.masjidName === masjidName);
+        // If exact match (score 100) exists, preselect it
+        const exact = visibleMasjids.find((m) => (m.masjidName || "") === q || (m.colony || "") === q || (m.locality || "") === q);
         if (exact) {
             setSelectedMasjidData(exact);
-            setSelectedColony(exact.colony || "");
         } else {
             setSelectedMasjidData(null);
         }
@@ -400,7 +414,6 @@ export default function JamatTimesPage() {
     const selectMasjid = (masjid) => {
         setSelectedMasjid(masjid.masjidName);
         setSelectedMasjidData(masjid);
-        setSelectedColony(masjid.colony || "");
         setMasjidSuggestionsVisible(false);
         setFilteredMasjids([]);
         setMasjidHighlight(-1);
@@ -410,9 +423,7 @@ export default function JamatTimesPage() {
         if (!masjidSuggestionsVisible) return;
         if (e.key === "ArrowDown") {
             e.preventDefault();
-            setMasjidHighlight((i) =>
-                Math.min(i + 1, filteredMasjids.length - 1)
-            );
+            setMasjidHighlight((i) => Math.min(i + 1, filteredMasjids.length - 1));
         } else if (e.key === "ArrowUp") {
             e.preventDefault();
             setMasjidHighlight((i) => Math.max(i - 1, 0));
@@ -434,91 +445,9 @@ export default function JamatTimesPage() {
         setMasjidSuggestionsVisible(false);
         setMasjidHighlight(-1);
     };
-    const clearColony = (e) => {
-        e.preventDefault();
-        setSelectedColony("");
-        setFilteredColonies([]);
-        setColonySuggestionsVisible(false);
-        setColonyHighlight(-1);
-    };
 
-    const colonies = [
-        ...new Set(visibleMasjids.map((m) => m.colony || "").filter(Boolean)),
-    ];
-
-    // derived exact-match flags to avoid showing dropdown when an exact item is selected
-    // respect onlyRaipur toggle for exact match checks
-    const selectedMasjidExact = visibleMasjids.some(
-        (m) => m.masjidName === selectedMasjid
-    );
-    const selectedColonyExact = colonies.includes(selectedColony);
-
-    // dropdown flags
-    // keep the ">= 4" check as requested, but allow showing the dropdown even when there are no matches
-    // so we can display a themed "No Match Found" message
-    const showMasjidDropdown =
-        masjidSuggestionsVisible ||
-        (selectedMasjid.trim().length >= 4 && !selectedMasjidExact);
-    const showColonyDropdown =
-        colonySuggestionsVisible ||
-        (selectedColony.trim().length >= 4 && !selectedColonyExact);
-
-    const selectColony = (colony) => {
-        setSelectedColony(colony);
-        const masjidsInColony = visibleMasjids.filter((m) => m.colony === colony);
-        if (masjidsInColony.length > 0) {
-            setSelectedMasjid(masjidsInColony[0].masjidName);
-            setSelectedMasjidData(masjidsInColony[0]);
-        } else {
-            setSelectedMasjid("");
-            setSelectedMasjidData(null);
-        }
-        setFilteredColonies([]);
-        setColonySuggestionsVisible(false);
-        setColonyHighlight(-1);
-    };
-
-    const handleColonyChange = (e) => {
-        const colony = e.target.value;
-        setSelectedColony(colony);
-        const filtered = colonies.filter(
-            (c) => c && c.toLowerCase().includes(colony.toLowerCase())
-        );
-        setFilteredColonies(filtered);
-        setColonySuggestionsVisible(
-            colony.trim().length > 0 && filtered.length > 0
-        );
-        setColonyHighlight(-1);
-
-        const exact = colonies.find((c) => c === colony);
-        if (exact) {
-            const masjidsInColony = visibleMasjids.filter((m) => m.colony === colony);
-            if (masjidsInColony.length > 0) {
-                setSelectedMasjid(masjidsInColony[0].masjidName);
-                setSelectedMasjidData(masjidsInColony[0]);
-            }
-        }
-    };
-
-    const handleColonyKeyDown = (e) => {
-        if (!colonySuggestionsVisible) return;
-        if (e.key === "ArrowDown") {
-            e.preventDefault();
-            setColonyHighlight((i) =>
-                Math.min(i + 1, filteredColonies.length - 1)
-            );
-        } else if (e.key === "ArrowUp") {
-            e.preventDefault();
-            setColonyHighlight((i) => Math.max(i - 1, 0));
-        } else if (e.key === "Enter") {
-            e.preventDefault();
-            const sel =
-                filteredColonies[colonyHighlight] || filteredColonies[0];
-            if (sel) selectColony(sel);
-        } else if (e.key === "Escape") {
-            setColonySuggestionsVisible(false);
-        }
-    };
+    const selectedMasjidExact = visibleMasjids.some((m) => m.masjidName === selectedMasjid);
+    const showMasjidDropdown = masjidSuggestionsVisible || (selectedMasjid.trim().length >= 4 && !selectedMasjidExact);
 
     const getMapUrl = () => {
         if (!selectedMasjidData) return "";
@@ -820,10 +749,9 @@ export default function JamatTimesPage() {
                 )}
 
                 <div className="flex flex-col gap-2 mb-6 ml-4 mr-4">
-                    {/* Masjid search */}
                     <div className="w-full">
                         <h3 className="text-lg font-bold text-primary mb-3 flex items-center gap-2">
-                            🕌 Search By Masjid Name
+                            🔎 Search By Masjid or Locality
                         </h3>
                         <div className="relative">
                             <input
@@ -832,20 +760,11 @@ export default function JamatTimesPage() {
                                 onChange={handleMasjidChange}
                                 onKeyDown={handleMasjidKeyDown}
                                 onFocus={() => {
-                                    if (
-                                        selectedMasjid.trim().length > 0 &&
-                                        filteredMasjids.length > 0
-                                    )
+                                    if (selectedMasjid.trim().length > 0 && filteredMasjids.length > 0)
                                         setMasjidSuggestionsVisible(true);
                                 }}
-                                onBlur={() =>
-                                    setTimeout(
-                                        () =>
-                                            setMasjidSuggestionsVisible(false),
-                                        150
-                                    )
-                                }
-                                placeholder="Search For Masjid"
+                                onBlur={() => setTimeout(() => setMasjidSuggestionsVisible(false), 150)}
+                                placeholder="Search By Masjid or Colony"
                                 aria-autocomplete="list"
                             />
                             {selectedMasjid.length > 0 && (
@@ -854,7 +773,7 @@ export default function JamatTimesPage() {
                                     onMouseDown={(ev) => ev.preventDefault()}
                                     onClick={clearMasjid}
                                     className="absolute right-2 top-1/2 -translate-y-1/2 transform text-primary bg-primary/10 hover:bg-primary/20 rounded-full p-1 z-50"
-                                    aria-label="Clear masjid"
+                                    aria-label="Clear search"
                                 >
                                     <FaTimes className="w-4 h-4" />
                                 </button>
@@ -866,120 +785,16 @@ export default function JamatTimesPage() {
                                         filteredMasjids.map((m, idx) => (
                                             <li
                                                 key={m.id}
-                                                className={`px-3 py-2 cursor-pointer hover:bg-primary/10 ${idx === masjidHighlight
-                                                    ? "bg-primary/10"
-                                                    : ""
-                                                    }`}
-                                                onMouseDown={(ev) =>
-                                                    ev.preventDefault()
-                                                }
+                                                className={`px-3 py-2 cursor-pointer hover:bg-primary/10 ${idx === masjidHighlight ? "bg-primary/10" : ""}`}
+                                                onMouseDown={(ev) => ev.preventDefault()}
                                                 onClick={() => selectMasjid(m)}
                                             >
-                                                <div className="font-semibold text-primary">
-                                                    {m.masjidName}
-                                                </div>
-                                                <div className="text-sm text-gray-500">
-                                                    {m.colony}
-                                                    {m.locality
-                                                        ? `, ${m.locality}`
-                                                        : ""}
-                                                </div>
+                                                <div className="font-semibold text-primary">{m.masjidName}</div>
+                                                <div className="text-sm text-gray-500">{m.colony}{m.locality ? `, ${m.locality}` : ""}</div>
                                             </li>
                                         ))
                                     ) : selectedMasjid.trim().length >= 4 ? (
-                                        <li
-                                            key="no-match"
-                                            className="px-3 py-2 text-center text-sm text-primary opacity-80 cursor-default"
-                                        >
-                                            {isOffline ? "No Internet" : "No Match Found"}
-                                        </li>
-                                    ) : null}
-                                </ul>
-                            )}
-                        </div>
-                    </div>
-
-                    {/* OR separator */}
-                    <div className="flex items-center justify-center py-2">
-                        <div className="flex items-center gap-4 w-full">
-                            <div className="flex-1 h-px bg-gradient-to-r from-transparent to-primary/30"></div>
-                            <div className="px-4 py-2 bg-primary/10 border border-primary/20 rounded-full">
-                                <span className="text-sm font-bold text-primary tracking-wider">
-                                    OR
-                                </span>
-                            </div>
-                            <div className="flex-1 h-px bg-gradient-to-l from-transparent to-primary/30"></div>
-                        </div>
-                    </div>
-
-                    {/* Colony search */}
-                    <div className="w-full">
-                        <h3 className="text-lg font-bold text-primary mb-3 flex items-center gap-2">
-                            🏘️ Search By Colony Name
-                        </h3>
-                        <div className="relative">
-                            <input
-                                className="input input-primary input-lg w-full pr-10"
-                                value={selectedColony}
-                                onChange={handleColonyChange}
-                                onKeyDown={handleColonyKeyDown}
-                                onFocus={() => {
-                                    if (
-                                        selectedColony.trim().length > 0 &&
-                                        filteredColonies.length > 0
-                                    )
-                                        setColonySuggestionsVisible(true);
-                                }}
-                                onBlur={() =>
-                                    setTimeout(
-                                        () =>
-                                            setColonySuggestionsVisible(false),
-                                        150
-                                    )
-                                }
-                                placeholder="Search by colony"
-                                aria-autocomplete="list"
-                            />
-
-                            {selectedColony.length > 0 && (
-                                <button
-                                    type="button"
-                                    onMouseDown={(ev) => ev.preventDefault()}
-                                    onClick={clearColony}
-                                    className="absolute right-2 top-1/2 -translate-y-1/2 transform text-primary bg-primary/10 hover:bg-primary/20 rounded-full p-1 z-50"
-                                    aria-label="Clear colony"
-                                >
-                                    <FaTimes className="w-4 h-4" />
-                                </button>
-                            )}
-
-                            {showColonyDropdown && (
-                                <ul className="absolute left-0 right-0 mt-1 z-50 max-h-44 overflow-auto bg-base-100 border border-primary/20 rounded-md shadow-lg">
-                                    {filteredColonies.length > 0 ? (
-                                        filteredColonies.map((c, idx) => (
-                                            <li
-                                                key={c}
-                                                className={`px-3 py-2 cursor-pointer hover:bg-primary/10 ${idx === colonyHighlight
-                                                    ? "bg-primary/10"
-                                                    : ""
-                                                    }`}
-                                                onMouseDown={(ev) =>
-                                                    ev.preventDefault()
-                                                }
-                                                onClick={() => selectColony(c)}
-                                            >
-                                                <div className="font-semibold text-primary">
-                                                    {c}
-                                                </div>
-                                            </li>
-                                        ))
-                                    ) : selectedColony.trim().length >= 4 ? (
-                                        <li
-                                            key="no-match"
-                                            className="px-3 py-2 text-center text-sm text-primary opacity-80 cursor-default"
-                                        >
-                                            {isOffline ? "No Internet" : "No Match Found"}
-                                        </li>
+                                        <li key="no-match" className="px-3 py-2 text-center text-sm text-primary opacity-80 cursor-default">{isOffline ? "No Internet" : "No Match Found"}</li>
                                     ) : null}
                                 </ul>
                             )}

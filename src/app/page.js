@@ -215,7 +215,6 @@ export default function Home() {
                     onDelayedShow={setShowLoader}
                 >
                     <span className="inline-flex items-center">
-                        <FaHandPointRight className="mr-2 text-xl lg:text-2xl" />
                         Ramzan Special
                     </span>
                 </CardLink>
