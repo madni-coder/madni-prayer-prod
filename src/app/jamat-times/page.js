@@ -63,11 +63,15 @@ export default function JamatTimesPage() {
     const [colonyHighlight, setColonyHighlight] = useState(-1);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState("");
+    const [isOffline, setIsOffline] = useState(
+        typeof window !== "undefined" ? !window.navigator.onLine : false
+    );
     const [autoLocating, setAutoLocating] = useState(false);
     const [userCoords, setUserCoords] = useState(null);
     const [mapEmbedUrl, setMapEmbedUrl] = useState(null);
     const [savedMasjid, setSavedMasjid] = useState(null);
     const [hasLoadedSavedMasjid, setHasLoadedSavedMasjid] = useState(false);
+    const [changedPrayers, setChangedPrayers] = useState([]);
     const [reportVisible, setReportVisible] = useState(false);
     const [copied, setCopied] = useState(false);
     const reportPhone = "9691302711";
@@ -96,6 +100,17 @@ export default function JamatTimesPage() {
 
     useEffect(() => {
         loadSavedMasjid();
+        // load cached masjids immediately so UI can render when offline
+        try {
+            if (typeof window !== "undefined") {
+                const cached = localStorage.getItem("masjidsCache");
+                if (cached) {
+                    setMasjids(JSON.parse(cached));
+                }
+            }
+        } catch (e) {
+            console.warn("Failed to load masjidsCache on mount", e);
+        }
         fetchMasjids();
 
         // load persisted toggle state
@@ -107,6 +122,26 @@ export default function JamatTimesPage() {
         } catch (e) {
             console.warn("Failed to read onlyRaipur from localStorage", e);
         }
+    }, []);
+
+    // Keep track of online/offline state and refetch when back online
+    useEffect(() => {
+        if (typeof window === "undefined") return;
+        const handleOnline = () => {
+            setIsOffline(false);
+            setError("");
+            fetchMasjids();
+        };
+        const handleOffline = () => {
+            setIsOffline(true);
+            setError("No internet connection");
+        };
+        window.addEventListener("online", handleOnline);
+        window.addEventListener("offline", handleOffline);
+        return () => {
+            window.removeEventListener("online", handleOnline);
+            window.removeEventListener("offline", handleOffline);
+        };
     }, []);
 
     // persist toggle to localStorage when changed
@@ -129,6 +164,88 @@ export default function JamatTimesPage() {
             setHasLoadedSavedMasjid(true);
         }
     }, [savedMasjid, hasLoadedSavedMasjid]);
+
+    // Sync updated API data with the locally saved masjid (runs when API data arrives)
+    useEffect(() => {
+        if (hasLoadedSavedMasjid && savedMasjid && masjids.length > 0) {
+            const freshData = masjids.find(
+                (m) =>
+                    m.masjidName === savedMasjid.masjidName &&
+                    m.colony === savedMasjid.colony
+            );
+
+            if (freshData) {
+                const dataToSave = {
+                    masjidName: freshData.masjidName,
+                    colony: freshData.colony,
+                    locality: freshData.locality || "",
+                    fazar: freshData.fazar,
+                    zuhar: freshData.zuhar,
+                    asar: freshData.asar,
+                    maghrib: freshData.maghrib,
+                    isha: freshData.isha,
+                    taravih: freshData.taravih,
+                    juma: freshData.juma,
+                    pasteMapUrl: freshData.pasteMapUrl || "",
+                    savedAt: savedMasjid.savedAt || new Date().toISOString(),
+                };
+
+                const isDataDifferent =
+                    savedMasjid.fazar !== freshData.fazar ||
+                    savedMasjid.zuhar !== freshData.zuhar ||
+                    savedMasjid.asar !== freshData.asar ||
+                    savedMasjid.maghrib !== freshData.maghrib ||
+                    savedMasjid.isha !== freshData.isha ||
+                    savedMasjid.juma !== freshData.juma ||
+                    savedMasjid.taravih !== freshData.taravih ||
+                    savedMasjid.locality !== freshData.locality;
+
+                if (isDataDifferent) {
+                    try {
+                        localStorage.setItem("savedMasjidData", JSON.stringify(dataToSave));
+                        setSavedMasjid(dataToSave);
+
+                        const changed = [];
+                        if (savedMasjid.fazar !== freshData.fazar) changed.push("Fajr");
+                        if (savedMasjid.zuhar !== freshData.zuhar) changed.push("Zuhr");
+                        if (savedMasjid.asar !== freshData.asar) changed.push("Asar");
+                        if (savedMasjid.maghrib !== freshData.maghrib) changed.push("Maghrib");
+                        if (savedMasjid.isha !== freshData.isha) changed.push("Isha");
+                        if (savedMasjid.taravih !== freshData.taravih) changed.push("Taravih");
+                        if (savedMasjid.juma !== freshData.juma) changed.push("Juma Khutba");
+
+                        if (changed.length > 0) {
+                            setChangedPrayers(changed);
+                            setTimeout(() => {
+                                setChangedPrayers([]);
+                            }, 60000); // 1 minute
+                        }
+                    } catch (e) {
+                        console.error("Failed to update fresh masjid data to localStorage", e);
+                    }
+                }
+
+                // Ensure the selectedMasjidData uses the freshest data possible
+                setSelectedMasjidData((prev) => {
+                    if (prev && prev.masjidName === freshData.masjidName && prev.colony === freshData.colony) {
+                        // Check if the current state data is identical to the fresh data
+                        const isPrevDifferent =
+                            prev.fazar !== freshData.fazar ||
+                            prev.zuhar !== freshData.zuhar ||
+                            prev.asar !== freshData.asar ||
+                            prev.maghrib !== freshData.maghrib ||
+                            prev.isha !== freshData.isha ||
+                            prev.juma !== freshData.juma ||
+                            prev.taravih !== freshData.taravih;
+                        if (isPrevDifferent) {
+                            return freshData;
+                        }
+                    }
+                    return prev;
+                });
+            }
+        }
+    }, [masjids, savedMasjid, hasLoadedSavedMasjid]);
 
     // Clear or adjust selections when onlyRaipur toggle changes
     useEffect(() => {
@@ -179,13 +296,31 @@ export default function JamatTimesPage() {
             setLoading(true);
             const { data } = await apiClient.get("/api/all-masjids");
             setMasjids(data?.data || []);
+            setIsOffline(false);
+            try {
+                if (typeof window !== "undefined") {
+                    localStorage.setItem("masjidsCache", JSON.stringify(data?.data || []));
+                }
+            } catch (e) {
+                console.warn("Failed to persist masjids cache", e);
+            }
         } catch (err) {
             const message =
                 err?.response?.data?.error ||
                 err?.message ||
                 "Network error occurred";
             setError(message);
+            setIsOffline(true);
             console.error("Error fetching masjids:", err);
+            // fall back to cached masjids so UI can still render
+            try {
+                if (typeof window !== "undefined") {
+                    const cached = localStorage.getItem("masjidsCache");
+                    if (cached) setMasjids(JSON.parse(cached));
+                }
+            } catch (e) {
+                console.warn("Failed to load cached masjids after fetch failure", e);
+            }
         } finally {
             setLoading(false);
         }
@@ -594,28 +729,9 @@ export default function JamatTimesPage() {
         ];
     };
 
-    if (loading) {
-        return (
-            <div className="min-h-screen flex items-center justify-center bg-base-200">
-                <style>{`\n                .loader {\n                    position: relative;\n                    width: 100px;\n                    height: 100px;\n                }\n                .loader:before{\n                    content: '';\n                    position: absolute;\n                    width: 48px;\n                    height: 48px;\n                    border-radius: 50%;\n                    top: 50%;\n                    left: 0;\n                    transform: translate(-5px, -50%);\n                    background: linear-gradient(to right, #fff 50%, var(--primary-color, #de3500) 50%) no-repeat;\n                    background-size: 200% auto;\n                    background-position: 100% 0;\n                    animation: colorBallMoveX 1.5s linear infinite alternate;\n                }\n                .loader:after{\n                    content: '';\n                    position: absolute;\n                    left: 50%;\n                    top: 0;\n                    transform: translateX(-50%);\n                    width: 2px;\n                    height: 100%;\n                    background: var(--primary-color, #de3500);\n                }\n                @keyframes colorBallMoveX {\n                  0%  {\n                    background-position: 0% 0;\n                    transform: translate(-15px, -50%);\n                  }\n                  15%  , 25% {\n                    background-position: 0% 0;\n                    transform: translate(0px, -50%);\n                  }\n                  75% , 85% {\n                    background-position: 100% 0;\n                    transform: translate(50px, -50%);\n                  }\n                  100% {\n                    background-position: 100% 0;\n                    transform: translate(65px, -50%);\n                  }\n                }\n                `}</style>
-
-                <span className="loader" aria-hidden="true"></span>
-            </div>
-        );
-    }
-
-    if (error) {
-        return (
-            <div className="min-h-screen flex items-center justify-center bg-base-200">
-                <div className="alert alert-error">
-                    <span>Error: {error}</span>
-                    <button className="btn btn-sm" onClick={fetchMasjids}>
-                        Retry
-                    </button>
-                </div>
-            </div>
-        );
-    }
+    // Note: remove blocking early returns so the UI renders even when
+    // loading or an error occurs (offline mode). We still track `loading`
+    // and `error` states and show contextual UI inside the main render.
 
     return (
         <div className="min-h-screen flex flex-col items-center justify-center bg-base-200 pb-12">
@@ -641,6 +757,14 @@ export default function JamatTimesPage() {
                     <DigitalClock />
                 </div>
             </div>
+
+            {isOffline && (
+                <div className="w-full max-w-md px-4 mt-3">
+                    <div className="alert shadow-lg alert-warning text-center mt -2">
+                        <span className="font-bold">No Internet</span>
+                    </div>
+                </div>
+            )}
 
             <div className="bg-white backdrop-blur-sm p-3 md:p-4 rounded-lg shadow-sm max-w-2xl mx-4 sm:mx-auto">
                 <h2 className="text-base md:text-lg font-extrabold text-primary text-center leading-tight">
@@ -767,7 +891,7 @@ export default function JamatTimesPage() {
                                             key="no-match"
                                             className="px-3 py-2 text-center text-sm text-primary opacity-80 cursor-default"
                                         >
-                                            No Match Found
+                                            {isOffline ? "No Internet" : "No Match Found"}
                                         </li>
                                     ) : null}
                                 </ul>
@@ -854,7 +978,7 @@ export default function JamatTimesPage() {
                                             key="no-match"
                                             className="px-3 py-2 text-center text-sm text-primary opacity-80 cursor-default"
                                         >
-                                            No Match Found
+                                            {isOffline ? "No Internet" : "No Match Found"}
                                         </li>
                                     ) : null}
                                 </ul>
@@ -884,19 +1008,42 @@ export default function JamatTimesPage() {
                 <div className="card bg-base-100 shadow-xl mb-8">
                     <div className="card-body p-6">
                         {selectedMasjidData ? (
-                            getJamatTimes().map((prayer) => (
-                                <div
-                                    key={prayer.name}
-                                    className={`flex justify-between items-center border-l-4 ${prayer.color} bg-base-200 rounded-lg px-4 py-3 mb-3 last:mb-0`}
-                                >
-                                    <span className="font-semibold text-base">
-                                        {prayer.name}
-                                    </span>
-                                    <span className="font-mono text-lg">
-                                        {prayer.time}
-                                    </span>
-                                </div>
-                            ))
+                            getJamatTimes().map((prayer) => {
+                                const isChanged = changedPrayers.includes(prayer.name);
+                                return (
+                                    <div
+                                        key={prayer.name}
+                                        title={isChanged ? `${prayer.name} time changed today` : undefined}
+                                        className={`group relative flex justify-between items-center border-l-4 ${prayer.color} rounded-lg px-4 py-3 mb-3 last:mb-0 transition-all duration-500 ${isChanged
+                                            ? "bg-primary/20 shadow-md scale-[1.02]"
+                                            : "bg-base-200"
+                                            }`}
+                                    >
+                                        <div className="flex items-center gap-2">
+                                            <span className={`font-semibold text-base ${isChanged ? "text-primary" : ""}`}>
+                                                {prayer.name}
+                                            </span>
+                                        </div>
+                                        <div className="flex items-center gap-2">
+                                            <span className="font-mono text-lg font-bold">
+                                                {prayer.time}
+                                            </span>
+                                            {isChanged && (
+                                                <span className="absolute -top-2 right-2 bg-primary text-white text-xs px-2  rounded-full shadow-sm animate-pulse z-10">
+                                                    Jamat Time Changed
+                                                </span>
+                                            )}
+                                        </div>
+
+                                        {/* Tooltip on hover if changed */}
+                                        {isChanged && (
+                                            <div className="pointer-events-none absolute -top-8 right-0 opacity-0 group-hover:opacity-100 transition-opacity bg-black text-white text-xs py-1 px-2 rounded shadow-lg whitespace-nowrap z-50">
+                                                {prayer.name} time changed today
+                                            </div>
+                                        )}
+                                    </div>
+                                )
+                            })
                         ) : (
                             <div className="flex flex-col items-center justify-center py-12 px-6">
                                 <div className="w-20 h-20 mb-6 rounded-full bg-primary/10 flex items-center justify-center">

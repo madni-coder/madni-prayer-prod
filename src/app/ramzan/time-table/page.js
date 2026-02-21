@@ -55,8 +55,28 @@ export default function Page() {
         setSoundEnabled(checked);
         soundEnabledRef.current = checked;
         try {
-            if (checked) localStorage.setItem(SOUND_KEY, "true");
-            else localStorage.removeItem(SOUND_KEY);
+            if (checked) {
+                localStorage.setItem(SOUND_KEY, "true");
+                // Briefly play/pause to unlock audio context
+                if (sehriAudioRef.current) {
+                    sehriAudioRef.current.volume = 0;
+                    sehriAudioRef.current.play().then(() => {
+                        sehriAudioRef.current.pause();
+                        sehriAudioRef.current.currentTime = 0;
+                        sehriAudioRef.current.volume = 1;
+                    }).catch(() => { });
+                }
+                if (iftariAudioRef.current) {
+                    iftariAudioRef.current.volume = 0;
+                    iftariAudioRef.current.play().then(() => {
+                        iftariAudioRef.current.pause();
+                        iftariAudioRef.current.currentTime = 0;
+                        iftariAudioRef.current.volume = 1;
+                    }).catch(() => { });
+                }
+            } else {
+                localStorage.removeItem(SOUND_KEY);
+            }
         } catch (e) { }
     };
 
@@ -96,6 +116,24 @@ export default function Page() {
     const sehriAudioRef = useRef(null);
     const iftariAudioRef = useRef(null);
     const playedRef = useRef({ sehri: null, iftari: null });
+
+    const tryNotify = async (title, body) => {
+        try {
+            if (typeof window !== 'undefined' && window.__TAURI_INTERNALS__) {
+                const tauriNotify = await import('@tauri-apps/plugin-notification');
+                let granted = await tauriNotify.isPermissionGranted();
+                if (!granted) {
+                    const permission = await tauriNotify.requestPermission();
+                    granted = permission === 'granted';
+                }
+                if (granted) {
+                    tauriNotify.sendNotification({ title, body });
+                }
+            } else if (typeof Notification !== 'undefined' && Notification.permission === 'granted') {
+                new Notification(title, { body });
+            }
+        } catch (e) { }
+    };
 
     useEffect(() => {
         // create Audio objects (expects files in public/ named sehri.mp3 and irftari.mp3)
@@ -157,14 +195,12 @@ export default function Page() {
             return null;
         };
 
-        const tryNotify = async (title, body) => {
-            try {
-                if (typeof Notification !== 'undefined' && Notification.permission === 'granted') {
-                    new Notification(title, { body });
-                }
-            } catch (e) {
-                // ignore
-            }
+        const isSameMinute = (d1, d2) => {
+            return d1 && d2 && d1.getHours() === d2.getHours() && d1.getMinutes() === d2.getMinutes();
+        };
+
+        const tryNotifyLocal = async (title, body) => {
+            await tryNotify(title, body);
         };
 
         const check = () => {
@@ -189,45 +225,51 @@ export default function Page() {
             const sehriTime = parseTimeStr(times.sehriText);
             const iftariTime = parseTimeStr(times.iftariText, true);
 
-            if (sehriTime && now >= sehriTime) {
+            if (sehriTime && isSameMinute(now, sehriTime)) {
                 const key = (new Date()).toDateString();
                 const persisted = (typeof localStorage !== 'undefined') ? localStorage.getItem('ramzan_played_sehri') : null;
                 if (playedRef.current.sehri !== key && persisted !== key) {
                     playedRef.current.sehri = key;
-                    tryNotify('Sehri Time', `Sehri time has started (${times.sehriText})`);
+                    tryNotifyLocal('Sehri Time', `Sehri time has started (${times.sehriText})`);
                     try {
                         if (soundEnabledRef.current) {
                             const p = sehriAudioRef.current?.play();
                             if (p && typeof p.then === 'function') {
-                                p.then(() => { try { if (typeof localStorage !== 'undefined') localStorage.setItem('ramzan_played_sehri', key); } catch (e) { } }).catch(() => { });
+                                p.then(() => { try { if (typeof localStorage !== 'undefined') localStorage.setItem('ramzan_played_sehri', key); } catch (e) { } }).catch((e) => {
+                                    console.error('Audio play failed:', e);
+                                    try { if (typeof localStorage !== 'undefined') localStorage.setItem('ramzan_played_sehri', key); } catch (e) { }
+                                });
                             } else {
                                 try { if (typeof localStorage !== 'undefined') localStorage.setItem('ramzan_played_sehri', key); } catch (e) { }
                             }
                         } else {
                             try { if (typeof localStorage !== 'undefined') localStorage.setItem('ramzan_played_sehri', key); } catch (e) { }
                         }
-                    } catch (e) { }
+                    } catch (e) { console.error('Error in sehri sound', e); }
                 }
             }
 
-            if (iftariTime && now >= iftariTime) {
+            if (iftariTime && isSameMinute(now, iftariTime)) {
                 const key = (new Date()).toDateString();
                 const persisted = (typeof localStorage !== 'undefined') ? localStorage.getItem('ramzan_played_iftari') : null;
                 if (playedRef.current.iftari !== key && persisted !== key) {
                     playedRef.current.iftari = key;
-                    tryNotify('Iftari Time', `Iftari time has started (${times.iftariText})`);
+                    tryNotifyLocal('Iftari Time', `Iftari time has started (${times.iftariText})`);
                     try {
                         if (soundEnabledRef.current) {
                             const p = iftariAudioRef.current?.play();
                             if (p && typeof p.then === 'function') {
-                                p.then(() => { try { if (typeof localStorage !== 'undefined') localStorage.setItem('ramzan_played_iftari', key); } catch (e) { } }).catch(() => { });
+                                p.then(() => { try { if (typeof localStorage !== 'undefined') localStorage.setItem('ramzan_played_iftari', key); } catch (e) { } }).catch((e) => {
+                                    console.error('Audio play failed:', e);
+                                    try { if (typeof localStorage !== 'undefined') localStorage.setItem('ramzan_played_iftari', key); } catch (e) { }
+                                });
                             } else {
                                 try { if (typeof localStorage !== 'undefined') localStorage.setItem('ramzan_played_iftari', key); } catch (e) { }
                             }
                         } else {
                             try { if (typeof localStorage !== 'undefined') localStorage.setItem('ramzan_played_iftari', key); } catch (e) { }
                         }
-                    } catch (e) { }
+                    } catch (e) { console.error('Error in iftari sound', e); }
                 }
             }
         };
@@ -289,9 +331,8 @@ export default function Page() {
 
             {/* debug message removed */}
 
-            {showLoader && <BackLoader message="Switching..." />}
             {onlyRaipur ? (
-                <RaipurTimeTable onlyRaipur={onlyRaipur} />
+                <RaipurTimeTable onlyRaipur={onlyRaipur} sehriAudioRef={sehriAudioRef} iftariAudioRef={iftariAudioRef} />
             ) : (
                 <>
                     {/* ##############################Mobile single stacked table showing all 30 rows */}
