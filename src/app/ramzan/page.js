@@ -15,6 +15,14 @@ const ramzanSections = [
         bgHover: "hover:bg-purple-600",
     },
     {
+        name: "Deeni Quiz",
+        href: "/islamicStar",
+        icon: <Star className="w-10 h-10 lg:w-16 lg:h-16" />,
+        description: "Exam & prizes at your nearby masjid",
+        gradient: "from-yellow-400 to-yellow-600",
+        bgHover: "hover:bg-yellow-500",
+    },
+    {
         name: "Roza Ke Masaa-il",
         href: "/ramzan/masla",
         icon: <BookOpenText className="w-10 h-10 lg:w-16 lg:h-16" />,
@@ -30,14 +38,7 @@ const ramzanSections = [
         gradient: "from-green-500 to-teal-500",
         bgHover: "hover:bg-green-600",
     },
-    {
-        name: "Islamic Star",
-        href: "/islamicStar",
-        icon: <Star className="w-10 h-10 lg:w-16 lg:h-16" />,
-        description: "Exam & prizes at your nearby masjid",
-        gradient: "from-yellow-400 to-yellow-600",
-        bgHover: "hover:bg-yellow-500",
-    },
+   
     
    
 

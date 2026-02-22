@@ -13,6 +13,9 @@ import {
     FaMicrophone,
     FaRegIdBadge,
     FaUser,
+    FaStore,
+    FaBriefcase,
+    FaUsers,
     FaChevronRight,
     FaStarAndCrescent
 
@@ -20,23 +23,23 @@ import {
 import TasbihSvgIcon from "../components/TasbihSvgIcon";
 
 const navLinks = [
-    { name: "Home", href: "/", icon: <FaHome className="text-lg" /> },
-    { name: "Ramzan Special", href: "/ramzan", icon: <FaStarAndCrescent className="text-lg" /> },
+    { name: "Home", href: "/", icon: <FaHome className="text-lg text-white" /> },
+    { name: "Ramzan Special", href: "/ramzan", icon: <FaStarAndCrescent className="text-lg text-emerald-400" /> },
     {
         name: "Jama'at Times",
         href: "/jamat-times",
-        icon: <FaPeopleArrows className="text-lg" />,
+        icon: <FaPeopleArrows className="text-lg text-pink-500" />,
     },
-    { name: "Quran", href: "/quran", icon: <FaQuran className="text-lg" /> },
+    { name: "Quran", href: "/quran", icon: <FaQuran className="text-lg text-green-400" /> },
     {
         name: "Prayer Times",
         href: "/prayer-times",
-        icon: <FaClock className="text-lg" />,
+        icon: <FaClock className="text-lg text-yellow-500" />,
     },
     {
         name: "Qibla",
         href: "/qibla",
-        icon: <FaRegCompass className="text-lg" />,
+        icon: <FaRegCompass className="text-lg text-blue-400" />,
     },
     {
         name: "Tasbih",
@@ -44,23 +47,25 @@ const navLinks = [
         icon: <TasbihSvgIcon className="w-6 h-6" />,
     },
     { name: "Zikr", href: "/zikr", icon: <img src="/iconZikr.png" alt="Zikr" className="w-6 h-6 object-contain bg-white rounded-full p-0.5" /> },
-    { name: "Rewards", href: "/rewards", icon: <FaGift className="text-lg" /> },
+    { name: "Rewards", href: "/rewards", icon: <FaGift className="text-lg text-red-400" /> },
     {
         name: "Aelaan Naama",
         href: "/notice",
-        icon: <FaMicrophone className="text-lg" />,
+        icon: <FaMicrophone className="text-lg text-sky-400" />,
     },
+
+    { name: "Job Portal", href: "/jobPortal/jobLists", icon: <FaBriefcase className="text-lg text-purple-400" /> },
 
     {
         name: "Contact Us",
         href: "/contactUs",
-        icon: <FaRegIdBadge className="text-lg" />,
+        icon: <FaRegIdBadge className="text-lg text-amber-400" />,
     },
     {
         name: "My Profile",
         href: "/myProfile",
-        icon: <FaUser className="text-lg" />,
-    }
+        icon: <FaUser className="text-lg text-cyan-500" />,
+    },
 ];
 
 
@@ -113,7 +118,7 @@ export default function TopNav() {
         <nav
             data-app-top-nav
             className={`${isNotice ? "relative w-full z-50" : "sticky top-0 z-50"
-                } bg-base-100 backdrop-blur border-b border-base-300 shadow-sm`}
+                } bg-base-100 backdrop-blur border-b border-base-300 shadow-sm rounded-2xl`}
         >
             <div className="max-w-5xl mx-auto flex items-center justify-between px-4 py-2 mt-10">
                 <div className="flex items-center gap-2">
@@ -184,7 +189,7 @@ export default function TopNav() {
                     <div
                         id="mobile-nav"
                         role="menu"
-                        className="fixed top-12 right-0 w-54 bg-base-100 shadow-2xl z-50 h-screen-100  flex flex-col"
+                        className="fixed top-12 right-0 w-54 bg-base-100 shadow-2xl z-50 h-screen-100 flex flex-col rounded-2xl overflow-hidden"
                         style={{
                             // use preserve-3d/backface-visibility and a short transform transition
                             transformStyle: "preserve-3d",
