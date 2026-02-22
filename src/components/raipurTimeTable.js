@@ -20,11 +20,11 @@ export default function RaipurTimeTable({ onlyRaipur, sehriAudioRef, iftariAudio
         }
     };
 
+    // audio & testing helpers (same behaviour as page-level implementation)
     const playedRef = useRef({ sehri: null, iftari: null });
     const [debugMsg, setDebugMsg] = useState('');
 
     useEffect(() => {
-
         let checker = null;
 
         const getTodayLabel = () => {
@@ -83,25 +83,12 @@ export default function RaipurTimeTable({ onlyRaipur, sehriAudioRef, iftariAudio
                 if (typeof window !== 'undefined' && window.__TAURI_INTERNALS__) {
                     const tauriNotify = await import('@tauri-apps/plugin-notification');
                     let granted = await tauriNotify.isPermissionGranted();
-                    if (!granted) {
-                        const permission = await tauriNotify.requestPermission();
-                        granted = permission === 'granted';
-                    }
-                    if (granted) {
-                        tauriNotify.sendNotification({ title, body });
-                    }
+                    if (!granted) granted = (await tauriNotify.requestPermission()) === 'granted';
+                    if (granted) tauriNotify.sendNotification({ title, body, sound: 'default' });
                 } else if (typeof Notification !== 'undefined' && Notification.permission === 'granted') {
                     new Notification(title, { body });
                 }
             } catch (e) { }
-        };
-
-        const isSameMinute = (d1, d2) => {
-            return d1 && d2 && d1.getHours() === d2.getHours() && d1.getMinutes() === d2.getMinutes();
-        };
-
-        const tryNotifyLocal = async (title, body) => {
-            await tryNotify(title, body);
         };
 
         const check = () => {
@@ -125,57 +112,51 @@ export default function RaipurTimeTable({ onlyRaipur, sehriAudioRef, iftariAudio
             const sehriTime = parseTimeStr(times.sehriText);
             const iftariTime = parseTimeStr(times.iftariText, true);
 
-            if (sehriTime && isSameMinute(now, sehriTime)) {
+            if (sehriTime && now >= sehriTime) {
                 const key = (new Date()).toDateString();
                 const persisted = (typeof localStorage !== 'undefined') ? localStorage.getItem('ramzan_played_sehri') : null;
                 if (playedRef.current.sehri !== key && persisted !== key) {
                     playedRef.current.sehri = key;
-                    tryNotifyLocal('Sehri Time', `Sehri time has started (${times.sehriText})`);
+                    tryNotify('Sehri Time', `Sehri time has started (${times.sehriText})`);
                     try {
                         const s = typeof localStorage !== 'undefined' ? localStorage.getItem('ramzan_sound_enabled') : null;
                         if (s === 'true') {
-                            const p = sehriAudioRef?.current?.play();
+                            const p = sehriAudioRef.current?.play();
                             if (p && typeof p.then === 'function') {
                                 p.then(() => {
                                     try { if (typeof localStorage !== 'undefined') localStorage.setItem('ramzan_played_sehri', key); } catch (e) { }
-                                }).catch((e) => {
-                                    console.error('Audio play failed:', e);
-                                    try { if (typeof localStorage !== 'undefined') localStorage.setItem('ramzan_played_sehri', key); } catch (e) { }
-                                });
+                                }).catch(() => { });
                             } else {
                                 try { if (typeof localStorage !== 'undefined') localStorage.setItem('ramzan_played_sehri', key); } catch (e) { }
                             }
                         } else {
                             try { if (typeof localStorage !== 'undefined') localStorage.setItem('ramzan_played_sehri', key); } catch (e) { }
                         }
-                    } catch (e) { console.error('Error in sehri sound', e); }
+                    } catch (e) { }
                 }
             }
 
-            if (iftariTime && isSameMinute(now, iftariTime)) {
+            if (iftariTime && now >= iftariTime) {
                 const key = (new Date()).toDateString();
                 const persisted = (typeof localStorage !== 'undefined') ? localStorage.getItem('ramzan_played_iftari') : null;
                 if (playedRef.current.iftari !== key && persisted !== key) {
                     playedRef.current.iftari = key;
-                    tryNotifyLocal('Iftari Time', `Iftari time has started (${times.iftariText})`);
+                    tryNotify('Iftari Time', `Iftari time has started (${times.iftariText})`);
                     try {
                         const s = typeof localStorage !== 'undefined' ? localStorage.getItem('ramzan_sound_enabled') : null;
                         if (s === 'true') {
-                            const p = iftariAudioRef?.current?.play();
+                            const p = iftariAudioRef.current?.play();
                             if (p && typeof p.then === 'function') {
                                 p.then(() => {
                                     try { if (typeof localStorage !== 'undefined') localStorage.setItem('ramzan_played_iftari', key); } catch (e) { }
-                                }).catch((e) => {
-                                    console.error('Audio play failed:', e);
-                                    try { if (typeof localStorage !== 'undefined') localStorage.setItem('ramzan_played_iftari', key); } catch (e) { }
-                                });
+                                }).catch(() => { });
                             } else {
                                 try { if (typeof localStorage !== 'undefined') localStorage.setItem('ramzan_played_iftari', key); } catch (e) { }
                             }
                         } else {
                             try { if (typeof localStorage !== 'undefined') localStorage.setItem('ramzan_played_iftari', key); } catch (e) { }
                         }
-                    } catch (e) { console.error('Error in iftari sound', e); }
+                    } catch (e) { }
                 }
             }
         };

@@ -57,23 +57,15 @@ export default function Page() {
         try {
             if (checked) {
                 localStorage.setItem(SOUND_KEY, "true");
-                // Briefly play/pause to unlock audio context
-                if (sehriAudioRef.current) {
-                    sehriAudioRef.current.volume = 0;
-                    sehriAudioRef.current.play().then(() => {
-                        sehriAudioRef.current.pause();
-                        sehriAudioRef.current.currentTime = 0;
-                        sehriAudioRef.current.volume = 1;
-                    }).catch(() => { });
+                // Briefly play silence to unlock standard and Web Audio context
+                if (audioCtxRef.current && audioCtxRef.current.state === 'suspended') {
+                    audioCtxRef.current.resume().catch(() => { });
                 }
-                if (iftariAudioRef.current) {
-                    iftariAudioRef.current.volume = 0;
-                    iftariAudioRef.current.play().then(() => {
-                        iftariAudioRef.current.pause();
-                        iftariAudioRef.current.currentTime = 0;
-                        iftariAudioRef.current.volume = 1;
-                    }).catch(() => { });
-                }
+                try {
+                    const a = new Audio('/sehri.mp3');
+                    a.volume = 0;
+                    a.play().then(() => { a.pause(); }).catch(() => { });
+                } catch (e) { }
             } else {
                 localStorage.removeItem(SOUND_KEY);
             }
@@ -113,9 +105,10 @@ export default function Page() {
     };
 
     // Play audio announcement when sehri or iftari time hits
-    const sehriAudioRef = useRef(null);
-    const iftariAudioRef = useRef(null);
+    const sehriAudioRef = useRef({ play: () => Promise.resolve() });
+    const iftariAudioRef = useRef({ play: () => Promise.resolve() });
     const playedRef = useRef({ sehri: null, iftari: null });
+    const audioCtxRef = useRef(null);
 
     const tryNotify = async (title, body) => {
         try {
@@ -127,7 +120,7 @@ export default function Page() {
                     granted = permission === 'granted';
                 }
                 if (granted) {
-                    tauriNotify.sendNotification({ title, body });
+                    tauriNotify.sendNotification({ title, body, sound: 'default' });
                 }
             } else if (typeof Notification !== 'undefined' && Notification.permission === 'granted') {
                 new Notification(title, { body });
@@ -136,9 +129,52 @@ export default function Page() {
     };
 
     useEffect(() => {
-        // create Audio objects (expects files in public/ named sehri.mp3 and irftari.mp3)
-        sehriAudioRef.current = new Audio('/sehri.mp3');
-        iftariAudioRef.current = new Audio('/irftari.mp3');
+        // create Audio objects using Web Audio API for mobile compatibility
+        try {
+            const AudioContext = window.AudioContext || window.webkitAudioContext;
+            if (AudioContext && !audioCtxRef.current) {
+                audioCtxRef.current = new AudioContext();
+            }
+        } catch (e) { }
+
+        const loadAudio = async (url, ref) => {
+            try {
+                const response = await fetch(url);
+                const arrayBuffer = await response.arrayBuffer();
+                let audioBuffer = null;
+                if (audioCtxRef.current) {
+                    audioBuffer = await audioCtxRef.current.decodeAudioData(arrayBuffer);
+                }
+                ref.current = {
+                    play: () => {
+                        return new Promise((resolve) => {
+                            try {
+                                if (audioCtxRef.current && audioBuffer) {
+                                    if (audioCtxRef.current.state === 'suspended') {
+                                        audioCtxRef.current.resume();
+                                    }
+                                    const source = audioCtxRef.current.createBufferSource();
+                                    source.buffer = audioBuffer;
+                                    source.connect(audioCtxRef.current.destination);
+                                    source.start(0);
+                                    resolve();
+                                } else {
+                                    const a = new Audio(url);
+                                    a.play().then(resolve).catch(resolve);
+                                }
+                            } catch (e) { resolve(); }
+                        });
+                    }
+                };
+            } catch (e) {
+                console.error("Audio Load Error", e);
+                const basic = new Audio(url);
+                ref.current = { play: () => basic.play().catch(() => { }) };
+            }
+        };
+
+        loadAudio('/sehri.mp3', sehriAudioRef);
+        loadAudio('/irftari.mp3', iftariAudioRef);
 
         let checker = null;
 
