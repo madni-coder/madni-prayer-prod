@@ -27,15 +27,23 @@ const nextConfig = {
         ];
     },
     async rewrites() {
+        // Always rewrite the public `/app-config.json` path to our API
+        // so we can return platform-specific config based on request headers.
+        const rewrites = [
+            {
+                source: "/app-config.json",
+                destination: "/api/app-config",
+            },
+        ];
+
         if (isTauri) {
-            return [
-                {
-                    source: "/api/:path*",
-                    destination: "https://raahehidayat.vercel.app/api/:path*",
-                },
-            ];
+            rewrites.push({
+                source: "/api/:path*",
+                destination: "https://raahehidayat.vercel.app/api/:path*",
+            });
         }
-        return [];
+
+        return rewrites;
     },
 };
 
