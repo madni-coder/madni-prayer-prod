@@ -58,7 +58,9 @@ export default function RaipurTimeTable({ onlyRaipur, sehriAudioRef, iftariAudio
             return d;
         };
 
-
+        const isSameMinute = (d1, d2) => {
+            return d1 && d2 && d1.getHours() === d2.getHours() && d1.getMinutes() === d2.getMinutes();
+        };
 
         const findTodayRowTimes = () => {
             const label = getTodayLabel();
@@ -112,7 +114,37 @@ export default function RaipurTimeTable({ onlyRaipur, sehriAudioRef, iftariAudio
             const sehriTime = parseTimeStr(times.sehriText);
             const iftariTime = parseTimeStr(times.iftariText, true);
 
-            if (sehriTime && now >= sehriTime) {
+            // Schedule background exact alarms for locked phone
+            if (window.__TAURI_INTERNALS__) {
+                const s = typeof localStorage !== 'undefined' ? localStorage.getItem('ramzan_sound_enabled') : null;
+                if (s === 'true') {
+                    import('@tauri-apps/plugin-notification').then(async nav => {
+                        const trySched = async (date, idStr, titleStr, textStr) => {
+                            if (date && date > new Date()) {
+                                const lsKey = `native_sched_rp_${idStr}`;
+                                const t = date.getTime().toString();
+                                if ((typeof localStorage !== 'undefined') && localStorage.getItem(lsKey) !== t) {
+                                    try {
+                                        await nav.createChannel({ id: idStr, name: titleStr, sound: idStr, importance: 4, visibility: 1 });
+                                        await nav.sendNotification({
+                                            title: titleStr,
+                                            body: `${titleStr} time has started (${textStr})`,
+                                            channelId: idStr,
+                                            sound: idStr + '.mp3',
+                                            schedule: nav.Schedule.at(date, false, true)
+                                        });
+                                        if (typeof localStorage !== 'undefined') localStorage.setItem(lsKey, t);
+                                    } catch (e) { }
+                                }
+                            }
+                        };
+                        await trySched(sehriTime, 'sehri', 'Sehri Time', times.sehriText);
+                        await trySched(iftariTime, 'irftari', 'Iftari Time', times.iftariText);
+                    }).catch(() => { });
+                }
+            }
+
+            if (sehriTime && isSameMinute(now, sehriTime)) {
                 const key = (new Date()).toDateString();
                 const persisted = (typeof localStorage !== 'undefined') ? localStorage.getItem('ramzan_played_sehri') : null;
                 if (playedRef.current.sehri !== key && persisted !== key) {
@@ -136,7 +168,7 @@ export default function RaipurTimeTable({ onlyRaipur, sehriAudioRef, iftariAudio
                 }
             }
 
-            if (iftariTime && now >= iftariTime) {
+            if (iftariTime && isSameMinute(now, iftariTime)) {
                 const key = (new Date()).toDateString();
                 const persisted = (typeof localStorage !== 'undefined') ? localStorage.getItem('ramzan_played_iftari') : null;
                 if (playedRef.current.iftari !== key && persisted !== key) {

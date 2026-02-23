@@ -170,7 +170,12 @@ export default function Tasbih() {
     const [showActiveTargetWarning, setShowActiveTargetWarning] = useState(false);
     const [pendingTarget, setPendingTarget] = useState(null);
     const [showIncompleteTargetWarning, setShowIncompleteTargetWarning] = useState(false);
-    const [allowFreeCounting, setAllowFreeCounting] = useState(false);
+    const [allowFreeCounting, setAllowFreeCounting] = useState(() => {
+        if (typeof window !== 'undefined') {
+            return localStorage.getItem('tasbihAllowFree') === '1';
+        }
+        return false;
+    });
 
     // Pagination state
     const [currentPage, setCurrentPage] = useState(1);
@@ -206,6 +211,22 @@ export default function Tasbih() {
             localStorage.setItem("tasbihTarget", String(target || 0));
         }
     }, [target]);
+
+    // Persist allowFreeCounting (No Target) so selection survives redirects/navigation
+    useEffect(() => {
+        if (typeof window === 'undefined') return;
+        try {
+            if (allowFreeCounting) {
+                localStorage.setItem('tasbihAllowFree', '1');
+                // ensure numeric target is cleared
+                localStorage.removeItem('tasbihTarget');
+            } else {
+                localStorage.removeItem('tasbihAllowFree');
+            }
+        } catch (e) {
+            // ignore storage errors
+        }
+    }, [allowFreeCounting]);
 
     // Detect theme changes
     useEffect(() => {

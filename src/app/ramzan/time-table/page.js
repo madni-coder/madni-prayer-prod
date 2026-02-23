@@ -55,6 +55,9 @@ export default function Page() {
         setSoundEnabled(checked);
         soundEnabledRef.current = checked;
         try {
+            if (typeof window !== 'undefined' && window.__TAURI_INTERNALS__) {
+                import('@tauri-apps/plugin-notification').then(nav => nav.cancelAll().catch(() => { })).catch(() => { });
+            }
             if (checked) {
                 localStorage.setItem(SOUND_KEY, "true");
                 // Briefly play silence to unlock standard and Web Audio context
@@ -260,6 +263,33 @@ export default function Page() {
             } catch (e) { console.debug(e); }
             const sehriTime = parseTimeStr(times.sehriText);
             const iftariTime = parseTimeStr(times.iftariText, true);
+
+            // Schedule background exact alarms for locked phone
+            if (soundEnabledRef.current && window.__TAURI_INTERNALS__) {
+                import('@tauri-apps/plugin-notification').then(async nav => {
+                    const trySched = async (date, idStr, titleStr, textStr) => {
+                        if (date && date > new Date()) {
+                            const lsKey = `native_sched_${idStr}`;
+                            const t = date.getTime().toString();
+                            if ((typeof localStorage !== 'undefined') && localStorage.getItem(lsKey) !== t) {
+                                try {
+                                    await nav.createChannel({ id: idStr, name: titleStr, sound: idStr, importance: 4, visibility: 1 });
+                                    await nav.sendNotification({
+                                        title: titleStr,
+                                        body: `${titleStr} Ka Waqt Ho Gaya Hai (${textStr})`,
+                                        channelId: idStr,
+                                        sound: idStr + '.mp3',
+                                        schedule: nav.Schedule.at(date, false, true)
+                                    });
+                                    if (typeof localStorage !== 'undefined') localStorage.setItem(lsKey, t);
+                                } catch (e) { }
+                            }
+                        }
+                    };
+                    await trySched(sehriTime, 'sehri', 'Sehri Time', times.sehriText);
+                    await trySched(iftariTime, 'irftari', 'Iftari Time', times.iftariText);
+                }).catch(() => { });
+            }
 
             if (sehriTime && isSameMinute(now, sehriTime)) {
                 const key = (new Date()).toDateString();
