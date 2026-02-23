@@ -60,8 +60,8 @@ export default function UserModal({
         setError(null);
         setLoading(true);
 
-        // Validate required fields
-        if (!gender || !fullName.trim() || !email.trim() || !password) {
+        // Validate required fields (gender is optional)
+        if (!fullName.trim() || !email.trim() || !password) {
             setError("Please fill in all required fields.");
             setLoading(false);
             return;
@@ -179,32 +179,20 @@ export default function UserModal({
                             <div className="form-control w-full">
                                 <label className="label py-1">
                                     <span className="label-text text-sm font-bold text-white drop-shadow-lg">
-                                        Gender <span className="text-error">*</span>
+                                        Gender <span className="text-white/60 text-sm font-normal">(Optional)</span>
                                     </span>
                                 </label>
-                                <div className="flex gap-2 items-center">
-                                    <label className={`cursor-pointer border rounded-md px-3 py-1 transition-all text-sm flex items-center gap-2 ${gender === "Male" ? 'border-primary bg-primary/10' : 'border-base-300 hover:border-base-400'}`}>
-                                        <input
-                                            type="radio"
-                                            name="gender"
-                                            value="Male"
-                                            checked={gender === "Male"}
-                                            onChange={(e) => setGender(e.target.value)}
-                                            className="radio radio-sm"
-                                        />
-                                        <span className="font-medium text-white">Male</span>
-                                    </label>
-                                    <label className={`cursor-pointer border rounded-md px-3 py-1 transition-all text-sm flex items-center gap-2 ${gender === "Female" ? 'border-secondary bg-secondary/10' : 'border-base-300 hover:border-base-400'}`}>
-                                        <input
-                                            type="radio"
-                                            name="gender"
-                                            value="Female"
-                                            checked={gender === "Female"}
-                                            onChange={(e) => setGender(e.target.value)}
-                                            className="radio radio-sm"
-                                        />
-                                        <span className="font-medium text-white">Female</span>
-                                    </label>
+                                <div className="relative">
+                                    <select
+                                        value={gender}
+                                        onChange={(e) => setGender(e.target.value)}
+                                        className={`select select-bordered w-full input-sm rounded-md appearance-none pr-8 ${isDark ? 'bg-transparent text-white border-neutral-700' : 'bg-white text-base-content border-neutral-300'}`}
+                                    >
+                                        <option value="">Any</option>
+                                        <option value="Male">Male</option>
+                                        <option value="Female">Female</option>
+                                    </select>
+                                    <span className={`absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none ${isDark ? 'text-white/70' : 'text-base-content/60'}`}>▾</span>
                                 </div>
                             </div>
 

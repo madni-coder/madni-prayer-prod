@@ -1,6 +1,6 @@
 "use client";
 import React, { useRef, useState, useEffect } from "react";
-import { FaUser, FaAngleLeft, FaEnvelope, FaLock, FaMapMarkerAlt, FaMosque, FaPhone, FaVenusMars, FaSignInAlt, FaSignOutAlt, FaTrashAlt } from "react-icons/fa";
+import { FaUser, FaAngleLeft, FaEnvelope, FaLock, FaMapMarkerAlt, FaMosque, FaPhone, FaVenusMars, FaSignInAlt, FaSignOutAlt, FaTrashAlt, FaAngleDown } from "react-icons/fa";
 import apiClient from "../../lib/apiClient";
 import AnimatedLooader from "../../components/animatedLooader";
 import { useRouter } from "next/navigation";
@@ -136,7 +136,7 @@ export default function MyProfilePage() {
         setError(null);
         setLoading(true);
 
-        if (!gender || !fullName.trim() || !email.trim() || !password || !confirmPassword) {
+        if (!fullName.trim() || !email.trim() || !password || !confirmPassword) {
             setError("Please fill in all required fields.");
             setLoading(false);
             return;
@@ -523,33 +523,22 @@ export default function MyProfilePage() {
                                 {/* Gender Selection */}
                                 <div className="form-control w-full">
                                     <label className="label pb-2">
-                                        <span className="label-text font-semibold text-base flex items-center gap-1 text-white">
-                                            Gender <span className="text-error">*</span>
+                                        <span className="label-text font-semibold text-base flex items-center gap-2 text-white">
+                                            Gender
+                                            <span className="text-white/60 text-sm font-normal">(Optional)</span>
                                         </span>
                                     </label>
-                                    <div className="flex flex-row gap-3 sm:gap-4">
-                                        <label className={`flex-1 cursor-pointer border-2 rounded-xl px-5 py-3 transition-all duration-200 flex items-center justify-center gap-3 ${gender === "Male" ? 'border-primary bg-primary/10 shadow-md' : 'border-base-300 hover:border-primary/50 hover:bg-base-200'}`}>
-                                            <input
-                                                type="radio"
-                                                name="gender"
-                                                value="Male"
-                                                checked={gender === "Male"}
-                                                onChange={(e) => setGender(e.target.value)}
-                                                className="radio radio-primary radio-sm"
-                                            />
-                                            <span className="font-semibold text-white">Male</span>
-                                        </label>
-                                        <label className={`flex-1 cursor-pointer border-2 rounded-xl px-5 py-3 transition-all duration-200 flex items-center justify-center gap-3 ${gender === "Female" ? 'border-secondary bg-secondary/10 shadow-md' : 'border-base-300 hover:border-secondary/50 hover:bg-base-200'}`}>
-                                            <input
-                                                type="radio"
-                                                name="gender"
-                                                value="Female"
-                                                checked={gender === "Female"}
-                                                onChange={(e) => setGender(e.target.value)}
-                                                className="radio radio-secondary radio-sm"
-                                            />
-                                            <span className="font-semibold text-white">Female</span>
-                                        </label>
+                                    <div className="relative">
+                                        <select
+                                            value={gender}
+                                            onChange={(e) => setGender(e.target.value)}
+                                            className="select select-bordered w-full h-12 rounded-xl transition-all appearance-none pr-10 bg-base-100 text-base-content border-base-300"
+                                        >
+                                            <option value="">Select</option>
+                                            <option value="Male">Male</option>
+                                            <option value="Female">Female</option>
+                                        </select>
+                                        <FaAngleDown className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-base-content/60" />
                                     </div>
                                 </div>
 
