@@ -1,9 +1,9 @@
 "use client";
-import React, { useState, useCallback, useEffect } from "react";
+import React, { useState, useCallback, useEffect, useRef } from "react";
 import { toast } from "react-toastify";
 import { RotateCw, Trash2 } from "lucide-react";
 import { PiHandTapLight } from "react-icons/pi";
-import { FaAngleLeft } from "react-icons/fa";
+import { FaAngleLeft, FaArrowLeft, FaArrowRight } from "react-icons/fa";
 import { useRouter } from "next/navigation";
 import apiClient from "../../lib/apiClient";
 import AnimatedLooader from "../../components/animatedLooader";
@@ -55,6 +55,117 @@ export default function Tasbih() {
     const [allowContinueAfterTarget, setAllowContinueAfterTarget] = useState(false);
     const [showManualInput, setShowManualInput] = useState(false);
     const [manualTargetValue, setManualTargetValue] = useState("");
+    // Card carousel state
+    const [currentCard, setCurrentCard] = useState(0);
+    // Show / hide carousel/cards wrapper
+    const [showCards, setShowCards] = useState(false);
+    // Press animation state for the main tap button
+    const [pressing, setPressing] = useState(false);
+
+    const startPress = useCallback(() => {
+        // Immediate visual press
+        setPressing(true);
+        try { createRipple(); applyGlow(); } catch (e) { }
+        // Fallback clear in case animationend doesn't fire
+        window.setTimeout(() => setPressing(false), 260);
+    }, []);
+
+    // ref for inner tap circle to apply ripple/glow
+    const tapInnerRef = useRef(null);
+
+    const createRipple = useCallback(() => {
+        try {
+            const el = tapInnerRef.current;
+            if (!el) return;
+            const r = document.createElement('span');
+            r.className = 'tap-ripple';
+            el.appendChild(r);
+            r.addEventListener('animationend', () => r.remove());
+        } catch (e) {
+            // ignore
+        }
+    }, []);
+
+    const applyGlow = useCallback(() => {
+        try {
+            const el = tapInnerRef.current;
+            if (!el) return;
+            el.classList.add('tap-glow-strong');
+            window.setTimeout(() => el.classList.remove('tap-glow-strong'), 580);
+        } catch (e) { }
+    }, []);
+
+    const cards = [
+        {
+            title: 'दुरूदे इब्राहीमी',
+            content: `अल्लाहुम्मा स़ल्लि अला सय्यिदिना मुहम्मदिवँ व अला आलि सय्यिदिना मुहम्मदिन कमा स़ल्लेता अला सय्यिदिना इब्राहिमा व अला आलि सय्यिदिना इब्राहिमा इन्नका हमीदुम मजीद।\nअल्लाहुम्मा बारिक अला सय्यिदिना मुहम्मदिवँ व अला सय्यिदिना मुहम्मदिन कमा बारक-ता अला सय्यिदिना इब्राहिमा व अला आलि सय्यिदिना इब्राहिमा इन्नका हमीदुम मजीद।`
+        },
+        {
+            title: 'रोज़ी में बरकत',
+            content: `अल्लाहुम्मा स़ल्लि अला मुहम्मदिन अब्दिका व रसूलिका व स़ल्लि अलल मुअमिनीना व मुअमिनाति वल मुस्लिमीना वल मुस्लिमाति,\nजिस शख्स की ये ख्वाहिश हाे कि उसका माल बढ जाए, वो इस Darood Sharif को पढा करै,`
+        },
+        {
+            title: 'अस्सी साल की इबादत का सवाब',
+            content: `अल्लाहुम्मा स़ल्लि अला मुहम्मदि निन नबीय्यिल उम्मिय्यि व अला आलिही व स़ल्लिम तस्लीमा,\nजुमअ के दिन जहाँ नमाजे अस्र पढी हो उसी जगह उठने से पहले अस्सी मर्तबा ये दुरूद शरीफ़ Darood Sharif पढ़ने से अस्सी साल के गुनाह मुआफ होते हैं, और अस्सी साल की इबादत کا सवाब मिलता है,`
+        },
+        {
+            title: 'दुरूदे इस्मे आज़म',
+            content: `अल्लाहु रब्बु मुहम्मदिन स़ल्ला अलैहि वसल्लमा, नहनु इबादु मुहम्मदिन स़ल्ला अलैहि वसल्लमा,\nये दुरूद शरीफ़ Darood Sharif को  सौ मर्तबा रोजाना अपना मअमूल बना लीजिए, फिर इसकी बरकात देखिए कि दीन व दुनिया के हर काम मेंकामयाबी आपके क़दम चूमेगी नाकामी की बादे ख़ज़ाँ कभी दूर से भी नहीं गुज़रेगी,`
+        },
+        {
+            title: 'खजिनए फ़ज़ाइलो बरकात',
+            content: `सल्लल्लाहु अलन-नबीय्यिल उम्मिय्यि व आलिही सल्लल्लाहु अलेहि वसल्लमा सलातवें व सलामन अलैका या रसूलल्लाह\nये दुरूद शरीफ़ Darood Sharif हर नमाज़ खुसूसन नमाजे जुम्मा के बाद मदीना मुनव्वरा की जानिब मुँह करके सौ मर्तबा पढने से बे-शुमार फ़जाएलाे बरकात हासिल होते हैं,`
+        },
+        {
+            title: 'तमाम औकात में दुरूद शरीफ़',
+            content: `अल्लाहुम्मा स़ल्लि अला मुहम्मदिन फी अव्वलि कलामिना,\nअल्लाहुम्मा स़ल्लि अला मुहम्मदिन फी औ-सति कलामिना,\nअल्लाहुम्मा स़ल्लि अला मुहम्मदिन फी आख़िरि कलामिना,\nशैखुल इस्लाम अबुल अब्बास ने फ़रमाया जाे शख्स दिन और रात मेंतीन तीन मर्तबा ये दुरूद शरीफ़ Darood Sharif पढे वाे गाेया रात व दिन के तमाम औकात में दुरूद भेंजता रहा,`
+        },
+        {
+            title: 'दस नेकिया',
+            content: `मौलाया स़ल्लि व स़ल्लिम दाइमन अ-ब-दन अला हबीबिका खै़रिल-खल्कि कुल्लिहिमी,\nअल्लाह तआला दुरूद शरीफ़ Darood Sharif पढ़ने वाले के लिए दस नेकियाँ लिख देता है, उसके दस दर्जे बुलंद कर देता है और दस गुनाह मुआफ कर देता है,`
+        },
+        {
+            title: 'दोज़ख़ से नजात',
+            content: `अल्लाहुम्मा स़ल्लि अला मुहम्मदि निन नबीय्यिल उम्मिय्यि व अला आलिही वसल्लिम,\nहजरत खल्लाद रहमतुल्लाह अलैह जुम्मा के दिन ये दुरूद शरीफ़ एक हजार मर्तबा पढा करते थे, उनके इन्तिकाल के बाद उनके तकिया के नीचे से एक कागज मिला जिस पर लिखा हुआ था, कि ये ख़ल्लाद दिन कसीर के लिए दोज़ख़ से आजादी का परवाना है,`
+        },
+        {
+            title: 'जन्नत में ठिकाना',
+            content: `अल्लाहुम्मा स़ल्लि अला मुहम्मदि निन नबीय्यिल उम्मिय्यि अलैंहिस-सलामु,\nजुम्मा के दिन एक हजार मर्तबा ये दुरूद शरीफ़ Darood Sharif पढने वाले को मरने से पहले जन्नत यें उसका ठिकाना दिखा दिया जाएगा,`
+        },
+        {
+            title: 'दीदारे सरकारे दो आलम',
+            content: `सल्ललाहु तआला अलैहि व् सल्लम,\nअल्लाहुम्मा स़ल्लि व स़ल्लिम व बारिक अला सय्यिदिना व मौलाना मुहम्मदि-निन नबीय्यिल उम्मिय्यि हबीबिल आलििय क़द्रिल अज़ीमिल जाहि व अला आलिही व स़हबिही व स़ल्लिम,\nबुजुर्गों ने फ़रमाया की जो शख्स हर शबे जुम्मा, जुमेरात, और जुम्मा, की दरमियानी रात इस दुरूद शरीफ़ Darood Sharif को पाबंदी से कम से कम एक बार पढ़ेगा, मौत के वक़्त सरकारे दो आलम सल्ललाहु तआला अलैहि व सल्लम की ज़ियारत करेगा, और क़ब्र में दाखिल होते वक़्त भी देखेगा की सरकार उसे क़ब्र में अपने रहमत भरे हाथो से उतार रहे है,`
+        }
+    ];
+    const carouselRef = useRef(null);
+    const touchStartX = useRef(null);
+    const cardRefs = useRef([]);
+    const [carouselHeight, setCarouselHeight] = useState(0);
+
+    useEffect(() => {
+        // Disable automatic sliding via keyboard and touch/swipe.
+        // Cards will only change through explicit buttons and dot controls.
+        return () => { };
+    }, [cards.length]);
+
+
+    // Measure active card height and set container height so it resizes to content
+    useEffect(() => {
+        const measure = () => {
+            const el = cardRefs.current[currentCard];
+            if (el && typeof el.offsetHeight === 'number') {
+                setCarouselHeight(el.offsetHeight);
+            } else {
+                setCarouselHeight(0);
+            }
+        };
+
+        // measure after paint
+        requestAnimationFrame(measure);
+
+        window.addEventListener('resize', measure);
+        return () => window.removeEventListener('resize', measure);
+    }, [currentCard, cards.length]);
     // Warn user if they try to set a new target while an active one exists
     const [showActiveTargetWarning, setShowActiveTargetWarning] = useState(false);
     const [pendingTarget, setPendingTarget] = useState(null);
@@ -266,6 +377,7 @@ export default function Tasbih() {
                 if (c + 1 === target) {
                     triggerVibration();
                     try { playTick(); } catch (e) { }
+                    try { createRipple(); applyGlow(); } catch (e) { }
                     setShowTargetReached(true);
                     return c + 1;
                 }
@@ -273,6 +385,7 @@ export default function Tasbih() {
 
             triggerVibration(); // Add vibration feedback
             try { playTick(); } catch (e) { }
+            try { createRipple(); applyGlow(); } catch (e) { }
             return c + 1;
         });
     }, [triggerVibration, target, allowContinueAfterTarget, playTick, allowFreeCounting]);
@@ -365,6 +478,18 @@ export default function Tasbih() {
 
     return (
         <section className="flex flex-col items-center min-h-screen px-4 py-1 bg-base-100 text-base-content">
+            {/* Press animation keyframes for the tap button */}
+            <style>{`
+                @keyframes pressAnim {
+                    0% { transform: translateY(0) scale(1); box-shadow: 0 10px 20px rgba(0,0,0,0.10); }
+                    30% { transform: translateY(4px) scale(0.97); box-shadow: 0 6px 10px rgba(0,0,0,0.06); }
+                    60% { transform: translateY(-2px) scale(1.02); box-shadow: 0 12px 20px rgba(0,0,0,0.12); }
+                    100% { transform: translateY(0) scale(1); box-shadow: 0 10px 20px rgba(0,0,0,0.10); }
+                }
+                @keyframes rippleAnim { 0% { transform: scale(0.2); opacity: 0.6; } 100% { transform: scale(2.6); opacity: 0; } }
+                .tap-ripple { position: absolute; width: 40px; height: 40px; left: calc(50% - 20px); top: calc(50% - 20px); border-radius: 999px; background: rgba(255,255,255,0.26); pointer-events: none; animation: rippleAnim 520ms cubic-bezier(.2,.9,.3,1) forwards; }
+                .tap-glow-strong { box-shadow: 0 10px 38px rgba(99, 179, 95, 0.62), inset 0 4px 12px rgba(255,255,255,0.08); transform: translateY(-2px) scale(1.035); transition: box-shadow 260ms ease, transform 260ms ease; }
+            `}</style>
             {/* Header */}
             <button
                 className="flex items-center gap-2 mb-2 text-lg text-primary hover:text-green-600 font-semibold"
@@ -470,13 +595,118 @@ export default function Tasbih() {
                         )}
 
                         <div className="text-sm font-medium text-primary/90 w-full md:w-auto text-center md:text-right">
-                            {allowFreeCounting ? (
-                                <span className="bg-primary/10 px-3 py-1.5 rounded-lg border border-primary/20">No Target</span>
-                            ) : target > 0 ? (
-                                <span className="bg-primary/10 px-3 py-1.5 rounded-lg border border-primary/20">🎯 Target: <strong className="text-primary">{target}</strong></span>
-                            ) : (
-                                <span className="text-primary/60">No target set</span>
-                            )}
+                            <div className="flex flex-col items-center md:items-end gap-2">
+                                {allowFreeCounting ? (
+                                    <span className="bg-primary/10 px-3 py-1.5 rounded-lg border border-primary/20">No Target</span>
+                                ) : target > 0 ? (
+                                    <span className="bg-primary/10 px-3 py-1.5 rounded-lg border border-primary/20">🎯 Target: <strong className="text-primary">{target}</strong></span>
+                                ) : (
+                                    <span className="text-primary/60">No target set</span>
+                                )}
+
+                                {/* Show/Hide toggle for the info cards (underline link) */}
+                                <button
+                                    onClick={() => setShowCards((s) => !s)}
+                                    aria-expanded={showCards}
+                                    className={
+                                        "text-sm underline underline-offset-4 font-medium focus:outline-none " +
+                                        (typeof window !== 'undefined' && effectiveTheme() === 'dark'
+                                            ? 'text-primary/90'
+                                            : 'text-primary')
+                                    }
+                                >
+                                    {showCards ? 'Hide Durood Sharif' : 'Show Durood Sharif'}
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Collapsible wrapper for carousel controls + cards (starts from carousel buttons down) */}
+                    <div
+                        className={
+                            "w-full overflow-hidden transition-[max-height,opacity] duration-300 " +
+                            (showCards ? 'max-h-[1600px] opacity-100 mt-3' : 'max-h-0 opacity-0')
+                        }
+                        aria-hidden={!showCards}
+                    >
+                        <div className="w-full flex items-center justify-center gap-15 mb-3 mt-[-6]">
+                            <button
+                                aria-label="Previous info card"
+                                onClick={() => setCurrentCard((c) => (c - 1 + cards.length) % cards.length)}
+                                className={
+                                    "flex items-center justify-center w-11 h-11 rounded-full text-primary border shadow-md hover:scale-105 transition-transform focus:outline-none mt-3 " +
+                                    (typeof window !== 'undefined' && effectiveTheme() === 'dark'
+                                        ? 'bg-neutral/10 border-neutral/20'
+                                        : 'bg-primary/8 border-primary/20')
+                                }
+                            >
+                                <FaArrowLeft className="h-5 w-5" />
+                            </button>
+
+                            <button
+                                aria-label="Next info card"
+                                onClick={() => setCurrentCard((c) => (c + 1) % cards.length)}
+                                className={
+                                    "flex items-center justify-center w-11 h-11 rounded-full text-primary border shadow-md hover:scale-105 transition-transform focus:outline-none mt-3 " +
+                                    (typeof window !== 'undefined' && effectiveTheme() === 'dark'
+                                        ? 'bg-neutral/10 border-neutral/20'
+                                        : 'bg-primary/8 border-primary/20')
+                                }
+                            >
+                                <FaArrowRight className="h-5 w-5" />
+                            </button>
+                        </div>
+
+                        {/* Cards Carousel - theme aware, responsive */}
+                        <div className="w-full mb-6">
+                            <div ref={carouselRef} className="relative w-full max-w-3xl mx-auto">
+
+
+                                <div
+                                    className={
+                                        "overflow-hidden rounded-xl border p-0 " +
+                                        (typeof window !== 'undefined' && effectiveTheme() === 'dark'
+                                            ? 'bg-neutral/6 border-neutral/20'
+                                            : 'bg-base-100/60 border-primary/10')
+                                    }
+                                    style={{ height: carouselHeight ? `${carouselHeight}px` : 'auto', transition: 'height 280ms ease' }}
+                                >
+                                    <div
+                                        className="flex items-start transition-transform duration-300 ease-in-out"
+                                        style={{ transform: `translateX(-${currentCard * 100}%)` }}
+                                    >
+                                        {cards.map((card, idx) => (
+                                            <div
+                                                key={idx}
+                                                ref={(el) => (cardRefs.current[idx] = el)}
+                                                style={{ flex: '0 0 100%' }}
+                                                className="w-full p-4 flex flex-col gap-3"
+                                            >
+                                                <h4 className="text-lg font-semibold  text-warning mt-[-8]">{card.title}</h4>
+                                                <p className="text-sm text-primary/90 whitespace-pre-line leading-relaxed">{card.content}</p>
+                                                <div className="flex items-center justify-between">
+                                                    <span className="text-l  text-info/60">Durood Sharif {idx + 1}</span>
+                                                </div>
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
+
+                                {/* Dots */}
+                                <div className="flex gap-2 justify-center mt-3">
+                                    {cards.map((_, i) => (
+                                        <button
+                                            key={i}
+                                            onClick={() => setCurrentCard(i)}
+                                            aria-label={`Go to card ${i + 1}`}
+                                            className={
+                                                "w-3 h-3 rounded-full transition-colors " +
+                                                (i === currentCard ? 'bg-primary' : 'bg-primary/30')
+                                            }
+                                        />
+                                    ))}
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -517,16 +747,26 @@ export default function Tasbih() {
                 <div className="flex flex-col items-center gap-6 w-full">
                     <button
                         onClick={() => increment()}
+                        onPointerDown={startPress}
+                        onTouchStart={startPress}
                         aria-disabled={!allowFreeCounting && target <= 0}
-                        className={
-                            "btn btn-circle bg-base-100 border text-primary shadow-md hover:scale-105 transition-transform w-28 h-28 flex items-center justify-center " +
-                            (!allowFreeCounting && target <= 0
-                                ? 'border-primary/30 opacity-80'
-                                : 'border-primary')
-                        }
                         aria-label="Increment Tasbih"
+                        className="relative -mb-1 p-4 rounded-full focus:outline-none"
+                        title="Tap to increment"
                     >
-                        <PiHandTapLight className="h-20 w-20" />
+                        <span
+                            onAnimationEnd={() => setPressing(false)}
+                            style={{ animation: pressing ? 'pressAnim 260ms cubic-bezier(.2,.9,.3,1)' : 'none' }}
+                            ref={tapInnerRef}
+                            className={
+                                "relative flex items-center justify-center w-28 h-28 rounded-full transition-transform shadow-xl overflow-hidden " +
+                                (!allowFreeCounting && target <= 0
+                                    ? 'bg-base-100 border border-primary/30 text-primary/70 opacity-90'
+                                    : 'bg-gradient-to-b from-primary to-primary/80 text-white')
+                            }
+                        >
+                            <PiHandTapLight className="h-16 w-16" />
+                        </span>
                     </button>
 
                     <div className="text-xl font-bold">Tap Above</div>

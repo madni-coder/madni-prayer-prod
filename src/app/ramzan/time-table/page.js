@@ -266,7 +266,7 @@ export default function Page() {
                 const persisted = (typeof localStorage !== 'undefined') ? localStorage.getItem('ramzan_played_sehri') : null;
                 if (playedRef.current.sehri !== key && persisted !== key) {
                     playedRef.current.sehri = key;
-                    tryNotifyLocal('Sehri Time', `Sehri time has started (${times.sehriText})`);
+                    tryNotifyLocal('Sehri Time', `Sehri Ka Waqt Khatm Ho Gaya Hai (${times.sehriText})`);
                     try {
                         if (soundEnabledRef.current) {
                             const p = sehriAudioRef.current?.play();
@@ -290,7 +290,7 @@ export default function Page() {
                 const persisted = (typeof localStorage !== 'undefined') ? localStorage.getItem('ramzan_played_iftari') : null;
                 if (playedRef.current.iftari !== key && persisted !== key) {
                     playedRef.current.iftari = key;
-                    tryNotifyLocal('Iftari Time', `Iftari time has started (${times.iftariText})`);
+                    tryNotifyLocal('Iftari Time', `Iftari Ka Waqt Ho Chuka Hai (${times.iftariText})`);
                     try {
                         if (soundEnabledRef.current) {
                             const p = iftariAudioRef.current?.play();

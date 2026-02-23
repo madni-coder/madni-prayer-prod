@@ -44,5 +44,7 @@
 	<string>We need access to the device&apos;s motion sensors to show the Qibla direction accurately.</string>
 	<key>NSLocalNetworkUsageDescription</key>
 	<string>App needs local network access to connect to nearby devices and to load local development resources when running locally.</string>
+	<key>NSUserNotificationsUsageDescription</key>
+	<string>We need permission to send you timely notifications for Sehri and Iftari.</string>
 </dict>
 </plist>

@@ -407,7 +407,7 @@
 					"$(TOOLCHAIN_DIR)/usr/lib/swift/$(PLATFORM_NAME)",
 					"$(TOOLCHAIN_DIR)/usr/lib/swift-5.0/$(PLATFORM_NAME)",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = com.prayer.raahe;
+				PRODUCT_BUNDLE_IDENTIFIER = com.prayer.madni;
 				PRODUCT_NAME = "raaheHidayat";
 				PROVISIONING_PROFILE_SPECIFIER = "";
 				"PROVISIONING_PROFILE_SPECIFIER[sdk=iphoneos*]" = "Raahe Hidayat";
@@ -513,7 +513,7 @@
 					"$(TOOLCHAIN_DIR)/usr/lib/swift/$(PLATFORM_NAME)",
 					"$(TOOLCHAIN_DIR)/usr/lib/swift-5.0/$(PLATFORM_NAME)",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = com.prayer.rahe;
+				PRODUCT_BUNDLE_IDENTIFIER = com.prayer.madni;
 				PRODUCT_NAME = "raaheHidayat";
 				PROVISIONING_PROFILE_SPECIFIER = "";
 				"PROVISIONING_PROFILE_SPECIFIER[sdk=iphoneos*]" = "Raahe Hidayat";
