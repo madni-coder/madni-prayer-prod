@@ -9,6 +9,7 @@ const HARDCODED_CONFIG_URL = "https://raahehidayat.vercel.app/app-config.json";
 export default function ForceUpdateChecker() {
     const [blocked, setBlocked] = useState(false);
     const [message, setMessage] = useState("");
+    const [isIosState, setIsIosState] = useState(null);
 
     useEffect(() => {
         let mounted = true;
@@ -43,21 +44,27 @@ export default function ForceUpdateChecker() {
                 }
 
                 // ✅ Detect platform: iOS or Android
-                let isIos = false;
+                let isIosLocal = false;
                 try {
                     const { platform } = await import("@tauri-apps/plugin-os");
                     const os = await platform();
-                    isIos = os === "ios";
+                    isIosLocal = os === "ios";
                     console.log("[ForceUpdate] Platform:", os);
                 } catch {
                     // Fallback: use userAgent if Tauri OS plugin unavailable
-                    isIos =
+                    isIosLocal =
                         typeof navigator !== "undefined" &&
                         /iPad|iPhone|iPod/.test(navigator.userAgent);
                     console.log(
                         "[ForceUpdate] OS plugin unavailable, userAgent iOS:",
-                        isIos,
+                        isIosLocal,
                     );
+                }
+                // persist platform for the Update button (outside effect scope)
+                try {
+                    setIsIosState(isIosLocal);
+                } catch (e) {
+                    /* ignore */
                 }
 
                 // Get current version via Tauri if available, otherwise fallback to env/window value
@@ -147,38 +154,75 @@ export default function ForceUpdateChecker() {
                 const cfg = await res.json();
                 console.log("[ForceUpdate] Config loaded:", cfg);
 
-                // Support both min_version (semantic) and min_version_code (integer)
+                // Support OS-specific semantic min versions and numeric codes first
                 let minCode = 0;
-                if (cfg?.min_version) {
-                    minCode = versionToCode(cfg.min_version);
-                    console.log(
-                        "[ForceUpdate] Min version from semantic:",
-                        cfg.min_version,
-                        "-> code:",
-                        minCode,
-                    );
-                } else if (cfg?.min_version_code) {
-                    minCode = parseInt(cfg.min_version_code, 10) || 0;
-                    console.log(
-                        "[ForceUpdate] Min version code from config:",
-                        minCode,
-                    );
+                if (isIosLocal) {
+                    if (cfg?.min_version_ios) {
+                        minCode = versionToCode(cfg.min_version_ios);
+                        console.log(
+                            "[ForceUpdate] Min iOS version from semantic:",
+                            cfg.min_version_ios,
+                            "-> code:",
+                            minCode,
+                        );
+                    } else if (cfg?.min_version_code_ios) {
+                        minCode = parseInt(cfg.min_version_code_ios, 10) || 0;
+                        console.log(
+                            "[ForceUpdate] Min iOS version code from config:",
+                            minCode,
+                        );
+                    }
+                } else {
+                    if (cfg?.min_version_android) {
+                        minCode = versionToCode(cfg.min_version_android);
+                        console.log(
+                            "[ForceUpdate] Min Android version from semantic:",
+                            cfg.min_version_android,
+                            "-> code:",
+                            minCode,
+                        );
+                    } else if (cfg?.min_version_code_android) {
+                        minCode = parseInt(cfg.min_version_code_android, 10) || 0;
+                        console.log(
+                            "[ForceUpdate] Min Android version code from config:",
+                            minCode,
+                        );
+                    }
+                }
+
+                // Fallback to generic keys if OS-specific keys not provided
+                if (!minCode) {
+                    if (cfg?.min_version) {
+                        minCode = versionToCode(cfg.min_version);
+                        console.log(
+                            "[ForceUpdate] Min version from semantic:",
+                            cfg.min_version,
+                            "-> code:",
+                            minCode,
+                        );
+                    } else if (cfg?.min_version_code) {
+                        minCode = parseInt(cfg.min_version_code, 10) || 0;
+                        console.log(
+                            "[ForceUpdate] Min version code from config:",
+                            minCode,
+                        );
+                    }
                 }
 
                 // ✅ Pick correct store URL based on platform
-                const storeUrl = isIos
-                    ? cfg?.ios_store_url ||
-                      cfg?.app_store_url ||
-                      cfg?.storeUrl ||
-                      null
-                    : cfg?.store_url ||
-                      cfg?.play_store_url ||
-                      cfg?.storeUrl ||
-                      null;
+                                const storeUrl = isIosLocal
+                                        ? cfg?.ios_store_url ||
+                                            cfg?.app_store_url ||
+                                            cfg?.storeUrl ||
+                                            null
+                                        : cfg?.store_url ||
+                                            cfg?.play_store_url ||
+                                            cfg?.storeUrl ||
+                                            null;
 
                 console.log(
                     "[ForceUpdate] Platform:",
-                    isIos ? "iOS" : "Android",
+                    isIosLocal ? "iOS" : "Android",
                     "| Store URL:",
                     storeUrl,
                 );
@@ -252,15 +296,21 @@ export default function ForceUpdateChecker() {
                                     cache: "no-store",
                                 });
                                 const cfg = await res.json();
-                                const storeUrl = isIos
-                                    ? cfg?.ios_store_url ||
-                                      cfg?.app_store_url ||
-                                      cfg?.storeUrl ||
-                                      null
-                                    : cfg?.store_url ||
-                                      cfg?.play_store_url ||
-                                      cfg?.storeUrl ||
-                                      null;
+                                                                // determine platform for button click: use cached state if available
+                                                                const isIosForClick =
+                                                                        typeof isIosState === "boolean"
+                                                                                ? isIosState
+                                                                                : typeof navigator !== "undefined" && /iPad|iPhone|iPod/.test(navigator.userAgent);
+
+                                                                const storeUrl = isIosForClick
+                                                                        ? cfg?.ios_store_url ||
+                                                                            cfg?.app_store_url ||
+                                                                            cfg?.storeUrl ||
+                                                                            null
+                                                                        : cfg?.store_url ||
+                                                                            cfg?.play_store_url ||
+                                                                            cfg?.storeUrl ||
+                                                                            null;
                                 if (storeUrl) {
                                     try {
                                         const { openUrl } = await import(
