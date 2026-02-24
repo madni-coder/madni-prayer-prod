@@ -2,7 +2,7 @@
     "$schema": "../node_modules/@tauri-apps/cli/config.schema.json",
     "productName": "raaheHidayat",
     "version": "6.0.0",
-    "identifier": "com.prayer.raahe",
+    "identifier": "com.prayer.madni",
     "build": {
         "frontendDist": "../out",
         "devUrl": "https://raahehidayat.vercel.app",
@@ -26,7 +26,10 @@
     "bundle": {
         "active": true,
         "targets": "all",
-        "resources": ["../public/sehri.mp3", "../public/irftari.mp3"],
+        "resources": [
+            "../public/sehri.mp3",
+            "../public/irftari.mp3"
+        ],
         "icon": [
             "icons/32x32.png",
             "icons/128x128.png",
