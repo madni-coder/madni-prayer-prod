@@ -147,8 +147,10 @@ export default function Page() {
         } catch (e) { }
     };
 
-    // Schedule a native alarm that fires even when app is closed/phone locked (Android ExactAlarmAllowWhileIdle)
-    const scheduleNativeAlarm = async (date, idStr, titleStr, bodyStr) => {
+    // Schedule a native alarm that fires even when app is closed/phone locked
+    // Android: ExactAlarmAllowWhileIdle  |  iOS: UNUserNotificationCenter (works when locked/closed)
+    // iosSoundName: name of the .caf file in the iOS bundle (without extension), e.g. 'sehri' or 'irftari'
+    const scheduleNativeAlarm = async (date, idStr, titleStr, bodyStr, iosSoundName = 'default') => {
         if (!date || date <= new Date()) return;
         if (typeof window === 'undefined' || !window.__TAURI_INTERNALS__) return;
         try {
@@ -160,27 +162,41 @@ export default function Page() {
                 granted = permission === 'granted';
             }
             if (!granted) return;
-            // Create the high-importance channel first (Android requires this)
-            await invoke('plugin:notification|create_channel', {
-                id: 'ramzan_alert',
-                name: 'Ramzan Alerts',
-                description: 'Sehri and Iftari time alerts',
-                importance: 4,        // Importance.High
-                visibility: 1,        // Visibility.Public  
-                vibration: true,
-                sound: 'ramzan_alert'
-            }).catch(() => { });
-            // Use invoke directly to send a scheduled notification — the JS sendNotification() wrapper
-            // only calls window.Notification and does NOT reach the native scheduler on mobile.
-            // Command name is 'notify' per the Tauri plugin Rust source (commands.rs)
+
+            // Detect platform: channels are Android-only — on iOS create_channel is not needed
+            let isIOS = false;
+            try {
+                const { platform } = await import('@tauri-apps/plugin-os');
+                isIOS = (await platform()) === 'ios';
+            } catch (e) { }
+
+            if (!isIOS) {
+                // Android: Create high-importance channel (required for custom sound + heads-up display)
+                await invoke('plugin:notification|create_channel', {
+                    id: 'ramzan_alert',
+                    name: 'Ramzan Alerts',
+                    description: 'Sehri and Iftari time alerts',
+                    importance: 4,    // Importance.High
+                    visibility: 1,    // Visibility.Public
+                    vibration: true,
+                    sound: 'ramzan_alert'  // matches res/raw/ramzan_alert.mp3 in Android assets
+                }).catch(() => { });
+            }
+
+            // Use invoke directly — the JS sendNotification() wrapper just calls window.Notification
+            // and does NOT reach the native scheduler on mobile.
+            // Rust command name: 'notify' (from commands.rs in tauri-plugin-notification)
+            const notifId = Math.abs(idStr.split('').reduce((a, c) => (a << 5) - a + c.charCodeAt(0), 0)) % 2147483647;
             await invoke('plugin:notification|notify', {
                 options: {
-                    id: Math.abs(idStr.split('').reduce((a, c) => (a << 5) - a + c.charCodeAt(0), 0)) % 2147483647,
+                    id: notifId,
                     title: titleStr,
                     body: bodyStr,
-                    channelId: 'ramzan_alert',
-                    sound: 'ramzan_alert',
-                    schedule: Schedule.at(date, false, true)  // allowWhileIdle=true → works on locked screen
+                    // iOS: .caf file name (without extension) bundled in app  |  Android: res/raw sound name
+                    sound: isIOS ? iosSoundName : 'ramzan_alert',
+                    // channelId is ignored on iOS but required on Android
+                    ...(isIOS ? {} : { channelId: 'ramzan_alert' }),
+                    schedule: Schedule.at(date, false, true)  // allowWhileIdle=true → fires on locked screen
                 }
             });
         } catch (e) {
@@ -273,13 +289,15 @@ export default function Page() {
             sehriTime,
             `ramzan_sehri_${todayKey}`,
             'Sehri Time 🌙',
-            `Sehri Ka Waqt Khatm Ho Gaya Hai (${row.sehri})`
+            `Sehri Ka Waqt Khatm Ho Gaya Hai (${row.sehri})`,
+            'sehri'          // iOS: plays sehri.caf from app bundle
         );
         await scheduleNativeAlarm(
             iftariTime,
             `ramzan_iftari_${todayKey}`,
             'Iftari Time 🌅',
-            `Iftari Ka Waqt Ho Gaya Hai (${row.iftari})`
+            `Iftari Ka Waqt Ho Gaya Hai (${row.iftari})`,
+            'irftari'        // iOS: plays irftari.caf from app bundle
         );
 
         // Mark as scheduled for today
