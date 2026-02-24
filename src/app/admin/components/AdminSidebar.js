@@ -27,11 +27,7 @@ const navigation = [
         href: "/admin/all-masjids",
         icon: School,
     },
-    {
-        name: "Masjid Committee",
-        href: "/admin/masjid-committee",
-        icon: UsersRound,
-    },
+    
     {
         name: "Jamat Times",
         href: "/admin/jamat",
