@@ -2,6 +2,8 @@ import { Prisma } from "@prisma/client";
 import { NextResponse } from "next/server";
 import prisma from "../../../../lib/prisma";
 
+export const dynamic = 'force-dynamic';
+
 const UNIQUE_ID_TARGET = "id";
 
 function extractTargets(err) {
