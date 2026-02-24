@@ -7,13 +7,13 @@ import { ArrowLeft, Pencil } from "lucide-react";
 import apiClient from "../../../../lib/apiClient";
 
 const prayers = [
-    { name: "Fajr", defaultTime: "5:00 am" },
-    { name: "Zuhar", defaultTime: "6:10 am" },
-    { name: "Asr", defaultTime: "4:30 pm" },
-    { name: "Maghrib", defaultTime: "7:15 pm" },
-    { name: "Isha", defaultTime: "8:45 pm" },
+    { name: "Fajr", defaultTime: "5:00" },
+    { name: "Zuhar", defaultTime: "6:10" },
+    { name: "Asr", defaultTime: "4:30" },
+    { name: "Maghrib", defaultTime: "7:15" },
+    { name: "Isha", defaultTime: "8:45" },
     { name: "Taravih", defaultTime: "00:00" },
-    { name: "Juma", defaultTime: "1:30 pm" },
+    { name: "Juma", defaultTime: "1:30" },
 ];
 
 export default function EditJamatTimePageWrapper() {
@@ -42,6 +42,10 @@ function EditJamatTimePage() {
     const [name, setName] = useState("");
     const [mobile, setMobile] = useState("");
     const [pasteMapUrl, setPasteMapUrl] = useState("");
+    const [loginId, setLoginId] = useState("");
+    const [memberNames, setMemberNames] = useState("");
+    const [mobileNumbers, setMobileNumbers] = useState("");
+    const [password, setPassword] = useState("");
     const LOCAL_CITY_KEY = "masjid_city_isRaipur";
     const [isRaipur, setIsRaipur] = useState(false);
     const [times, setTimes] = useState(prayers.map((p) => p.defaultTime));
@@ -68,6 +72,10 @@ function EditJamatTimePage() {
                 setName(data.name || "");
                 setMobile(data.mobile || "");
                 setPasteMapUrl(data.pasteMapUrl || "");
+                setLoginId(data.loginId || "");
+                setMemberNames(data.memberNames && Array.isArray(data.memberNames) ? data.memberNames.join(', ') : "");
+                setMobileNumbers(data.mobileNumbers && Array.isArray(data.mobileNumbers) ? data.mobileNumbers.join(', ') : "");
+                setPassword(data.password || "");
                 // Respect user's persisted toggle preference. If there is a
                 // stored preference in localStorage, use that. Otherwise
                 // fall back to the value from the server.
@@ -86,13 +94,13 @@ function EditJamatTimePage() {
                     setIsRaipur((data.city || "Bilaspur") === "Raipur");
                 }
                 setTimes([
-                    data.fazar || prayers[0].defaultTime,
-                    data.zuhar || prayers[1].defaultTime,
-                    data.asar || prayers[2].defaultTime,
-                    data.maghrib || prayers[3].defaultTime,
-                    data.isha || prayers[4].defaultTime,
-                    data.taravih || prayers[5].defaultTime,
-                    data.juma || prayers[6].defaultTime,
+                    (data.fazar || prayers[0].defaultTime).replace(/ am| pm/gi, ""),
+                    (data.zuhar || prayers[1].defaultTime).replace(/ am| pm/gi, ""),
+                    (data.asar || prayers[2].defaultTime).replace(/ am| pm/gi, ""),
+                    (data.maghrib || prayers[3].defaultTime).replace(/ am| pm/gi, ""),
+                    (data.isha || prayers[4].defaultTime).replace(/ am| pm/gi, ""),
+                    (data.taravih || prayers[5].defaultTime).replace(/ am| pm/gi, ""),
+                    (data.juma || prayers[6].defaultTime).replace(/ am| pm/gi, ""),
                 ]);
             } else {
                 setError(data?.error || "Failed to fetch masjid data");
@@ -151,12 +159,12 @@ function EditJamatTimePage() {
 
     const handleEdit = (idx) => {
         setEditIdx(idx);
-        setEditValue(convertTo24(times[idx]));
+        setEditValue(times[idx]);
     };
 
     const handleSave = (idx) => {
         setTimes((times) =>
-            times.map((t, i) => (i === idx ? convertTo12(editValue) : t))
+            times.map((t, i) => (i === idx ? editValue : t))
         );
         setEditIdx(null);
     };
@@ -177,6 +185,10 @@ function EditJamatTimePage() {
                 mobile: mobile,
                 pasteMapUrl: pasteMapUrl.trim(),
                 city: isRaipur ? 'Raipur' : 'Bilaspur',
+                loginId: loginId ? parseInt(loginId) : null,
+                memberNames: memberNames ? memberNames.split(',').map(s => s.trim()).filter(Boolean) : [],
+                mobileNumbers: mobileNumbers ? mobileNumbers.split(',').map(s => s.trim()).filter(Boolean) : [],
+                password: password ? parseInt(password) : 0,
                 // map times
                 fazar: times[0],
                 zuhar: times[1],
@@ -322,6 +334,50 @@ function EditJamatTimePage() {
                         </div>
                         <div className="mb-4">
                             <label className="block text-gray-700 mb-2">
+                                Login ID
+                            </label>
+                            <input
+                                type="number"
+                                className="input input-bordered w-full bg-white text-black border-gray-300 rounded-full py-2"
+                                value={loginId}
+                                onChange={(e) => setLoginId(e.target.value)}
+                            />
+                        </div>
+                        <div className="mb-4">
+                            <label className="block text-gray-700 mb-2">
+                                Password
+                            </label>
+                            <input
+                                type="number"
+                                className="input input-bordered w-full bg-white text-black border-gray-300 rounded-full py-2"
+                                value={password}
+                                onChange={(e) => setPassword(e.target.value)}
+                            />
+                        </div>
+                        <div className="mb-4">
+                            <label className="block text-gray-700 mb-2">
+                                Committee Members (comma separated)
+                            </label>
+                            <input
+                                type="text"
+                                className="input input-bordered w-full bg-white text-black border-gray-300 rounded-full py-2"
+                                value={memberNames}
+                                onChange={(e) => setMemberNames(e.target.value)}
+                            />
+                        </div>
+                        <div className="mb-4">
+                            <label className="block text-gray-700 mb-2">
+                                Committee Mobiles (comma separated)
+                            </label>
+                            <input
+                                type="text"
+                                className="input input-bordered w-full bg-white text-black border-gray-300 rounded-full py-2"
+                                value={mobileNumbers}
+                                onChange={(e) => setMobileNumbers(e.target.value)}
+                            />
+                        </div>
+                        <div className="mb-4">
+                            <label className="block text-gray-700 mb-2">
                                 Paste Map URL
                             </label>
                             <input
@@ -401,8 +457,10 @@ function EditJamatTimePage() {
                                             {editIdx === idx ? (
                                                 <div className="flex flex-col sm:flex-row items-center gap-2">
                                                     <input
-                                                        type="time"
-                                                        className="input input-bordered input-sm bg-white text-gray-800 border-gray-300"
+                                                        type="text"
+                                                        inputMode="numeric"
+                                                        pattern="[0-9:]*"
+                                                        className="input input-bordered input-sm bg-white text-gray-800 border-gray-300 w-24 text-center"
                                                         value={editValue}
                                                         onChange={(e) =>
                                                             setEditValue(
@@ -447,20 +505,4 @@ function EditJamatTimePage() {
     );
 }
 
-function convertTo24(timeStr) {
-    const [time, period] = timeStr.split(" ");
-    let [h, m] = time.split(":");
-    h = parseInt(h);
-    if (period === "pm" && h !== 12) h += 12;
-    if (period === "am" && h === 12) h = 0;
-    return `${String(h).padStart(2, "0")}:${m}`;
-}
-
-function convertTo12(timeStr) {
-    let [h, m] = timeStr.split(":");
-    h = parseInt(h);
-    const period = h >= 12 ? "pm" : "am";
-    if (h === 0) h = 12;
-    else if (h > 12) h -= 12;
-    return `${h}:${m} ${period}`;
-}
+// Conversions removed to allow raw text input

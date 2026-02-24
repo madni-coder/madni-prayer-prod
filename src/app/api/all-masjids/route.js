@@ -64,7 +64,11 @@ export async function POST(request) {
             role = null,
             mobile = null,
             pasteMapUrl = null,
-            city = 'Bilaspur'
+            city = 'Bilaspur',
+            loginId = null,
+            memberNames = [],
+            mobileNumbers = [],
+            password = 0
         } = body;
 
         const required = [
@@ -101,7 +105,11 @@ export async function POST(request) {
             role,
             mobile,
             pasteMapUrl,
-            city
+            city,
+            loginId,
+            memberNames,
+            mobileNumbers,
+            password
         });
 
         return NextResponse.json(
@@ -151,7 +159,11 @@ export async function PATCH(request) {
             role,
             mobile,
             pasteMapUrl,
-            city='Bilaspur'
+            city = 'Bilaspur',
+            loginId,
+            memberNames,
+            mobileNumbers,
+            password
         } = body;
 
         if (!id) {
@@ -190,6 +202,10 @@ export async function PATCH(request) {
         if (mobile !== undefined) updateData.mobile = mobile;
         if (pasteMapUrl !== undefined) updateData.pasteMapUrl = pasteMapUrl;
         if (city !== undefined) updateData.city = city;
+        if (loginId !== undefined) updateData.loginId = loginId;
+        if (memberNames !== undefined) updateData.memberNames = memberNames;
+        if (mobileNumbers !== undefined) updateData.mobileNumbers = mobileNumbers;
+        if (password !== undefined) updateData.password = password;
 
         const updated = await prisma.allMasjid.update({
             where: { id: parseInt(id) },
