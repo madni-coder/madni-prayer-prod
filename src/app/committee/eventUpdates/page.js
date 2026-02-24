@@ -104,6 +104,9 @@ export default function EventUpdates() {
     const [showDetails, setShowDetails] = useState(false);
     const fetchingRef = useRef(null);
 
+    const [committeeImages, setCommitteeImages] = useState([]);
+    const [loadingCommitteeImages, setLoadingCommitteeImages] = useState(false);
+
     const [times, setTimes] = useState(prayers.map((p) => p.defaultTime));
     const [editIdx, setEditIdx] = useState(null);
     const [editValue, setEditValue] = useState("");
@@ -200,6 +203,27 @@ export default function EventUpdates() {
         fetchMasjid();
     }, [currentMasjidId]);
 
+    // Fetch images from committee bucket (GET /api/masjid-committee-event)
+    useEffect(() => {
+        if (!currentMasjidId) return;
+        let mounted = true;
+        const fetchImages = async () => {
+            setLoadingCommitteeImages(true);
+            try {
+                const res = await apiClient.get('/api/masjid-committee-event');
+                const imgs = res?.data?.images || [];
+                const urls = imgs.map((f) => f.imageSrc).filter(Boolean).reverse();
+                if (mounted) setCommitteeImages(urls);
+            } catch (err) {
+                console.error('Failed to load committee images', err);
+            } finally {
+                if (mounted) setLoadingCommitteeImages(false);
+            }
+        };
+        fetchImages();
+        return () => { mounted = false; };
+    }, [currentMasjidId]);
+
     // Filter out unwanted fields
     const excludedFields = ['password', 'createdAt', 'updatedAt', 'created_at', 'updated_at', 'id', 'committeeImage', 'committeeImages'];
 
@@ -271,7 +295,7 @@ export default function EventUpdates() {
                 {!loading && masjid && (
                     <>
                         {/* Event Image Section - Carousel (supports single or multiple images) */}
-                        {((masjid.committeeImages && masjid.committeeImages.length) || masjid.committeeImage) && (
+                        {((committeeImages && committeeImages.length) || (masjid.committeeImages && masjid.committeeImages.length) || masjid.committeeImage) && (
                             <div className="bg-slate-800/50 backdrop-blur-sm rounded-2xl overflow-hidden shadow-2xl border border-emerald-500/30">
                                 {/* Header Banner */}
                                 <div className="bg-gradient-to-r from-emerald-600 to-teal-600 px-6 py-4">
@@ -294,11 +318,13 @@ export default function EventUpdates() {
                                         {/* derive images array */}
                                         {/* eslint-disable-next-line react-hooks/rules-of-hooks */}
                                         {(() => {
-                                            const imgs = Array.isArray(masjid.committeeImages)
-                                                ? masjid.committeeImages.filter(Boolean).slice().reverse()
-                                                : masjid.committeeImage
-                                                    ? [masjid.committeeImage]
-                                                    : [];
+                                            const imgs = (Array.isArray(committeeImages) && committeeImages.length)
+                                                ? committeeImages
+                                                : (Array.isArray(masjid.committeeImages)
+                                                    ? masjid.committeeImages.filter(Boolean).slice().reverse()
+                                                    : masjid.committeeImage
+                                                        ? [masjid.committeeImage]
+                                                        : []);
                                             return (
                                                 <Carousel images={imgs} />
                                             );

@@ -46,9 +46,6 @@ const resolvedBase = mapLocalhostForAndroidEmulator(defaultBase);
 const apiClient = axios.create({
     baseURL: resolvedBase,
     withCredentials: false,
-    headers: {
-        "Content-Type": "application/json",
-    },
 });
 
 apiClient.interceptors.response.use(
