@@ -55,12 +55,11 @@ export default function Page() {
         setSoundEnabled(checked);
         soundEnabledRef.current = checked;
         try {
-            if (typeof window !== 'undefined' && window.__TAURI_INTERNALS__) {
-                import('@tauri-apps/plugin-notification').then(nav => nav.cancelAll().catch(() => { })).catch(() => { });
-            }
             if (checked) {
                 localStorage.setItem(SOUND_KEY, "true");
-                // Briefly play silence to unlock standard and Web Audio context
+                // Clear the "already scheduled today" flag so alarms are re-scheduled immediately
+                try { localStorage.removeItem(`ramzan_sched_done_${new Date().toDateString()}`); } catch (e) { }
+                // Briefly play silence to unlock Web Audio context on iOS/Android
                 if (audioCtxRef.current && audioCtxRef.current.state === 'suspended') {
                     audioCtxRef.current.resume().catch(() => { });
                 }
@@ -69,8 +68,14 @@ export default function Page() {
                     a.volume = 0;
                     a.play().then(() => { a.pause(); }).catch(() => { });
                 } catch (e) { }
+                // Schedule native alarms now that sound is enabled
+                setTimeout(() => scheduleNativeAlarmsOnce(), 500);
             } else {
                 localStorage.removeItem(SOUND_KEY);
+                // Cancel any previously scheduled native notifications
+                if (typeof window !== 'undefined' && window.__TAURI_INTERNALS__) {
+                    import('@tauri-apps/plugin-notification').then(nav => nav.cancelAll().catch(() => { })).catch(() => { });
+                }
             }
         } catch (e) { }
     };
@@ -113,22 +118,172 @@ export default function Page() {
     const playedRef = useRef({ sehri: null, iftari: null });
     const audioCtxRef = useRef(null);
 
+    // Send an immediate native notification (works in foreground)
     const tryNotify = async (title, body) => {
         try {
             if (typeof window !== 'undefined' && window.__TAURI_INTERNALS__) {
-                const tauriNotify = await import('@tauri-apps/plugin-notification');
-                let granted = await tauriNotify.isPermissionGranted();
+                const { invoke } = await import('@tauri-apps/api/core');
+                const { isPermissionGranted, requestPermission } = await import('@tauri-apps/plugin-notification');
+                let granted = await isPermissionGranted();
                 if (!granted) {
-                    const permission = await tauriNotify.requestPermission();
+                    const permission = await requestPermission();
                     granted = permission === 'granted';
                 }
                 if (granted) {
-                    tauriNotify.sendNotification({ title, body, sound: 'default' });
+                    // Use invoke directly so it hits the native layer (not just window.Notification)
+                    // Command name is 'notify' per the Tauri plugin Rust source
+                    await invoke('plugin:notification|notify', {
+                        options: { title, body, sound: 'default', channelId: 'ramzan_alert' }
+                    }).catch(() => {
+                        // Fallback to browser notification if invoke fails
+                        if (typeof Notification !== 'undefined' && Notification.permission === 'granted') {
+                            new Notification(title, { body });
+                        }
+                    });
                 }
             } else if (typeof Notification !== 'undefined' && Notification.permission === 'granted') {
                 new Notification(title, { body });
             }
         } catch (e) { }
+    };
+
+    // Schedule a native alarm that fires even when app is closed/phone locked (Android ExactAlarmAllowWhileIdle)
+    const scheduleNativeAlarm = async (date, idStr, titleStr, bodyStr) => {
+        if (!date || date <= new Date()) return;
+        if (typeof window === 'undefined' || !window.__TAURI_INTERNALS__) return;
+        try {
+            const { invoke } = await import('@tauri-apps/api/core');
+            const { isPermissionGranted, requestPermission, Schedule } = await import('@tauri-apps/plugin-notification');
+            let granted = await isPermissionGranted();
+            if (!granted) {
+                const permission = await requestPermission();
+                granted = permission === 'granted';
+            }
+            if (!granted) return;
+            // Create the high-importance channel first (Android requires this)
+            await invoke('plugin:notification|create_channel', {
+                id: 'ramzan_alert',
+                name: 'Ramzan Alerts',
+                description: 'Sehri and Iftari time alerts',
+                importance: 4,        // Importance.High
+                visibility: 1,        // Visibility.Public  
+                vibration: true,
+                sound: 'ramzan_alert'
+            }).catch(() => { });
+            // Use invoke directly to send a scheduled notification — the JS sendNotification() wrapper
+            // only calls window.Notification and does NOT reach the native scheduler on mobile.
+            // Command name is 'notify' per the Tauri plugin Rust source (commands.rs)
+            await invoke('plugin:notification|notify', {
+                options: {
+                    id: Math.abs(idStr.split('').reduce((a, c) => (a << 5) - a + c.charCodeAt(0), 0)) % 2147483647,
+                    title: titleStr,
+                    body: bodyStr,
+                    channelId: 'ramzan_alert',
+                    sound: 'ramzan_alert',
+                    schedule: Schedule.at(date, false, true)  // allowWhileIdle=true → works on locked screen
+                }
+            });
+        } catch (e) {
+            console.debug('scheduleNativeAlarm error', e);
+        }
+    };
+
+    // Time table data (same as rendered table) for reliable lookups without DOM access
+    const BILASPUR_TIMES = [
+        { date: '19 Feb', sehri: '5:10', iftari: '6:06' }, { date: '20 Feb', sehri: '5:10', iftari: '6:06' },
+        { date: '21 Feb', sehri: '5:09', iftari: '6:07' }, { date: '22 Feb', sehri: '5:09', iftari: '6:07' },
+        { date: '23 Feb', sehri: '5:08', iftari: '6:08' }, { date: '24 Feb', sehri: '5:08', iftari: '6:08' },
+        { date: '25 Feb', sehri: '5:07', iftari: '6:08' }, { date: '26 Feb', sehri: '5:07', iftari: '6:08' },
+        { date: '27 Feb', sehri: '5:06', iftari: '6:09' }, { date: '28 Feb', sehri: '5:06', iftari: '6:09' },
+        { date: '1 Mar', sehri: '5:04', iftari: '6:10' }, { date: '2 Mar', sehri: '5:02', iftari: '6:11' },
+        { date: '3 Mar', sehri: '5:02', iftari: '6:11' }, { date: '4 Mar', sehri: '5:00', iftari: '6:12' },
+        { date: '5 Mar', sehri: '5:00', iftari: '6:12' }, { date: '6 Mar', sehri: '4:59', iftari: '6:13' },
+        { date: '7 Mar', sehri: '4:59', iftari: '6:13' }, { date: '8 Mar', sehri: '4:58', iftari: '6:14' },
+        { date: '9 Mar', sehri: '4:58', iftari: '6:14' }, { date: '10 Mar', sehri: '4:56', iftari: '6:14' },
+        { date: '11 Mar', sehri: '4:56', iftari: '6:14' }, { date: '12 Mar', sehri: '4:54', iftari: '6:15' },
+        { date: '13 Mar', sehri: '4:54', iftari: '6:15' }, { date: '14 Mar', sehri: '4:52', iftari: '6:16' },
+        { date: '15 Mar', sehri: '4:52', iftari: '6:16' }, { date: '16 Mar', sehri: '4:50', iftari: '6:16' },
+        { date: '17 Mar', sehri: '4:50', iftari: '6:16' }, { date: '18 Mar', sehri: '4:48', iftari: '6:17' },
+        { date: '19 Mar', sehri: '4:48', iftari: '6:17' }, { date: '20 Mar', sehri: '4:46', iftari: '6:17' },
+    ];
+    const RAIPUR_TIMES = [
+        { date: '19 Feb', sehri: '05:13', iftari: '06:08' }, { date: '20 Feb', sehri: '05:12', iftari: '06:08' },
+        { date: '21 Feb', sehri: '05:11', iftari: '06:09' }, { date: '22 Feb', sehri: '05:11', iftari: '06:09' },
+        { date: '23 Feb', sehri: '05:10', iftari: '06:10' }, { date: '24 Feb', sehri: '05:09', iftari: '06:10' },
+        { date: '25 Feb', sehri: '05:09', iftari: '06:11' }, { date: '26 Feb', sehri: '05:08', iftari: '06:11' },
+        { date: '27 Feb', sehri: '05:07', iftari: '06:11' }, { date: '28 Feb', sehri: '05:07', iftari: '06:12' },
+        { date: '1 Mar', sehri: '05:06', iftari: '06:12' }, { date: '2 Mar', sehri: '05:05', iftari: '06:13' },
+        { date: '3 Mar', sehri: '05:04', iftari: '06:13' }, { date: '4 Mar', sehri: '05:04', iftari: '06:13' },
+        { date: '5 Mar', sehri: '05:03', iftari: '06:14' }, { date: '6 Mar', sehri: '05:02', iftari: '06:14' },
+        { date: '7 Mar', sehri: '05:01', iftari: '06:15' }, { date: '8 Mar', sehri: '05:00', iftari: '06:15' },
+        { date: '9 Mar', sehri: '04:59', iftari: '06:15' }, { date: '10 Mar', sehri: '04:59', iftari: '06:16' },
+        { date: '11 Mar', sehri: '04:58', iftari: '06:16' }, { date: '12 Mar', sehri: '04:57', iftari: '06:16' },
+        { date: '13 Mar', sehri: '04:56', iftari: '06:17' }, { date: '14 Mar', sehri: '04:55', iftari: '06:17' },
+        { date: '15 Mar', sehri: '04:54', iftari: '06:17' }, { date: '16 Mar', sehri: '04:53', iftari: '06:18' },
+        { date: '17 Mar', sehri: '04:52', iftari: '06:18' }, { date: '18 Mar', sehri: '04:51', iftari: '06:18' },
+        { date: '19 Mar', sehri: '04:50', iftari: '06:19' }, { date: '20 Mar', sehri: '04:50', iftari: '06:19' },
+    ];
+
+    // Parse "H:MM" or "HH:MM" with optional PM treatment
+    const parseDatelessTime = (timeStr, treatAsPM = false) => {
+        if (!timeStr) return null;
+        const m = timeStr.trim().toLowerCase().match(/(\d{1,2}):(\d{2})\s*(am|pm)?/);
+        if (!m) return null;
+        let hh = parseInt(m[1], 10);
+        const mm = parseInt(m[2], 10);
+        const suffix = m[3];
+        if (suffix === 'am') { if (hh === 12) hh = 0; }
+        else if (suffix === 'pm') { if (hh < 12) hh += 12; }
+        else if (treatAsPM && hh < 12) { hh += 12; }
+        const d = new Date();
+        d.setHours(hh, mm, 0, 0);
+        return d;
+    };
+
+    // Schedule Sehri & Iftari native alarms ONCE per day.
+    // Using a localStorage key "ramzan_sched_done_DATE" prevents re-scheduling on every re-render.
+    const scheduleNativeAlarmsOnce = async () => {
+        if (typeof window === 'undefined' || !window.__TAURI_INTERNALS__) return;
+        const soundOn = typeof localStorage !== 'undefined' && localStorage.getItem(SOUND_KEY) === 'true';
+        if (!soundOn) return;
+        const todayKey = new Date().toDateString();
+        const schedDoneKey = `ramzan_sched_done_${todayKey}`;
+        if (typeof localStorage !== 'undefined' && localStorage.getItem(schedDoneKey) === '1') return; // already scheduled today
+
+        // Clear yesterday's sched key to avoid localStorage bloat
+        try {
+            const yesterday = new Date(); yesterday.setDate(yesterday.getDate() - 1);
+            localStorage.removeItem(`ramzan_sched_done_${yesterday.toDateString()}`);
+        } catch (e) { }
+
+        // Find today's row from embedded data (no DOM needed — works even before render)
+        const onlyRaipurNow = typeof localStorage !== 'undefined' && localStorage.getItem(STORAGE_KEY) === 'true';
+        const table = onlyRaipurNow ? RAIPUR_TIMES : BILASPUR_TIMES;
+        const today = new Date();
+        const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+        const todayLabel = `${today.getDate()} ${months[today.getMonth()]}`;
+        const row = table.find(r => r.date === todayLabel);
+        if (!row) return;
+
+        const sehriTime = parseDatelessTime(row.sehri);
+        // Iftari times are all "6:xx" AM format in data but represent PM → treat as PM
+        const iftariTime = parseDatelessTime(row.iftari, true);
+
+        await scheduleNativeAlarm(
+            sehriTime,
+            `ramzan_sehri_${todayKey}`,
+            'Sehri Time 🌙',
+            `Sehri Ka Waqt Khatm Ho Gaya Hai (${row.sehri})`
+        );
+        await scheduleNativeAlarm(
+            iftariTime,
+            `ramzan_iftari_${todayKey}`,
+            'Iftari Time 🌅',
+            `Iftari Ka Waqt Ho Gaya Hai (${row.iftari})`
+        );
+
+        // Mark as scheduled for today
+        try { localStorage.setItem(schedDoneKey, '1'); } catch (e) { }
     };
 
     useEffect(() => {
@@ -238,10 +393,6 @@ export default function Page() {
             return d1 && d2 && d1.getHours() === d2.getHours() && d1.getMinutes() === d2.getMinutes();
         };
 
-        const tryNotifyLocal = async (title, body) => {
-            await tryNotify(title, body);
-        };
-
         const check = () => {
 
             // allow manual overrides (for normal flow) stored in localStorage
@@ -264,39 +415,15 @@ export default function Page() {
             const sehriTime = parseTimeStr(times.sehriText);
             const iftariTime = parseTimeStr(times.iftariText, true);
 
-            // Schedule background exact alarms for locked phone
-            if (soundEnabledRef.current && window.__TAURI_INTERNALS__) {
-                import('@tauri-apps/plugin-notification').then(async nav => {
-                    const trySched = async (date, idStr, titleStr, textStr) => {
-                        if (date && date > new Date()) {
-                            const lsKey = `native_sched_${idStr}`;
-                            const t = date.getTime().toString();
-                            if ((typeof localStorage !== 'undefined') && localStorage.getItem(lsKey) !== t) {
-                                try {
-                                    await nav.createChannel({ id: idStr, name: titleStr, sound: idStr, importance: 4, visibility: 1 });
-                                    await nav.sendNotification({
-                                        title: titleStr,
-                                        body: `${titleStr} Ka Waqt Ho Gaya Hai (${textStr})`,
-                                        channelId: idStr,
-                                        sound: idStr + '.mp3',
-                                        schedule: nav.Schedule.at(date, false, true)
-                                    });
-                                    if (typeof localStorage !== 'undefined') localStorage.setItem(lsKey, t);
-                                } catch (e) { }
-                            }
-                        }
-                    };
-                    await trySched(sehriTime, 'sehri', 'Sehri Time', times.sehriText);
-                    await trySched(iftariTime, 'irftari', 'Iftari Time', times.iftariText);
-                }).catch(() => { });
-            }
+            // NOTE: Native background alarms are scheduled once per day via scheduleNativeAlarmsOnce(),
+            // not on every 10-second tick, to avoid duplicate notifications.
 
             if (sehriTime && isSameMinute(now, sehriTime)) {
                 const key = (new Date()).toDateString();
                 const persisted = (typeof localStorage !== 'undefined') ? localStorage.getItem('ramzan_played_sehri') : null;
                 if (playedRef.current.sehri !== key && persisted !== key) {
                     playedRef.current.sehri = key;
-                    tryNotifyLocal('Sehri Time', `Sehri Ka Waqt Khatm Ho Gaya Hai (${times.sehriText})`);
+                    tryNotify('Sehri Time 🌙', `Sehri Ka Waqt Khatm Ho Gaya Hai (${times.sehriText})`);
                     try {
                         if (soundEnabledRef.current) {
                             const p = sehriAudioRef.current?.play();
@@ -320,7 +447,7 @@ export default function Page() {
                 const persisted = (typeof localStorage !== 'undefined') ? localStorage.getItem('ramzan_played_iftari') : null;
                 if (playedRef.current.iftari !== key && persisted !== key) {
                     playedRef.current.iftari = key;
-                    tryNotifyLocal('Iftari Time', `Iftari Ka Waqt Ho Chuka Hai (${times.iftariText})`);
+                    tryNotify('Iftari Time 🌅', `Iftari Ka Waqt Ho Gaya Hai (${times.iftariText})`);
                     try {
                         if (soundEnabledRef.current) {
                             const p = iftariAudioRef.current?.play();
@@ -340,10 +467,13 @@ export default function Page() {
             }
         };
 
-        // ask notification permission once
+        // Ask notification permission once
         if (typeof Notification !== 'undefined' && Notification.permission === 'default') {
             try { Notification.requestPermission().catch(() => { }); } catch (e) { }
         }
+
+        // Schedule today's native alarms (once on mount — not every tick)
+        scheduleNativeAlarmsOnce();
 
         // run immediately and then every 10 seconds
         check();

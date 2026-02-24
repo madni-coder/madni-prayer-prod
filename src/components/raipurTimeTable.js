@@ -1,5 +1,5 @@
 "use client"
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef } from 'react';
 
 export default function RaipurTimeTable({ onlyRaipur, sehriAudioRef, iftariAudioRef }) {
     // helper: check if a date string in format "D Mon" (e.g. "28 Feb", "1 Mar") refers to today
@@ -22,7 +22,6 @@ export default function RaipurTimeTable({ onlyRaipur, sehriAudioRef, iftariAudio
 
     // audio & testing helpers (same behaviour as page-level implementation)
     const playedRef = useRef({ sehri: null, iftari: null });
-    const [debugMsg, setDebugMsg] = useState('');
 
     useEffect(() => {
         let checker = null;
@@ -83,10 +82,21 @@ export default function RaipurTimeTable({ onlyRaipur, sehriAudioRef, iftariAudio
         const tryNotify = async (title, body) => {
             try {
                 if (typeof window !== 'undefined' && window.__TAURI_INTERNALS__) {
-                    const tauriNotify = await import('@tauri-apps/plugin-notification');
-                    let granted = await tauriNotify.isPermissionGranted();
-                    if (!granted) granted = (await tauriNotify.requestPermission()) === 'granted';
-                    if (granted) tauriNotify.sendNotification({ title, body, sound: 'default' });
+                    const { invoke } = await import('@tauri-apps/api/core');
+                    const { isPermissionGranted, requestPermission } = await import('@tauri-apps/plugin-notification');
+                    let granted = await isPermissionGranted();
+                    if (!granted) granted = (await requestPermission()) === 'granted';
+                    if (granted) {
+                        // Use invoke directly so it hits the native layer (not just window.Notification)
+                        // Command name is 'notify' per the Tauri plugin Rust source (commands.rs)
+                        await invoke('plugin:notification|notify', {
+                            options: { title, body, sound: 'default', channelId: 'ramzan_alert' }
+                        }).catch(() => {
+                            if (typeof Notification !== 'undefined' && Notification.permission === 'granted') {
+                                new Notification(title, { body });
+                            }
+                        });
+                    }
                 } else if (typeof Notification !== 'undefined' && Notification.permission === 'granted') {
                     new Notification(title, { body });
                 }
@@ -96,60 +106,21 @@ export default function RaipurTimeTable({ onlyRaipur, sehriAudioRef, iftariAudio
         const check = () => {
             const times = findTodayRowTimes();
             if (!times) return;
-            // debug
-            try {
-                const now = new Date();
-                const sehriTime = parseTimeStr(times.sehriText);
-                // treat iftari as PM when no am/pm is provided
-                const iftariTime = parseTimeStr(times.iftariText, true);
-                const persistedSehri = (typeof localStorage !== 'undefined') ? localStorage.getItem('ramzan_played_sehri') : null;
-                const persistedIftari = (typeof localStorage !== 'undefined') ? localStorage.getItem('ramzan_played_iftari') : null;
-                const dbg = `raipur now=${now.toTimeString().slice(0, 8)} sehri=${times.sehriText} sehriTs=${sehriTime ? sehriTime.toTimeString().slice(0, 8) : 'null'} iftari=${times.iftariText} iftariTs=${iftariTime ? iftariTime.toTimeString().slice(0, 8) : 'null'} persistedSehri=${persistedSehri} persistedIftari=${persistedIftari}`;
-                console.debug('Raipur schedule check', dbg);
-                setDebugMsg(dbg);
-            } catch (e) { console.debug(e); }
             // only play from this Raipur component when page indicates Raipur selected
             if (!onlyRaipur) return;
             const now = new Date();
             const sehriTime = parseTimeStr(times.sehriText);
             const iftariTime = parseTimeStr(times.iftariText, true);
 
-            // Schedule background exact alarms for locked phone
-            if (window.__TAURI_INTERNALS__) {
-                const s = typeof localStorage !== 'undefined' ? localStorage.getItem('ramzan_sound_enabled') : null;
-                if (s === 'true') {
-                    import('@tauri-apps/plugin-notification').then(async nav => {
-                        const trySched = async (date, idStr, titleStr, textStr) => {
-                            if (date && date > new Date()) {
-                                const lsKey = `native_sched_rp_${idStr}`;
-                                const t = date.getTime().toString();
-                                if ((typeof localStorage !== 'undefined') && localStorage.getItem(lsKey) !== t) {
-                                    try {
-                                        await nav.createChannel({ id: idStr, name: titleStr, sound: idStr, importance: 4, visibility: 1 });
-                                        await nav.sendNotification({
-                                            title: titleStr,
-                                            body: `${titleStr} time has started (${textStr})`,
-                                            channelId: idStr,
-                                            sound: idStr + '.mp3',
-                                            schedule: nav.Schedule.at(date, false, true)
-                                        });
-                                        if (typeof localStorage !== 'undefined') localStorage.setItem(lsKey, t);
-                                    } catch (e) { }
-                                }
-                            }
-                        };
-                        await trySched(sehriTime, 'sehri', 'Sehri Time', times.sehriText);
-                        await trySched(iftariTime, 'irftari', 'Iftari Time', times.iftariText);
-                    }).catch(() => { });
-                }
-            }
+            // NOTE: Native background alarm scheduling is done centrally in page.js (scheduleNativeAlarmsOnce).
+            // This component only handles in-app sound+notification when the screen is on.
 
             if (sehriTime && isSameMinute(now, sehriTime)) {
                 const key = (new Date()).toDateString();
                 const persisted = (typeof localStorage !== 'undefined') ? localStorage.getItem('ramzan_played_sehri') : null;
                 if (playedRef.current.sehri !== key && persisted !== key) {
                     playedRef.current.sehri = key;
-                    tryNotify('Sehri Time', `Sehri time has started (${times.sehriText})`);
+                    tryNotify('Sehri Time 🌙', `Sehri Ka Waqt Khatm Ho Gaya Hai (${times.sehriText})`);
                     try {
                         const s = typeof localStorage !== 'undefined' ? localStorage.getItem('ramzan_sound_enabled') : null;
                         if (s === 'true') {
@@ -173,7 +144,7 @@ export default function RaipurTimeTable({ onlyRaipur, sehriAudioRef, iftariAudio
                 const persisted = (typeof localStorage !== 'undefined') ? localStorage.getItem('ramzan_played_iftari') : null;
                 if (playedRef.current.iftari !== key && persisted !== key) {
                     playedRef.current.iftari = key;
-                    tryNotify('Iftari Time', `Iftari time has started (${times.iftariText})`);
+                    tryNotify('Iftari Time 🌅', `Iftari Ka Waqt Ho Gaya Hai (${times.iftariText})`);
                     try {
                         const s = typeof localStorage !== 'undefined' ? localStorage.getItem('ramzan_sound_enabled') : null;
                         if (s === 'true') {
