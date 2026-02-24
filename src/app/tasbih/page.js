@@ -118,7 +118,7 @@ export default function Tasbih() {
         },
         {
             title: 'तमाम औकात में दुरूद शरीफ़',
-            content: `अल्लाहुम्मा स़ल्लि अला मुहम्मदिन फी अव्वलि कलामिना,\nअल्लाहुम्मा स़ल्लि अला मुहम्मदिन फी औ-सति कलामिना,\nअल्लाहुम्मा स़ल्लि अला मुहम्मदिन फी आख़िरि कलामिना,\nशैखुल इस्लाम अबुल अब्बास ने फ़रमाया जाे शख्स दिन और रात मेंतीन तीन मर्तबा ये दुरूद शरीफ़ Darood Sharif पढे वाे गाेया रात व दिन के तमाम औकात में दुरूद भेंजता रहा,`
+            content: `अल्लाहुम्मा स़ल्लि अला मुहम्मदिन फी अव्वलि कलामिना, अल्लाहुम्मा स़ल्लि अला मुहम्मदिन फी औ-सति कलामिना,अल्लाहुम्मा स़ल्लि अला मुहम्मदिन फी आख़िरि कलामिना,\nशैखुल इस्लाम अबुल अब्बास ने फ़रमाया जाे शख्स दिन और रात मेंतीन तीन मर्तबा ये दुरूद शरीफ़ Darood Sharif पढे वाे गाेया रात व दिन के तमाम औकात में दुरूद भेंजता रहा,`
         },
         {
             title: 'दस नेकिया',
@@ -132,15 +132,13 @@ export default function Tasbih() {
             title: 'जन्नत में ठिकाना',
             content: `अल्लाहुम्मा स़ल्लि अला मुहम्मदि निन नबीय्यिल उम्मिय्यि अलैंहिस-सलामु,\nजुम्मा के दिन एक हजार मर्तबा ये दुरूद शरीफ़ Darood Sharif पढने वाले को मरने से पहले जन्नत यें उसका ठिकाना दिखा दिया जाएगा,`
         },
-        {
-            title: 'दीदारे सरकारे दो आलम',
-            content: `सल्ललाहु तआला अलैहि व् सल्लम,\nअल्लाहुम्मा स़ल्लि व स़ल्लिम व बारिक अला सय्यिदिना व मौलाना मुहम्मदि-निन नबीय्यिल उम्मिय्यि हबीबिल आलििय क़द्रिल अज़ीमिल जाहि व अला आलिही व स़हबिही व स़ल्लिम,\nबुजुर्गों ने फ़रमाया की जो शख्स हर शबे जुम्मा, जुमेरात, और जुम्मा, की दरमियानी रात इस दुरूद शरीफ़ Darood Sharif को पाबंदी से कम से कम एक बार पढ़ेगा, मौत के वक़्त सरकारे दो आलम सल्ललाहु तआला अलैहि व सल्लम की ज़ियारत करेगा, और क़ब्र में दाखिल होते वक़्त भी देखेगा की सरकार उसे क़ब्र में अपने रहमत भरे हाथो से उतार रहे है,`
-        }
+
     ];
     const carouselRef = useRef(null);
     const touchStartX = useRef(null);
     const cardRefs = useRef([]);
     const [carouselHeight, setCarouselHeight] = useState(0);
+    const [expandedCards, setExpandedCards] = useState(() => Array(cards.length).fill(false));
 
     useEffect(() => {
         // Disable automatic sliding via keyboard and touch/swipe.
@@ -165,7 +163,7 @@ export default function Tasbih() {
 
         window.addEventListener('resize', measure);
         return () => window.removeEventListener('resize', measure);
-    }, [currentCard, cards.length]);
+    }, [currentCard, cards.length, expandedCards]);
     // Warn user if they try to set a new target while an active one exists
     const [showActiveTargetWarning, setShowActiveTargetWarning] = useState(false);
     const [pendingTarget, setPendingTarget] = useState(null);
@@ -530,7 +528,7 @@ export default function Tasbih() {
             {/* Card */}
             {/* Make this entire card respond to pointer and keyboard so taps anywhere increment the counter */}
             <div
-                className="w-full max-w-3xl  card bg-base-200 shadow-md rounded-2xl p-6 flex flex-col items-center"
+                className="w-full max-w-3xl  card bg-base-200 shadow-md rounded-2xl p-4 flex flex-col items-center "
             >
                 {/* Header row with label and reset button */}
                 <div
@@ -553,7 +551,7 @@ export default function Tasbih() {
                 <div className="divider my-1" />
 
                 {/* Target setter - Beautiful Dropdown */}
-                <div className="w-full mb-4 p-4 bg-gradient-to-r from-primary/5 via-primary/10 to-primary/5 rounded-xl shadow-sm border border-primary/20">
+                <div className="w-full  p-4 bg-gradient-to-r from-primary/5 via-primary/10 to-primary/5 rounded-xl shadow-sm border border-primary/20">
                     <div className="flex flex-col md:flex-row items-center justify-between gap-3">
                         <div className="flex items-center gap-3 w-full md:w-auto">
                             <label className="text-sm font-semibold text-primary">Set Target:</label>
@@ -646,16 +644,16 @@ export default function Tasbih() {
                     <div
                         className={
                             "w-full overflow-hidden transition-[max-height,opacity] duration-300 " +
-                            (showCards ? 'max-h-[1600px] opacity-100 mt-3' : 'max-h-0 opacity-0')
+                            (showCards ? 'max-h-[1600px] opacity-100 mt-2' : 'max-h-0 opacity-0')
                         }
                         aria-hidden={!showCards}
                     >
-                        <div className="w-full flex items-center justify-center gap-15 mb-3 mt-[-6]">
+                        <div className="w-full flex items-center justify-center gap-6 mb-2 mt-[-4]">
                             <button
                                 aria-label="Previous info card"
                                 onClick={() => setCurrentCard((c) => (c - 1 + cards.length) % cards.length)}
                                 className={
-                                    "flex items-center justify-center w-11 h-11 rounded-full text-primary border shadow-md hover:scale-105 transition-transform focus:outline-none mt-3 " +
+                                    "flex items-center justify-center w-11 h-11 rounded-full text-primary border shadow-md hover:scale-105 transition-transform focus:outline-none mt-2 " +
                                     (typeof window !== 'undefined' && effectiveTheme() === 'dark'
                                         ? 'bg-neutral/10 border-neutral/20'
                                         : 'bg-primary/8 border-primary/20')
@@ -668,7 +666,7 @@ export default function Tasbih() {
                                 aria-label="Next info card"
                                 onClick={() => setCurrentCard((c) => (c + 1) % cards.length)}
                                 className={
-                                    "flex items-center justify-center w-11 h-11 rounded-full text-primary border shadow-md hover:scale-105 transition-transform focus:outline-none mt-3 " +
+                                    "flex items-center justify-center w-11 h-11 rounded-full text-primary border shadow-md hover:scale-105 transition-transform focus:outline-none mt-2 " +
                                     (typeof window !== 'undefined' && effectiveTheme() === 'dark'
                                         ? 'bg-neutral/10 border-neutral/20'
                                         : 'bg-primary/8 border-primary/20')
@@ -679,7 +677,7 @@ export default function Tasbih() {
                         </div>
 
                         {/* Cards Carousel - theme aware, responsive */}
-                        <div className="w-full mb-6">
+                        <div className="w-full mb-4">
                             <div ref={carouselRef} className="relative w-full max-w-3xl mx-auto">
 
 
@@ -701,13 +699,43 @@ export default function Tasbih() {
                                                 key={idx}
                                                 ref={(el) => (cardRefs.current[idx] = el)}
                                                 style={{ flex: '0 0 100%' }}
-                                                className="w-full p-4 flex flex-col gap-3"
+                                                className="w-full p-3 flex flex-col gap-2"
                                             >
-                                                <h4 className="text-lg font-semibold  text-warning mt-[-8]">{card.title}</h4>
-                                                <p className="text-sm text-primary/90 whitespace-pre-line leading-relaxed">{card.content}</p>
-                                                <div className="flex items-center justify-between">
-                                                    <span className="text-l  text-info/60">Durood Sharif {idx + 1}</span>
+                                                <h4 className="text-lg font-semibold  text-warning mt-[-4]">{card.title}</h4>
+                                                <div className="text-sm leading-relaxed">
+                                                    {(() => {
+                                                        const lines = card.content.split('\n');
+                                                        return (
+                                                            <>
+                                                                <p className="text-xl text-primary/90">{lines[0]}</p>
+                                                                {expandedCards[idx]
+                                                                    ? lines.slice(1).map((line, i) => (
+                                                                        <p key={i} className="text-sm text-info italic">
+                                                                            {line}
+                                                                        </p>
+                                                                    ))
+                                                                    : null}
+                                                            </>
+                                                        );
+                                                    })()}
+
+                                                    <div className="mt-2">
+                                                        <button
+                                                            type="button"
+                                                            onClick={() =>
+                                                                setExpandedCards((prev) => {
+                                                                    const copy = Array.from(prev);
+                                                                    copy[idx] = !copy[idx];
+                                                                    return copy;
+                                                                })
+                                                            }
+                                                            className="btn btn-ghost btn-sm px-3 text-error"
+                                                        >
+                                                            {expandedCards[idx] ? "Hide Fazilat" : "View Fazilat"}
+                                                        </button>
+                                                    </div>
                                                 </div>
+
                                             </div>
                                         ))}
                                     </div>
@@ -733,7 +761,7 @@ export default function Tasbih() {
                 </div>
 
                 {/* Circular ring with ticks */}
-                <div className="relative flex items-center justify-center mb-8">
+                <div className="relative flex items-center justify-center ">
                     <svg
                         viewBox="-110 -110 220 220"
                         width="260"
@@ -752,7 +780,7 @@ export default function Tasbih() {
                         />
                     </svg>
 
-                    <div className="absolute inset-0 flex items-center justify-center">
+                    <div className="absolute inset-0 flex items-center justify-center ">
                         <div className="text-center">
                             <div className="text-4xl md:text-5xl font-extrabold text-primary">
                                 {target > 0
