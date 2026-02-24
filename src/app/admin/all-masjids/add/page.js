@@ -6,13 +6,13 @@ import { ArrowLeft, Plus } from "lucide-react";
 import apiClient from "../../../../lib/apiClient";
 
 const prayers = [
-    { name: "Fajr", defaultTime: "6:00 am" },
-    { name: "Zuhar", defaultTime: "1:30 pm" },
-    { name: "Asr", defaultTime: "4:45 pm" },
-    { name: "Maghrib", defaultTime: "6:10 pm" },
-    { name: "Isha", defaultTime: "8:45 pm" },
+    { name: "Fajr", defaultTime: "6:00" },
+    { name: "Zuhar", defaultTime: "1:30" },
+    { name: "Asr", defaultTime: "4:45" },
+    { name: "Maghrib", defaultTime: "6:10" },
+    { name: "Isha", defaultTime: "8:45" },
     { name: "Taravih", defaultTime: "00:00" },
-    { name: "Juma", defaultTime: "1:30 pm" },
+    { name: "Juma", defaultTime: "1:30" },
 ];
 
 export default function AddMasjidPage() {
@@ -24,6 +24,10 @@ export default function AddMasjidPage() {
     const [role, setRole] = useState("");
     const [name, setName] = useState("");
     const [mobile, setMobile] = useState("");
+    const [loginId, setLoginId] = useState("");
+    const [memberNames, setMemberNames] = useState("");
+    const [mobileNumbers, setMobileNumbers] = useState("");
+    const [password, setPassword] = useState("");
     // add per-role mobile cache
     const [roleMobiles, setRoleMobiles] = useState({});
     // add per-role name cache
@@ -43,12 +47,12 @@ export default function AddMasjidPage() {
 
     const handleEdit = (idx) => {
         setEditIdx(idx);
-        setEditValue(convertTo24(times[idx]));
+        setEditValue(times[idx]);
     };
 
     const handleSave = (idx) => {
         setTimes((times) =>
-            times.map((t, i) => (i === idx ? convertTo12(editValue) : t))
+            times.map((t, i) => (i === idx ? editValue : t))
         );
         setEditIdx(null);
     };
@@ -68,6 +72,10 @@ export default function AddMasjidPage() {
                 mobile: mobile,
                 pasteMapUrl: pasteMapUrl.trim(),
                 city: isRaipur ? 'Raipur' : 'Bilaspur',
+                loginId: loginId ? parseInt(loginId) : null,
+                memberNames: memberNames ? memberNames.split(',').map(s => s.trim()).filter(Boolean) : [],
+                mobileNumbers: mobileNumbers ? mobileNumbers.split(',').map(s => s.trim()).filter(Boolean) : [],
+                password: password ? parseInt(password) : 0,
                 // map times
                 fazar: times[0],
                 zuhar: times[1],
@@ -298,6 +306,50 @@ export default function AddMasjidPage() {
                         </div>
                         <div className="mb-4">
                             <label className="block text-gray-700 mb-2 text-sm md:text-base">
+                                Login ID
+                            </label>
+                            <input
+                                type="number"
+                                className="input input-bordered w-full bg-white text-black border-gray-300 rounded-full text-sm md:text-base"
+                                value={loginId}
+                                onChange={(e) => setLoginId(e.target.value)}
+                            />
+                        </div>
+                        <div className="mb-4">
+                            <label className="block text-gray-700 mb-2 text-sm md:text-base">
+                                Password
+                            </label>
+                            <input
+                                type="number"
+                                className="input input-bordered w-full bg-white text-black border-gray-300 rounded-full text-sm md:text-base"
+                                value={password}
+                                onChange={(e) => setPassword(e.target.value)}
+                            />
+                        </div>
+                        <div className="mb-4">
+                            <label className="block text-gray-700 mb-2 text-sm md:text-base">
+                                Committee Members (comma separated)
+                            </label>
+                            <input
+                                type="text"
+                                className="input input-bordered w-full bg-white text-black border-gray-300 rounded-full text-sm md:text-base"
+                                value={memberNames}
+                                onChange={(e) => setMemberNames(e.target.value)}
+                            />
+                        </div>
+                        <div className="mb-4">
+                            <label className="block text-gray-700 mb-2 text-sm md:text-base">
+                                Committee Mobiles (comma separated)
+                            </label>
+                            <input
+                                type="text"
+                                className="input input-bordered w-full bg-white text-black border-gray-300 rounded-full text-sm md:text-base"
+                                value={mobileNumbers}
+                                onChange={(e) => setMobileNumbers(e.target.value)}
+                            />
+                        </div>
+                        <div className="mb-4">
+                            <label className="block text-gray-700 mb-2 text-sm md:text-base">
                                 Paste Map URL of Masjid Location
                             </label>
                             <input
@@ -378,8 +430,10 @@ export default function AddMasjidPage() {
                                             {editIdx === idx ? (
                                                 <div className="flex items-center gap-1 md:gap-2">
                                                     <input
-                                                        type="time"
-                                                        className="input input-bordered input-sm bg-white text-gray-800 border-gray-300 text-xs md:text-sm"
+                                                        type="text"
+                                                        inputMode="numeric"
+                                                        pattern="[0-9:]*"
+                                                        className="input input-bordered input-sm bg-white text-gray-800 border-gray-300 text-sm md:text-base w-24 text-center"
                                                         value={editValue}
                                                         onChange={(e) =>
                                                             setEditValue(
@@ -438,20 +492,4 @@ export default function AddMasjidPage() {
     );
 }
 
-function convertTo24(timeStr) {
-    const [time, period] = timeStr.split(" ");
-    let [h, m] = time.split(":");
-    h = parseInt(h);
-    if (period === "pm" && h !== 12) h += 12;
-    if (period === "am" && h === 12) h = 0;
-    return `${String(h).padStart(2, "0")}:${m}`;
-}
-
-function convertTo12(timeStr) {
-    let [h, m] = timeStr.split(":");
-    h = parseInt(h);
-    const period = h >= 12 ? "pm" : "am";
-    if (h === 0) h = 12;
-    else if (h > 12) h -= 12;
-    return `${h}:${m} ${period}`;
-}
+// Conversions removed to allow raw text input

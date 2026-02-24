@@ -5,6 +5,20 @@ export const dynamic = 'force-dynamic';
 import { useEffect, useState, useRef } from "react";
 import { useRouter } from "next/navigation";
 import apiClient from "../../../lib/apiClient";
+import { FaCheckCircle } from "react-icons/fa";
+import { Pencil } from "lucide-react";
+
+const prayers = [
+    { name: "Fajr", defaultTime: "5:00" },
+    { name: "Zuhar", defaultTime: "6:10" },
+    { name: "Asr", defaultTime: "4:30" },
+    { name: "Maghrib", defaultTime: "7:15" },
+    { name: "Isha", defaultTime: "8:45" },
+    { name: "Taravih", defaultTime: "00:00" },
+    { name: "Juma", defaultTime: "1:30" },
+];
+
+// Removed unused conversion functions
 
 // Simple carousel for event images (no external deps)
 function Carousel({ images = [] }) {
@@ -90,6 +104,55 @@ export default function EventUpdates() {
     const [showDetails, setShowDetails] = useState(false);
     const fetchingRef = useRef(null);
 
+    const [committeeImages, setCommitteeImages] = useState([]);
+    const [loadingCommitteeImages, setLoadingCommitteeImages] = useState(false);
+
+    const [times, setTimes] = useState(prayers.map((p) => p.defaultTime));
+    const [editIdx, setEditIdx] = useState(null);
+    const [editValue, setEditValue] = useState("");
+    const [updatingTimes, setUpdatingTimes] = useState(false);
+    const [timeUpdateMsg, setTimeUpdateMsg] = useState(null);
+
+    const handleEdit = (idx) => {
+        setEditIdx(idx);
+        setEditValue(times[idx]);
+    };
+
+    const handleSaveTime = (idx) => {
+        setTimes((times) =>
+            times.map((t, i) => (i === idx ? editValue : t))
+        );
+        setEditIdx(null);
+    };
+
+    const updateJamatTimes = async () => {
+        if (!masjid || !masjid.id) {
+            setTimeUpdateMsg({ type: "error", text: "Missing internal masjid id" });
+            return;
+        }
+        setUpdatingTimes(true);
+        setTimeUpdateMsg(null);
+        try {
+            const payload = {
+                id: masjid.id,
+                fazar: times[0],
+                zuhar: times[1],
+                asar: times[2],
+                maghrib: times[3],
+                isha: times[4],
+                taravih: times[5],
+                juma: times[6],
+            };
+            await apiClient.patch("/api/all-masjids", payload);
+            setTimeUpdateMsg({ type: "success", text: "Jamat times updated successfully!" });
+            setTimeout(() => setTimeUpdateMsg(null), 3000);
+        } catch (err) {
+            setTimeUpdateMsg({ type: "error", text: err?.response?.data?.error || err.message || "Failed to update times" });
+        } finally {
+            setUpdatingTimes(false);
+        }
+    };
+
     const handleCopyMasjidId = () => {
         if (currentMasjidId) {
             navigator.clipboard.writeText(currentMasjidId);
@@ -120,6 +183,15 @@ export default function EventUpdates() {
                 const copy = { ...payload };
                 if (copy.password) delete copy.password;
                 setMasjid(copy);
+                setTimes([
+                    (copy.fazar || prayers[0].defaultTime).replace(/ am| pm/gi, ""),
+                    (copy.zuhar || prayers[1].defaultTime).replace(/ am| pm/gi, ""),
+                    (copy.asar || prayers[2].defaultTime).replace(/ am| pm/gi, ""),
+                    (copy.maghrib || prayers[3].defaultTime).replace(/ am| pm/gi, ""),
+                    (copy.isha || prayers[4].defaultTime).replace(/ am| pm/gi, ""),
+                    (copy.taravih || prayers[5].defaultTime).replace(/ am| pm/gi, ""),
+                    (copy.juma || prayers[6].defaultTime).replace(/ am| pm/gi, ""),
+                ]);
             } catch (err) {
                 setError(err?.response?.data?.error || err.message || "Failed to load masjid details");
             } finally {
@@ -129,6 +201,27 @@ export default function EventUpdates() {
             }
         };
         fetchMasjid();
+    }, [currentMasjidId]);
+
+    // Fetch images from committee bucket (GET /api/masjid-committee-event)
+    useEffect(() => {
+        if (!currentMasjidId) return;
+        let mounted = true;
+        const fetchImages = async () => {
+            setLoadingCommitteeImages(true);
+            try {
+                const res = await apiClient.get('/api/masjid-committee-event');
+                const imgs = res?.data?.images || [];
+                const urls = imgs.map((f) => f.imageSrc).filter(Boolean).reverse();
+                if (mounted) setCommitteeImages(urls);
+            } catch (err) {
+                console.error('Failed to load committee images', err);
+            } finally {
+                if (mounted) setLoadingCommitteeImages(false);
+            }
+        };
+        fetchImages();
+        return () => { mounted = false; };
     }, [currentMasjidId]);
 
     // Filter out unwanted fields
@@ -202,7 +295,7 @@ export default function EventUpdates() {
                 {!loading && masjid && (
                     <>
                         {/* Event Image Section - Carousel (supports single or multiple images) */}
-                        {((masjid.committeeImages && masjid.committeeImages.length) || masjid.committeeImage) && (
+                        {((committeeImages && committeeImages.length) || (masjid.committeeImages && masjid.committeeImages.length) || masjid.committeeImage) && (
                             <div className="bg-slate-800/50 backdrop-blur-sm rounded-2xl overflow-hidden shadow-2xl border border-emerald-500/30">
                                 {/* Header Banner */}
                                 <div className="bg-gradient-to-r from-emerald-600 to-teal-600 px-6 py-4">
@@ -225,11 +318,13 @@ export default function EventUpdates() {
                                         {/* derive images array */}
                                         {/* eslint-disable-next-line react-hooks/rules-of-hooks */}
                                         {(() => {
-                                            const imgs = Array.isArray(masjid.committeeImages)
-                                                ? masjid.committeeImages.filter(Boolean).slice().reverse()
-                                                : masjid.committeeImage
-                                                    ? [masjid.committeeImage]
-                                                    : [];
+                                            const imgs = (Array.isArray(committeeImages) && committeeImages.length)
+                                                ? committeeImages
+                                                : (Array.isArray(masjid.committeeImages)
+                                                    ? masjid.committeeImages.filter(Boolean).slice().reverse()
+                                                    : masjid.committeeImage
+                                                        ? [masjid.committeeImage]
+                                                        : []);
                                             return (
                                                 <Carousel images={imgs} />
                                             );
@@ -247,11 +342,11 @@ export default function EventUpdates() {
                                         {masjid.masjidName || masjid.name || "—"}
                                     </h2>
                                     <div className="flex items-center gap-2 flex-wrap">
-                                        <p className="text-emerald-50 text-sm break-all">Masjid ID: {currentMasjidId}</p>
+                                        <p className="text-emerald-50 text-sm break-all">Login ID: {currentMasjidId}</p>
                                         <button
                                             onClick={handleCopyMasjidId}
                                             className="p-1.5 hover:bg-white/20 rounded-lg transition-all shrink-0"
-                                            title="Copy Masjid ID"
+                                            title="Copy Login ID"
                                         >
                                             {copied ? (
                                                 <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -280,20 +375,29 @@ export default function EventUpdates() {
                         {showDetails && (
                             <div className="bg-slate-800/50 backdrop-blur-sm rounded-xl p-6 shadow-lg border border-slate-700/50 mt-4">
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    {renderField("Role", masjid.role || "Mutawalli")}
+                                    {renderField("Name", masjid.mutwalliName || (masjid.memberNames && masjid.memberNames[0]) || "—")}
+                                    {renderField("Mobile Number", Array.isArray(masjid.mobileNumbers) && masjid.mobileNumbers.length > 0 ? masjid.mobileNumbers[0] : (masjid.mobileNumbers || masjid.mobile || "—"))}
+                                    {renderField("Login ID", currentMasjidId || masjid.loginId || "—")}
+
+                                    <div className="col-span-1 md:col-span-2 border-t border-slate-700/50 my-2 h-0"></div>
+
                                     {renderField("Masjid Name", masjid.masjidName || masjid.name)}
-                                    {renderField("Mobile Numbers", masjid.mobileNumbers || masjid.mobile || masjid.phone || masjid.contactNumber)}
+                                    {renderField("Mobile Numbers", masjid.mobileNumbers && Array.isArray(masjid.mobileNumbers) ? masjid.mobileNumbers.join(', ') : (masjid.mobileNumbers || masjid.mobile || masjid.phone || masjid.contactNumber))}
                                     {renderField("Address", masjid.fullAddress || masjid.address)}
                                     {renderField("City", masjid.city)}
                                     {renderField("Mutwalli Name", masjid.mutwalliName)}
-                                    {renderField("Committee Members", masjid.committeeMembers)}
+                                    {renderField("Committee Members", masjid.memberNames && Array.isArray(masjid.memberNames) ? masjid.memberNames.join(', ') : (masjid.memberNames || masjid.committeeMembers))}
                                     {renderField("Imam Name", masjid.imaamName)}
 
                                     {/* Show any remaining fields that aren't in excluded list */}
                                     {Object.keys(masjid).filter(k =>
                                         !excludedFields.includes(k) &&
                                         !['masjidName', 'name', 'mobileNumbers', 'mobile', 'phone', 'contactNumber',
-                                            'fullAddress', 'address', 'city', 'mutwalliName', 'committeeMembers',
-                                            'imaamName', 'masjidId', 'committeeImage'].includes(k) &&
+                                            'fullAddress', 'address', 'city', 'mutwalliName', 'committeeMembers', 'memberNames',
+                                            'imaamName', 'masjidId', 'loginId', 'committeeImage',
+                                            'fazar', 'zuhar', 'asar', 'maghrib', 'isha', 'taravih', 'juma',
+                                            'role', 'pasteMapUrl'].includes(k) &&
                                         masjid[k] !== undefined &&
                                         masjid[k] !== null
                                     ).map(key =>
@@ -305,6 +409,105 @@ export default function EventUpdates() {
                                 </div>
                             </div>
                         )}
+
+                        {/* Jamat Time Section */}
+                        <div className="bg-slate-800/50 backdrop-blur-sm rounded-xl p-4 sm:p-6 shadow-lg border border-slate-700/50 mt-4 overflow-hidden">
+                            <h2 className="text-xl sm:text-2xl font-bold mb-4 text-center text-white">
+                                Jamat Time Table
+                            </h2>
+                            <div className="overflow-x-auto w-full">
+                                <table className="table w-full text-sm sm:text-base text-gray-200">
+                                    <thead>
+                                        <tr className="border-b border-slate-700/50">
+                                            <th className="text-gray-300 font-semibold px-2 sm:px-4 py-3 text-left w-[25%] sm:w-1/3">Prayer</th>
+                                            <th className="text-gray-300 font-semibold px-2 sm:px-4 py- text-center w-[50%] sm:w-1/3">Time</th>
+                                            <th className="text-gray-300 font-semibold px-2 sm:px-4 py-3 text-right w-[25%] sm:w-1/3">Action</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {prayers.map((prayer, idx) => (
+                                            <tr
+                                                key={prayer.name}
+                                                className="border-b border-slate-700/50"
+                                            >
+                                                <td
+                                                    className={[
+                                                        "font-semibold border-b-2 px-2 sm:px-4 py-3 align-middle text-sm sm:text-base break-words",
+                                                        idx === 0
+                                                            ? "text-primary border-primary/50"
+                                                            : idx === 1
+                                                                ? "text-pink-400 border-pink-500/50"
+                                                                : idx === 2
+                                                                    ? "text-warning border-warning/50"
+                                                                    : idx === 3
+                                                                        ? "text-error border-error/50"
+                                                                        : idx === 4
+                                                                            ? "text-info border-info/50"
+                                                                            : idx === 5
+                                                                                ? "text-purple-400 font-bold border-purple-400/50"
+                                                                                : idx === 6
+                                                                                    ? "text-amber-600 border-amber-600/50"
+                                                                                    : "",
+                                                    ].join(" ")}
+                                                >
+                                                    {prayer.name}
+                                                </td>
+                                                <td className="text-emerald-400 font-semibold px-2 sm:px-4 py-3 align-center text-center text-xl sm:text-base">
+                                                    {editIdx === idx ? (
+                                                        <div className="flex flex-row items-center gap-2 sm:gap-3">
+                                                            <input
+                                                                type="text"
+                                                                inputMode="numeric"
+                                                                pattern="[0-9:]*"
+                                                                className="input input-bordered input-xl bg-slate-700 text-white border-slate-600 w-16 sm:w-20 text-center px-1 h-8 sm:h-9"
+                                                                value={editValue}
+                                                                onChange={(e) =>
+                                                                    setEditValue(e.target.value)
+                                                                }
+                                                                autoFocus
+                                                            />
+                                                            <button
+                                                                type="button"
+                                                                className="bg-emerald-600 hover:bg-emerald-700 text-white p-2.5 sm:p-2 rounded-lg shadow-lg flex-shrink-0"
+                                                                onClick={() => handleSaveTime(idx)}
+                                                            >
+                                                                <FaCheckCircle className="w-4 h-4 sm:w-5 sm:h-5" />
+                                                            </button>
+                                                        </div>
+                                                    ) : (
+                                                        times[idx]
+                                                    )}
+                                                </td>
+                                                <td className="px-2 sm:px-4 py-3 text-right align-middle">
+                                                    <button
+                                                        type="button"
+                                                        className="bg-teal-600 hover:bg-teal-700 text-white p-1.5 sm:p-2 rounded-lg shadow-lg inline-flex items-center justify-center"
+                                                        onClick={() => handleEdit(idx)}
+                                                    >
+                                                        <Pencil className="w-4 h-4 sm:w-5 sm:h-5" />
+                                                    </button>
+                                                </td>
+                                            </tr>
+                                        ))}
+                                    </tbody>
+                                </table>
+                            </div>
+
+                            <div className="mt-6 flex flex-col sm:flex-row items-center justify-end gap-3 w-full">
+                                {timeUpdateMsg && (
+                                    <div className={`text-sm flex-1 ${timeUpdateMsg.type === 'error' ? 'text-red-400' : 'text-emerald-400'}`}>
+                                        {timeUpdateMsg.text}
+                                    </div>
+                                )}
+                                <button
+                                    onClick={updateJamatTimes}
+                                    disabled={updatingTimes}
+                                    className="btn w-full sm:w-auto bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg py-2 px-6 disabled:opacity-60 border-none"
+                                >
+                                    {updatingTimes ? "Updating..." : "Update Jamat Times"}
+                                </button>
+                            </div>
+                        </div>
                     </>
                 )}
 

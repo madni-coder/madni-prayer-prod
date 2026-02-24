@@ -130,7 +130,7 @@ export default function MasjidCommitteeLogin() {
                     <form onSubmit={handleSubmit} className="space-y-4">
                         <div className="form-control">
                             <label className="label">
-                                <span className="label-text text-white mb-2">Masjid Id</span>
+                                <span className="label-text text-white mb-2">Login Id</span>
                             </label>
                             <input
                                 type="number"

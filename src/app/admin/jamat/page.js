@@ -6,13 +6,13 @@ import apiClient from "../../../lib/apiClient";
 import { useRouter } from "next/navigation";
 
 const prayers = [
-    { name: "Fajr", defaultTime: "6:00 am" },
-    { name: "Zuhar", defaultTime: "1:30 pm" },
-    { name: "Asr", defaultTime: "4:30 pm" },
-    { name: "Maghrib", defaultTime: "6:15 pm" },
-    { name: "Isha", defaultTime: "8:45 pm" },
+    { name: "Fajr", defaultTime: "6:00" },
+    { name: "Zuhar", defaultTime: "1:30" },
+    { name: "Asr", defaultTime: "4:30" },
+    { name: "Maghrib", defaultTime: "6:15" },
+    { name: "Isha", defaultTime: "8:45" },
     { name: "Taravih", defaultTime: "00:00" },
-    { name: "Juma", defaultTime: "1:30 pm" }, // Added Juma below Isha
+    { name: "Juma", defaultTime: "1:30" }, // Added Juma below Isha
 ];
 
 export default function JamatTimesPage() {
@@ -137,7 +137,7 @@ export default function JamatTimesPage() {
                             default:
                                 value = prayer.defaultTime;
                         }
-                        return normalizeTime(value, prayer.defaultTime);
+                        return normalizeTime(value, prayer.defaultTime, idx);
                     });
                     setTimes(newTimes);
                 } else {
@@ -176,11 +176,11 @@ export default function JamatTimesPage() {
 
     const handleEdit = (idx) => {
         setEditIdx(idx);
-        setEditValue(convertTo24(times[idx]));
+        setEditValue(times[idx]);
     };
 
     const handleSave = async (idx) => {
-        const newTime = convertTo12(editValue);
+        const newTime = editValue;
         setTimes((times) => times.map((t, i) => (i === idx ? newTime : t)));
         setEditIdx(null);
 
@@ -440,8 +440,10 @@ export default function JamatTimesPage() {
                                 <td className="text-blue-700 font-semibold text-sm md:text-base py-2 px-2 w-32 md:w-40">
                                     {editIdx === idx ? (
                                         <input
-                                            type="time"
-                                            className="input input-bordered input-sm bg-white text-gray-800 border-gray-300 text-sm md:text-base"
+                                            type="text"
+                                            inputMode="numeric"
+                                            pattern="[0-9:]*"
+                                            className="input input-bordered input-sm bg-white text-gray-800 border-gray-300 text-sm md:text-base w-24 text-center"
                                             value={editValue}
                                             onChange={(e) =>
                                                 setEditValue(e.target.value)
@@ -485,36 +487,8 @@ export default function JamatTimesPage() {
     );
 }
 
-// Normalize incoming time from API (supports 'HH:mm' or 'h:mm am/pm')
-function normalizeTime(value, fallback) {
-    if (!value) return fallback;
-    const s = String(value).trim().toLowerCase();
-    if (/^\d{1,2}:\d{2}\s?(am|pm)$/.test(s)) return s;
-    if (/^\d{1,2}:\d{2}$/.test(s)) return convertTo12(s);
-    return fallback;
-}
-
-// Helper to convert 12hr string to 24hr format for input value
-function convertTo24(timeStr) {
-    // e.g. '6:10 am' => '06:10', '4:30 pm' => '16:30'
-    if (!timeStr) return "00:00";
-    if (/^\d{1,2}:\d{2}$/.test(timeStr)) return timeStr; // already 24h
-    const [time, period] = timeStr.split(" ");
-    let [h, m] = time.split(":");
-    h = parseInt(h);
-    if (period === "pm" && h !== 12) h += 12;
-    if (period === "am" && h === 12) h = 0;
-    return `${String(h).padStart(2, "0")}:${m}`;
-}
-
-// Helper to convert 24hr input value to 12hr string
-function convertTo12(timeStr) {
-    // e.g. '06:10' => '6:10 am', '16:30' => '4:30 pm'
-    if (!timeStr) return "12:00 am";
-    let [h, m] = timeStr.split(":");
-    h = parseInt(h);
-    const period = h >= 12 ? "pm" : "am";
-    if (h === 0) h = 12;
-    else if (h > 12) h -= 12;
-    return `${h}:${m} ${period}`;
+// Normalize incoming time from API
+function normalizeTime(value, fallback, idx) {
+    if (!value) return fallback.replace(/ am| pm/gi, "");
+    return String(value).trim().toLowerCase().replace(/ am| pm/gi, "");
 }

@@ -419,13 +419,7 @@ export default function NoticeAdmin() {
             formData.append("image", blob, fileName);
 
             // Post to the API (same as route.js POST endpoint)
-            const { data } = await apiClient.post(
-                "/api/api-notice",
-                formData,
-                {
-                    headers: { "Content-Type": "multipart/form-data" },
-                }
-            );
+            const { data } = await apiClient.post("/api/api-notice", formData);
             toast.success("Posted successfully");
 
             // Refresh the images list
@@ -594,9 +588,7 @@ export default function NoticeAdmin() {
             formData.append("image", blob, fileName);
 
             // Post to masjid-committee-event endpoint
-            const committeeRes = await apiClient.post("/api/masjid-committee-event", formData, {
-                headers: { "Content-Type": "multipart/form-data" },
-            });
+            const committeeRes = await apiClient.post("/api/masjid-committee-event", formData);
 
             toast.success(`Posted to ${committeeRes.data.count} committees`);
         } catch (err) {
@@ -1277,9 +1269,7 @@ export default function NoticeAdmin() {
                                                 const fileName = pendingImage.fileName || `notice_${Date.now()}.jpg`;
                                                 formData.append('image', blob, fileName);
 
-                                                await apiClient.post('/api/api-notice', formData, {
-                                                    headers: { 'Content-Type': 'multipart/form-data' },
-                                                });
+                                                await apiClient.post('/api/api-notice', formData);
                                                 toast.success('Uploaded');
                                                 setPendingImage(null);
                                                 await fetchImages();
@@ -1310,9 +1300,7 @@ export default function NoticeAdmin() {
                                                 formData.append('image', blob, fileName);
 
                                                 // Send multipart/form-data directly to masjid-committee-event
-                                                const committeeRes = await apiClient.post('/api/masjid-committee-event', formData, {
-                                                    headers: { 'Content-Type': 'multipart/form-data' },
-                                                });
+                                                const committeeRes = await apiClient.post('/api/masjid-committee-event', formData);
 
                                                 toast.success(`Posted to ${committeeRes.data.count} committees`);
                                                 setPendingImage(null);

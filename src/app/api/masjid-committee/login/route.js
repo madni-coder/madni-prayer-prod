@@ -10,12 +10,12 @@ export async function POST(request) {
             return NextResponse.json({ error: "masjidId and password required" }, { status: 400 });
         }
 
-        const record = await prisma.masjidCommittee.findUnique({ where: { masjidId: parseInt(masjidId) } });
+        const record = await prisma.allMasjid.findUnique({ where: { loginId: parseInt(masjidId) } });
         if (!record) {
             return NextResponse.json({ error: "Not found" }, { status: 404 });
         }
 
-        if (record.password === password) {
+        if (record.password === parseInt(password)) {
             const { password: _pw, ...rest } = record;
             return NextResponse.json({ authenticated: true, data: rest }, { status: 200 });
         }
