@@ -36,7 +36,7 @@ model AllMasjid {
 mobileNumbers String[] @default([])
   createdAt  DateTime @default(now())
   updatedAt  DateTime @updatedAt
-  password Int
+  password Int?
 
   @@map("all_masjid")
 }
