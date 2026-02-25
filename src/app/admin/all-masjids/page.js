@@ -14,7 +14,6 @@ export default function Page() {
     const [masjids, setMasjids] = useState([]);
     const [error, setError] = useState(null);
     const [searchQuery, setSearchQuery] = useState("");
-    const [colonySearch, setColonySearch] = useState(""); // new state for colony search
     const [showRaipur, setShowRaipur] = useState(false);
     const [reloading, setReloading] = useState(false);
     const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -101,7 +100,7 @@ export default function Page() {
     // Reset to first page when filters or masjids change
     useEffect(() => {
         setCurrentPage(1);
-    }, [searchQuery, colonySearch, masjids, showRaipur]);
+    }, [searchQuery, masjids, showRaipur]);
 
     // Show loading while checking authentication
     if (authLoading) {
@@ -119,11 +118,9 @@ export default function Page() {
 
     const handleReset = () => {
         setSearchQuery("");
-        setColonySearch(""); // reset colony search
     };
 
     const clearSearch = () => setSearchQuery("");
-    const clearColonySearch = () => setColonySearch("");
 
     // derive visibleMasjids based on Show Raipur toggle
     const visibleMasjids = showRaipur
@@ -134,13 +131,16 @@ export default function Page() {
         });
 
     const filteredMasjids = visibleMasjids.filter((m) => {
-        const matchesSearch = (m.masjidName || "")
-            .toLowerCase()
-            .includes(searchQuery.toLowerCase());
-        const matchesColonySearch = (m.colony || "")
-            .toLowerCase()
-            .includes(colonySearch.toLowerCase());
-        return matchesSearch && matchesColonySearch;
+        const q = (searchQuery || "").toLowerCase().trim();
+        if (q.length === 0) return true;
+        const name = (m.masjidName || "").toLowerCase();
+        const colony = (m.colony || "").toLowerCase();
+        const locality = (m.locality || "").toLowerCase();
+        return (
+            name.includes(q) ||
+            colony.includes(q) ||
+            locality.includes(q)
+        );
     });
 
     const totalPages = Math.max(
@@ -196,15 +196,15 @@ export default function Page() {
 
             {/* Filters */}
             <div className="bg-white p-3 md:p-4 rounded-lg shadow-sm mb-4 md:mb-6">
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-3 md:gap-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-4">
                     <div>
                         <label className="block text-xs md:text-sm font-medium text-gray-700 mb-1">
-                            Masjid Name
+                            Masjid Name or Colony/Locality
                         </label>
                         <div className="relative">
                             <input
                                 type="text"
-                                placeholder="Search masjid name"
+                                placeholder="Search masjid name, colony or locality"
                                 value={searchQuery}
                                 onChange={(e) => setSearchQuery(e.target.value)}
                                 className="w-full px-3 py-2 pr-8 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-black text-sm"
@@ -214,31 +214,6 @@ export default function Page() {
                                     onClick={clearSearch}
                                     className="absolute right-2 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
                                     title="Clear search"
-                                >
-                                    <X size={16} />
-                                </button>
-                            )}
-                        </div>
-                    </div>
-                    <div>
-                        <label className="block text-xs md:text-sm font-medium text-gray-700 mb-1">
-                            Colony Address
-                        </label>
-                        <div className="relative">
-                            <input
-                                type="text"
-                                placeholder="Search colony address"
-                                value={colonySearch}
-                                onChange={(e) =>
-                                    setColonySearch(e.target.value)
-                                }
-                                className="w-full px-3 py-2 pr-8 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-black text-sm"
-                            />
-                            {colonySearch && (
-                                <button
-                                    onClick={clearColonySearch}
-                                    className="absolute right-2 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
-                                    title="Clear colony search"
                                 >
                                     <X size={16} />
                                 </button>

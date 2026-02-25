@@ -4,6 +4,31 @@ import prisma from "../../../../lib/prisma";
 
 export const dynamic = 'force-dynamic';
 
+// ─── CORS helpers ────────────────────────────────────────────────────────────
+// Tauri mobile apps run from tauri://localhost (Android) / https://localhost
+// (iOS), which are cross-origin relative to *.vercel.app. We must return the
+// correct CORS headers so the browser doesn't block the request.
+const CORS_HEADERS = {
+    "Access-Control-Allow-Origin": "*",
+    "Access-Control-Allow-Methods": "GET,POST,PATCH,PUT,DELETE,OPTIONS",
+    "Access-Control-Allow-Headers": "Content-Type, Authorization",
+};
+
+function corsResponse(body, init = {}) {
+    const { status = 200, headers = {} } = init;
+    return NextResponse.json(body, {
+        status,
+        headers: { ...CORS_HEADERS, ...headers },
+    });
+}
+
+// Handle pre-flight OPTIONS requests (browsers send this before PATCH from a
+// cross-origin – Tauri mobile triggers this every time).
+export async function OPTIONS() {
+    return new Response(null, { status: 204, headers: CORS_HEADERS });
+}
+// ─────────────────────────────────────────────────────────────────────────────
+
 const UNIQUE_ID_TARGET = "id";
 
 function extractTargets(err) {
@@ -161,7 +186,7 @@ export async function PATCH(request) {
             role,
             mobile,
             pasteMapUrl,
-            city = 'Bilaspur',
+            city,            // no default – only update if explicitly sent
             loginId,
             memberNames,
             mobileNumbers,
@@ -169,7 +194,7 @@ export async function PATCH(request) {
         } = body;
 
         if (!id) {
-            return NextResponse.json(
+            return corsResponse(
                 { error: "Missing required field: id" },
                 { status: 400 }
             );
@@ -181,7 +206,7 @@ export async function PATCH(request) {
         });
 
         if (!existingMasjid) {
-            return NextResponse.json(
+            return corsResponse(
                 { error: "Masjid not found" },
                 { status: 404 }
             );
@@ -214,13 +239,13 @@ export async function PATCH(request) {
             data: updateData,
         });
 
-        return NextResponse.json(
+        return corsResponse(
             { message: "Masjid updated successfully", data: updated },
             { status: 200 }
         );
     } catch (err) {
         console.error("PATCH /api/all-masjids error", err);
-        return NextResponse.json(
+        return corsResponse(
             { error: "Internal server error" },
             { status: 500 }
         );
