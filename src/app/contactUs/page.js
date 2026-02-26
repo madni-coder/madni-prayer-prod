@@ -90,7 +90,8 @@ export default function ContactUs() {
                     <div className="flex items-center gap-4">
                         <span className="text-gray-300">📞</span>
                         <span className="text-gray-300 font-medium">Phone</span>
-                        <span className="text-gray-400">88171 88825</span>
+                        <span className="text-gray-400">88171 88825, 96913 02711</span>
+
                     </div>
                     <div className="flex items-center gap-4">
                         <span className="text-red-400">📍</span>

@@ -12,7 +12,7 @@ import {
     FaGift,
     FaMicrophone,
     FaPhoneSquare,
-    FaHandPointRight, FaUser, FaStore, FaBriefcase, FaRegIdBadge
+    FaHandPointRight, FaUser, FaStore, FaBriefcase, FaRegIdBadge,FaMosque
 } from "react-icons/fa";
 import { Megaphone, UsersRound } from "lucide-react";
 import Image from "next/image";
@@ -27,6 +27,11 @@ const sections = [
         icon: <FaPeopleArrows className="text-2xl lg:text-5xl text-pink-500" />,
     },
     {
+        name: "Prayer Times",
+        href: "/prayer-times",
+        icon: <FaClock className="text-2xl lg:text-5xl text-yellow-500" />,
+    },
+    {
         name: "Qibla Finder",
         href: "/qibla",
         icon: <FaRegCompass className="text-2xl lg:text-5xl text-blue-400" />,
@@ -36,11 +41,7 @@ const sections = [
         href: "/quran",
         icon: <FaQuran className="text-2xl lg:text-5xl text-green-400" />,
     },
-    {
-        name: "Prayer Times",
-        href: "/prayer-times",
-        icon: <FaClock className="text-2xl lg:text-5xl text-yellow-500" />,
-    },
+   
 
     {
         name: "Tasbih Counter",
@@ -86,7 +87,7 @@ const sections = [
         name: "Masjid Committee",
         href: "/committee",
         icon: (
-            <UsersRound className="text-3xl lg:text-6xl text-indigo-400" />
+            <FaMosque className="text-3xl lg:text-6xl text-indigo-400" />
         ),
     },
     {
