@@ -247,37 +247,59 @@ export async function GET() {
         // Fetch from database
         const users = await prisma.tasbihUser.findMany();
         const count = await prisma.tasbihUser.count();
-        // Resolve Email where possible: if mobileNumber looks like an email use it,
-        // otherwise try to find a matching `User` record by mobile or email.
-        const filtered = await Promise.all(
-            users.map(async (u) => {
-                let resolvedEmail = null;
-                if (u.mobileNumber && u.mobileNumber.includes("@")) {
-                    resolvedEmail = u.mobileNumber;
-                } else if (u.mobileNumber) {
-                    const matched = await prisma.user.findFirst({
-                        where: {
-                            OR: [{ mobile: u.mobileNumber }, { email: u.mobileNumber }],
-                        },
-                    });
-                    if (matched) resolvedEmail = matched.email;
-                }
-                return {
-                    "Full Name": u.fullName,
-                    Address: u.address,
-                    "mobile number": u.mobileNumber,
-                    Email: resolvedEmail,
-                    // Life time counts
-                    "Tasbih Counts":
-                        typeof u.count === "bigint" ? Number(u.count) : u.count,
-                    // Weekly counts (note: key is lowercase to match admin UI expectation)
-                    "weekly counts":
-                        typeof u.weeklyCounts === "bigint"
-                            ? Number(u.weeklyCounts)
-                            : u.weeklyCounts,
-                };
-            })
-        );
+
+        // Collect mobile identifiers and batch-resolve users to avoid N+1 queries.
+        const mobileIdentifiers = users
+            .map((u) => u.mobileNumber)
+            .filter(Boolean);
+
+        // Separate explicit emails (already resolvable) from other identifiers
+        const explicitEmails = mobileIdentifiers.filter((m) => m.includes("@"));
+        const nonEmailIdentifiers = mobileIdentifiers.filter((m) => !m.includes("@"));
+
+        // Batch query `User` table for any records whose mobile or email matches
+        // one of the non-email identifiers. This reduces many single-row queries
+        // into a single query (or small number of queries).
+        let matchedUsersByIdentifier = {};
+        if (nonEmailIdentifiers.length > 0) {
+            const matched = await prisma.user.findMany({
+                where: {
+                    OR: [
+                        { mobile: { in: nonEmailIdentifiers } },
+                        { email: { in: nonEmailIdentifiers } },
+                    ],
+                },
+                select: { mobile: true, email: true },
+            });
+            for (const mu of matched) {
+                if (mu.mobile) matchedUsersByIdentifier[mu.mobile] = mu;
+                if (mu.email) matchedUsersByIdentifier[mu.email] = mu;
+            }
+        }
+
+        const filtered = users.map((u) => {
+            let resolvedEmail = null;
+            if (u.mobileNumber && u.mobileNumber.includes("@")) {
+                resolvedEmail = u.mobileNumber;
+            } else if (u.mobileNumber) {
+                const matched = matchedUsersByIdentifier[u.mobileNumber];
+                if (matched) resolvedEmail = matched.email || null;
+            }
+            return {
+                "Full Name": u.fullName,
+                Address: u.address,
+                "mobile number": u.mobileNumber,
+                Email: resolvedEmail,
+                // Life time counts
+                "Tasbih Counts":
+                    typeof u.count === "bigint" ? Number(u.count) : u.count,
+                // Weekly counts (note: key is lowercase to match admin UI expectation)
+                "weekly counts":
+                    typeof u.weeklyCounts === "bigint"
+                        ? Number(u.weeklyCounts)
+                        : u.weeklyCounts,
+            };
+        });
         return NextResponse.json({ ok: true, data: filtered }, { status: 200 });
     } catch (err) {
         return NextResponse.json(
