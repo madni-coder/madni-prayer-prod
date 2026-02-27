@@ -3,6 +3,7 @@ import React, { useState, useEffect } from "react";
 import { toast } from "react-toastify";
 import { Trash2 } from "lucide-react";
 import { FaBitcoin, FaMosque } from "react-icons/fa";
+import { FiCopy } from "react-icons/fi";
 import { useRouter } from "next/navigation";
 import apiClient from "../../../lib/apiClient";
 
@@ -171,6 +172,7 @@ export default function DuroodSharifPage() {
     const [publishStatus, setPublishStatus] = useState(null);
     const [showPublishConfirm, setShowPublishConfirm] = useState(false);
     const showToast = React.useContext(ToastContext);
+    const [copiedMobile, setCopiedMobile] = useState(null);
 
     // Date range states
     const [fromDate, setFromDate] = useState("");
@@ -553,7 +555,85 @@ export default function DuroodSharifPage() {
                         <ClearWinnerListButton />
                     </div>
                 </div>
-                <table className="table w-full">
+                {/* Mobile: stacked cards */}
+                <div className="md:hidden space-y-4">
+                    {paginated.map((row, idx) => (
+                        <div
+                            key={idx}
+                            className="bg-white rounded-lg shadow-sm p-4 border last:border-b-0"
+                        >
+                            <div className="flex items-start justify-between gap-4">
+                                <div className="flex items-center gap-3">
+                                    <div className="bg-amber-100 rounded-full p-2 flex items-center justify-center">
+                                        <FaBitcoin className="text-xl text-amber-700" />
+                                    </div>
+                                    <div>
+                                        <div className="text-sm font-semibold text-gray-800">
+                                            {row.SERIAL}. {row["Full Name"] || 'Not Provided'}
+                                        </div>
+                                        <div className="text-xs text-gray-500">
+                                            {row.Email || row.email || 'Not Provided'}
+                                        </div>
+                                    </div>
+                                </div>
+                                <div className="text-right text-sm font-medium text-gray-700">
+                                    <div className="text-orange-800 font-bold">{row["weekly counts"] || '00'}</div>
+                                    <div className="text-gray-600 text-xs">Weekly</div>
+                                </div>
+                            </div>
+                            <div className="mt-3 flex flex-col gap-2">
+                                <div className="text-sm text-gray-700">{row["Address"] || 'Not Provided'}</div>
+                                <div className="flex items-center justify-between gap-2">
+                                    <div className="text-sm text-gray-800 truncate">
+                                        {row["mobile number"] || 'Not Provided'}
+                                    </div>
+                                    <div className="flex items-center gap-2">
+                                        {row["mobile number"] ? (
+                                            <>
+                                                <button
+                                                    onClick={async () => {
+                                                        const textToCopy = String(row["mobile number"] || "");
+                                                        try {
+                                                            if (navigator?.clipboard?.writeText) {
+                                                                await navigator.clipboard.writeText(textToCopy);
+                                                            } else {
+                                                                const ta = document.createElement('textarea');
+                                                                ta.value = textToCopy;
+                                                                document.body.appendChild(ta);
+                                                                ta.select();
+                                                                document.execCommand('copy');
+                                                                document.body.removeChild(ta);
+                                                            }
+                                                            setCopiedMobile(textToCopy);
+                                                            setTimeout(() => setCopiedMobile(null), 2000);
+                                                            showToast("Mobile copied to clipboard", "success");
+                                                        } catch (e) {
+                                                            showToast("Failed to copy mobile", "error");
+                                                        }
+                                                    }}
+                                                    className="p-1 rounded hover:bg-gray-100"
+                                                    title="Copy mobile number"
+                                                >
+                                                    <FiCopy />
+                                                </button>
+                                                {copiedMobile === String(row["mobile number"]) && (
+                                                    <span className="text-sm text-green-600 font-semibold">Copied</span>
+                                                )}
+                                            </>
+                                        ) : null}
+                                    </div>
+                                </div>
+                                <div className="flex items-center justify-between text-xs text-gray-500 pt-2 border-t">
+                                    <div>Life Time: <span className="text-gray-800 font-semibold">{row["Tasbih Counts"] || 'NA'}</span></div>
+                                    <div className="hidden" />
+                                </div>
+                            </div>
+                        </div>
+                    ))}
+                </div>
+
+                {/* Desktop/table view (md and up) - unchanged layout */}
+                <table className="hidden md:table w-full">
                     <thead>
                         <tr className="bg-[#5fb923] rounded-t-xl">
                             <th className="font-semibold text-base text-white text-left rounded-tl-xl">
@@ -568,10 +648,11 @@ export default function DuroodSharifPage() {
                             <th className="font-semibold text-base text-white text-left">
                                 Colony Address
                             </th>
-                            {/* Mobile column intentionally removed for privacy */}
-                            <th className="font-semibold text-base text-white text-left flex items-center gap-2">
-                                <span>This Week Counts</span>
-                                {/* ...existing code... */}
+                            <th className="font-semibold text-base text-white text-left w-56">
+                                Mobile
+                            </th>
+                            <th className="font-semibold text-base text-white text-right">
+                                This Week Counts
                             </th>
                             <th className="font-semibold text-base text-white text-left rounded-tr-xl">
                                 Life Time Counts
@@ -601,11 +682,46 @@ export default function DuroodSharifPage() {
                                 <td className="py-4 text-gray-800 text-left">
                                     {row["Address"] || 'Not Provided'}
                                 </td>
-                                {/* Mobile number omitted for privacy */}
-                                <td className="py-4 text-orange-800 font-bold  text-left flex items-center gap-2">
+                                <td className="py-4 text-gray-800 text-left flex items-center gap-2 whitespace-nowrap">
+                                    <span className="truncate">{row["mobile number"] || 'Not Provided'}</span>
+                                    {row["mobile number"] ? (
+                                        <div className="flex items-center gap-2">
+                                            <button
+                                                onClick={async () => {
+                                                    const textToCopy = String(row["mobile number"] || "");
+                                                    try {
+                                                        if (navigator?.clipboard?.writeText) {
+                                                            await navigator.clipboard.writeText(textToCopy);
+                                                        } else {
+                                                            const ta = document.createElement('textarea');
+                                                            ta.value = textToCopy;
+                                                            document.body.appendChild(ta);
+                                                            ta.select();
+                                                            document.execCommand('copy');
+                                                            document.body.removeChild(ta);
+                                                        }
+                                                        setCopiedMobile(textToCopy);
+                                                        setTimeout(() => setCopiedMobile(null), 2000);
+                                                        showToast("Mobile copied to clipboard", "success");
+                                                    } catch (e) {
+                                                        showToast("Failed to copy mobile", "error");
+                                                    }
+                                                }}
+                                                className="p-1 rounded hover:bg-gray-100"
+                                                title="Copy mobile number"
+                                            >
+                                                <FiCopy />
+                                            </button>
+                                            {copiedMobile === String(row["mobile number"]) && (
+                                                <span className="text-sm text-green-600 font-semibold">Copied</span>
+                                            )}
+                                        </div>
+                                    ) : null}
+                                </td>
+                                <td className="py-4 text-orange-800 font-bold text-right">
                                     {row["weekly counts"] || "00"}
                                 </td>
-                                <td className="py-4 text-gray-800 text-left">
+                                <td className="py-4 text-gray-800 text-right">
                                     {row["Tasbih Counts"] || "NA"}
                                 </td>
                             </tr>
