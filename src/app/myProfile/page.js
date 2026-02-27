@@ -1,6 +1,6 @@
 "use client";
 import React, { useRef, useState, useEffect } from "react";
-import { FaUser, FaAngleLeft, FaEnvelope, FaLock, FaMapMarkerAlt, FaMosque, FaPhone, FaVenusMars, FaSignInAlt, FaSignOutAlt, FaTrashAlt, FaAngleDown } from "react-icons/fa";
+import { FaUser, FaAngleLeft, FaEnvelope, FaLock, FaMapMarkerAlt, FaMosque, FaPhone, FaVenusMars, FaSignInAlt, FaSignOutAlt, FaTrashAlt, FaAngleDown, FaPencilAlt, FaCheck, FaTimes } from "react-icons/fa";
 import apiClient from "../../lib/apiClient";
 import AnimatedLooader from "../../components/animatedLooader";
 import { useRouter } from "next/navigation";
@@ -28,6 +28,8 @@ export default function MyProfilePage() {
     const [isAuthenticated, setIsAuthenticated] = useState(false);
     const [profileLoading, setProfileLoading] = useState(true);
     const [profileUser, setProfileUser] = useState(null);
+    const [editField, setEditField] = useState(null);
+    const [tempValue, setTempValue] = useState('');
     const [initializing, setInitializing] = useState(true);
     const [showLoginModal, setShowLoginModal] = useState(false);
     const [loginLoading, setLoginLoading] = useState(false);
@@ -255,6 +257,52 @@ export default function MyProfilePage() {
         }
     }
 
+    function handleEditClick(field) {
+        setEditField(field);
+        if (field === 'fullName') setTempValue(fullName || profileUser?.fullName || '');
+        else if (field === 'address') setTempValue(address || profileUser?.address || '');
+        else if (field === 'areaMasjid') setTempValue(areaMasjid || profileUser?.areaMasjid || '');
+        else if (field === 'mobile') setTempValue(mobileValue || profileUser?.mobile || '');
+        else setTempValue('');
+    }
+
+    async function saveField(field) {
+        if (!profileUser) {
+            setError('No user to update');
+            return;
+        }
+        setLoading(true);
+        try {
+            const payload = { id: profileUser.id };
+            // treat empty string as null for optional fields
+            payload[field] = tempValue === '' ? null : tempValue;
+
+            const res = await apiClient.patch('/api/auth/register', payload);
+            const data = res?.data;
+            if (data?.user) {
+                const user = data.user;
+                setProfileUser(user);
+                setFullName(user.fullName || '');
+                setAddress(user.address || '');
+                setAreaMasjid(user.areaMasjid || '');
+                setMobileValue(user.mobile || '');
+                try { localStorage.setItem('userData', JSON.stringify(user)); } catch (e) { }
+                setSuccessMessage('Profile updated');
+                setShowSuccessToast(true);
+                setTimeout(() => setShowSuccessToast(false), 2000);
+            } else {
+                setError(data?.error || 'Failed to update');
+            }
+        } catch (err) {
+            console.error('Update error', err);
+            const msg = err?.response?.data?.error || err?.message || 'Update failed';
+            setError(msg);
+        } finally {
+            setLoading(false);
+            setEditField(null);
+        }
+    }
+
     // Function to get initials from full name
     const getInitials = (name) => {
         if (!name) return 'U';
@@ -382,7 +430,29 @@ export default function MyProfilePage() {
                                     </div>
                                     <div className="flex-1 min-w-0">
                                         <div className="text-xs text-base-content/60 dark:text-base-content/70">My Profile</div>
-                                        <div className="font-semibold text-sm text-base-content truncate">{fullName || profileUser?.fullName || 'Not Provided'}</div>
+                                        {editField === 'fullName' ? (
+                                            <div className="flex items-center gap-2">
+                                                <input
+                                                    className="input input-ghost w-full h-8 p-0 text-sm"
+                                                    value={tempValue}
+                                                    onChange={(e) => setTempValue(e.target.value)}
+                                                    autoFocus
+                                                />
+                                                <button aria-label="Save full name" className="btn btn-sm btn-square btn-primary" onClick={() => saveField('fullName')} disabled={loading}>
+                                                    <FaCheck />
+                                                </button>
+                                                <button aria-label="Cancel full name edit" className="btn btn-sm btn-square btn-ghost" onClick={() => setEditField(null)} disabled={loading}>
+                                                    <FaTimes />
+                                                </button>
+                                            </div>
+                                        ) : (
+                                            <div className="flex items-center justify-between gap-3">
+                                                <div className="font-semibold text-sm text-base-content truncate">{fullName || profileUser?.fullName || 'Not Provided'}</div>
+                                                <button title="Edit Full Name" onClick={() => handleEditClick('fullName')} className="ml-2 text-base text-base-content/60 hover:text-primary">
+                                                    <FaPencilAlt />
+                                                </button>
+                                            </div>
+                                        )}
                                     </div>
                                 </div>
 
@@ -404,7 +474,24 @@ export default function MyProfilePage() {
                                     </div>
                                     <div className="flex-1 min-w-0">
                                         <div className="text-xs text-base-content/60 dark:text-base-content/70">Saved Addresses</div>
-                                        <div className="font-semibold text-sm text-base-content truncate">{address || profileUser?.address || 'Not Provided'}</div>
+                                        {editField === 'address' ? (
+                                            <div className="flex items-center gap-2">
+                                                <input className="input input-ghost w-full h-8 p-0 text-sm" value={tempValue} onChange={(e) => setTempValue(e.target.value)} autoFocus />
+                                                <button aria-label="Save address" className="btn btn-sm btn-square btn-primary" onClick={() => saveField('address')} disabled={loading}>
+                                                    <FaCheck />
+                                                </button>
+                                                <button aria-label="Cancel address edit" className="btn btn-sm btn-square btn-ghost" onClick={() => setEditField(null)} disabled={loading}>
+                                                    <FaTimes />
+                                                </button>
+                                            </div>
+                                        ) : (
+                                            <div className="flex items-center justify-between gap-3">
+                                                <div className="font-semibold text-sm text-base-content truncate">{address || profileUser?.address || 'Not Provided'}</div>
+                                                <button title="Edit Address" onClick={() => handleEditClick('address')} className="ml-2 text-base text-base-content/60 hover:text-primary">
+                                                    <FaPencilAlt />
+                                                </button>
+                                            </div>
+                                        )}
                                     </div>
                                 </div>
 
@@ -415,7 +502,24 @@ export default function MyProfilePage() {
                                     </div>
                                     <div className="flex-1 min-w-0">
                                         <div className="text-xs text-base-content/60 dark:text-base-content/70">Area Masjid</div>
-                                        <div className="font-semibold text-sm text-base-content truncate">{areaMasjid || profileUser?.areaMasjid || 'Not Provided'}</div>
+                                        {editField === 'areaMasjid' ? (
+                                            <div className="flex items-center gap-2">
+                                                <input className="input input-ghost w-full h-8 p-0 text-sm" value={tempValue} onChange={(e) => setTempValue(e.target.value)} autoFocus />
+                                                <button aria-label="Save area masjid" className="btn btn-sm btn-square btn-primary" onClick={() => saveField('areaMasjid')} disabled={loading}>
+                                                    <FaCheck />
+                                                </button>
+                                                <button aria-label="Cancel area masjid edit" className="btn btn-sm btn-square btn-ghost" onClick={() => setEditField(null)} disabled={loading}>
+                                                    <FaTimes />
+                                                </button>
+                                            </div>
+                                        ) : (
+                                            <div className="flex items-center justify-between gap-3">
+                                                <div className="font-semibold text-sm text-base-content truncate">{areaMasjid || profileUser?.areaMasjid || 'Not Provided'}</div>
+                                                <button title="Edit Area Masjid" onClick={() => handleEditClick('areaMasjid')} className="ml-2 text-base text-base-content/60 hover:text-primary">
+                                                    <FaPencilAlt />
+                                                </button>
+                                            </div>
+                                        )}
                                     </div>
                                 </div>
 
@@ -426,7 +530,27 @@ export default function MyProfilePage() {
                                     </div>
                                     <div className="flex-1 min-w-0">
                                         <div className="text-xs text-base-content/60 dark:text-base-content/70">Mobile Number</div>
-                                        <div className="font-semibold text-sm text-base-content truncate">{mobileValue || profileUser?.mobile || 'Not Provided'}</div>
+                                        {editField === 'mobile' ? (
+                                            <div className="flex items-center gap-2">
+                                                <input className="input input-ghost w-full h-8 p-0 text-sm" value={tempValue} onChange={(e) => {
+                                                    const v = e.target.value;
+                                                    if (/^\d*$/.test(v) && v.length <= 10) setTempValue(v);
+                                                }} autoFocus />
+                                                <button aria-label="Save mobile" className="btn btn-sm btn-square btn-primary" onClick={() => saveField('mobile')} disabled={loading}>
+                                                    <FaCheck />
+                                                </button>
+                                                <button aria-label="Cancel mobile edit" className="btn btn-sm btn-square btn-ghost" onClick={() => setEditField(null)} disabled={loading}>
+                                                    <FaTimes />
+                                                </button>
+                                            </div>
+                                        ) : (
+                                            <div className="flex items-center justify-between gap-3">
+                                                <div className="font-semibold text-sm text-base-content truncate">{mobileValue || profileUser?.mobile || 'Not Provided'}</div>
+                                                <button title="Edit Mobile" onClick={() => handleEditClick('mobile')} className="ml-2 text-base text-base-content/60 hover:text-primary">
+                                                    <FaPencilAlt />
+                                                </button>
+                                            </div>
+                                        )}
                                     </div>
                                 </div>
 

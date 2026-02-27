@@ -240,9 +240,9 @@ export default function Page() {
         { date: '19 Mar', sehri: '04:50', iftari: '06:19' }, { date: '20 Mar', sehri: '04:50', iftari: '06:19' },
     ];
 
-    // Parse "H:MM" or "HH:MM" with optional PM treatment
-    const parseDatelessTime = (timeStr, treatAsPM = false) => {
-        if (!timeStr) return null;
+    // Parse "H:MM" or "HH:MM" for a specific date string like "19 Feb"
+    const parseTimeForDate = (dateLabel, timeStr, treatAsPM = false) => {
+        if (!timeStr || !dateLabel) return null;
         const m = timeStr.trim().toLowerCase().match(/(\d{1,2}):(\d{2})\s*(am|pm)?/);
         if (!m) return null;
         let hh = parseInt(m[1], 10);
@@ -251,58 +251,101 @@ export default function Page() {
         if (suffix === 'am') { if (hh === 12) hh = 0; }
         else if (suffix === 'pm') { if (hh < 12) hh += 12; }
         else if (treatAsPM && hh < 12) { hh += 12; }
+
+        const parts = dateLabel.trim().split(/\s+/);
+        if (parts.length < 2) return null;
+        const day = parseInt(parts[0], 10);
+        const monStr = parts[1].replace(/\./g, '');
+        const months = { Jan: 0, Feb: 1, Mar: 2, Apr: 3, May: 4, Jun: 5, Jul: 6, Aug: 7, Sep: 8, Oct: 9, Nov: 10, Dec: 11 };
+        const month = months[monStr];
+
+        if (isNaN(day) || month === undefined) return null;
+
         const d = new Date();
+        d.setFullYear(d.getFullYear(), month, day);
         d.setHours(hh, mm, 0, 0);
         return d;
     };
 
-    // Schedule Sehri & Iftari native alarms ONCE per day.
-    // Using a localStorage key "ramzan_sched_done_DATE" prevents re-scheduling on every re-render.
+    // Schedule ALL upcoming Sehri & Iftari native alarms for the month.
+    // iOS has a limit of 64 pending notifications. The table has 30 rows (60 total alarms), which is perfectly safe.
+    // A daily flag ensures we don't spam the OS scheduler over and over, but re-schedules once every day
+    // the user opens the app to ensure things are fresh and handle if the month rolls over.
     const scheduleNativeAlarmsOnce = async () => {
         if (typeof window === 'undefined' || !window.__TAURI_INTERNALS__) return;
         const soundOn = typeof localStorage !== 'undefined' && localStorage.getItem(SOUND_KEY) === 'true';
         if (!soundOn) return;
-        const todayKey = new Date().toDateString();
-        const schedDoneKey = `ramzan_sched_done_${todayKey}`;
-        if (typeof localStorage !== 'undefined' && localStorage.getItem(schedDoneKey) === '1') return; // already scheduled today
 
-        // Clear yesterday's sched key to avoid localStorage bloat
+        const todayKey = new Date().toDateString();
+        const schedDoneKey = `ramzan_monthly_sched_${todayKey}`;
+        if (typeof localStorage !== 'undefined' && localStorage.getItem(schedDoneKey) === '1') return;
+
+        // Cancel existing pending notifications first so we don't accumulate duplicates from previous sessions
         try {
-            const yesterday = new Date(); yesterday.setDate(yesterday.getDate() - 1);
-            localStorage.removeItem(`ramzan_sched_done_${yesterday.toDateString()}`);
+            const nav = await import('@tauri-apps/plugin-notification');
+            await nav.cancelAll();
         } catch (e) { }
 
-        // Find today's row from embedded data (no DOM needed — works even before render)
+        // Clean up old daily keys from previous versions to avoid localStorage bloat
+        try {
+            const ls = window.localStorage;
+            // Iterate in reverse since we're removing items
+            for (let i = ls.length - 1; i >= 0; i--) {
+                const key = ls.key(i);
+                if (key && (key.startsWith('ramzan_sched_done_') || key.startsWith('ramzan_monthly_sched_'))) {
+                    ls.removeItem(key);
+                }
+            }
+        } catch (e) { }
+
         const onlyRaipurNow = typeof localStorage !== 'undefined' && localStorage.getItem(STORAGE_KEY) === 'true';
         const table = onlyRaipurNow ? RAIPUR_TIMES : BILASPUR_TIMES;
-        const today = new Date();
-        const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-        const todayLabel = `${today.getDate()} ${months[today.getMonth()]}`;
-        const row = table.find(r => r.date === todayLabel);
-        if (!row) return;
+        const now = new Date();
 
-        const sehriTime = parseDatelessTime(row.sehri);
-        // Iftari times are all "6:xx" AM format in data but represent PM → treat as PM
-        const iftariTime = parseDatelessTime(row.iftari, true);
+        let scheduledCount = 0;
 
-        await scheduleNativeAlarm(
-            sehriTime,
-            `ramzan_sehri_${todayKey}`,
-            'Sehri Time 🌙',
-            `Sehri Ka Waqt Khatm Ho Gaya Hai (${row.sehri})`,
-            'sehri'          // iOS: plays sehri.caf from app bundle
-        );
-        await scheduleNativeAlarm(
-            iftariTime,
-            `ramzan_iftari_${todayKey}`,
-            'Iftari Time 🌅',
-            `Iftari Ka Waqt Ho Gaya Hai (${row.iftari})`,
-            'irftari'        // iOS: plays irftari.caf from app bundle
-        );
+        for (const row of table) {
+            const sehriTime = parseTimeForDate(row.date, row.sehri);
+            // Iftari times are all "6:xx" AM format in data but represent PM → treat as PM
+            const iftariTime = parseTimeForDate(row.date, row.iftari, true);
+
+            // Only schedule if the alarm represents a future time
+            if (sehriTime && sehriTime > now) {
+                const monthStr = ('0' + (sehriTime.getMonth() + 1)).slice(-2);
+                const dayStr = ('0' + sehriTime.getDate()).slice(-2);
+
+                await scheduleNativeAlarm(
+                    sehriTime,
+                    `rs_${monthStr}${dayStr}`,
+                    'Sehri Time 🌙',
+                    `Sehri Ka Waqt Khatm Ho Gaya Hai (${row.sehri})`,
+                    'sehri'          // iOS: plays sehri.caf from app bundle
+                );
+                scheduledCount++;
+            }
+
+            if (iftariTime && iftariTime > now) {
+                const monthStr = ('0' + (iftariTime.getMonth() + 1)).slice(-2);
+                const dayStr = ('0' + iftariTime.getDate()).slice(-2);
+
+                await scheduleNativeAlarm(
+                    iftariTime,
+                    `ri_${monthStr}${dayStr}`,
+                    'Iftari Time 🌅',
+                    `Iftari Ka Waqt Ho Gaya Hai (${row.iftari})`,
+                    'irftari'        // iOS: plays irftari.caf from app bundle
+                );
+                scheduledCount++;
+            }
+
+            // Safety limit (iOS hard limit is 64 scheduled notifications)
+            if (scheduledCount >= 60) break;
+        }
 
         // Mark as scheduled for today
         try { localStorage.setItem(schedDoneKey, '1'); } catch (e) { }
     };
+
 
     useEffect(() => {
         // create Audio objects using Web Audio API for mobile compatibility

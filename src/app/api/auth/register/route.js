@@ -88,3 +88,34 @@ export async function GET(request) {
         return NextResponse.json({ error: 'Failed to fetch users' }, { status: 500 });
     }
 }
+
+export async function PATCH(request) {
+    try {
+        const body = await request.json();
+        // Identify user by id or email
+        const { id, email, fullName, gender, address, areaMasjid, mobile, password } = body;
+
+        if (!id && !email) {
+            return NextResponse.json({ error: 'Missing id or email to identify user' }, { status: 400 });
+        }
+
+        const where = id ? { id } : { email };
+
+        // Build update payload but DO NOT allow changing email
+        const data = {};
+        if (fullName !== undefined) data.fullName = fullName;
+        if (gender !== undefined) data.gender = gender;
+        if (address !== undefined) data.address = address;
+        if (areaMasjid !== undefined) data.areaMasjid = areaMasjid;
+        if (mobile !== undefined) data.mobile = mobile;
+        if (password !== undefined) data.password = password;
+
+        const updated = await prisma.user.update({ where, data });
+        const { password: _pwd, ...userWithoutPassword } = updated;
+
+        return NextResponse.json({ message: 'User updated successfully', user: userWithoutPassword }, { status: 200 });
+    } catch (err) {
+        console.error('Error updating user:', err);
+        return NextResponse.json({ error: 'Failed to update user' }, { status: 500 });
+    }
+}
