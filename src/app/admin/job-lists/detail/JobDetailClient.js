@@ -3,11 +3,13 @@
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { useSearchParams, useRouter } from "next/navigation";
+import { useJobListContext } from "../../../../context/JobListContext";
 
 export default function JobDetailClient() {
     const searchParams = useSearchParams();
     const router = useRouter();
     const id = parseInt(searchParams.get('id'), 10);
+    const { jobs, loading: contextLoading, fetchAll, getById, remove } = useJobListContext();
 
     const [job, setJob] = useState(null);
     const [loading, setLoading] = useState(true);
@@ -21,27 +23,36 @@ export default function JobDetailClient() {
             return;
         }
 
-        const fetchJob = async () => {
+        async function loadJob() {
             try {
                 setLoading(true);
-                // Using API route, not Prisma
-                const response = await fetch(`/api/api-job-lists?id=${id}`);
-
-                if (!response.ok) {
-                    throw new Error("Job not found");
+                // If jobs not loaded yet, fetch them
+                if (jobs.length === 0) {
+                    await fetchAll();
                 }
-
-                const data = await response.json();
-                setJob(data);
             } catch (err) {
                 setError(err.message || "Failed to fetch job");
             } finally {
                 setLoading(false);
             }
-        };
+        }
 
-        fetchJob();
-    }, [id]);
+        loadJob();
+    }, [id, fetchAll]);
+
+    // Update job whenever jobs array changes
+    useEffect(() => {
+        if (!Number.isNaN(id) && jobs.length > 0) {
+            const found = getById(id);
+            if (found) {
+                setJob(found);
+                setLoading(false);
+            } else if (!contextLoading) {
+                setError("Job not found");
+                setLoading(false);
+            }
+        }
+    }, [id, jobs, getById, contextLoading]);
 
     const handleDelete = async () => {
         if (!confirm("Are you sure you want to delete this job?")) {
@@ -50,15 +61,7 @@ export default function JobDetailClient() {
 
         try {
             setDeleting(true);
-            // Using API route, not Prisma
-            const response = await fetch(`/api/api-job-lists?id=${id}`, {
-                method: 'DELETE',
-            });
-
-            if (!response.ok) {
-                throw new Error("Failed to delete job");
-            }
-
+            await remove(id);
             alert("Job deleted successfully");
             router.push("/admin/job-lists");
         } catch (err) {
@@ -67,7 +70,7 @@ export default function JobDetailClient() {
         }
     };
 
-    if (loading) {
+    if (loading || contextLoading) {
         return <div className="p-6 text-center">Loading...</div>;
     }
 

@@ -1,14 +1,13 @@
 "use client";
 import React, { useEffect, useState, Suspense } from "react";
-
-// Simple in-memory cache to avoid duplicate fetches (useful in dev StrictMode)
-const jobCache = new Map();
 import { useRouter, useSearchParams } from "next/navigation";
+import { useJobListContext } from "../../../../context/JobListContext";
 
 function EditJobContent() {
     const router = useRouter();
     const searchParams = useSearchParams();
     const id = searchParams.get("id");
+    const { jobs, loading: contextLoading, fetchAll, getById, update } = useJobListContext();
 
     const [loading, setLoading] = useState(true);
     const [saving, setSaving] = useState(false);
@@ -28,9 +27,25 @@ function EditJobContent() {
     useEffect(() => {
         if (!id) return;
 
-        // If we already have the job cached, reuse it to avoid duplicate network calls
-        if (jobCache.has(id)) {
-            const data = jobCache.get(id);
+        async function loadJob() {
+            try {
+                // If jobs not loaded yet, fetch them
+                if (jobs.length === 0) {
+                    await fetchAll();
+                }
+            } catch (e) {
+                console.error(e);
+            }
+        }
+
+        loadJob();
+    }, [id, fetchAll]);
+
+    // Update form when jobs array changes (data loaded from context)
+    useEffect(() => {
+        if (!id || jobs.length === 0) return;
+        const data = getById(id);
+        if (data) {
             setForm({
                 title: data.title || "",
                 company: data.company || "",
@@ -44,45 +59,10 @@ function EditJobContent() {
                 responsibilities: Array.isArray(data.responsibilities) ? data.responsibilities.join(", ") : (data.responsibilities || ""),
             });
             setLoading(false);
-            return;
+        } else if (!contextLoading) {
+            setLoading(false);
         }
-
-        let cancelled = false;
-
-        async function load() {
-            try {
-                const res = await fetch(`/api/api-job-lists?id=${id}`);
-                if (!res.ok) throw new Error("Failed to fetch job");
-                const data = await res.json();
-
-                // store in cache
-                jobCache.set(id, data);
-
-                if (cancelled) return;
-
-                setForm({
-                    title: data.title || "",
-                    company: data.company || "",
-                    location: data.location || "",
-                    mobile: data.mobile || "",
-                    type: data.type || "",
-                    salary: data.salary || "",
-                    postedDate: data.postedDate ? new Date(data.postedDate).toISOString().slice(0, 10) : "",
-                    description: data.description || "",
-                    requirements: Array.isArray(data.requirements) ? data.requirements.join(", ") : (data.requirements || ""),
-                    responsibilities: Array.isArray(data.responsibilities) ? data.responsibilities.join(", ") : (data.responsibilities || ""),
-                });
-            } catch (e) {
-                console.error(e);
-            } finally {
-                if (!cancelled) setLoading(false);
-            }
-        }
-
-        load();
-
-        return () => { cancelled = true; };
-    }, [id]);
+    }, [id, jobs, getById, contextLoading]);
 
     const handleChange = (e) => {
         const { name, value } = e.target;
@@ -107,20 +87,7 @@ function EditJobContent() {
                 responsibilities: form.responsibilities ? form.responsibilities.split(",").map(s => s.trim()).filter(Boolean) : [],
             };
 
-            const res = await fetch(`/api/api-job-lists?id=${id}`, {
-                method: "PUT",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify(payload),
-            });
-
-            if (!res.ok) {
-                const err = await res.json().catch(() => ({ error: 'Unknown' }));
-                throw new Error(err.error || 'Failed to update');
-            }
-
-            // mark job list to refresh (so list ignores cache once)
-            try { sessionStorage.setItem('jobs_needs_refresh', '1'); } catch (e) { }
-            // navigate back to list after update
+            await update(id, payload);
             router.push("/admin/job-lists");
         } catch (err) {
             console.error("Update failed", err);

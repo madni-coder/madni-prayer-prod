@@ -3,31 +3,15 @@
 import { useEffect, useState } from "react";
 import { toast } from "react-toastify";
 import { useRouter } from "next/navigation";
-import apiClient from "../../../lib/apiClient";
+import { useLocalStoreContext } from "../../../context/LocalStoreContext";
 
 export default function LocalStoreListPage() {
     const router = useRouter();
-    const [stores, setStores] = useState([]);
-    const [loading, setLoading] = useState(false);
-
-    const fetchStores = async () => {
-        setLoading(true);
-        try {
-            const { data } = await apiClient.get('/api/local-stores');
-            if (data?.ok) setStores(data.data || []);
-            else setStores([]);
-        } catch (err) {
-            console.error('Failed to fetch stores', err);
-            toast.error('Failed to fetch local stores.');
-            setStores([]);
-        } finally {
-            setLoading(false);
-        }
-    };
+    const { stores, loading, fetchAll } = useLocalStoreContext();
 
     useEffect(() => {
-        fetchStores();
-    }, []);
+        fetchAll();
+    }, [fetchAll]);
 
 
 

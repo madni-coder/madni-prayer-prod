@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import apiClient from "../../../lib/apiClient";
+import { useLocalStoreContext } from "../../../context/LocalStoreContext";
 import { toast } from "react-toastify";
 import { ArrowLeft, Trash } from "lucide-react";
 import SocialMediaImageUpload from "../../../components/SocialMediaImageUpload";
@@ -11,6 +11,7 @@ export default function EditStoreClient() {
     const router = useRouter();
     const search = useSearchParams();
     const id = search.get('id');
+    const { stores, fetchAll, getById, patch: ctxPatch } = useLocalStoreContext();
 
     const [form, setForm] = useState({
         fullName: "",
@@ -20,39 +21,36 @@ export default function EditStoreClient() {
         workType: "",
         description: "",
     });
-    const [loading, setLoading] = useState(false);
+    const [loading, setLoading] = useState(true);
+    const fetchedRef = typeof window !== "undefined" ? require("react").useRef(false) : { current: false };
 
     useEffect(() => {
         if (!id) return;
-        let mounted = true;
-        const fetchStore = async () => {
-            setLoading(true);
-            try {
-                const { data } = await apiClient.get(`/api/local-stores?id=${id}`);
-                const payload = data?.ok ? (Array.isArray(data.data) ? data.data[0] : data.data) : null;
-                if (mounted && payload) {
-                    setForm({
-                        fullName: payload.fullName || "",
-                        mobile: payload.mobile || "",
-                        shopName: payload.shopName || "",
-                        shopAddress: payload.shopAddress || "",
-                        workType: payload.workType || "",
-                        description: payload.description || "",
-                        imageName: payload.imageName || null,
-                        imageSrc: payload.imageSrc || null,
-                        imageSrcPortrait: payload.imageSrcPortrait || null,
-                    });
-                }
-            } catch (err) {
-                console.error('Failed to fetch store for edit', err);
-                toast.error('Failed to fetch store for edit.');
-            } finally {
-                if (mounted) setLoading(false);
-            }
-        };
-        fetchStore();
-        return () => { mounted = false; };
-    }, [id]);
+        if (!fetchedRef.current && stores.length === 0) {
+            fetchedRef.current = true;
+            fetchAll().then(() => setLoading(false));
+        } else if (stores.length > 0) {
+            setLoading(false);
+        }
+    }, [id, fetchAll, stores.length]);
+
+    useEffect(() => {
+        if (!id || loading) return;
+        const payload = getById(id);
+        if (payload) {
+            setForm({
+                fullName: payload.fullName || "",
+                mobile: payload.mobile || "",
+                shopName: payload.shopName || "",
+                shopAddress: payload.shopAddress || "",
+                workType: payload.workType || "",
+                description: payload.description || "",
+                imageName: payload.imageName || null,
+                imageSrc: payload.imageSrc || null,
+                imageSrcPortrait: payload.imageSrcPortrait || null,
+            });
+        }
+    }, [id, stores, getById, loading]);
 
     const handleChange = (e) => {
         const { name, value } = e.target;
@@ -66,19 +64,12 @@ export default function EditStoreClient() {
             return;
         }
         try {
-            const { data } = await apiClient.patch('/api/local-stores', { id, ...form });
-            if (data?.ok) {
-                toast.success('Store updated successfully!');
-                router.push('/admin/local-store');
-            } else {
-                console.error('Update failed', data);
-                toast.error(data?.error || 'Failed to update store.');
-                console.warn('Failed to update');
-            }
+            await ctxPatch({ id, ...form });
+            toast.success('Store updated successfully!');
+            router.push('/admin/local-store');
         } catch (err) {
             console.error('Patch error', err);
             toast.error('Failed to update store. Please try again.');
-            console.warn('Failed to update');
         }
     };
 
@@ -142,18 +133,11 @@ export default function EditStoreClient() {
                                             setForm((p) => ({ ...p, imageName: null, imageSrc: null, imageSrcPortrait: null }));
                                             if (id) {
                                                 try {
-                                                    const { data } = await apiClient.patch('/api/local-stores', { id, imageName: null, imageSrc: null, imageSrcPortrait: null });
-                                                    if (!data?.ok) {
-                                                        console.error('Failed to remove image', data);
-                                                        toast.error(data?.error || 'Failed to remove image.');
-                                                        console.warn('Failed to remove image');
-                                                    } else {
-                                                        toast.success('Image removed');
-                                                    }
+                                                    await ctxPatch({ id, imageName: null, imageSrc: null, imageSrcPortrait: null });
+                                                    toast.success('Image removed');
                                                 } catch (err) {
                                                     console.error('Remove image error', err);
                                                     toast.error('Failed to remove image.');
-                                                    console.warn('Failed to remove image');
                                                 }
                                             }
                                         }}

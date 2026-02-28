@@ -1,13 +1,14 @@
 "use client";
 import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import apiClient from "../../../../lib/apiClient";
+import { useJobListContext } from "../../../../context/JobListContext";
 import { ArrowLeft, Plus, Trash2 } from "lucide-react";
 
 export default function CreateJobPage() {
     const router = useRouter();
     const [loading, setLoading] = useState(true);
     const [submitting, setSubmitting] = useState(false);
+    const { create } = useJobListContext();
     const [formData, setFormData] = useState({
         title: "",
         company: "",
@@ -87,7 +88,7 @@ export default function CreateJobPage() {
                 postedDate: new Date().toISOString(),
             };
 
-            await apiClient.post("/api/api-job-lists", dataToSubmit);
+            await create(dataToSubmit);
             router.push("/admin/job-lists");
         } catch (error) {
             console.error("Error creating job:", error);

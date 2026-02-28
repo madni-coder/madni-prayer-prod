@@ -1,12 +1,13 @@
 "use client";
 import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import apiClient from "../../../../lib/apiClient";
+import { useJobSeekerContext } from "../../../../context/JobSeekerContext";
 import { ArrowLeft, Trash2, Mail, Phone, Copy, MapPin, Briefcase, DollarSign, Clock, Award, Home } from "lucide-react";
 
 export default function JobSeekerDetailClient({ id }) {
     const router = useRouter();
     const seekerId = id;
+    const { seekers, loading: contextLoading, fetchAll, getById, remove } = useJobSeekerContext();
 
     const [loading, setLoading] = useState(true);
     const [seeker, setSeeker] = useState(null);
@@ -19,28 +20,31 @@ export default function JobSeekerDetailClient({ id }) {
             return;
         }
         if (seekerId) {
-            fetchSeeker();
+            // If seekers not loaded yet, fetch them
+            if (seekers.length === 0) {
+                fetchAll();
+            }
         }
-    }, [seekerId, router]);
+    }, [seekerId, router, fetchAll]);
 
-    const fetchSeeker = async () => {
-        try {
-            const { data } = await apiClient.get(`/api/api-job-seekers?id=${seekerId}`);
-            setSeeker(data);
-        } catch (error) {
-            console.error("Error fetching job seeker:", error);
-            alert("Failed to fetch job seeker details");
-            router.push("/admin/job-seekers");
-        } finally {
-            setLoading(false);
+    // Update seeker whenever seekers array changes
+    useEffect(() => {
+        if (seekerId && seekers.length > 0) {
+            const found = getById(seekerId);
+            if (found) {
+                setSeeker(found);
+                setLoading(false);
+            } else if (!contextLoading) {
+                setLoading(false);
+            }
         }
-    };
+    }, [seekerId, seekers, getById, contextLoading]);
 
     const handleDelete = async () => {
         if (!confirm("Are you sure you want to delete this job seeker application?")) return;
 
         try {
-            await apiClient.delete(`/api/api-job-seekers?id=${seekerId}`);
+            await remove(seekerId);
             alert("Job seeker deleted successfully");
             router.push("/admin/job-seekers");
         } catch (error) {
@@ -49,7 +53,7 @@ export default function JobSeekerDetailClient({ id }) {
         }
     };
 
-    if (loading) {
+    if (loading || contextLoading) {
         return (
             <div className="min-h-screen flex items-center justify-center">
                 <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-blue-500"></div>

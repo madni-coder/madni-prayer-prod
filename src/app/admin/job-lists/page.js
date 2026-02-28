@@ -1,14 +1,13 @@
 "use client";
 import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import apiClient from "../../../lib/apiClient";
+import { useJobListContext } from "../../../context/JobListContext";
 import { Plus, Pencil } from "lucide-react";
 
 export default function JobListsAdminPage() {
     const router = useRouter();
     const [loading, setLoading] = useState(true);
-    const [jobs, setJobs] = useState([]);
-    const [jobsLoading, setJobsLoading] = useState(true);
+    const { jobs, loading: jobsLoading, fetchAll } = useJobListContext();
     const [currentPage, setCurrentPage] = useState(1);
     const [pageSize] = useState(15);
 
@@ -22,51 +21,8 @@ export default function JobListsAdminPage() {
     }, [router]);
 
     useEffect(() => {
-        // Prevent duplicate network calls by using a short-lived module cache
-        // Also allow a sessionStorage flag to force refresh after edits
-        const shouldForce = sessionStorage.getItem("jobs_needs_refresh") === "1";
-
-        async function fetchJobs() {
-            try {
-                // use module-level cache if available and not forced
-                if (!shouldForce && globalThis.__jobsCache && Array.isArray(globalThis.__jobsCache.data)) {
-                    setJobs(globalThis.__jobsCache.data);
-                    return;
-                }
-
-                // if a fetch is already in progress, await it
-                if (globalThis.__jobsCache && globalThis.__jobsCache.promise) {
-                    const data = await globalThis.__jobsCache.promise;
-                    setJobs(data || []);
-                    return;
-                }
-
-                // start fetch and store promise on cache
-                const p = apiClient.get("/api/api-job-lists").then(res => {
-                    const data = res.data || [];
-                    globalThis.__jobsCache = { data, promise: null, ts: Date.now() };
-                    return data;
-                }).catch(err => {
-                    // clear promise on error
-                    if (globalThis.__jobsCache) globalThis.__jobsCache.promise = null;
-                    throw err;
-                });
-
-                globalThis.__jobsCache = { data: null, promise: p, ts: Date.now() };
-                const data = await p;
-                setJobs(data || []);
-            } catch (e) {
-                console.error("Error fetching jobs:", e);
-                setJobs([]);
-            } finally {
-                setJobsLoading(false);
-                // clear force flag so subsequent mounts use cache
-                sessionStorage.removeItem("jobs_needs_refresh");
-            }
-        }
-
-        fetchJobs();
-    }, []);
+        fetchAll();
+    }, [fetchAll]);
 
     useEffect(() => {
         setCurrentPage(1);

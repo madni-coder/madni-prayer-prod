@@ -10,7 +10,8 @@ import StarterKit from "@tiptap/starter-kit";
 import Underline from "@tiptap/extension-underline";
 import html2canvas from "html2canvas";
 import dynamic from "next/dynamic";
-import apiClient from "../../../lib/apiClient";
+import { useNoticeContext } from "../../../context/NoticeContext";
+import apiClient from "../../../lib/apiClient"; // kept for masjid-committee endpoints
 import "../../tiptap.css";
 
 // Dynamically import EmojiPicker to avoid SSR issues
@@ -20,8 +21,8 @@ const EmojiPicker = dynamic(() => import("emoji-picker-react"), {
 
 export default function NoticeAdmin() {
     const router = useRouter();
+    const { images, fetchAll: fetchNotices, remove: removeNotice, create: createNotice } = useNoticeContext();
     const [loading, setLoading] = useState(true);
-    const [images, setImages] = useState([]);
     const [eventImages, setEventImages] = useState([]);
     const [error, setError] = useState(null);
     const [showDeleteModal, setShowDeleteModal] = useState(false);
@@ -159,12 +160,9 @@ export default function NoticeAdmin() {
         setLoading(true);
         setError(null);
         try {
-            const { data } = await apiClient.get("/api/api-notice");
-            // Show latest uploaded image first
-            const imgs = data?.images || [];
-            setImages(Array.isArray(imgs) ? imgs.slice().reverse() : imgs);
+            await fetchNotices();
         } catch (err) {
-            setError(err?.response?.data?.error || err.message || String(err));
+            setError(err?.message || String(err));
         } finally {
             setLoading(false);
         }
@@ -205,11 +203,7 @@ export default function NoticeAdmin() {
         setShowDeleteModal(false);
 
         try {
-            await apiClient.delete("/api/api-notice", {
-                data: { imageId: imageToDelete },
-            });
-            // Remove deleted image from state
-            setImages((prev) => prev.filter((img) => img.id !== imageToDelete));
+            await removeNotice(imageToDelete);
         } catch (err) {
             setError(err?.response?.data?.error || err.message || String(err));
         } finally {
@@ -419,7 +413,7 @@ export default function NoticeAdmin() {
             formData.append("image", blob, fileName);
 
             // Post to the API (same as route.js POST endpoint)
-            const { data } = await apiClient.post("/api/api-notice", formData);
+            const { data } = await createNotice(formData);
             toast.success("Posted successfully");
 
             // Refresh the images list

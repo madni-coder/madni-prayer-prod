@@ -3,6 +3,7 @@ import React, { useRef, useState, useEffect } from "react";
 import { FaUser, FaAngleLeft, FaEnvelope, FaLock, FaMapMarkerAlt, FaMosque, FaPhone, FaVenusMars, FaSignInAlt, FaSignOutAlt, FaTrashAlt, FaAngleDown, FaPencilAlt, FaCheck, FaTimes } from "react-icons/fa";
 import apiClient from "../../lib/apiClient";
 import AnimatedLooader from "../../components/animatedLooader";
+import ErrorPopup from "../../components/ErrorPopup";
 import { useRouter } from "next/navigation";
 
 export default function MyProfilePage() {
@@ -35,6 +36,7 @@ export default function MyProfilePage() {
     const [loginLoading, setLoginLoading] = useState(false);
     const [loginError, setLoginError] = useState(null);
     const [showRegisterForm, setShowRegisterForm] = useState(false);
+    const [apiErrorPopup, setApiErrorPopup] = useState(null);
 
     // On mount: check for auth token/session. If present, fetch user details from API.
     useEffect(() => {
@@ -92,6 +94,7 @@ export default function MyProfilePage() {
                                 }
                             } catch (err) {
                                 console.error('Failed to fetch register users', err);
+                                setApiErrorPopup(err?.response?.data ? JSON.stringify(err.response.data, null, 2) : String(err));
                                 users = [];
                             }
                         }
@@ -206,6 +209,8 @@ export default function MyProfilePage() {
             console.error("Registration error:", err);
             const apiMessage = err?.response?.data?.error || err?.message || "Something went wrong. Please try again.";
             setError(apiMessage);
+            const errDetails = err.response?.data ? JSON.stringify(err.response.data, null, 2) : (err.message + (err.config ? `\\nTarget: ${err.config.baseURL || ''}${err.config.url}\\nMethod: ${err.config.method}` : ''));
+            setApiErrorPopup(errDetails);
             setLoading(false);
             // Re-open the register form so the user can correct errors
             setShowRegisterForm(true);
@@ -253,6 +258,8 @@ export default function MyProfilePage() {
             console.error('Login error', err);
             const msg = err?.response?.data?.error || err?.message || 'Login failed';
             setLoginError(msg);
+            const errDetails = err.response?.data ? JSON.stringify(err.response.data, null, 2) : (err.message + (err.config ? `\\nTarget: ${err.config.baseURL || ''}${err.config.url}\\nMethod: ${err.config.method}` : ''));
+            setApiErrorPopup(errDetails);
             setLoginLoading(false);
         }
     }
@@ -297,6 +304,8 @@ export default function MyProfilePage() {
             console.error('Update error', err);
             const msg = err?.response?.data?.error || err?.message || 'Update failed';
             setError(msg);
+            const errDetails = err.response?.data ? JSON.stringify(err.response.data, null, 2) : (err.message + (err.config ? `\\nTarget: ${err.config.baseURL || ''}${err.config.url}\\nMethod: ${err.config.method}` : ''));
+            setApiErrorPopup(errDetails);
         } finally {
             setLoading(false);
             setEditField(null);
@@ -612,6 +621,7 @@ export default function MyProfilePage() {
                                                         } catch (err) {
                                                             console.error('Delete error', err);
                                                             setError('Failed to delete account');
+                                                            setApiErrorPopup(err?.response?.data ? JSON.stringify(err.response.data, null, 2) : String(err));
                                                         }
                                                     }}
                                                 >
@@ -860,6 +870,8 @@ export default function MyProfilePage() {
                     )}
                 </div>
             </div>
+            {/* The new Error Popup component */}
+            <ErrorPopup error={apiErrorPopup} onClose={() => setApiErrorPopup(null)} />
 
             {showSuccessToast && (
                 <div className="fixed bottom-4 left-1/2 -translate-x-1/2 z-[100] w-[90%] max-w-3xl">

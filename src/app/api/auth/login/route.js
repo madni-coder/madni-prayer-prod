@@ -2,6 +2,26 @@ import { NextResponse } from 'next/server';
 import prisma from "../../../../../lib/prisma";
 import { supabase } from "../../../../../lib/supabase";
 
+// ─── CORS helpers ─────────────────────────────────────────────────────────────
+const CORS_HEADERS = {
+    "Access-Control-Allow-Origin": "*",
+    "Access-Control-Allow-Methods": "GET,POST,PATCH,PUT,DELETE,OPTIONS",
+    "Access-Control-Allow-Headers": "Content-Type, Authorization",
+};
+
+function corsResponse(body, init = {}) {
+    const { status = 200, headers = {} } = init;
+    return NextResponse.json(body, {
+        status,
+        headers: { ...CORS_HEADERS, ...headers },
+    });
+}
+
+export async function OPTIONS() {
+    return new Response(null, { status: 204, headers: CORS_HEADERS });
+}
+// ──────────────────────────────────────────────────────────────────────────────
+
 export async function POST(request) {
     try {
         const body = await request.json();
@@ -9,15 +29,12 @@ export async function POST(request) {
 
         // Validate required fields
         if (!email || !password) {
-            return NextResponse.json(
-                { error: 'Email and password are required' },
-                { status: 400 }
-            );
+            return corsResponse({ error: 'Email and password are required' }, { status: 400 });
         }
 
         // Check if Supabase is configured
         if (!supabase) {
-            return NextResponse.json(
+            return corsResponse(
                 { error: 'Supabase authentication is not configured. Please add NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY to your .env file' },
                 { status: 500 }
             );
@@ -30,28 +47,20 @@ export async function POST(request) {
         });
 
         if (authError) {
-            return NextResponse.json(
-                { error: 'Invalid email or password' },
-                { status: 401 }
-            );
+            return corsResponse({ error: 'Invalid email or password' }, { status: 401 });
         }
 
         // Get user data from database
-        const user = await prisma.user.findUnique({
-            where: { email }
-        });
+        const user = await prisma.user.findUnique({ where: { email } });
 
         if (!user) {
-            return NextResponse.json(
-                { error: 'User not found in database' },
-                { status: 404 }
-            );
+            return corsResponse({ error: 'User not found in database' }, { status: 404 });
         }
 
         // Return user without password
         const { password: _, ...userWithoutPassword } = user;
 
-        return NextResponse.json(
+        return corsResponse(
             {
                 message: 'Login successful',
                 user: userWithoutPassword,
@@ -61,9 +70,6 @@ export async function POST(request) {
         );
     } catch (error) {
         console.error('Error logging in:', error);
-        return NextResponse.json(
-            { error: 'Failed to login' },
-            { status: 500 }
-        );
+        return corsResponse({ error: 'Failed to login' }, { status: 500 });
     }
 }

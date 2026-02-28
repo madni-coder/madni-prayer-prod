@@ -4,7 +4,7 @@ import { useRef } from "react";
 import { FaCheckCircle } from "react-icons/fa";
 import { useRouter, useSearchParams } from "next/navigation";
 import { ArrowLeft, Pencil } from "lucide-react";
-import apiClient from "../../../../lib/apiClient";
+import { useAllMasjidContext } from "../../../../context/AllMasjidContext";
 
 const prayers = [
     { name: "Fajr", defaultTime: "5:00" },
@@ -34,6 +34,7 @@ function EditJamatTimePage() {
     const router = useRouter();
     const searchParams = useSearchParams();
     const masjidId = searchParams.get("id");
+    const { masjids: ctxMasjids, fetchAll, getById, patch: ctxPatch } = useAllMasjidContext();
 
     const [masjidName, setMasjidName] = useState("");
     const [colony, setColony] = useState("");
@@ -59,9 +60,12 @@ function EditJamatTimePage() {
     const fetchMasjidData = useCallback(async () => {
         try {
             console.log("Fetching masjid data for ID:", masjidId);
-            const { data } = await apiClient.get("/api/all-masjids", {
-                params: { id: masjidId },
-            });
+            // Ensure data is loaded
+            if (ctxMasjids.length === 0) {
+                await fetchAll();
+                return; // will re-run when ctxMasjids updates
+            }
+            const data = getById(masjidId);
             console.log("Response data:", data);
 
             if (data) {
@@ -76,9 +80,6 @@ function EditJamatTimePage() {
                 setMemberNames(data.memberNames && Array.isArray(data.memberNames) ? data.memberNames.join(', ') : "");
                 setMobileNumbers(data.mobileNumbers && Array.isArray(data.mobileNumbers) ? data.mobileNumbers.join(', ') : "");
                 setPassword(data.password || "");
-                // Respect user's persisted toggle preference. If there is a
-                // stored preference in localStorage, use that. Otherwise
-                // fall back to the value from the server.
                 try {
                     if (typeof window !== "undefined") {
                         const stored = localStorage.getItem(LOCAL_CITY_KEY);
@@ -103,7 +104,7 @@ function EditJamatTimePage() {
                     (data.juma || prayers[6].defaultTime).replace(/ am| pm/gi, ""),
                 ]);
             } else {
-                setError(data?.error || "Failed to fetch masjid data");
+                setError("Failed to fetch masjid data");
             }
         } catch (err) {
             console.error("Fetch error:", err);
@@ -111,11 +112,9 @@ function EditJamatTimePage() {
         } finally {
             setLoading(false);
         }
-    }, [masjidId]);
+    }, [masjidId, ctxMasjids, fetchAll, getById]);
 
     // Keep a ref to ensure we only fetch once per mount lifecycle.
-    // React Strict Mode in development can mount/unmount twice which may
-    // trigger duplicate network calls; this guard prevents that.
     const hasFetchedRef = useRef(false);
 
     useEffect(() => {
@@ -125,10 +124,10 @@ function EditJamatTimePage() {
             return;
         }
 
-        if (hasFetchedRef.current) return;
+        if (hasFetchedRef.current && ctxMasjids.length === 0) return;
         hasFetchedRef.current = true;
         fetchMasjidData();
-    }, [masjidId, fetchMasjidData]);
+    }, [masjidId, fetchMasjidData, ctxMasjids]);
 
     // initialize isRaipur from localStorage (persist user preference)
     useEffect(() => {
@@ -199,10 +198,7 @@ function EditJamatTimePage() {
                 juma: times[6],
             };
 
-            const { data } = await apiClient.patch(
-                "/api/all-masjids",
-                payload
-            );
+            const { data } = await ctxPatch(payload);
             setSuccess("Masjid details updated successfully");
             // redirect after slight delay
             setTimeout(() => router.push("/admin/all-masjids"), 800);

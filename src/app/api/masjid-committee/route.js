@@ -9,7 +9,12 @@ export async function GET(request) {
         const masjidId = searchParams.get("masjidId");
 
         if (!masjidId) {
-            return NextResponse.json({ error: "masjidId is required" }, { status: 400 });
+            const records = await prisma.allMasjid.findMany();
+            const data = records.map(record => {
+                const { password, ...rest } = record;
+                return rest;
+            });
+            return NextResponse.json({ data }, { status: 200 });
         }
 
         // The frontend passes 'masjidId' as parameter, but it actually represents the loginId

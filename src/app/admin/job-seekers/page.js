@@ -1,13 +1,12 @@
 "use client";
 import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import apiClient from "../../../lib/apiClient";
+import { useJobSeekerContext } from "../../../context/JobSeekerContext";
 
 export default function JobSeekersAdminPage() {
     const router = useRouter();
     const [loading, setLoading] = useState(true);
-    const [seekers, setSeekers] = useState([]);
-    const [seekersLoading, setSeekersLoading] = useState(true);
+    const { seekers, loading: seekersLoading, fetchAll } = useJobSeekerContext();
     const [currentPage, setCurrentPage] = useState(1);
     const [pageSize] = useState(15);
 
@@ -21,20 +20,8 @@ export default function JobSeekersAdminPage() {
     }, [router]);
 
     useEffect(() => {
-        async function fetchSeekers() {
-            try {
-                const { data } = await apiClient.get("/api/api-job-seekers");
-                setSeekers(data || []);
-            } catch (e) {
-                console.error("Error fetching job seekers:", e);
-                setSeekers([]);
-            } finally {
-                setSeekersLoading(false);
-            }
-        }
-
-        fetchSeekers();
-    }, []);
+        fetchAll();
+    }, [fetchAll]);
 
     useEffect(() => {
         setCurrentPage(1);

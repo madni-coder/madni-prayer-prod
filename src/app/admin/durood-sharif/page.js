@@ -5,7 +5,9 @@ import { Trash2 } from "lucide-react";
 import { FaBitcoin, FaMosque } from "react-icons/fa";
 import { FiCopy } from "react-icons/fi";
 import { useRouter } from "next/navigation";
-import apiClient from "../../../lib/apiClient";
+import apiClient from "../../../lib/apiClient"; // kept for ClearWinnerListButton internal calls
+import { useTasbihUserContext } from "../../../context/TasbihUserContext";
+import { useRewardContext } from "../../../context/RewardContext";
 
 const ToastContext = React.createContext(null);
 
@@ -164,9 +166,10 @@ export default function DuroodSharifPage() {
         }
     };
     const router = useRouter();
+    const { users, fetchAll: fetchTasbihUsers } = useTasbihUserContext();
+    const { create: createReward } = useRewardContext();
     const [loading, setLoading] = useState(true);
     const [search, setSearch] = useState("");
-    const [users, setUsers] = useState([]);
     const [currentPage, setCurrentPage] = useState(1);
     const [isPublishing, setIsPublishing] = useState(false);
     const [publishStatus, setPublishStatus] = useState(null);
@@ -210,18 +213,8 @@ export default function DuroodSharifPage() {
     }, [router]);
 
     useEffect(() => {
-        async function fetchUsers() {
-            try {
-                const { data: json } = await apiClient.get(
-                    "/api/api-tasbihUsers"
-                );
-                if (json?.ok) setUsers(json.data);
-            } catch (e) {
-                setUsers([]);
-            }
-        }
-        fetchUsers();
-    }, []);
+        fetchTasbihUsers();
+    }, [fetchTasbihUsers]);
 
     // Sort users by weekly counts (durood counts for this week) in descending order and assign TOP rank
     const sortedUsers = [...users].sort((a, b) => {
@@ -521,12 +514,9 @@ export default function DuroodSharifPage() {
                                                             })
                                                         );
                                                     const { data: result } =
-                                                        await apiClient.post(
-                                                            "/api/api-rewards",
-                                                            {
-                                                                items: payloadItems,
-                                                            }
-                                                        );
+                                                        await createReward({
+                                                            items: payloadItems,
+                                                        });
                                                     setPublishStatus({
                                                         ok:
                                                             result?.inserted ||

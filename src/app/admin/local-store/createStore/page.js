@@ -3,12 +3,13 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { ArrowLeft } from "lucide-react";
-import apiClient from "../../../../lib/apiClient";
+import { useLocalStoreContext } from "../../../../context/LocalStoreContext";
 import SocialMediaImageUpload from "../../../../components/SocialMediaImageUpload";
 import { toast } from "react-toastify";
 
 export default function CreateStorePage() {
     const router = useRouter();
+    const { create } = useLocalStoreContext();
     const [form, setForm] = useState({
         fullName: "",
         mobile: "",
@@ -26,19 +27,12 @@ export default function CreateStorePage() {
     async function handleSubmit(e) {
         e.preventDefault();
         try {
-            const { data } = await apiClient.post('/api/local-stores', form);
-            if (data?.ok) {
-                toast.success('Store created successfully!');
-                router.push('/admin/local-store');
-            } else {
-                console.error('API error', data);
-                toast.error(data?.error || 'Failed to save store.');
-                console.warn('Failed to save');
-            }
+            await create(form);
+            toast.success('Store created successfully!');
+            router.push('/admin/local-store');
         } catch (err) {
             console.error(err);
             toast.error('Failed to save store. Please try again.');
-            console.warn('Failed to save');
         }
     }
 

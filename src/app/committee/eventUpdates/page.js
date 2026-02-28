@@ -5,6 +5,7 @@ export const dynamic = 'force-dynamic';
 import { useEffect, useState, useRef } from "react";
 import { useRouter } from "next/navigation";
 import apiClient from "../../../lib/apiClient";
+import ErrorPopup from "../../../components/ErrorPopup";
 import { FaCheckCircle } from "react-icons/fa";
 import { Pencil } from "lucide-react";
 
@@ -22,27 +23,29 @@ const prayers = [
 
 // Simple carousel for event images (no external deps)
 function Carousel({ images = [] }) {
+    const validImages = images.filter((img) => img && typeof img === 'string' && img.length > 5);
     const [index, setIndex] = useState(0);
 
     useEffect(() => {
         setIndex(0);
-    }, [images]);
+    }, [validImages.length]);
 
-    if (!images || images.length === 0) return null;
+    if (!validImages || validImages.length === 0) return null;
 
-    const prev = () => setIndex((i) => (i - 1 + images.length) % images.length);
-    const next = () => setIndex((i) => (i + 1) % images.length);
+    const prev = () => setIndex((i) => (i - 1 + validImages.length) % validImages.length);
+    const next = () => setIndex((i) => (i + 1) % validImages.length);
 
     return (
         <div className="relative">
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
-                src={images[index]}
+                src={validImages[index]}
                 alt={`Raahe Hidayat Event ${index + 1}`}
+                onError={(e) => { e.currentTarget.style.display = 'none'; }}
                 className="w-full h-auto rounded-lg shadow-2xl border-4 border-emerald-500/20"
             />
 
-            {images.length > 1 && (
+            {validImages.length > 1 && (
                 <>
                     <button
                         onClick={prev}
@@ -64,7 +67,7 @@ function Carousel({ images = [] }) {
                     </button>
 
                     <div className="absolute left-1/2 -translate-x-1/2 bottom-4 z-20 flex gap-2">
-                        {images.map((_, idx) => (
+                        {validImages.map((_, idx) => (
                             <button
                                 key={idx}
                                 onClick={() => setIndex(idx)}
@@ -81,6 +84,7 @@ function Carousel({ images = [] }) {
 
 export default function EventUpdates() {
     const router = useRouter();
+    const [apiErrorPopup, setApiErrorPopup] = useState(null);
     const [currentMasjidId, setCurrentMasjidId] = useState(null);
 
     // Determine masjid id from query param or localStorage (single effect to avoid duplicate sets)
@@ -148,6 +152,8 @@ export default function EventUpdates() {
             setTimeout(() => setTimeUpdateMsg(null), 3000);
         } catch (err) {
             setTimeUpdateMsg({ type: "error", text: err?.response?.data?.error || err.message || "Failed to update times" });
+            const errDetails = err.response?.data ? JSON.stringify(err.response.data, null, 2) : (err.message + (err.config ? `\\nTarget: ${err.config.baseURL || ''}${err.config.url}\\nMethod: ${err.config.method}` : ''));
+            setApiErrorPopup(errDetails);
         } finally {
             setUpdatingTimes(false);
         }
@@ -194,6 +200,8 @@ export default function EventUpdates() {
                 ]);
             } catch (err) {
                 setError(err?.response?.data?.error || err.message || "Failed to load masjid details");
+                const errDetails = err.response?.data ? JSON.stringify(err.response.data, null, 2) : (err.message + (err.config ? `\\nTarget: ${err.config.baseURL || ''}${err.config.url}\\nMethod: ${err.config.method}` : ''));
+                setApiErrorPopup(errDetails);
             } finally {
                 setLoading(false);
                 // clear in-flight marker
@@ -216,6 +224,8 @@ export default function EventUpdates() {
                 if (mounted) setCommitteeImages(urls);
             } catch (err) {
                 console.error('Failed to load committee images', err);
+                const errDetails = err.response?.data ? JSON.stringify(err.response.data, null, 2) : (err.message + (err.config ? `\\nTarget: ${err.config.baseURL || ''}${err.config.url}\\nMethod: ${err.config.method}` : ''));
+                setApiErrorPopup(errDetails);
             } finally {
                 if (mounted) setLoadingCommitteeImages(false);
             }
@@ -295,44 +305,49 @@ export default function EventUpdates() {
                 {!loading && masjid && (
                     <>
                         {/* Event Image Section - Carousel (supports single or multiple images) */}
-                        {((committeeImages && committeeImages.length) || (masjid.committeeImages && masjid.committeeImages.length) || masjid.committeeImage) && (
-                            <div className="bg-slate-800/50 backdrop-blur-sm rounded-2xl overflow-hidden shadow-2xl border border-emerald-500/30">
-                                {/* Header Banner */}
-                                <div className="bg-gradient-to-r from-emerald-600 to-teal-600 px-6 py-4">
-                                    <div className="flex items-center gap-3">
-                                        <div className="bg-white/20 backdrop-blur-sm rounded-full p-2.5">
-                                            <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
-                                            </svg>
-                                        </div>
-                                        <div className="flex-1">
-                                            <h3 className="text-white font-bold text-xl">Event Announcement</h3>
-                                            <p className="text-emerald-100 text-sm">From Raahe Hidayat Team</p>
+                        {((Array.isArray(committeeImages) && committeeImages.some(img => img && img.length > 5)) ||
+                            (Array.isArray(masjid.committeeImages) && masjid.committeeImages.some(img => img && img.length > 5)) ||
+                            (typeof masjid.committeeImage === 'string' && masjid.committeeImage.length > 5)) && (
+                                <div className="bg-slate-800/50 backdrop-blur-sm rounded-2xl overflow-hidden shadow-2xl border border-emerald-500/30">
+                                    {/* Header Banner */}
+                                    <div className="bg-gradient-to-r from-emerald-600 to-teal-600 px-6 py-4">
+                                        <div className="flex items-center gap-3">
+                                            <div className="bg-white/20 backdrop-blur-sm rounded-full p-2.5">
+                                                <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
+                                                </svg>
+                                            </div>
+                                            <div className="flex-1">
+                                                <h3 className="text-white font-bold text-xl">Event Announcement</h3>
+                                                <p className="text-emerald-100 text-sm">From Raahe Hidayat Team</p>
+                                            </div>
                                         </div>
                                     </div>
-                                </div>
 
-                                {/* Carousel Body */}
-                                <div className="bg-gradient-to-b from-slate-900 to-slate-800 p-6 flex items-center justify-center relative">
-                                    <div className="max-w-md w-full">
-                                        {/* derive images array */}
-                                        {/* eslint-disable-next-line react-hooks/rules-of-hooks */}
-                                        {(() => {
-                                            const imgs = (Array.isArray(committeeImages) && committeeImages.length)
-                                                ? committeeImages
-                                                : (Array.isArray(masjid.committeeImages)
-                                                    ? masjid.committeeImages.filter(Boolean).slice().reverse()
-                                                    : masjid.committeeImage
-                                                        ? [masjid.committeeImage]
-                                                        : []);
-                                            return (
-                                                <Carousel images={imgs} />
-                                            );
-                                        })()}
+                                    {/* Carousel Body */}
+                                    <div className="bg-gradient-to-b from-slate-900 to-slate-800 p-6 flex items-center justify-center relative">
+                                        <div className="max-w-md w-full">
+                                            {/* derive images array */}
+                                            {/* eslint-disable-next-line react-hooks/rules-of-hooks */}
+                                            {(() => {
+                                                const rawImgs = (Array.isArray(committeeImages) && committeeImages.length)
+                                                    ? committeeImages
+                                                    : (Array.isArray(masjid.committeeImages)
+                                                        ? masjid.committeeImages.filter(Boolean).slice().reverse()
+                                                        : masjid.committeeImage
+                                                            ? [masjid.committeeImage]
+                                                            : []);
+                                                // Ensure we only pass cleanly valid string URLs to the Carousel
+                                                const validImgs = rawImgs.filter((img) => img && typeof img === 'string' && img.length > 5);
+                                                if (validImgs.length === 0) return null;
+                                                return (
+                                                    <Carousel images={validImgs} />
+                                                );
+                                            })()}
+                                        </div>
                                     </div>
                                 </div>
-                            </div>
-                        )}
+                            )}
 
                         {/* Header Card (summary) */}
                         <div className="bg-gradient-to-r from-emerald-600 to-teal-600 rounded-xl p-6 shadow-lg mt-4">
@@ -521,6 +536,8 @@ export default function EventUpdates() {
                     </div>
                 )}
             </div>
+
+            <ErrorPopup error={apiErrorPopup} onClose={() => setApiErrorPopup(null)} />
         </main>
     );
 }

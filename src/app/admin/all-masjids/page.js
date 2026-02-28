@@ -3,15 +3,15 @@
 import { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
 import { RefreshCw, X, Pencil, Copy, Check } from "lucide-react";
-import apiClient from "../../../lib/apiClient";
+import { useAllMasjidContext } from "../../../context/AllMasjidContext";
 import { useRouter } from "next/navigation";
 
 export default function Page() {
     const router = useRouter();
 
     // All state hooks at the top level - called unconditionally
+    const { masjids, loading: ctxLoading, fetchAll: ctxFetchAll } = useAllMasjidContext();
     const [loading, setLoading] = useState(true);
-    const [masjids, setMasjids] = useState([]);
     const [error, setError] = useState(null);
     const [searchQuery, setSearchQuery] = useState("");
     const [showRaipur, setShowRaipur] = useState(false);
@@ -39,15 +39,14 @@ export default function Page() {
         try {
             setError(null);
             setReloading(true);
-            const { data } = await apiClient.get("/api/all-masjids");
-            setMasjids(data?.data || []);
+            await ctxFetchAll();
         } catch (e) {
             setError(e?.response?.data?.error || e.message);
         } finally {
             setLoading(false);
             setReloading(false);
         }
-    }, []);
+    }, [ctxFetchAll]);
 
     // Authentication check effect
     useEffect(() => {

@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import AdminSidebar from "./components/AdminSidebar";
 import { Menu } from "lucide-react";
+import AppProviders from "../../context/AppProviders";
 
 export default function AdminLayout({ children }) {
     const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -50,7 +51,9 @@ export default function AdminLayout({ children }) {
                 </button>
 
                 {/* Page content */}
-                <main className="p-4 lg:p-6 pt-16 lg:pt-6">{children}</main>
+                <main className="p-4 lg:p-6 pt-16 lg:pt-6">
+                    <AppProviders>{children}</AppProviders>
+                </main>
             </div>
 
             {/* Hide TopNav only within admin pages (style is scoped to admin layout render) */}

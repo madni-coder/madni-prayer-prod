@@ -22,7 +22,7 @@ export function middleware(req) {
         if (allowOrigin !== "*") headers.set("Vary", "Origin");
         headers.set(
             "Access-Control-Allow-Methods",
-            "GET,HEAD,POST,PUT,DELETE,OPTIONS"
+            "GET,HEAD,POST,PUT,PATCH,DELETE,OPTIONS"
         );
         headers.set(
             "Access-Control-Allow-Headers",
@@ -53,7 +53,7 @@ export function middleware(req) {
             if (allowOrigin !== "*") redirectRes.headers.set("Vary", "Origin");
             redirectRes.headers.set(
                 "Access-Control-Allow-Methods",
-                "GET,HEAD,POST,PUT,DELETE,OPTIONS"
+                "GET,HEAD,POST,PUT,PATCH,DELETE,OPTIONS"
             );
             redirectRes.headers.set(
                 "Access-Control-Allow-Headers",
@@ -81,7 +81,7 @@ export function middleware(req) {
             if (allowOrigin !== "*") redirectRes.headers.set("Vary", "Origin");
             redirectRes.headers.set(
                 "Access-Control-Allow-Methods",
-                "GET,HEAD,POST,PUT,DELETE,OPTIONS"
+                "GET,HEAD,POST,PUT,PATCH,DELETE,OPTIONS"
             );
             redirectRes.headers.set(
                 "Access-Control-Allow-Headers",
@@ -113,7 +113,7 @@ export function middleware(req) {
     if (allowOrigin !== "*") res.headers.set("Vary", "Origin");
     res.headers.set(
         "Access-Control-Allow-Methods",
-        "GET,HEAD,POST,PUT,DELETE,OPTIONS"
+        "GET,HEAD,POST,PUT,PATCH,DELETE,OPTIONS"
     );
     res.headers.set(
         "Access-Control-Allow-Headers",

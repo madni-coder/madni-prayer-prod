@@ -2,7 +2,8 @@
 import { useState, useEffect, useRef } from "react";
 import { FaPencilAlt, FaCheckCircle } from "react-icons/fa";
 import { X, RotateCcw } from "lucide-react";
-import apiClient from "../../../lib/apiClient";
+import { useAllMasjidContext } from "../../../context/AllMasjidContext";
+import { useJamatTimeContext } from "../../../context/JamatTimeContext";
 import { useRouter } from "next/navigation";
 
 const prayers = [
@@ -18,11 +19,12 @@ const prayers = [
 export default function JamatTimesPage() {
     const router = useRouter();
     const fetchedMasjidsRef = useRef(false);
+    const { masjids, fetchAll: fetchAllMasjids } = useAllMasjidContext();
+    const { patch: patchJamatTime } = useJamatTimeContext();
 
     // All state hooks at the top level - called unconditionally
     const [loading, setLoading] = useState(true);
     const [colonies, setColonies] = useState([]);
-    const [masjids, setMasjids] = useState([]);
     const [selectedColony, setSelectedColony] = useState("");
     const [selectedMasjid, setSelectedMasjid] = useState("");
     const [times, setTimes] = useState(prayers.map((p) => p.defaultTime));
@@ -65,20 +67,8 @@ export default function JamatTimesPage() {
             try {
                 setLoading(true);
 
-                // Fetch masjids
-                const { data: masjidsData } = await apiClient.get(
-                    "/api/all-masjids"
-                );
-                setMasjids(masjidsData?.data || []);
-
-                const uniqueColonies = [
-                    ...new Set(
-                        masjidsData?.data
-                            ?.map((masjid) => masjid.colony)
-                            .filter(Boolean) || []
-                    ),
-                ];
-                setColonies(uniqueColonies.map((colony) => ({ name: colony })));
+                // Fetch masjids via context
+                await fetchAllMasjids();
             } catch (error) {
                 if (error.name !== "AbortError") {
                     console.error("Error fetching data:", error);
@@ -91,7 +81,21 @@ export default function JamatTimesPage() {
 
         fetchData();
         return () => ac.abort();
-    }, [isAuthenticated]);
+    }, [isAuthenticated, fetchAllMasjids]);
+
+    // Derive colonies from context masjids
+    useEffect(() => {
+        if (masjids.length > 0) {
+            const uniqueColonies = [
+                ...new Set(
+                    masjids
+                        .map((masjid) => masjid.colony)
+                        .filter(Boolean)
+                ),
+            ];
+            setColonies(uniqueColonies.map((colony) => ({ name: colony })));
+        }
+    }, [masjids]);
 
     // Fetch jamat times effect
     useEffect(() => {
@@ -238,28 +242,13 @@ export default function JamatTimesPage() {
                         break;
                 }
             });
-            const response = await apiClient.patch(
-                "/api/api-jamatTimes",
-                updateData
-            );
+            const response = await patchJamatTime(updateData);
 
-            if (response?.status >= 200 && response?.status < 300) {
-                setSaveMessage("Jamat times saved successfully!");
-                setTimeout(() => setSaveMessage(""), 3000);
+            setSaveMessage("Jamat times saved successfully!");
+            setTimeout(() => setSaveMessage(""), 3000);
 
-                // Update the masjids data in state
-                setMasjids((prevMasjids) =>
-                    prevMasjids.map((masjid) =>
-                        masjid.id === masjidData.id
-                            ? { ...masjid, ...updateData }
-                            : masjid
-                    )
-                );
-            } else {
-                setError(
-                    response?.data?.error || "Failed to save jamat times"
-                );
-            }
+            // Refresh masjids from context
+            await fetchAllMasjids();
         } catch (error) {
             console.error("Error saving jamat times:", error);
             setError(error?.response?.data?.error || "Error saving jamat times");

@@ -1,16 +1,15 @@
 "use client";
 import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import apiClient from "../../../lib/apiClient";
+import { useZikrContext } from "../../../context/ZikrContext";
 // no icon needed for this table view
 
 export const dynamic = 'force-static';
 
 export default function ZikrCountsPage() {
     const router = useRouter();
+    const { zikrList, loading: zikrLoading, fetchAll } = useZikrContext();
     const [loading, setLoading] = useState(true);
-    const [zikrList, setZikrList] = useState([]);
-    const [zikrLoading, setZikrLoading] = useState(true);
     const [currentPage, setCurrentPage] = useState(1);
     const [pageSize] = useState(15); // fixed page size (changed to 15)
 
@@ -28,23 +27,8 @@ export default function ZikrCountsPage() {
     // no users fetch — this page only shows zikr records
 
     useEffect(() => {
-        async function fetchZikr() {
-            try {
-                const { data } = await apiClient.get("/api/api-zikr");
-                // route returns either an array (all) or an object (single)
-                if (Array.isArray(data)) setZikrList(data);
-                else if (data) setZikrList([data]);
-                else setZikrList([]);
-            } catch (e) {
-                console.error("Error fetching zikr:", e);
-                setZikrList([]);
-            } finally {
-                setZikrLoading(false);
-            }
-        }
-
-        fetchZikr();
-    }, []);
+        fetchAll();
+    }, [fetchAll]);
 
     // reset page when data changes
     useEffect(() => {

@@ -2,35 +2,20 @@
 
 import { useState, useEffect } from 'react';
 import { Loader2, Trash2 } from 'lucide-react';
-import apiClient from '../../../lib/apiClient';
+import { useFreeServiceContext } from '../../../context/FreeServiceContext';
 
 export default function FreeServicesPage() {
-    const [services, setServices] = useState([]);
-    const [loading, setLoading] = useState(true);
-    const [error, setError] = useState('');
+    const { services, loading, error: ctxError, fetchAll, remove: ctxRemove, patch: ctxPatch } = useFreeServiceContext();
     const [currentPage, setCurrentPage] = useState(1);
     const itemsPerPage = 15;
     const [toastMessage, setToastMessage] = useState('');
     const [toastVariant, setToastVariant] = useState('success');
     const [showToast, setShowToast] = useState(false);
+    const error = ctxError;
 
     useEffect(() => {
-        fetchServices();
-    }, []);
-
-    const fetchServices = async () => {
-        try {
-            setLoading(true);
-            const { data } = await apiClient.get('/api/free-service');
-            setServices(data.data || []);
-            setError('');
-        } catch (err) {
-            console.error('Error fetching free services:', err);
-            setError('Failed to load free services');
-        } finally {
-            setLoading(false);
-        }
-    };
+        fetchAll();
+    }, [fetchAll]);
 
     const handleDelete = async (id) => {
         if (!confirm('Are you sure you want to delete this service request?')) {
@@ -38,9 +23,7 @@ export default function FreeServicesPage() {
         }
 
         try {
-            await apiClient.delete('/api/free-service', { data: { id } });
-            // Refresh the list
-            fetchServices();
+            await ctxRemove(id);
         } catch (err) {
             console.error('Error deleting service:', err);
             alert('Failed to delete service request');
@@ -48,13 +31,8 @@ export default function FreeServicesPage() {
     };
 
     const handleToggle = async (id, value) => {
-        // Optimistic UI update
-        const prev = services;
         try {
-            const updated = services.map((s) => (s.id === id ? { ...s, isServiceDone: value } : s));
-            setServices(updated);
-
-            await apiClient.patch('/api/free-service', { id, isServiceDone: value });
+            await ctxPatch({ id, isServiceDone: value });
 
             // show theme-aware toast
             setToastMessage(value ? 'Service Completed' : 'Service Incomplete');
@@ -63,8 +41,6 @@ export default function FreeServicesPage() {
             setTimeout(() => setShowToast(false), 2500);
         } catch (err) {
             console.error('Error updating service:', err);
-            // revert optimistic update
-            setServices(prev);
             setToastMessage('Failed to update service status');
             setToastVariant('error');
             setShowToast(true);

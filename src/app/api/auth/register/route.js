@@ -91,6 +91,7 @@ export async function GET(request) {
 
 export async function PATCH(request) {
     try {
+        
         const body = await request.json();
         // Identify user by id or email
         const { id, email, fullName, gender, address, areaMasjid, mobile, password } = body;

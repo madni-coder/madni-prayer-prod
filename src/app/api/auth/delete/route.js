@@ -1,6 +1,25 @@
 import { NextResponse } from 'next/server';
 import prisma from "../../../../../lib/prisma";
-import { supabase } from "../../../../../lib/supabase";
+
+// ─── CORS helpers ─────────────────────────────────────────────────────────────
+const CORS_HEADERS = {
+    "Access-Control-Allow-Origin": "*",
+    "Access-Control-Allow-Methods": "GET,POST,PATCH,PUT,DELETE,OPTIONS",
+    "Access-Control-Allow-Headers": "Content-Type, Authorization",
+};
+
+function corsResponse(body, init = {}) {
+    const { status = 200, headers = {} } = init;
+    return NextResponse.json(body, {
+        status,
+        headers: { ...CORS_HEADERS, ...headers },
+    });
+}
+
+export async function OPTIONS() {
+    return new Response(null, { status: 204, headers: CORS_HEADERS });
+}
+// ──────────────────────────────────────────────────────────────────────────────
 
 export async function DELETE(request) {
     try {
@@ -8,13 +27,13 @@ export async function DELETE(request) {
         const { email } = body;
 
         if (!email) {
-            return NextResponse.json({ error: 'Email is required' }, { status: 400 });
+            return corsResponse({ error: 'Email is required' }, { status: 400 });
         }
 
         // Verify user exists
         const user = await prisma.user.findUnique({ where: { email } });
         if (!user) {
-            return NextResponse.json({ error: 'User not found' }, { status: 404 });
+            return corsResponse({ error: 'User not found' }, { status: 404 });
         }
 
         // Delete related tasbih users and zikr history where they match user's mobile or fullName
@@ -29,25 +48,14 @@ export async function DELETE(request) {
 
         // Run deletes in a transaction: delete tasbih users, delete zikr rows, then delete user
         await prisma.$transaction([
-            // delete from tasbih_users
             prisma.tasbihUser.deleteMany({ where: deleteConditions.length ? { OR: deleteConditions } : {} }),
-            // delete from zikr
             prisma.zikr.deleteMany({ where: zikrDeleteConditions.length ? { OR: zikrDeleteConditions } : {} }),
-            // delete user
             prisma.user.delete({ where: { email } })
         ]);
 
-        // Optionally delete user from Supabase Auth if admin privileges are available
-        // (This requires a service_role key and admin client; keep commented if not configured)
-        // try {
-        //     await supabase.auth.admin.deleteUser(user.id);
-        // } catch (e) {
-        //     // ignore supabase delete errors if not configured
-        // }
-
-        return NextResponse.json({ message: 'User deleted' }, { status: 200 });
+        return corsResponse({ message: 'User deleted' }, { status: 200 });
     } catch (error) {
         console.error('Error deleting user:', error);
-        return NextResponse.json({ error: 'Failed to delete user' }, { status: 500 });
+        return corsResponse({ error: 'Failed to delete user' }, { status: 500 });
     }
 }

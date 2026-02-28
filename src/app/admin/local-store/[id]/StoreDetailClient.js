@@ -1,40 +1,33 @@
 "use client";
 
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import apiClient from "../../../../lib/apiClient";
+import { useLocalStoreContext } from "../../../../context/LocalStoreContext";
 import { toast } from "react-toastify";
 import { ArrowLeft } from "lucide-react";
 
 export default function StoreDetailClient({ id }) {
     const router = useRouter();
+    const { stores, loading: ctxLoading, fetchAll, getById, remove: ctxRemove } = useLocalStoreContext();
     const [store, setStore] = useState(null);
-    const [loading, setLoading] = useState(false);
-
-    const fetchedRef = useRef(false);
+    const [loading, setLoading] = useState(true);
+    const fetchedRef = typeof window !== "undefined" ? require("react").useRef(false) : { current: false };
 
     useEffect(() => {
         if (!id) return;
-        if (fetchedRef.current) return; // avoid duplicate fetches (React strict/dev double-invoke)
-        fetchedRef.current = true;
+        if (!fetchedRef.current && stores.length === 0) {
+            fetchedRef.current = true;
+            fetchAll().then(() => setLoading(false));
+        } else if (stores.length > 0) {
+            setLoading(false);
+        }
+    }, [id, fetchAll, stores.length]);
 
-        const fetchStore = async () => {
-            setLoading(true);
-            try {
-                const { data } = await apiClient.get(`/api/local-stores?id=${id}`);
-                if (data?.ok) {
-                    const payload = Array.isArray(data.data) ? data.data[0] : data.data;
-                    setStore(payload || null);
-                } else setStore(null);
-            } catch (err) {
-                console.error('Failed to fetch store', err);
-                setStore(null);
-            } finally {
-                setLoading(false);
-            }
-        };
-        fetchStore();
-    }, [id]);
+    useEffect(() => {
+        if (!id || loading) return;
+        const found = getById(id);
+        setStore(found || null);
+    }, [id, stores, getById, loading]);
 
     return (
         <div className="p-6">
@@ -52,14 +45,9 @@ export default function StoreDetailClient({ id }) {
                                 onClick={async () => {
                                     if (!confirm('Delete store?')) return;
                                     try {
-                                        const { data } = await apiClient.delete('/api/local-stores', { data: { id: store.id } });
-                                        if (data?.ok) {
-                                            toast.success('Store deleted');
-                                            router.push('/admin/local-store');
-                                        } else {
-                                            console.error('Delete failed', data);
-                                            toast.error(data?.error || 'Failed to delete store.');
-                                        }
+                                        await ctxRemove(store.id);
+                                        toast.success('Store deleted');
+                                        router.push('/admin/local-store');
                                     } catch (err) {
                                         console.error('Delete error', err);
                                         toast.error('Failed to delete store.');

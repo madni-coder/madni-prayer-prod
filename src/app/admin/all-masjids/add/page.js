@@ -3,7 +3,7 @@ import { useState, useEffect } from "react";
 import { FaCheckCircle } from "react-icons/fa";
 import { useRouter } from "next/navigation";
 import { ArrowLeft, Plus } from "lucide-react";
-import apiClient from "../../../../lib/apiClient";
+import { useAllMasjidContext } from "../../../../context/AllMasjidContext";
 
 const prayers = [
     { name: "Fajr", defaultTime: "6:00" },
@@ -17,6 +17,7 @@ const prayers = [
 
 export default function AddMasjidPage() {
     const router = useRouter();
+    const { create } = useAllMasjidContext();
     const LOCAL_CITY_KEY = "masjid_city_isRaipur";
     const [masjidName, setMasjidName] = useState("");
     const [colony, setColony] = useState("");
@@ -86,10 +87,7 @@ export default function AddMasjidPage() {
                 juma: times[6],
             };
 
-            const { data } = await apiClient.post(
-                "/api/all-masjids",
-                payload
-            );
+            const { data } = await create(payload);
             setSuccess("Masjid added successfully");
             // redirect after slight delay
             setTimeout(() => router.push("/admin/all-masjids"), 800);
