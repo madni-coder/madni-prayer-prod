@@ -6,6 +6,7 @@ import TopNav from "./TopNav";
 import BottomNav from "./BottomNav";
 import IosClassSetter from "./IosClassSetter.client";
 import ForceUpdateChecker from "../components/ForceUpdateChecker.client";
+import AppProviders from "../context/AppProviders";
 
 const geistSans = Geist({
     variable: "--font-geist-sans",
@@ -33,7 +34,9 @@ export default function RootLayout({ children }) {
                 <IosClassSetter />
                 <ForceUpdateChecker />
 
-                {children}
+                <AppProviders>
+                    {children}
+                </AppProviders>
 
                 <ToastContainer
                     position="top-right"

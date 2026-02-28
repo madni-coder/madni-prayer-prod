@@ -1,28 +1,44 @@
 "use client";
-import { createContext, useContext, useState, useCallback } from "react";
+import { createContext, useContext, useState, useCallback, useRef } from "react";
 import apiClient from "../lib/apiClient";
 
 const KanzulContext = createContext();
 
 export function KanzulProvider({ children }) {
+    const fetchedRef = useRef(false);
+    const fetchPromiseRef = useRef(null);
     const [pdfData, setPdfData] = useState(null);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState(null);
 
-    const fetchPdf = useCallback(async () => {
+    const fetchPdf = useCallback(async (params = {}) => {
+        const force = params?.force === true;
+        if (!force && (fetchedRef.current || fetchPromiseRef.current)) {
+            if (fetchPromiseRef.current) return fetchPromiseRef.current;
+            return []; // Already fetched
+        }
+
         setLoading(true);
         setError(null);
-        try {
-            const res = await apiClient.get("/api/kanzul");
-            const data = res.data;
-            setPdfData(data);
-            return data;
-        } catch (err) {
-            setError(err.message || "Failed to fetch Kanzul Imaan");
-            return null;
-        } finally {
-            setLoading(false);
-        }
+
+        const promise = (async () => {
+            try {
+                const res = await apiClient.get("/api/kanzul");
+                const data = res.data;
+                setPdfData(data);
+                return data;
+            } catch (err) {
+                setError(err.message || "Failed to fetch Kanzul Imaan");
+                return null;
+            } finally {
+                setLoading(false);
+                fetchPromiseRef.current = null;
+            }
+        })();
+
+        fetchPromiseRef.current = promise;
+        promise.then(() => { fetchedRef.current = true; }).catch(() => { });
+        return promise;
     }, []);
 
     return (
