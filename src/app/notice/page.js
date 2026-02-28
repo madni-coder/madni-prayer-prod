@@ -3,47 +3,29 @@
 import { useEffect, useState, useRef } from "react";
 import { FaAngleLeft } from "react-icons/fa";
 import { useRouter } from "next/navigation";
-import apiClient from "../../lib/apiClient";
+import { useNoticeContext } from "../../context/NoticeContext";
 
 export default function NoticeFeed() {
-    const [images, setImages] = useState([]);
-    const [error, setError] = useState(null);
-    const [loading, setLoading] = useState(true);
+    const { images: contextImages, loading, error, fetchAll } = useNoticeContext();
     const router = useRouter();
 
-    const fetchedRef = useRef(false);
-
     useEffect(() => {
-        if (fetchedRef.current) return; // guard against double calls (React Strict Mode)
-        fetchedRef.current = true;
-
-        async function fetchImages() {
-            setLoading(true);
+        // ALWAYS fetch forces upon entering this page (real-time updates)
+        async function fetchNotices() {
             try {
-                const { data } = await apiClient.get("/api/api-notice");
-                // Show newest images first
-                const imgs = data.images || [];
-                const list = Array.isArray(imgs) ? imgs.slice().reverse() : imgs;
-                setImages(list);
-                // mark as seen: store the total count (not reversed length)
-                try {
-                    const total = Array.isArray(imgs) ? imgs.length : imgs ? 1 : 0;
-                    localStorage.setItem("notice_last_seen_count", String(total));
-                    // Invalidate home-page session cache so badge resets on next visit
-                    sessionStorage.removeItem("notice_total_cache");
-                } catch (e) {
-                    // ignore storage errors
-                }
-                setError(null);
-            } catch (err) {
-                setError(err?.message || "An error occurred");
-            } finally {
-                setLoading(false);
+                const data = await fetchAll({ force: true });
+                const total = Array.isArray(data) ? data.length : data ? 1 : 0;
+                localStorage.setItem("notice_last_seen_count", String(total));
+                sessionStorage.removeItem("notice_total_cache");
+            } catch (e) {
+                // ignore
             }
         }
+        fetchNotices();
+    }, [fetchAll]);
 
-        fetchImages();
-    }, []);
+    // Show newest images first based on context items
+    const images = Array.isArray(contextImages) ? contextImages.slice().reverse() : [];
 
     return (
         <div className="min-h-screen relative flex flex-col items-center bg-base-200 pt-6 pb-24">
