@@ -1,28 +1,44 @@
 "use client";
-import { createContext, useContext, useState, useCallback } from "react";
+import { createContext, useContext, useState, useCallback, useRef } from "react";
 import apiClient from "../lib/apiClient";
 
 const NoticeContext = createContext();
 
 export function NoticeProvider({ children }) {
+    const fetchedRef = useRef(false);
+    const fetchPromiseRef = useRef(null);
     const [images, setImages] = useState([]);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState(null);
 
-    const fetchAll = useCallback(async () => {
-        setLoading(true);
-        setError(null);
-        try {
-            const res = await apiClient.get("/api/api-notice");
-            const data = res.data?.images || [];
-            setImages(data);
-            return data;
-        } catch (err) {
-            setError(err.message || "Failed to fetch notices");
-            return [];
-        } finally {
-            setLoading(false);
+    const fetchAll = useCallback(async (params = {}) => {
+        const force = params?.force === true;
+        if (!force && (fetchedRef.current || fetchPromiseRef.current)) {
+            if (fetchPromiseRef.current) return fetchPromiseRef.current;
+            return []; // Already fetched
         }
+
+        const promise = (async () => {
+            setLoading(true);
+            setError(null);
+            try {
+                const res = await apiClient.get("/api/api-notice");
+                const data = res.data?.images || [];
+                setImages(data);
+                return data;
+            } catch (err) {
+                setError(err.message || "Failed to fetch notices");
+                return [];
+            } finally {
+                setLoading(false);
+                fetchPromiseRef.current = null;
+            }
+        })();
+
+        fetchPromiseRef.current = promise;
+        promise.then(() => { fetchedRef.current = true; }).catch(() => { });
+
+        return promise;
     }, []);
 
     const getById = useCallback(

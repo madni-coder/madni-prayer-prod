@@ -52,7 +52,7 @@ export default function AdminLayout({ children }) {
 
                 {/* Page content */}
                 <main className="p-4 lg:p-6 pt-16 lg:pt-6">
-                    <AppProviders>{children}</AppProviders>
+                    {children}
                 </main>
             </div>
 

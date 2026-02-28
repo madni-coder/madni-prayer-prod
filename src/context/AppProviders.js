@@ -1,5 +1,6 @@
 "use client";
 
+import AppInitializer from "../components/AppInitializer";
 import { JobListProvider } from "./JobListContext";
 import { JobSeekerProvider } from "./JobSeekerContext";
 import { NoticeProvider } from "./NoticeContext";
@@ -37,7 +38,9 @@ export default function AppProviders({ children }) {
                                                                 <MasjidCommitteeEventProvider>
                                                                     <KanzulProvider>
                                                                         <PdfProxyProvider>
-                                                                            {children}
+                                                                            <AppInitializer>
+                                                                                {children}
+                                                                            </AppInitializer>
                                                                         </PdfProxyProvider>
                                                                     </KanzulProvider>
                                                                 </MasjidCommitteeEventProvider>
