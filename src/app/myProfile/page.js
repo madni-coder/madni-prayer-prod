@@ -178,6 +178,16 @@ export default function MyProfilePage() {
             }
             if (data?.user) {
                 localStorage.setItem('userData', JSON.stringify(data.user));
+                // Keep registerUsers cache in sync so subsequent loads don't show stale data
+                try {
+                    const cached = localStorage.getItem('registerUsers');
+                    let usersArr = cached ? JSON.parse(cached) : [];
+                    usersArr = usersArr.filter(u => u.email !== data.user.email);
+                    usersArr.unshift(data.user);
+                    localStorage.setItem('registerUsers', JSON.stringify(usersArr));
+                } catch (e) {
+                    // ignore storage/parse errors
+                }
             }
 
             // update local state and show success
@@ -246,6 +256,14 @@ export default function MyProfilePage() {
                 setAreaMasjid(data.user.areaMasjid || '');
                 setMobileValue(data.user.mobile || '');
                 setGender(data.user.gender || '');
+                // Keep registerUsers cache in sync after login
+                try {
+                    const cached = localStorage.getItem('registerUsers');
+                    let usersArr = cached ? JSON.parse(cached) : [];
+                    usersArr = usersArr.filter(u => u.email !== data.user.email);
+                    usersArr.unshift(data.user);
+                    localStorage.setItem('registerUsers', JSON.stringify(usersArr));
+                } catch (e) { }
             }
 
             setIsAuthenticated(true);
@@ -294,6 +312,20 @@ export default function MyProfilePage() {
                 setAreaMasjid(user.areaMasjid || '');
                 setMobileValue(user.mobile || '');
                 try { localStorage.setItem('userData', JSON.stringify(user)); } catch (e) { }
+                // Also update registerUsers cache if present so UI doesn't keep showing stale cached user list
+                try {
+                    const cached = localStorage.getItem('registerUsers');
+                    if (cached) {
+                        const usersArr = JSON.parse(cached);
+                        const idx = usersArr.findIndex(u => u.id === user.id || u.email === user.email);
+                        if (idx !== -1) {
+                            usersArr[idx] = user;
+                        } else {
+                            usersArr.unshift(user);
+                        }
+                        localStorage.setItem('registerUsers', JSON.stringify(usersArr));
+                    }
+                } catch (e) { }
                 setSuccessMessage('Profile updated');
                 setShowSuccessToast(true);
                 setTimeout(() => setShowSuccessToast(false), 2000);
@@ -610,6 +642,15 @@ export default function MyProfilePage() {
                                                             // on success, clear local session and navigate away
                                                             try { localStorage.removeItem('userSession'); } catch (e) { }
                                                             try { localStorage.removeItem('userData'); } catch (e) { }
+                                                            // Remove from registerUsers cache as well
+                                                            try {
+                                                                const cached = localStorage.getItem('registerUsers');
+                                                                if (cached) {
+                                                                    let usersArr = JSON.parse(cached);
+                                                                    usersArr = usersArr.filter(u => u.email !== profileUser?.email);
+                                                                    localStorage.setItem('registerUsers', JSON.stringify(usersArr));
+                                                                }
+                                                            } catch (e) { }
                                                             setShowDeleteModal(false);
                                                             setIsAuthenticated(false);
                                                             setProfileUser(null);
