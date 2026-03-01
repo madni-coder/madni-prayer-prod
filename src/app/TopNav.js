@@ -17,7 +17,8 @@ import {
     FaBriefcase,
     FaUsers,
     FaChevronRight,
-    FaStarAndCrescent
+    FaStarAndCrescent,
+    FaFileAlt
 
 } from "react-icons/fa";
 import TasbihSvgIcon from "../components/TasbihSvgIcon";
@@ -131,7 +132,7 @@ export default function TopNav() {
                     </Link>
                 </div>
 
-                <ul className="hidden lg:flex items-center gap-1 xl:gap-2">
+                <ul className="hidden md:flex items-center gap-1 xl:gap-2 flex-wrap">
                     {navLinks.map((link) => (
                         <li key={link.name} className="relative group">
                             <a

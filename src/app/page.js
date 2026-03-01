@@ -12,7 +12,13 @@ import {
     FaGift,
     FaMicrophone,
     FaPhoneSquare,
-    FaHandPointRight, FaUser, FaStore, FaBriefcase, FaRegIdBadge,FaMosque
+    FaHandPointRight,
+    FaUser,
+    FaStore,
+    FaBriefcase,
+    FaRegIdBadge,
+    FaMosque,
+    FaFileAlt
 } from "react-icons/fa";
 import { Megaphone, UsersRound } from "lucide-react";
 import Image from "next/image";
@@ -41,7 +47,7 @@ const sections = [
         href: "/quran",
         icon: <FaQuran className="text-2xl lg:text-5xl text-green-400" />,
     },
-   
+
 
     {
         name: "Tasbih Counter",
@@ -65,10 +71,10 @@ const sections = [
         href: "/notice",
         icon: <Megaphone className="text-3xl lg:text-6xl text-blue-400" />,
     },
-   
 
 
-    
+
+
     {
         name: "Olmaa's Stores",
         href: "/local-stores",
@@ -97,13 +103,21 @@ const sections = [
             <FaRegIdBadge className="text-3xl lg:text-6xl text-yellow-400" />
         ),
     },
+    
+    {
+        name: "Privacy Policy",
+        href: "/privacy",
+        icon: (
+            <FaFileAlt className="text-3xl lg:text-6xl text-slate-400" />
+        ),
+    },
     {
         name: "My Profile",
         href: "/myProfile",
         icon: (
             <FaUser className="text-3xl lg:text-6xl text-cyan-500" />
         ),
-    },
+    }
 ];
 
 // ─── Supabase client (client-side, anon key only) ───────────────────────────

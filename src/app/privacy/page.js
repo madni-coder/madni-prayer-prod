@@ -10,19 +10,15 @@ export default function PrivacyPolicy() {
             title: "2. Information We Collect",
             content: "We collect limited information:",
             items: [
-                "Usage Data: pages visited, time spent, device info, browser type, and IP address.",
-                "Location Info: approximate location for features like Qibla direction or prayer times.",
-                "Cookies: to improve functionality and user experience."
+                "Registration: We take all you personal details just because of tasbhih count rewards. We give rewards the person by finding his name,address,area majsid etc",
+                "Location Info: Approximate location for features like Qibla direction, prayer times, Nearby Masjid.",
             ]
         },
         {
             title: "3. How We Use Information",
-            items: [
-                "To operate and improve the website.",
-                "To personalise features like prayer times and Qibla direction.",
-                "To analyse website performance and fix issues.",
-                "To maintain security and prevent misuse."
-            ]
+            content:
+                "We See only durood counts with user's information that how much durood sharif a particular user has recited in a week"
+
         },
         {
             title: "4. Sharing of Information",
@@ -51,6 +47,10 @@ export default function PrivacyPolicy() {
         {
             title: "10. Changes to This Policy",
             content: "We may update this policy anytime. Changes will be posted here with a new \"Effective Date\"."
+        },
+        {
+            title: "11. Doing Check in Terms & Conditions",
+            content: "By agreeing (check) to the Terms and Conditions, the user accepts all rules and regulations governing the app and its features."
         }
     ]
 
