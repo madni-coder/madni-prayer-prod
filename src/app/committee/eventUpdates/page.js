@@ -7,7 +7,7 @@ import { useRouter } from "next/navigation";
 import apiClient from "../../../lib/apiClient";
 import ErrorPopup from "../../../components/ErrorPopup";
 import { FaCheckCircle } from "react-icons/fa";
-import { Pencil } from "lucide-react";
+import { Pencil, X } from "lucide-react";
 
 const prayers = [
     { name: "Fajr", defaultTime: "5:00" },
@@ -36,48 +36,62 @@ function Carousel({ images = [] }) {
     const next = () => setIndex((i) => (i + 1) % validImages.length);
 
     return (
-        <div className="relative">
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
-                src={validImages[index]}
-                alt={`Raahe Hidayat Event ${index + 1}`}
-                onError={(e) => { e.currentTarget.style.display = 'none'; }}
-                className="w-full h-auto rounded-lg shadow-2xl border-4 border-emerald-500/20"
-            />
+        <div className="relative mx-auto" style={{ maxWidth: '400px', aspectRatio: '9/16' }}>
+            <div className="relative w-full h-full bg-gradient-to-br from-slate-900 to-slate-800 overflow-hidden shadow-2xl group">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                    src={validImages[index]}
+                    alt={`Raahe Hidayat Event ${index + 1}`}
+                    onError={(e) => { e.currentTarget.style.display = 'none'; }}
+                    className="w-full h-full object-cover"
+                />
 
-            {validImages.length > 1 && (
-                <>
-                    <button
-                        onClick={prev}
-                        aria-label="Previous image"
-                        className="absolute -left-6 bottom-1 p-3 bg-emerald-700/90 hover:bg-emerald-600 text-white rounded-full z-30 shadow-lg ring-1 ring-emerald-200/20"
-                    >
-                        <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 19l-7-7 7-7" />
-                        </svg>
-                    </button>
-                    <button
-                        onClick={next}
-                        aria-label="Next image"
-                        className="absolute -right-6 bottom-1 p-3 bg-emerald-700/90 hover:bg-emerald-600 text-white rounded-full z-30 shadow-lg ring-1 ring-emerald-200/20"
-                    >
-                        <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7" />
-                        </svg>
-                    </button>
+                {validImages.length > 1 && (
+                    <>
+                        {/* Previous Button */}
+                        <button
+                            onClick={prev}
+                            aria-label="Previous image"
+                            className="absolute left-3 top-1/2 -translate-y-1/2 p-2.5 bg-black/60 hover:bg-black/80 text-white rounded-full z-10 backdrop-blur-sm transition-all"
+                        >
+                            <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M15 19l-7-7 7-7" />
+                            </svg>
+                        </button>
 
-                    <div className="absolute left-1/2 -translate-x-1/2 bottom-4 z-20 flex gap-2">
-                        {validImages.map((_, idx) => (
-                            <button
-                                key={idx}
-                                onClick={() => setIndex(idx)}
-                                aria-label={`Go to image ${idx + 1}`}
-                                className={`w-3 h-3 rounded-full transition-transform duration-150 ${idx === index ? 'bg-emerald-400 scale-110' : 'bg-white/60'}`}
-                            />
-                        ))}
-                    </div>
-                </>
-            )}
+                        {/* Next Button */}
+                        <button
+                            onClick={next}
+                            aria-label="Next image"
+                            className="absolute right-3 top-1/2 -translate-y-1/2 p-2.5 bg-black/60 hover:bg-black/80 text-white rounded-full z-10 backdrop-blur-sm transition-all"
+                        >
+                            <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M9 5l7 7-7 7" />
+                            </svg>
+                        </button>
+
+                        {/* Image Counter */}
+                        <div className="absolute top-4 right-4 bg-black/60 backdrop-blur-sm text-white px-3 py-1.5 rounded-full text-xs font-semibold">
+                            {index + 1} / {validImages.length}
+                        </div>
+
+                        {/* Dots Indicator */}
+                        <div className="absolute left-1/2 -translate-x-1/2 bottom-5 z-10 flex gap-1.5 bg-black/40 backdrop-blur-sm px-2.5 py-2 rounded-full">
+                            {validImages.map((_, idx) => (
+                                <button
+                                    key={idx}
+                                    onClick={() => setIndex(idx)}
+                                    aria-label={`Go to image ${idx + 1}`}
+                                    className={`h-1.5 rounded-full transition-all duration-300 ${idx === index
+                                        ? 'bg-emerald-400 w-6'
+                                        : 'bg-white/50 hover:bg-white/70 w-1.5'
+                                        }`}
+                                />
+                            ))}
+                        </div>
+                    </>
+                )}
+            </div>
         </div>
     );
 }
@@ -119,14 +133,106 @@ export default function EventUpdates() {
 
     const handleEdit = (idx) => {
         setEditIdx(idx);
-        setEditValue(times[idx]);
+        // Ensure colon is present when editing starts
+        const currentTime = times[idx];
+        if (!currentTime.includes(':')) {
+            // If somehow there's no colon, add it
+            setEditValue(currentTime.length > 0 ? currentTime + ':' : '0:00');
+        } else {
+            setEditValue(currentTime);
+        }
+    };
+
+    const handleCancelEdit = () => {
+        setEditIdx(null);
+        setEditValue("");
     };
 
     const handleSaveTime = (idx) => {
+        // Split and validate
+        const parts = editValue.split(':');
+        if (parts.length !== 2) {
+            alert('Invalid time format. Please use format HH:MM (e.g., 6:10)');
+            return;
+        }
+
+        const hourStr = parts[0];
+        const minuteStr = parts[1];
+
+        // Check if parts are empty or have non-digits
+        if (!hourStr || !minuteStr) {
+            alert('Invalid time format. Please enter both hour and minutes (e.g., 6:10)');
+            return;
+        }
+
+        // Validate hour and minute values
+        const hour = parseInt(hourStr, 10);
+        const minute = parseInt(minuteStr, 10);
+
+        if (isNaN(hour) || isNaN(minute) || hour < 0 || hour > 23 || minute < 0 || minute > 59) {
+            alert('Invalid time. Hour must be 0-23 and minutes must be 0-59');
+            return;
+        }
+
+        // Pad minutes with leading zero if needed
+        const formattedTime = `${hourStr}:${minuteStr.padStart(2, '0')}`;
+
         setTimes((times) =>
-            times.map((t, i) => (i === idx ? editValue : t))
+            times.map((t, i) => (i === idx ? formattedTime : t))
         );
         setEditIdx(null);
+    };
+
+    const handleTimeInputChange = (e) => {
+        let input = e.target.value;
+
+        // Remove all non-digit and non-colon characters
+        input = input.replace(/[^0-9:]/g, '');
+
+        // If user tries to remove colon, add it back
+        if (!input.includes(':')) {
+            // If there are digits, try to maintain colon position
+            if (input.length > 0) {
+                // Add colon after first 1 or 2 digits
+                if (input.length === 1) {
+                    input = input + ':';
+                } else if (input.length === 2) {
+                    input = input + ':';
+                } else if (input.length > 2) {
+                    // Insert colon before last 2 digits (minutes)
+                    const mins = input.slice(-2);
+                    const hrs = input.slice(0, -2);
+                    input = hrs + ':' + mins;
+                }
+            } else {
+                // Empty input, just set to colon
+                input = ':';
+            }
+        }
+
+        // Ensure only one colon
+        const colonIndex = input.indexOf(':');
+        if (colonIndex !== input.lastIndexOf(':')) {
+            // Multiple colons, keep only the first
+            input = input.slice(0, colonIndex + 1) + input.slice(colonIndex + 1).replace(/:/g, '');
+        }
+
+        // Split by colon and validate
+        const parts = input.split(':');
+        if (parts.length === 2) {
+            // Limit hour to 2 digits, minutes to 2 digits
+            let hour = parts[0].slice(0, 2);
+            let minute = parts[1].slice(0, 2);
+
+            // Don't allow empty hour part
+            if (hour.length === 0) {
+                hour = '0';
+            }
+
+            input = hour + ':' + minute;
+        }
+
+        setEditValue(input);
     };
 
     const updateJamatTimes = async () => {
@@ -308,44 +414,36 @@ export default function EventUpdates() {
                         {((Array.isArray(committeeImages) && committeeImages.some(img => img && img.length > 5)) ||
                             (Array.isArray(masjid.committeeImages) && masjid.committeeImages.some(img => img && img.length > 5)) ||
                             (typeof masjid.committeeImage === 'string' && masjid.committeeImage.length > 5)) && (
-                                <div className="bg-slate-800/50 backdrop-blur-sm rounded-2xl overflow-hidden shadow-2xl border border-emerald-500/30">
-                                    {/* Header Banner */}
-                                    <div className="bg-gradient-to-r from-emerald-600 to-teal-600 px-6 py-4">
-                                        <div className="flex items-center gap-3">
-                                            <div className="bg-white/20 backdrop-blur-sm rounded-full p-2.5">
-                                                <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
-                                                </svg>
-                                            </div>
-                                            <div className="flex-1">
-                                                <h3 className="text-white font-bold text-xl">Event Announcement</h3>
-                                                <p className="text-emerald-100 text-sm">From Raahe Hidayat Team</p>
-                                            </div>
+                                <div className="overflow-hidden shadow-xl border border-slate-700/30">
+                                    {/* Header Banner - Full Width */}
+                                    <div className=" bg-gradient-to-r from-teal-600 to-emerald-600 px-5 py-4 flex items-center gap-3">
+                                        <div className="bg-white/20 rounded-full p-2.5">
+                                            <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
+                                            </svg>
+                                        </div>
+                                        <div>
+                                            <h3 className="text-white font-bold text-lg">Event Announcement</h3>
+                                            <p className="text-white/90 text-sm">From Raahe Hidayat Team</p>
                                         </div>
                                     </div>
 
-                                    {/* Carousel Body */}
-                                    <div className="bg-gradient-to-b from-slate-900 to-slate-800 p-6 flex items-center justify-center relative">
-                                        <div className="max-w-md w-full">
-                                            {/* derive images array */}
-                                            {/* eslint-disable-next-line react-hooks/rules-of-hooks */}
-                                            {(() => {
-                                                const rawImgs = (Array.isArray(committeeImages) && committeeImages.length)
-                                                    ? committeeImages
-                                                    : (Array.isArray(masjid.committeeImages)
-                                                        ? masjid.committeeImages.filter(Boolean).slice().reverse()
-                                                        : masjid.committeeImage
-                                                            ? [masjid.committeeImage]
-                                                            : []);
-                                                // Ensure we only pass cleanly valid string URLs to the Carousel
-                                                const validImgs = rawImgs.filter((img) => img && typeof img === 'string' && img.length > 5);
-                                                if (validImgs.length === 0) return null;
-                                                return (
-                                                    <Carousel images={validImgs} />
-                                                );
-                                            })()}
-                                        </div>
-                                    </div>
+                                    {/* Carousel */}
+                                    {/* eslint-disable-next-line react-hooks/rules-of-hooks */}
+                                    {(() => {
+                                        const rawImgs = (Array.isArray(committeeImages) && committeeImages.length)
+                                            ? committeeImages
+                                            : (Array.isArray(masjid.committeeImages)
+                                                ? masjid.committeeImages.filter(Boolean).slice().reverse()
+                                                : masjid.committeeImage
+                                                    ? [masjid.committeeImage]
+                                                    : []);
+                                        const validImgs = rawImgs.filter((img) => img && typeof img === 'string' && img.length > 5);
+                                        if (validImgs.length === 0) return null;
+                                        return (
+                                            <Carousel images={validImgs} />
+                                        );
+                                    })()}
                                 </div>
                             )}
 
@@ -474,11 +572,10 @@ export default function EventUpdates() {
                                                                 type="text"
                                                                 inputMode="numeric"
                                                                 pattern="[0-9:]*"
+                                                                placeholder="H:MM"
                                                                 className="input input-bordered input-xl bg-slate-700 text-white border-slate-600 w-16 sm:w-20 text-center px-1 h-8 sm:h-9"
                                                                 value={editValue}
-                                                                onChange={(e) =>
-                                                                    setEditValue(e.target.value)
-                                                                }
+                                                                onChange={handleTimeInputChange}
                                                                 autoFocus
                                                             />
                                                             <button
@@ -487,6 +584,13 @@ export default function EventUpdates() {
                                                                 onClick={() => handleSaveTime(idx)}
                                                             >
                                                                 <FaCheckCircle className="w-4 h-4 sm:w-5 sm:h-5" />
+                                                            </button>
+                                                            <button
+                                                                type="button"
+                                                                className="bg-red-600 hover:bg-red-700 text-white p-2.5 sm:p-2 rounded-lg shadow-lg flex-shrink-0"
+                                                                onClick={handleCancelEdit}
+                                                            >
+                                                                <X className="w-4 h-4 sm:w-5 sm:h-5" />
                                                             </button>
                                                         </div>
                                                     ) : (
