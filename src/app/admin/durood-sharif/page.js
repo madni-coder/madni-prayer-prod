@@ -29,21 +29,21 @@ function ToastProvider({ children }) {
 function ConfirmModal({ open, title, message, onConfirm, onCancel }) {
     if (!open) return null;
     return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-transparent">
-            <div className="bg-white dark:bg-gray-900 rounded-xl shadow-lg p-6 min-w-[320px] max-w-[90vw]">
-                <h2 className="text-lg font-bold mb-2 text-gray-900 dark:text-white">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-transparent p-4">
+            <div className="bg-white dark:bg-gray-900 rounded-xl shadow-2xl p-4 sm:p-6 w-full max-w-[95vw] sm:max-w-md mx-auto">
+                <h2 className="text-base sm:text-lg font-bold mb-2 text-gray-900 dark:text-white">
                     {title}
                 </h2>
-                <p className="mb-6 text-gray-700 dark:text-gray-300">{message}</p>
-                <div className="flex gap-4 justify-end">
+                <p className="mb-4 sm:mb-6 text-sm sm:text-base text-gray-700 dark:text-gray-300">{message}</p>
+                <div className="flex flex-col sm:flex-row gap-2 sm:gap-4 sm:justify-end">
                     <button
-                        className="px-4 py-2 rounded bg-gray-200 dark:bg-gray-700 text-gray-900 dark:text-white font-semibold hover:bg-gray-300 dark:hover:bg-gray-600"
+                        className="w-full sm:w-auto px-4 py-2.5 sm:py-2 rounded bg-gray-200 dark:bg-gray-700 text-gray-900 dark:text-white font-semibold hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors"
                         onClick={onCancel}
                     >
                         No
                     </button>
                     <button
-                        className="px-4 py-2 rounded bg-[#5fb923] text-white font-semibold hover:bg-green-700"
+                        className="w-full sm:w-auto px-4 py-2.5 sm:py-2 rounded bg-[#5fb923] text-white font-semibold hover:bg-green-700 transition-colors"
                         onClick={onConfirm}
                     >
                         Yes
@@ -82,6 +82,9 @@ export default function DuroodSharifPage() {
     const [isPublishing, setIsPublishing] = useState(false);
     const [publishStatus, setPublishStatus] = useState(null);
     const [showPublishConfirm, setShowPublishConfirm] = useState(false);
+    const [clearingRewards, setClearingRewards] = useState(false);
+    const [showClearPrevConfirm, setShowClearPrevConfirm] = useState(false);
+    const [rewardsDeleted, setRewardsDeleted] = useState(false);
     const showToast = React.useContext(ToastContext);
     const [clearingWeek, setClearingWeek] = useState(false);
     const [showClearWeekConfirm, setShowClearWeekConfirm] = useState(false);
@@ -181,49 +184,49 @@ export default function DuroodSharifPage() {
                 <div className="bg-white rounded-xl shadow p-0 mt-8">
                     {/* ...existing code... */}
                 </div>
-                <div className="p-4 flex items-center justify-between">
-                    <div className="flex-1 min-w-[200px]">
+                <div className="p-4 flex flex-col md:flex-row gap-3 md:gap-4 md:items-center md:justify-between">
+                    <div className="w-full md:flex-1">
                         <input
                             type="text"
                             placeholder="Search by name or address"
-                            className="input input-bordered bg-white w-full max-w-xs text-black"
+                            className="input input-bordered bg-white w-full md:max-w-xs text-black"
                             value={search}
                             onChange={(e) => setSearch(e.target.value)}
                         />
                     </div>
-                    <div className="ml-auto flex gap-2 relative">
+                    <div className="flex flex-col sm:flex-row gap-2 sm:gap-2 md:ml-auto relative w-full md:w-auto">
                         <button
                             onClick={() => setShowPublishConfirm(true)}
-                            className="bg-purple-500 hover:bg-green-600 text-white font-semibold py-2 px-4 rounded-md"
+                            className="bg-purple-500 hover:bg-green-600 text-white font-semibold py-2.5 md:py-2 px-4 rounded-md text-sm md:text-base whitespace-nowrap"
                             disabled={isPublishing || filtered.length === 0}
-                            title="Publish top 10 results to rewards API"
+                            title={"Publish top 10 results to rewards API"}
                         >
                             {isPublishing ? "Publishing..." : "Publish Results"}
                         </button>
                         <button
                             onClick={() => setShowClearWeekConfirm(true)}
-                            className="bg-red-500 hover:bg-red-600 text-white font-semibold py-2 px-4 rounded-md"
+                            className="bg-red-500 hover:bg-red-600 text-white font-semibold py-2.5 md:py-2 px-4 rounded-md text-sm md:text-base whitespace-nowrap"
                             disabled={clearingWeek || filtered.length === 0}
                             title="Set 'This Week Counts' to 0 for all users"
                         >
                             {clearingWeek ? "Clearing..." : "Clear This Week Counts"}
                         </button>
                         {showClearWeekConfirm && (
-                            <div className="absolute right-0 mt-2 z-50 w-[400px] max-w-[98vw]">
-                                <div className="bg-white rounded-xl shadow-lg p-5 border border-gray-200 dark:border-gray-700 flex flex-col gap-4">
-                                    <h2 className="text-lg font-bold mb-2 text-gray-900">
+                            <div className="fixed inset-0 z-50 flex items-center justify-center bg-transparent p-4">
+                                <div className="bg-white rounded-xl shadow-2xl p-4 sm:p-5 border border-gray-200 dark:border-gray-700 flex flex-col gap-3 sm:gap-4 w-full max-w-[95vw] sm:max-w-md mx-auto">
+                                    <h2 className="text-base sm:text-lg font-bold mb-1 sm:mb-2 text-gray-900">
                                         Clear This Week Counts
                                     </h2>
-                                    <div className="text-sm text-gray-700">This will set the "This Week Counts" column to 0 for all users. It will NOT add these numbers to lifetime counts.</div>
-                                    <div className="flex gap-2 justify-end mt-4">
+                                    <div className="text-xs sm:text-sm text-gray-700">This will set the "This Week Counts" column to 0 for all users. It will NOT add these numbers to lifetime counts.</div>
+                                    <div className="flex flex-col sm:flex-row gap-2 sm:justify-end mt-2 sm:mt-4">
                                         <button
-                                            className="px-4 py-2 rounded bg-gray-200 text-gray-900 font-semibold hover:bg-gray-300"
+                                            className="w-full sm:w-auto px-4 py-2.5 sm:py-2 rounded bg-gray-200 text-gray-900 font-semibold hover:bg-gray-300 transition-colors"
                                             onClick={() => setShowClearWeekConfirm(false)}
                                         >
                                             Cancel
                                         </button>
                                         <button
-                                            className="px-4 py-2 rounded bg-[#5fb923] text-white font-semibold hover:bg-green-700"
+                                            className="w-full sm:w-auto px-4 py-2.5 sm:py-2 rounded bg-[#5fb923] text-white font-semibold hover:bg-green-700 transition-colors"
                                             onClick={async () => {
                                                 setShowClearWeekConfirm(false);
                                                 setClearingWeek(true);
@@ -269,15 +272,15 @@ export default function DuroodSharifPage() {
                         )}
                         {/* Modal for publish with date fields */}
                         {showPublishConfirm && (
-                            <div className="absolute right-0 mt-2 z-50 w-[400px] max-w-[98vw]">
-                                <div className="bg-white rounded-xl shadow-lg p-5 border border-gray-200 dark:border-gray-700 flex flex-col gap-4">
-                                    <h2 className="text-lg font-bold mb-2 text-gray-900">
-                                        Publish Top 10 Results . Enter Week
+                            <div className="fixed inset-0 z-50 flex items-center justify-center bg-transparent p-4">
+                                <div className="bg-white rounded-xl shadow-2xl p-4 sm:p-5 md:p-6 border border-gray-200 dark:border-gray-700 flex flex-col gap-3 sm:gap-4 w-full max-w-[95vw] sm:max-w-md lg:max-w-lg mx-auto max-h-[90vh] overflow-y-auto">
+                                    <h2 className="text-base sm:text-lg font-bold mb-1 sm:mb-2 text-gray-900">
+                                        Publish Top 10 Results - Enter Week
                                         Dates Correctly
                                     </h2>
-                                    <div className="flex flex-wrap gap-4 w-full">
-                                        <div className="flex-1 min-w-[150px] flex flex-col gap-1">
-                                            <label className="font-bold text-black text-sm">
+                                    <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 w-full">
+                                        <div className="flex-1 flex flex-col gap-1">
+                                            <label className="font-semibold text-black text-xs sm:text-sm">
                                                 From Date
                                             </label>
                                             <div className="relative">
@@ -288,7 +291,7 @@ export default function DuroodSharifPage() {
                                                     onChange={
                                                         handleFromDateChange
                                                     }
-                                                    className="text-black border rounded px-2 py-1 focus:outline-none focus:ring-2 focus:ring-blue-500 w-full pr-10"
+                                                    className="text-black border border-gray-300 rounded px-2 py-2 sm:py-1.5 focus:outline-none focus:ring-2 focus:ring-blue-500 w-full pr-10 text-sm"
                                                     max={toDate || undefined}
                                                 />
                                                 <button
@@ -343,8 +346,8 @@ export default function DuroodSharifPage() {
                                                 </button>
                                             </div>
                                         </div>
-                                        <div className="flex-1 min-w-[150px] flex flex-col gap-1">
-                                            <label className="font-bold text-black text-sm">
+                                        <div className="flex-1 flex flex-col gap-1">
+                                            <label className="font-semibold text-black text-xs sm:text-sm">
                                                 To Date
                                             </label>
                                             <div className="relative">
@@ -355,7 +358,7 @@ export default function DuroodSharifPage() {
                                                     onChange={
                                                         handleToDateChange
                                                     }
-                                                    className="text-black border rounded px-2 py-1 focus:outline-none focus:ring-2 focus:ring-blue-500 w-full pr-10"
+                                                    className="text-black border border-gray-300 rounded px-2 py-2 sm:py-1.5 focus:outline-none focus:ring-2 focus:ring-blue-500 w-full pr-10 text-sm"
                                                     min={fromDate || undefined}
                                                 />
                                                 <button
@@ -412,13 +415,13 @@ export default function DuroodSharifPage() {
                                         </div>
                                     </div>
                                     {error && (
-                                        <div className="text-red-500 font-semibold text-sm ml-2">
+                                        <div className="text-red-500 font-semibold text-xs sm:text-sm">
                                             {error}
                                         </div>
                                     )}
-                                    <div className="flex gap-2 justify-end mt-4">
+                                    <div className="flex flex-col sm:flex-row gap-2 sm:justify-end mt-2 sm:mt-4">
                                         <button
-                                            className="px-4 py-2 rounded bg-gray-200 text-gray-900 font-semibold hover:bg-gray-300"
+                                            className="w-full sm:w-auto px-4 py-2.5 sm:py-2 rounded bg-blue-500 text-white font-semibold hover:bg-blue-600 transition-colors text-sm order-3 sm:order-1"
                                             onClick={() =>
                                                 setShowPublishConfirm(false)
                                             }
@@ -426,11 +429,22 @@ export default function DuroodSharifPage() {
                                             Cancel
                                         </button>
                                         <button
-                                            className="px-4 py-2 rounded bg-[#5fb923] text-white font-semibold hover:bg-green-700"
-                                            disabled={
-                                                !!error || !fromDate || !toDate
-                                            }
+                                            className="w-full sm:w-auto px-4 py-2.5 sm:py-2 rounded bg-red-500 text-white font-semibold hover:bg-red-600 transition-colors text-sm order-1 sm:order-2"
+                                            onClick={() => setShowClearPrevConfirm(true)}
+                                            disabled={clearingRewards}
+                                            title="Delete previous rewards from server"
+                                        >
+                                            {clearingRewards ? "Clearing..." : "Clear Previous Week Results"}
+                                        </button>
+                                        <button
+                                            className={`w-full sm:w-auto px-4 py-2.5 sm:py-2 rounded font-semibold transition-colors text-sm order-2 sm:order-3 ${isPublishing || clearingRewards || !rewardsDeleted ? 'bg-gray-400 text-white cursor-not-allowed' : 'bg-[#5fb923] text-white hover:bg-green-700'}`}
+                                            disabled={isPublishing || clearingRewards || !rewardsDeleted}
                                             onClick={async () => {
+                                                // Validate dates explicitly
+                                                if (!fromDate || !toDate) {
+                                                    setError("Please select date");
+                                                    return;
+                                                }
                                                 setShowPublishConfirm(false);
                                                 setIsPublishing(true);
                                                 setPublishStatus(null);
@@ -514,6 +528,40 @@ export default function DuroodSharifPage() {
                                             }}
                                         >
                                             Publish
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        )}
+                        {showClearPrevConfirm && (
+                            <div className="fixed inset-0 z-50 flex items-center justify-center bg-transparent p-4">
+                                <div className="bg-white rounded-xl shadow-2xl p-4 sm:p-5 border border-gray-200 dark:border-gray-700 flex flex-col gap-3 sm:gap-4 w-full max-w-[95vw] sm:max-w-md mx-auto">
+                                    <h2 className="text-base sm:text-lg font-bold mb-1 sm:mb-2 text-gray-900">Clear Previous Week Results</h2>
+                                    <div className="text-xs sm:text-sm text-gray-700">This will delete all previous published rewards from the server (the rewards API). The publish button will be disabled while this operation runs.</div>
+                                    <div className="flex flex-col sm:flex-row gap-2 sm:justify-end mt-2 sm:mt-4">
+                                        <button
+                                            className="w-full sm:w-auto px-4 py-2.5 sm:py-2 rounded bg-gray-200 text-gray-900 font-semibold hover:bg-gray-300 transition-colors"
+                                            onClick={() => setShowClearPrevConfirm(false)}
+                                        >
+                                            Cancel
+                                        </button>
+                                        <button
+                                            className="w-full sm:w-auto px-4 py-2.5 sm:py-2 rounded bg-red-500 text-white font-semibold hover:bg-red-600 transition-colors"
+                                            onClick={async () => {
+                                                setShowClearPrevConfirm(false);
+                                                setClearingRewards(true);
+                                                try {
+                                                    await apiClient.delete('/api/api-rewards');
+                                                    setRewardsDeleted(true);
+                                                    showToast('Previous rewards cleared successfully', 'success');
+                                                } catch (e) {
+                                                    showToast(e?.message || String(e), 'error');
+                                                } finally {
+                                                    setClearingRewards(false);
+                                                }
+                                            }}
+                                        >
+                                            {clearingRewards ? 'Clearing...' : 'Confirm'}
                                         </button>
                                     </div>
                                 </div>
