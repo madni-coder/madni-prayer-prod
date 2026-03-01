@@ -146,7 +146,9 @@ export default function MasjidCommitteeLogin() {
                                 <span className="label-text text-white mb-2">Password</span>
                             </label>
                             <input
-                                type="text"
+                                type="tel"
+                                inputMode="numeric"
+                                pattern="\d*"
                                 value={password}
                                 onChange={(e) => setPassword(e.target.value)}
                                 className="input input-bordered input-primary w-full bg-transparent text-white placeholder:text-slate-400"
