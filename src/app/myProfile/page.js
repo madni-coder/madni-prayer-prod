@@ -37,6 +37,7 @@ export default function MyProfilePage() {
     const [loginError, setLoginError] = useState(null);
     const [showRegisterForm, setShowRegisterForm] = useState(false);
     const [apiErrorPopup, setApiErrorPopup] = useState(null);
+    const [agreeTerms, setAgreeTerms] = useState(false);
 
     // On mount: check for auth token/session. If present, fetch user details from API.
     useEffect(() => {
@@ -140,6 +141,12 @@ export default function MyProfilePage() {
         e.preventDefault();
         setError(null);
         setLoading(true);
+
+        if (!agreeTerms) {
+            setError("You must agree to the Terms & Conditions.");
+            setLoading(false);
+            return;
+        }
 
         if (!fullName.trim() || !email.trim() || !password || !confirmPassword) {
             setError("Please fill in all required fields.");
@@ -400,7 +407,7 @@ export default function MyProfilePage() {
                                     <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} className="input input-bordered w-full bg-black/30 text-white placeholder-white/60" placeholder="you@example.com" required />
                                 </div>
                                 <div>
-                                    <label className="label pb-1"><span className="label-text text-white">Password</span></label>
+                                    <label className="label pb-1"><span className="label-text text-white">Password </span></label>
                                     <input type="text" value={password} onChange={(e) => setPassword(e.target.value)} className="input input-bordered w-full bg-black/30 text-white placeholder-white/60" placeholder="Password" required />
                                 </div>
                                 {loginError && (
@@ -769,7 +776,7 @@ export default function MyProfilePage() {
                                         <FaLock className="absolute left-4 top-1/2 -translate-y-1/2 text-white-400 z-10" size={18} />
                                         <input
                                             type="text"
-                                            placeholder="Add a password"
+                                            placeholder="Minimum 6 Characters"
                                             className="input input-bordered w-full pl-12 h-12 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all"
                                             value={password}
                                             onChange={(e) => setPassword(e.target.value)}
@@ -872,6 +879,24 @@ export default function MyProfilePage() {
                                     </div>
                                 )}
 
+                                <div className="form-control">
+                                    <label className="label cursor-pointer gap-3 items-start">
+                                        <input
+                                            type="checkbox"
+                                            checked={agreeTerms}
+                                            onChange={(e) => setAgreeTerms(e.target.checked)}
+                                            required
+                                            className="checkbox checkbox-primary mt-1"
+                                            id="agreeTerms"
+                                        />
+                                        <span className="label-text text-sm text-white">
+                                            I agree with{' '}
+                                            <a href="/privacy" className="underline font-semibold text-primary">
+                                                Terms &amp; Conditions
+                                            </a>
+                                        </span>
+                                    </label>
+                                </div>
                                 {/* Submit Button */}
                                 <button
                                     type="submit"
