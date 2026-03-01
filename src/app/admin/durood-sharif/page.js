@@ -5,7 +5,7 @@ import { Trash2 } from "lucide-react";
 import { FaBitcoin, FaMosque } from "react-icons/fa";
 import { FiCopy } from "react-icons/fi";
 import { useRouter } from "next/navigation";
-import apiClient from "../../../lib/apiClient"; // kept for ClearWinnerListButton internal calls
+import apiClient from "../../../lib/apiClient";
 import { useTasbihUserContext } from "../../../context/TasbihUserContext";
 import { useRewardContext } from "../../../context/RewardContext";
 
@@ -54,98 +54,6 @@ function ConfirmModal({ open, title, message, onConfirm, onCancel }) {
     );
 }
 
-function ClearWinnerListButton() {
-    const [loading, setLoading] = useState(false);
-    const [showConfirm, setShowConfirm] = useState(false);
-    const showToast = React.useContext(ToastContext);
-    const handleClear = async () => {
-        setLoading(true);
-        try {
-            // 1) Fetch all users from the API and update their weekly counts (move to lifetime)
-            const { data: jsonUsers } = await apiClient.get(
-                "/api/api-tasbihUsers"
-            );
-            if (!jsonUsers?.ok || !Array.isArray(jsonUsers.data))
-                throw new Error("Failed to fetch users");
-
-            let userErrorCount = 0;
-            for (const user of jsonUsers.data) {
-                const mobileNumber = user["mobile number"];
-                const weeklyCounts = Number(user["weekly counts"] || 0);
-                if (!mobileNumber || weeklyCounts === 0) continue;
-                // Call API to add weeklyCounts to lifetime count and reset weeklyCounts
-                try {
-                    await apiClient.delete("/api/api-tasbihUsers", {
-                        data: {
-                            mobileNumber,
-                            addWeeklyToCount: true,
-                        },
-                    });
-                } catch (_) {
-                    userErrorCount++;
-                }
-            }
-
-            // 2) Clear the winners (rewards) list by calling the rewards DELETE endpoint
-            let clearedRewardsOk = false;
-            try {
-                await apiClient.delete("/api/api-rewards");
-                clearedRewardsOk = true;
-            } catch (e) {
-                clearedRewardsOk = false;
-            }
-
-            // Build user-visible message depending on outcomes
-            if (userErrorCount === 0 && clearedRewardsOk) {
-                showToast(
-                    "Weekly counts moved to lifetime and winners list cleared.",
-                    "success"
-                );
-            } else if (!clearedRewardsOk && userErrorCount === 0) {
-                showToast(
-                    "Users updated but clearing winners failed.",
-                    "error"
-                );
-            } else if (clearedRewardsOk && userErrorCount > 0) {
-                showToast(
-                    `Winners cleared but ${userErrorCount} users failed to update.`,
-                    "error"
-                );
-            } else {
-                showToast(
-                    `Failed to clear winners and ${userErrorCount} users failed to update.`,
-                    "error"
-                );
-            }
-        } catch (e) {
-            showToast(e.message || String(e), "error");
-        } finally {
-            setLoading(false);
-            setShowConfirm(false);
-        }
-    };
-
-    return (
-        <div className="inline-block">
-            <button
-                onClick={() => setShowConfirm(true)}
-                className="bg-red-500 hover:bg-red-600 text-white font-semibold py-2 px-4 rounded-md"
-                disabled={loading}
-                title="Clear winner list (delete all rewards)"
-            >
-                {loading ? "Clearing..." : "Clear Winners List"}
-            </button>
-            <ConfirmModal
-                open={showConfirm}
-                title="Clear Winner List?"
-                message="Are you sure want to clear winners list ?"
-                onConfirm={handleClear}
-                onCancel={() => setShowConfirm(false)}
-            />
-        </div>
-    );
-}
-
 export default function DuroodSharifPage() {
     // Date change handlers for calendar inputs
     const handleFromDateChange = (e) => {
@@ -175,6 +83,8 @@ export default function DuroodSharifPage() {
     const [publishStatus, setPublishStatus] = useState(null);
     const [showPublishConfirm, setShowPublishConfirm] = useState(false);
     const showToast = React.useContext(ToastContext);
+    const [clearingWeek, setClearingWeek] = useState(false);
+    const [showClearWeekConfirm, setShowClearWeekConfirm] = useState(false);
     const [copiedMobile, setCopiedMobile] = useState(null);
 
     // Date range states
@@ -290,6 +200,73 @@ export default function DuroodSharifPage() {
                         >
                             {isPublishing ? "Publishing..." : "Publish Results"}
                         </button>
+                        <button
+                            onClick={() => setShowClearWeekConfirm(true)}
+                            className="bg-red-500 hover:bg-red-600 text-white font-semibold py-2 px-4 rounded-md"
+                            disabled={clearingWeek || filtered.length === 0}
+                            title="Set 'This Week Counts' to 0 for all users"
+                        >
+                            {clearingWeek ? "Clearing..." : "Clear This Week Counts"}
+                        </button>
+                        {showClearWeekConfirm && (
+                            <div className="absolute right-0 mt-2 z-50 w-[400px] max-w-[98vw]">
+                                <div className="bg-white rounded-xl shadow-lg p-5 border border-gray-200 dark:border-gray-700 flex flex-col gap-4">
+                                    <h2 className="text-lg font-bold mb-2 text-gray-900">
+                                        Clear This Week Counts
+                                    </h2>
+                                    <div className="text-sm text-gray-700">This will set the "This Week Counts" column to 0 for all users. It will NOT add these numbers to lifetime counts.</div>
+                                    <div className="flex gap-2 justify-end mt-4">
+                                        <button
+                                            className="px-4 py-2 rounded bg-gray-200 text-gray-900 font-semibold hover:bg-gray-300"
+                                            onClick={() => setShowClearWeekConfirm(false)}
+                                        >
+                                            Cancel
+                                        </button>
+                                        <button
+                                            className="px-4 py-2 rounded bg-[#5fb923] text-white font-semibold hover:bg-green-700"
+                                            onClick={async () => {
+                                                setShowClearWeekConfirm(false);
+                                                setClearingWeek(true);
+                                                try {
+                                                    const { data: jsonUsers } = await apiClient.get("/api/api-tasbihUsers");
+                                                    if (!jsonUsers?.ok || !Array.isArray(jsonUsers.data)) throw new Error("Failed to fetch users");
+                                                    let userErrorCount = 0;
+                                                    for (const user of jsonUsers.data) {
+                                                        const mobileNumber = user["mobile number"];
+                                                        const weeklyCounts = Number(user["weekly counts"] || 0);
+                                                        if (!mobileNumber || weeklyCounts === 0) continue;
+                                                        try {
+                                                            // call API to reset weekly counts only (do NOT add to lifetime)
+                                                            await apiClient.delete('/api/api-tasbihUsers', {
+                                                                data: {
+                                                                    mobileNumber,
+                                                                    addWeeklyToCount: false,
+                                                                },
+                                                            });
+                                                        } catch (e) {
+                                                            userErrorCount++;
+                                                        }
+                                                    }
+                                                    if (userErrorCount === 0) {
+                                                        showToast("This week counts cleared for all users.", "success");
+                                                    } else {
+                                                        showToast(`${userErrorCount} users failed to update.`, "error");
+                                                    }
+                                                    // refresh local data
+                                                    try { await fetchTasbihUsers(); } catch (e) { /* ignore */ }
+                                                } catch (e) {
+                                                    showToast(e.message || String(e), "error");
+                                                } finally {
+                                                    setClearingWeek(false);
+                                                }
+                                            }}
+                                        >
+                                            Confirm
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        )}
                         {/* Modal for publish with date fields */}
                         {showPublishConfirm && (
                             <div className="absolute right-0 mt-2 z-50 w-[400px] max-w-[98vw]">
@@ -542,7 +519,6 @@ export default function DuroodSharifPage() {
                                 </div>
                             </div>
                         )}
-                        <ClearWinnerListButton />
                     </div>
                 </div>
                 {/* Mobile: stacked cards */}
