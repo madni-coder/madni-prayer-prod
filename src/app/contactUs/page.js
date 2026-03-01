@@ -12,6 +12,7 @@ export default function ContactUs() {
         email: "",
         message: "",
     });
+    const [appVersion, setAppVersion] = useState("");
 
     const handleChange = (e) => {
         const { name, value } = e.target;
@@ -26,8 +27,58 @@ export default function ContactUs() {
         // Handle form submission logic here
     };
 
+    useEffect(() => {
+        let mounted = true;
+
+        async function getAppVersion() {
+            try {
+                // Check if running in Tauri app
+                const isTauri =
+                    typeof window !== "undefined" &&
+                    (window.__TAURI__ !== undefined ||
+                        window.__TAURI_INTERNALS__ !== undefined);
+
+                if (isTauri) {
+                    // Get actual installed version from Tauri app
+                    try {
+                        const tauriApp = await import("@tauri-apps/api/app");
+                        const version = await tauriApp.getVersion();
+                        if (mounted && version) {
+                            setAppVersion(version);
+                            console.log("[ContactUs] Got version from Tauri app:", version);
+                        }
+                        return;
+                    } catch (e) {
+                        console.log("[ContactUs] Failed to get Tauri version:", e?.message);
+                    }
+                }
+
+                // Fallback to API for web users
+                fetch("/api/version")
+                    .then((res) => res.json())
+                    .then((data) => {
+                        if (mounted && data && data.version) {
+                            setAppVersion(data.version);
+                            console.log("[ContactUs] Got version from API:", data.version);
+                        }
+                    })
+                    .catch(() => {
+                        /* ignore errors */
+                    });
+            } catch (error) {
+                console.error("[ContactUs] Error getting version:", error);
+            }
+        }
+
+        getAppVersion();
+
+        return () => {
+            mounted = false;
+        };
+    }, []);
+
     return (
-        <main className="flex min-h-screen flex-col items-center justify-center bg-[#1a2332] text-gray-100 p-4 sm:p-6 mb-[64px]">
+        <main className="flex min-h-screen flex-col items-center justify-center bg-[#1a2332] text-gray-100 p-4 sm:p-6 pb-16">
             <header className="mb-8 w-full max-w-4xl">
                 <div className="flex items-center gap-4 mb-4">
                     <button
@@ -107,6 +158,14 @@ export default function ContactUs() {
 
                     </div>
                     <div>
+                        {appVersion ? (
+                            <div className="flex items-center gap-4 mb-2">
+                                <span className="text-gray-300">🔖</span>
+                                <span className="text-gray-300 font-medium">App version</span>
+                                <span className="text-green-400 font-semibold">{appVersion}</span>
+                            </div>
+                        ) : null}
+
                         <Link
                             href="/privacy"
                             className="text-green-400 hover:text-green-300 hover:underline font-semibold transition-colors duration-200"
