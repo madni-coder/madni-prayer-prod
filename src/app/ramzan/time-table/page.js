@@ -17,6 +17,10 @@ export default function Page() {
     const [, setNowTick] = useState(0);
     const timerRef = useRef(null);
     const soundEnabledRef = useRef(false);
+    const scheduleAlarmsRef = useRef(null); // Will store the schedule function to call from city toggle
+    const isInitialMountRef = useRef(true); // Track initial mount for city toggle effect
+
+
 
     useEffect(() => {
         try {
@@ -39,45 +43,66 @@ export default function Page() {
         setShowLoader(true);
         if (timerRef.current) clearTimeout(timerRef.current);
         timerRef.current = setTimeout(() => {
+            console.log('City toggle changed to:', checked ? 'Raipur' : 'Bilaspur');
             setOnlyRaipur(checked);
             try {
                 if (checked) localStorage.setItem(STORAGE_KEY, "true");
                 else localStorage.removeItem(STORAGE_KEY);
             } catch (e) {
-                // ignore
+                console.error('Error in handleOnlyRaipurChange:', e);
             }
             setShowLoader(false);
             timerRef.current = null;
+            // Note: Alarm re-scheduling is handled by useEffect watching onlyRaipur
         }, 500);
     };
 
     const handleSoundChange = (checked) => {
+        console.log('Sound toggle changed to:', checked);
         setSoundEnabled(checked);
         soundEnabledRef.current = checked;
         try {
             if (checked) {
                 localStorage.setItem(SOUND_KEY, "true");
+                console.log('Sound enabled in localStorage');
                 // Clear the "already scheduled today" flag so alarms are re-scheduled immediately
                 try { localStorage.removeItem(`ramzan_sched_done_${new Date().toDateString()}`); } catch (e) { }
                 // Briefly play silence to unlock Web Audio context on iOS/Android
-                if (audioCtxRef.current && audioCtxRef.current.state === 'suspended') {
-                    audioCtxRef.current.resume().catch(() => { });
+                if (audioCtxRef.current) {
+                    console.log('Audio context state:', audioCtxRef.current.state);
+                    if (audioCtxRef.current.state === 'suspended') {
+                        audioCtxRef.current.resume().then(() => {
+                            console.log('Audio context resumed');
+                        }).catch((e) => {
+                            console.error('Failed to resume audio context:', e);
+                        });
+                    }
                 }
                 try {
                     const a = new Audio('/sehri.mp3');
                     a.volume = 0;
-                    a.play().then(() => { a.pause(); }).catch(() => { });
-                } catch (e) { }
+                    a.play().then(() => {
+                        console.log('Silent audio test played successfully');
+                        a.pause();
+                    }).catch((e) => {
+                        console.error('Failed to play silent audio:', e);
+                    });
+                } catch (e) {
+                    console.error('Error creating test audio:', e);
+                }
                 // Schedule native alarms now that sound is enabled
                 setTimeout(() => scheduleNativeAlarmsOnce(), 500);
             } else {
                 localStorage.removeItem(SOUND_KEY);
+                console.log('Sound disabled in localStorage');
                 // Cancel any previously scheduled native notifications
                 if (typeof window !== 'undefined' && window.__TAURI_INTERNALS__) {
                     import('@tauri-apps/plugin-notification').then(nav => nav.cancelAll().catch(() => { })).catch(() => { });
                 }
             }
-        } catch (e) { }
+        } catch (e) {
+            console.error('Error in handleSoundChange:', e);
+        }
     };
 
 
@@ -93,6 +118,45 @@ export default function Page() {
         const id = setInterval(() => setNowTick((n) => n + 1), 30 * 1000);
         return () => clearInterval(id);
     }, []);
+
+    // Re-schedule native alarms when city toggle changes
+    useEffect(() => {
+        // Don't run on initial mount, only when onlyRaipur actually changes
+        if (isInitialMountRef.current) {
+            isInitialMountRef.current = false;
+            return;
+        }
+
+        const reScheduleAlarms = async () => {
+            if (typeof window === 'undefined' || !window.__TAURI_INTERNALS__) return;
+            if (!soundEnabled) return; // Only re-schedule if sound is enabled
+
+            console.log('🔄 City changed, re-scheduling alarms for:', onlyRaipur ? 'Raipur' : 'Bilaspur');
+
+            // Clear the schedule flag so it re-schedules
+            const todayKey = new Date().toDateString();
+            const schedDoneKey = `ramzan_monthly_sched_${todayKey}`;
+            try {
+                localStorage.removeItem(schedDoneKey);
+            } catch (e) { }
+
+            // Cancel all previous alarms
+            try {
+                const nav = await import('@tauri-apps/plugin-notification');
+                await nav.cancelAll();
+                console.log('❌ All previous alarms cancelled');
+            } catch (e) {
+                console.error('Failed to cancel alarms:', e);
+            }
+
+            // Call the schedule function if available
+            if (scheduleAlarmsRef.current) {
+                await scheduleAlarmsRef.current();
+            }
+        };
+
+        reScheduleAlarms();
+    }, [onlyRaipur, soundEnabled]); // Watch both to ensure proper re-scheduling
 
     // helper: check if a date string in format "D Mon" (e.g. "28 Feb", "1 Mar") refers to today
     const isToday = (dateStr) => {
@@ -300,6 +364,8 @@ export default function Page() {
 
         const onlyRaipurNow = typeof localStorage !== 'undefined' && localStorage.getItem(STORAGE_KEY) === 'true';
         const table = onlyRaipurNow ? RAIPUR_TIMES : BILASPUR_TIMES;
+        const cityName = onlyRaipurNow ? 'Raipur' : 'Bilaspur';
+        console.log(`📅 Scheduling native alarms for ${cityName} (${table.length} days)`);
         const now = new Date();
 
         let scheduledCount = 0;
@@ -342,58 +408,94 @@ export default function Page() {
             if (scheduledCount >= 60) break;
         }
 
+        console.log(`✅ Scheduled ${scheduledCount} alarms for ${cityName}`);
         // Mark as scheduled for today
         try { localStorage.setItem(schedDoneKey, '1'); } catch (e) { }
     };
 
 
     useEffect(() => {
+        console.log('Initializing audio system...');
         // create Audio objects using Web Audio API for mobile compatibility
         try {
             const AudioContext = window.AudioContext || window.webkitAudioContext;
             if (AudioContext && !audioCtxRef.current) {
                 audioCtxRef.current = new AudioContext();
+                console.log('Audio context created, state:', audioCtxRef.current.state);
             }
-        } catch (e) { }
+        } catch (e) {
+            console.error('Failed to create audio context:', e);
+        }
 
-        const loadAudio = async (url, ref) => {
+        const loadAudio = async (url, ref, name) => {
+            console.log(`Loading audio: ${name} from ${url}`);
             try {
                 const response = await fetch(url);
+                if (!response.ok) {
+                    throw new Error(`Failed to fetch ${url}: ${response.status}`);
+                }
                 const arrayBuffer = await response.arrayBuffer();
+                console.log(`${name} fetched, size:`, arrayBuffer.byteLength);
                 let audioBuffer = null;
                 if (audioCtxRef.current) {
                     audioBuffer = await audioCtxRef.current.decodeAudioData(arrayBuffer);
+                    console.log(`${name} decoded successfully, duration:`, audioBuffer.duration);
                 }
                 ref.current = {
                     play: () => {
-                        return new Promise((resolve) => {
+                        return new Promise((resolve, reject) => {
                             try {
+                                console.log(`Attempting to play ${name}`);
                                 if (audioCtxRef.current && audioBuffer) {
+                                    console.log(`Using Web Audio API for ${name}, context state:`, audioCtxRef.current.state);
                                     if (audioCtxRef.current.state === 'suspended') {
+                                        console.log('Resuming suspended audio context');
                                         audioCtxRef.current.resume();
                                     }
                                     const source = audioCtxRef.current.createBufferSource();
                                     source.buffer = audioBuffer;
                                     source.connect(audioCtxRef.current.destination);
+                                    source.onended = () => {
+                                        console.log(`${name} finished playing`);
+                                        resolve();
+                                    };
                                     source.start(0);
-                                    resolve();
+                                    console.log(`${name} started playing`);
                                 } else {
+                                    console.log(`Using HTML5 Audio for ${name}`);
                                     const a = new Audio(url);
-                                    a.play().then(resolve).catch(resolve);
+                                    a.play().then(() => {
+                                        console.log(`${name} played via HTML5 Audio`);
+                                        resolve();
+                                    }).catch((e) => {
+                                        console.error(`${name} play failed:`, e);
+                                        reject(e);
+                                    });
                                 }
-                            } catch (e) { resolve(); }
+                            } catch (e) {
+                                console.error(`Error playing ${name}:`, e);
+                                reject(e);
+                            }
                         });
                     }
                 };
+                console.log(`${name} audio ref configured successfully`);
             } catch (e) {
-                console.error("Audio Load Error", e);
+                console.error(`Audio Load Error for ${name}:`, e);
                 const basic = new Audio(url);
-                ref.current = { play: () => basic.play().catch(() => { }) };
+                ref.current = {
+                    play: () => {
+                        console.log(`Playing ${name} via fallback HTML5 Audio`);
+                        return basic.play().catch((e) => {
+                            console.error(`Fallback play failed for ${name}:`, e);
+                        });
+                    }
+                };
             }
         };
 
-        loadAudio('/sehri.mp3', sehriAudioRef);
-        loadAudio('/irftari.mp3', iftariAudioRef);
+        loadAudio('/sehri.mp3', sehriAudioRef, 'Sehri');
+        loadAudio('/irftari.mp3', iftariAudioRef, 'Iftari');
 
         let checker = null;
 
@@ -482,21 +584,29 @@ export default function Page() {
             if (sehriTime && isSameMinute(now, sehriTime)) {
                 const key = (new Date()).toDateString();
                 const persisted = (typeof localStorage !== 'undefined') ? localStorage.getItem('ramzan_played_sehri') : null;
+                console.log('Sehri time matched!', { key, persisted, playedRef: playedRef.current.sehri, soundEnabled: soundEnabledRef.current });
                 if (playedRef.current.sehri !== key && persisted !== key) {
                     playedRef.current.sehri = key;
+                    console.log('Playing Bilaspur sehri notification and sound');
                     tryNotify('Sehri Time 🌙', `Sehri Ka Waqt Khatm Ho Gaya Hai (${times.sehriText})`);
                     try {
                         if (soundEnabledRef.current) {
+                            console.log('Sound is enabled, attempting to play sehri audio');
                             const p = sehriAudioRef.current?.play();
                             if (p && typeof p.then === 'function') {
-                                p.then(() => { try { if (typeof localStorage !== 'undefined') localStorage.setItem('ramzan_played_sehri', key); } catch (e) { } }).catch((e) => {
-                                    console.error('Audio play failed:', e);
+                                p.then(() => {
+                                    console.log('Sehri audio played successfully');
+                                    try { if (typeof localStorage !== 'undefined') localStorage.setItem('ramzan_played_sehri', key); } catch (e) { }
+                                }).catch((e) => {
+                                    console.error('Sehri audio play failed:', e);
                                     try { if (typeof localStorage !== 'undefined') localStorage.setItem('ramzan_played_sehri', key); } catch (e) { }
                                 });
                             } else {
+                                console.log('Play returned non-promise');
                                 try { if (typeof localStorage !== 'undefined') localStorage.setItem('ramzan_played_sehri', key); } catch (e) { }
                             }
                         } else {
+                            console.log('Sound is disabled, skipping audio playback');
                             try { if (typeof localStorage !== 'undefined') localStorage.setItem('ramzan_played_sehri', key); } catch (e) { }
                         }
                     } catch (e) { console.error('Error in sehri sound', e); }
@@ -506,21 +616,29 @@ export default function Page() {
             if (iftariTime && isSameMinute(now, iftariTime)) {
                 const key = (new Date()).toDateString();
                 const persisted = (typeof localStorage !== 'undefined') ? localStorage.getItem('ramzan_played_iftari') : null;
+                console.log('Iftari time matched!', { key, persisted, playedRef: playedRef.current.iftari, soundEnabled: soundEnabledRef.current });
                 if (playedRef.current.iftari !== key && persisted !== key) {
                     playedRef.current.iftari = key;
+                    console.log('Playing Bilaspur iftari notification and sound');
                     tryNotify('Iftari Time 🌅', `Iftari Ka Waqt Ho Gaya Hai (${times.iftariText})`);
                     try {
                         if (soundEnabledRef.current) {
+                            console.log('Sound is enabled, attempting to play iftari audio');
                             const p = iftariAudioRef.current?.play();
                             if (p && typeof p.then === 'function') {
-                                p.then(() => { try { if (typeof localStorage !== 'undefined') localStorage.setItem('ramzan_played_iftari', key); } catch (e) { } }).catch((e) => {
-                                    console.error('Audio play failed:', e);
+                                p.then(() => {
+                                    console.log('Iftari audio played successfully');
+                                    try { if (typeof localStorage !== 'undefined') localStorage.setItem('ramzan_played_iftari', key); } catch (e) { }
+                                }).catch((e) => {
+                                    console.error('Iftari audio play failed:', e);
                                     try { if (typeof localStorage !== 'undefined') localStorage.setItem('ramzan_played_iftari', key); } catch (e) { }
                                 });
                             } else {
+                                console.log('Play returned non-promise');
                                 try { if (typeof localStorage !== 'undefined') localStorage.setItem('ramzan_played_iftari', key); } catch (e) { }
                             }
                         } else {
+                            console.log('Sound is disabled, skipping audio playback');
                             try { if (typeof localStorage !== 'undefined') localStorage.setItem('ramzan_played_iftari', key); } catch (e) { }
                         }
                     } catch (e) { console.error('Error in iftari sound', e); }
@@ -532,6 +650,9 @@ export default function Page() {
         if (typeof Notification !== 'undefined' && Notification.permission === 'default') {
             try { Notification.requestPermission().catch(() => { }); } catch (e) { }
         }
+
+        // Store the schedule function in ref so it can be called from city toggle effect
+        scheduleAlarmsRef.current = scheduleNativeAlarmsOnce;
 
         // Schedule today's native alarms (once on mount — not every tick)
         scheduleNativeAlarmsOnce();
