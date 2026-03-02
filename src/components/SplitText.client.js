@@ -155,7 +155,7 @@ const SplitText = ({
                     .split-parent .split-word,
                     .split-parent .split-line {
                         display: inline-block;
-                        background: linear-gradient(to bottom, #ffffff, #bbf7d0, #14b8a6);
+                            background: linear-gradient(to bottom, #FFF4E6, #FBE7D0, #8B5E3C);
                         -webkit-background-clip: text;
                         background-clip: text;
                         -webkit-text-fill-color: transparent;

@@ -273,7 +273,7 @@ export default function Home() {
 
     return (
         <main
-            className="flex min-h-screen flex-col items-center justify-start pt-12 sm:pt-20 bg-[#271b14] text-gray-100 p-4 sm:p-6 pb-24 sm:pb-32 relative overflow-hidden"
+            className="flex min-h-screen flex-col items-center justify-start pt-12 sm:pt-20 bg-[#160e09] text-gray-100 p-4 sm:p-6 pb-24 sm:pb-32 relative overflow-hidden"
             style={{
                 paddingBottom: "calc(env(safe-area-inset-bottom, 0px) + 2rem)",
             }}
@@ -284,8 +284,7 @@ export default function Home() {
 
             <header className=" text-center mb-15 sm:mb-14 relative z-15 w-full max-w-4xl mx-auto">
                 <div className="relative inline-flex flex-col items-center mt-[-30px]">
-                    {/* Glowing background blur */}
-                    <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[150%] h-[150%] bg-gradient-to-r from-emerald-500/50 via-teal-400/50 to-cyan-500/50 blur-[50px] rounded-full pointer-events-none animate-pulse" />
+                    {/* Glowing background blur (base-200 like + white) */}
 
                     <AppTitle />
 
