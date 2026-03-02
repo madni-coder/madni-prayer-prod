@@ -23,6 +23,7 @@ import {
 import { Megaphone, UsersRound } from "lucide-react";
 import Image from "next/image";
 import TasbihSvgIcon from "../components/TasbihSvgIcon";
+import AppTitle from "../components/AppTitle.client";
 import apiClient from "../lib/apiClient";
 
 const sections = [
@@ -286,11 +287,7 @@ export default function Home() {
                     {/* Glowing background blur */}
                     <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[150%] h-[150%] bg-gradient-to-r from-emerald-500/50 via-teal-400/50 to-cyan-500/50 blur-[50px] rounded-full pointer-events-none animate-pulse" />
 
-                    <h1 className="mr-0 relative w-full text-3xl sm:text-3xl md:text-4xl lg:text-5xl xl:text-6xl font-black font-serif tracking-[0.06em] uppercase leading-tight drop-shadow-[0_12px_24px_rgba(0,0,0,0.8)] z-10 pb-2 text-center px-2">
-                        <span className="inline-block w-full break-words [word-spacing:0.25em] bg-clip-text text-transparent bg-gradient-to-b from-white via-emerald-200 to-teal-600 drop-shadow-[0_0_15px_rgba(52,211,153,0.3)]">
-                            RAAHE HIDAYAT
-                        </span>
-                    </h1>
+                    <AppTitle />
 
                     {/* Glowing underline accent */}
                     <div className="mt-[-2] sm:mt-4 h-[3px] w-32 sm:w-48 rounded-full bg-gradient-to-r from-transparent via-emerald-400 to-transparent shadow-[0_0_15px_rgba(52,211,153,0.8)] relative overflow-hidden">
