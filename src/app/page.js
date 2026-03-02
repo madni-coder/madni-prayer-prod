@@ -272,7 +272,7 @@ export default function Home() {
 
     return (
         <main
-            className=" flex min-h-screen flex-col items-center justify-start pt-12 sm:pt-20 bg-gradient-to-b from-[#060b14] via-[#0b172d] to-[#040812] text-gray-200 p-4 sm:p-6 pb-24 sm:pb-32 relative overflow-hidden"
+            className="flex min-h-screen flex-col items-center justify-start pt-12 sm:pt-20 bg-[#271b14] text-gray-100 p-4 sm:p-6 pb-24 sm:pb-32 relative overflow-hidden"
             style={{
                 paddingBottom: "calc(env(safe-area-inset-bottom, 0px) + 2rem)",
             }}
@@ -286,9 +286,9 @@ export default function Home() {
                     {/* Glowing background blur */}
                     <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[150%] h-[150%] bg-gradient-to-r from-emerald-500/50 via-teal-400/50 to-cyan-500/50 blur-[50px] rounded-full pointer-events-none animate-pulse" />
 
-                    <h1 className="relative w-full text-4xl whitespace-nowrap font-black tracking-tighter uppercase drop-shadow-[0_12px_24px_rgba(0,0,0,0.8)] z-10 pb-2">
-                        <span className="bg-clip-text text-transparent bg-gradient-to-b from-white via-emerald-200 to-teal-600 drop-shadow-[0_0_15px_rgba(52,211,153,0.3)]">
-                            RAAH-E-HIDAYAT
+                    <h1 className="mr-0 relative w-full text-3xl sm:text-3xl md:text-4xl lg:text-5xl xl:text-6xl font-black font-serif tracking-[0.06em] uppercase leading-tight drop-shadow-[0_12px_24px_rgba(0,0,0,0.8)] z-10 pb-2 text-center px-2">
+                        <span className="inline-block w-full break-words [word-spacing:0.25em] bg-clip-text text-transparent bg-gradient-to-b from-white via-emerald-200 to-teal-600 drop-shadow-[0_0_15px_rgba(52,211,153,0.3)]">
+                            RAAHE HIDAYAT
                         </span>
                     </h1>
 
@@ -318,14 +318,14 @@ export default function Home() {
                 {sections.map((section, idx) => {
                     const isNotice = section.href === "/notice";
 
-                    // Realistic 3D Interactive Card Classes
+                    // Card container using header's glowing frosted-glass styling
                     const baseClass =
                         "group relative flex flex-col items-center justify-center gap-3 sm:gap-4 p-4 sm:p-6 rounded-3xl " +
-                        "bg-gradient-to-b from-[#253648] to-[#162331] " +
-                        "border-t border-l border-[#40566e] border-b border-r border-[#0d151e] " +
-                        "shadow-[6px_6px_14px_rgba(0,0,0,0.6),-4px_-4px_10px_rgba(255,255,255,0.03)] " +
-                        "hover:shadow-[10px_10px_20px_rgba(0,0,0,0.7),-6px_-6px_14px_rgba(255,255,255,0.05),inset_0_2px_20px_rgba(255,255,255,0.02)] " +
-                        "active:shadow-[2px_2px_6px_rgba(0,0,0,0.8),inset_4px_4px_10px_rgba(0,0,0,0.5)] " +
+                        "bg-gradient-to-b from-[#0b2540]/30 via-[#072033]/25 to-[#04121a]/30 backdrop-blur-sm " +
+                        "border border-white/[0.04] " +
+                        "shadow-[0_12px_30px_rgba(2,6,23,0.6),inset_0_1px_0_rgba(255,255,255,0.02)] " +
+                        "hover:shadow-[0_16px_40px_rgba(2,6,23,0.7),inset_0_1px_0_rgba(255,255,255,0.03)] " +
+                        "active:shadow-[0_6px_16px_rgba(0,0,0,0.8),inset_4px_4px_10px_rgba(0,0,0,0.5)] " +
                         "transform transition-all duration-300 ease-[cubic-bezier(0.25,0.8,0.25,1)] " +
                         "hover:-translate-y-2 hover:scale-[1.03] active:translate-y-1 active:scale-95 " +
                         "h-[140px] sm:h-[180px] w-full overflow-hidden";
