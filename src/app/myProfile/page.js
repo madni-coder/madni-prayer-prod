@@ -4,12 +4,22 @@ import { FaUser, FaAngleLeft, FaEnvelope, FaLock, FaMapMarkerAlt, FaMosque, FaPh
 import apiClient from "../../lib/apiClient";
 import AnimatedLooader from "../../components/animatedLooader";
 import ErrorPopup from "../../components/ErrorPopup";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useRouter } from "next/navigation";
 
 export default function MyProfilePage() {
     const router = useRouter();
-    const searchParams = useSearchParams();
-    const returnTo = searchParams ? searchParams.get('returnTo') : null;
+    const [returnTo, setReturnTo] = useState(null);
+
+    useEffect(() => {
+        if (typeof window === 'undefined') return;
+        try {
+            const sp = new URLSearchParams(window.location.search);
+            const rt = sp.get('returnTo');
+            if (rt) setReturnTo(rt);
+        } catch (e) {
+            // ignore
+        }
+    }, []);
     const fullNameRef = useRef(null);
     const addressRef = useRef(null);
     const mobileRef = useRef(null);
