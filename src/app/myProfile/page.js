@@ -4,10 +4,12 @@ import { FaUser, FaAngleLeft, FaEnvelope, FaLock, FaMapMarkerAlt, FaMosque, FaPh
 import apiClient from "../../lib/apiClient";
 import AnimatedLooader from "../../components/animatedLooader";
 import ErrorPopup from "../../components/ErrorPopup";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 
 export default function MyProfilePage() {
     const router = useRouter();
+    const searchParams = useSearchParams();
+    const returnTo = searchParams ? searchParams.get('returnTo') : null;
     const fullNameRef = useRef(null);
     const addressRef = useRef(null);
     const mobileRef = useRef(null);
@@ -213,12 +215,11 @@ export default function MyProfilePage() {
             setSuccessMessage("Registration successful!");
             setShowSuccessToast(true);
 
-            // Refresh the current route so any server data is re-fetched
+            // Redirect back to the page that initiated registration (if provided)
             try {
-                router.refresh();
+                router.push(returnTo || '/');
             } catch (e) {
-                // fallback to full reload if refresh isn't available
-                if (typeof window !== 'undefined') window.location.reload();
+                if (typeof window !== 'undefined') window.location.href = returnTo || '/';
             }
 
             setTimeout(() => setShowSuccessToast(false), 2000);
@@ -277,8 +278,12 @@ export default function MyProfilePage() {
             setShowLoginModal(false);
             setLoginLoading(false);
 
-            // Redirect to home page on successful login
-            router.push('/');
+            // Redirect back to the page that initiated login (if provided)
+            try {
+                router.push(returnTo || '/');
+            } catch (e) {
+                if (typeof window !== 'undefined') window.location.href = returnTo || '/';
+            }
         } catch (err) {
             console.error('Login error', err);
             const msg = err?.response?.data?.error || err?.message || 'Login failed';
@@ -611,7 +616,8 @@ export default function MyProfilePage() {
                                         <button
                                             type="button"
                                             onClick={() => setShowDeleteModal(true)}
-                                            className="ml-auto inline-flex items-center gap-2 py-1.5 px-3 rounded-md bg-gradient-to-r from-error to-error hover:opacity-90 transition-all shadow text-white font-semibold text-sm"
+                                            className="ml-auto text-sm text-error underline underline-offset-2 hover:opacity-80 bg-transparent p-0 border-0"
+                                            aria-label="Delete My Account"
                                         >
                                             Delete My Account
                                         </button>

@@ -465,7 +465,8 @@ export default function Tasbih() {
                 setSubmitting(false);
             }
         } else {
-            router.push('/myProfile');
+            const returnTo = typeof window !== 'undefined' ? window.location.pathname + window.location.search : '/tasbih';
+            router.push(`/myProfile?returnTo=${encodeURIComponent(returnTo)}`);
         }
     };
 

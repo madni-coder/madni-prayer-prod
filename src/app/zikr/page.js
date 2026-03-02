@@ -206,8 +206,9 @@ export default function Page() {
             // User exists, call zikr API directly
             submitZikrForAuthenticatedUser();
         } else {
-            // User not logged in, redirect to profile page
-            router.push('/myProfile');
+            // User not logged in, redirect to profile page with returnTo
+            const returnTo = typeof window !== 'undefined' ? window.location.pathname + window.location.search : '/zikr';
+            router.push(`/myProfile?returnTo=${encodeURIComponent(returnTo)}`);
         }
     }
 
