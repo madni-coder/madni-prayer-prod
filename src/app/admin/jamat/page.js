@@ -1,7 +1,7 @@
 "use client";
 import { useState, useEffect, useRef } from "react";
 import { FaPencilAlt, FaCheckCircle } from "react-icons/fa";
-import { X, RotateCcw } from "lucide-react";
+import { X } from "lucide-react";
 import { useAllMasjidContext } from "../../../context/AllMasjidContext";
 import { useJamatTimeContext } from "../../../context/JamatTimeContext";
 import { useRouter } from "next/navigation";
@@ -35,7 +35,7 @@ export default function JamatTimesPage() {
     const [saveMessage, setSaveMessage] = useState("");
     const [isAuthenticated, setIsAuthenticated] = useState(false);
     const [authLoading, setAuthLoading] = useState(true);
-    const [colonySearch, setColonySearch] = useState(""); // add for colony search
+    const [searchQuery, setSearchQuery] = useState(""); // unified search for masjid or locality
 
     // Authentication check effect
     useEffect(() => {
@@ -114,7 +114,7 @@ export default function JamatTimesPage() {
                     (m) => m.masjidName === selectedMasjid
                 );
                 if (masjidData) {
-                    const newTimes = prayers.map((prayer) => {
+                    const newTimes = prayers.map((prayer, idx) => {
                         let value;
                         switch (prayer.name) {
                             case "Fajr":
@@ -141,7 +141,7 @@ export default function JamatTimesPage() {
                             default:
                                 value = prayer.defaultTime;
                         }
-                        return normalizeTime(value, prayer.defaultTime, idx);
+                        return normalizeTime(value, prayer.defaultTime);
                     });
                     setTimes(newTimes);
                 } else {
@@ -265,116 +265,102 @@ export default function JamatTimesPage() {
         setSelectedMasjid("");
     };
 
-    const handleReset = () => {
-        setSelectedColony("");
-        setSelectedMasjid("");
-        setColonySearch(""); // clear search input
-        setTimes(prayers.map((p) => p.defaultTime));
-        setEditIdx(null);
-        setEditValue(""); // clear any in-progress edit value
-        setError("");
-        setSaveMessage(""); // clear any save message
-        setSaving(false); // ensure saving flag is reset
+    // Handle selection from unified search (masjid name or colony)
+    const handleSearchSelect = (value) => {
+        if (!value) return;
+        // exact masjid name match
+        const exactMasjid = masjids.find((m) => m.masjidName === value);
+        if (exactMasjid) {
+            setSelectedMasjid(exactMasjid.masjidName);
+            setSelectedColony(exactMasjid.colony || "");
+            setSearchQuery(exactMasjid.masjidName);
+            return;
+        }
+        // exact colony match
+        const colonyMatch = colonies.find((c) => (c.name || c) === value);
+        if (colonyMatch) {
+            setSelectedColony(colonyMatch.name || colonyMatch);
+            setSelectedMasjid("");
+            setSearchQuery(colonyMatch.name || colonyMatch);
+            return;
+        }
+        // no exact match: leave as typed
     };
 
     return (
         <div className="min-h-screen bg-white flex flex-col items-center py-10">
             <div className="flex flex-col md:flex-row gap-4 mb-8 w-full max-w-5xl items-stretch md:items-center px-4">
-                {/* Colony Search Input */}
+                {/* Unified Search Input for Masjid or Locality */}
                 <div className="flex-1 relative">
                     <input
                         type="text"
-                        placeholder="Search or enter colony"
-                        value={colonySearch}
-                        onChange={(e) => {
-                            setColonySearch(e.target.value);
-                            setSelectedColony(e.target.value);
-                        }}
+                        placeholder="Search for masjid or locality"
+                        value={searchQuery}
+                        onChange={(e) => setSearchQuery(e.target.value)}
                         className="input w-full bg-white border text-gray-800 text-base md:text-lg h-12 md:h-14 pr-10"
-                        list="colony-list"
                     />
-                    {colonySearch && (
+                    {searchQuery && (
                         <button
                             onClick={() => {
-                                setColonySearch("");
+                                setSearchQuery("");
                                 setSelectedColony("");
+                                setSelectedMasjid("");
                             }}
                             className="absolute right-1 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 z-20"
-                            title="Clear colony"
+                            title="Clear search"
                         >
                             <X size={20} />
                         </button>
                     )}
-                    <datalist id="colony-list">
-                        {colonies
-                            .filter((colony) =>
-                                (colony.name || colony)
-                                    .toLowerCase()
-                                    .includes(colonySearch.toLowerCase())
-                            )
-                            .map((colony) => (
-                                <option
-                                    key={colony.name || colony}
-                                    value={colony.name || colony}
-                                />
-                            ))}
-                    </datalist>
-                </div>
-                {/* Masjid Dropdown (DaisyUI) */}
-                <div className="dropdown flex-1 relative">
-                    <label
-                        tabIndex={0}
-                        className="btn w-full bg-white border text-gray-500 justify-between text-left text-base md:text-lg h-12 md:h-14"
-                    >
-                        {loading
-                            ? "Loading..."
-                            : selectedMasjid || "Select Masjid"}
-                    </label>
-                    {selectedMasjid && (
-                        <button
-                            onClick={handleClearMasjid}
-                            className="absolute right-2 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 z-20"
-                        >
-                            <X size={20} />
-                        </button>
+
+                    {/* Suggestions dropdown: render masjid name + colony/address */}
+                    {searchQuery.trim().length > 0 && (!selectedMasjid || searchQuery !== selectedMasjid) && (
+                        <div className="absolute left-0 right-0 mt-2 z-30">
+                            <div className="bg-white border rounded shadow-lg max-h-60 overflow-auto">
+                                {masjids
+                                    .filter((m) => {
+                                        const q = searchQuery.toLowerCase();
+                                        return (
+                                            (m.masjidName || "").toLowerCase().includes(q) ||
+                                            (m.colony || "").toLowerCase().includes(q) ||
+                                            (m.locality || "").toLowerCase().includes(q)
+                                        );
+                                    })
+                                    .slice(0, 50)
+                                    .map((m) => (
+                                        <button
+                                            key={m.id}
+                                            onMouseDown={(e) => e.preventDefault()}
+                                            onClick={() => {
+                                                setSelectedMasjid(m.masjidName);
+                                                setSelectedColony(m.colony || "");
+                                                setSearchQuery(m.masjidName);
+                                            }}
+                                            className="w-full text-left p-3 hover:bg-gray-50 flex flex-col"
+                                        >
+                                            <span className="font-semibold text-gray-800">
+                                                {m.masjidName}
+                                            </span>
+                                            <span className="text-sm text-gray-500 mt-1">
+                                                {m.colony || m.locality || ""}
+                                            </span>
+                                        </button>
+                                    ))}
+                                {masjids.filter((m) => {
+                                    const q = searchQuery.toLowerCase();
+                                    return (
+                                        (m.masjidName || "").toLowerCase().includes(q) ||
+                                        (m.colony || "").toLowerCase().includes(q) ||
+                                        (m.locality || "").toLowerCase().includes(q)
+                                    );
+                                }).length === 0 && (
+                                        <div className="p-3 text-sm text-gray-500">No results</div>
+                                    )}
+                            </div>
+                        </div>
                     )}
-                    <ul
-                        tabIndex={0}
-                        className="dropdown-content menu p-2 shadow bg-base-100 rounded-box w-full z-10"
-                    >
-                        {masjids
-                            .filter(
-                                (m) =>
-                                    !selectedColony ||
-                                    m.colony === selectedColony
-                            )
-                            .map((masjid) => (
-                                <li key={masjid.id}>
-                                    <a
-                                        onClick={() => {
-                                            setSelectedMasjid(
-                                                masjid.masjidName
-                                            );
-                                            if (!selectedColony)
-                                                setSelectedColony(
-                                                    masjid.colony
-                                                );
-                                        }}
-                                    >
-                                        {masjid.masjidName}
-                                    </a>
-                                </li>
-                            ))}
-                    </ul>
                 </div>
-                {/* Reset Button */}
-                <button
-                    onClick={handleReset}
-                    className="btn bg-gray-500 hover:bg-gray-600 text-white border-none px-4 h-12 md:h-14 flex items-center justify-center mt-2 md:mt-0 flex-shrink-0"
-                    title="Reset all selections"
-                >
-                    <RotateCcw size={20} />
-                </button>
+                {/* Reset button removed */}
             </div>
             <h1 className="text-3xl font-bold mb-8 text-center text-gray-800">
                 Jamat Time Table
@@ -477,7 +463,7 @@ export default function JamatTimesPage() {
 }
 
 // Normalize incoming time from API
-function normalizeTime(value, fallback, idx) {
-    if (!value) return fallback.replace(/ am| pm/gi, "");
+function normalizeTime(value, fallback) {
+    if (!value) return String(fallback || "").replace(/ am| pm/gi, "");
     return String(value).trim().toLowerCase().replace(/ am| pm/gi, "");
 }
