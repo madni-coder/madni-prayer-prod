@@ -138,7 +138,7 @@ const SplitText = ({
             wordWrap: 'break-word',
             willChange: 'transform, opacity'
         };
-        const classes = `split-parent inline-block whitespace-normal ${className}`;
+        const classes = `split-parent overflow-hidden inline-block whitespace-normal ${className}`;
         const Tag = tag || 'p';
 
         return (
@@ -150,18 +150,16 @@ const SplitText = ({
                     .split-parent {
                         -webkit-text-fill-color: transparent;
                         text-fill-color: transparent;
-                        overflow: visible;
                     }
                     .split-parent .split-char,
                     .split-parent .split-word,
                     .split-parent .split-line {
                         display: inline-block;
-                        background: linear-gradient(to bottom, #FFF4E6, #FBE7D0, #8B5E3C);
+                            background: linear-gradient(to bottom, #FFF4E6, #FBE7D0, #8B5E3C);
                         -webkit-background-clip: text;
                         background-clip: text;
                         -webkit-text-fill-color: transparent;
                         color: transparent;
-                        backface-visibility: hidden;
                     }
                 `}</style>
             </>
