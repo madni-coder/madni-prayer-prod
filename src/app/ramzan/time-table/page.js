@@ -1,5 +1,5 @@
 "use client"
-import { FaAngleLeft, FaVolumeUp, FaVolumeMute } from 'react-icons/fa';
+import { FaAngleLeft } from 'react-icons/fa';
 import { useRouter } from 'next/navigation';
 import { useState, useEffect, useRef } from 'react';
 import BackLoader from '../../../components/BackLoader.client';
@@ -8,17 +8,13 @@ import RaipurTimeTable from '../../../components/raipurTimeTable';
 export default function Page() {
     const router = useRouter();
     const STORAGE_KEY = "ramzan_only_raipur";
-    const SOUND_KEY = "ramzan_sound_enabled";
     const [onlyRaipur, setOnlyRaipur] = useState(false);
-    const [soundEnabled, setSoundEnabled] = useState(false);
     const [showLoader, setShowLoader] = useState(false);
 
     // tick to force re-render so `isToday` updates when system date/time changes
     const [, setNowTick] = useState(0);
     const timerRef = useRef(null);
-    const soundEnabledRef = useRef(false);
-    const scheduleAlarmsRef = useRef(null); // Will store the schedule function to call from city toggle
-    const isInitialMountRef = useRef(true); // Track initial mount for city toggle effect
+
 
 
 
@@ -26,13 +22,6 @@ export default function Page() {
         try {
             const v = localStorage.getItem(STORAGE_KEY);
             if (v === "true") setOnlyRaipur(true);
-            const s = localStorage.getItem(SOUND_KEY);
-            if (s === "true") {
-                setSoundEnabled(true);
-                soundEnabledRef.current = true;
-            }
-            // no test UI state to load
-            // no test overrides in production
         } catch (e) {
             // ignore
         }
@@ -57,53 +46,7 @@ export default function Page() {
         }, 500);
     };
 
-    const handleSoundChange = (checked) => {
-        console.log('Sound toggle changed to:', checked);
-        setSoundEnabled(checked);
-        soundEnabledRef.current = checked;
-        try {
-            if (checked) {
-                localStorage.setItem(SOUND_KEY, "true");
-                console.log('Sound enabled in localStorage');
-                // Clear the "already scheduled today" flag so alarms are re-scheduled immediately
-                try { localStorage.removeItem(`ramzan_sched_done_${new Date().toDateString()}`); } catch (e) { }
-                // Briefly play silence to unlock Web Audio context on iOS/Android
-                if (audioCtxRef.current) {
-                    console.log('Audio context state:', audioCtxRef.current.state);
-                    if (audioCtxRef.current.state === 'suspended') {
-                        audioCtxRef.current.resume().then(() => {
-                            console.log('Audio context resumed');
-                        }).catch((e) => {
-                            console.error('Failed to resume audio context:', e);
-                        });
-                    }
-                }
-                try {
-                    const a = new Audio('/sehri.mp3');
-                    a.volume = 0;
-                    a.play().then(() => {
-                        console.log('Silent audio test played successfully');
-                        a.pause();
-                    }).catch((e) => {
-                        console.error('Failed to play silent audio:', e);
-                    });
-                } catch (e) {
-                    console.error('Error creating test audio:', e);
-                }
-                // Schedule native alarms now that sound is enabled
-                setTimeout(() => scheduleNativeAlarmsOnce(), 500);
-            } else {
-                localStorage.removeItem(SOUND_KEY);
-                console.log('Sound disabled in localStorage');
-                // Cancel any previously scheduled native notifications
-                if (typeof window !== 'undefined' && window.__TAURI_INTERNALS__) {
-                    import('@tauri-apps/plugin-notification').then(nav => nav.cancelAll().catch(() => { })).catch(() => { });
-                }
-            }
-        } catch (e) {
-            console.error('Error in handleSoundChange:', e);
-        }
-    };
+
 
 
 
@@ -119,44 +62,7 @@ export default function Page() {
         return () => clearInterval(id);
     }, []);
 
-    // Re-schedule native alarms when city toggle changes
-    useEffect(() => {
-        // Don't run on initial mount, only when onlyRaipur actually changes
-        if (isInitialMountRef.current) {
-            isInitialMountRef.current = false;
-            return;
-        }
 
-        const reScheduleAlarms = async () => {
-            if (typeof window === 'undefined' || !window.__TAURI_INTERNALS__) return;
-            if (!soundEnabled) return; // Only re-schedule if sound is enabled
-
-            console.log('🔄 City changed, re-scheduling alarms for:', onlyRaipur ? 'Raipur' : 'Bilaspur');
-
-            // Clear the schedule flag so it re-schedules
-            const todayKey = new Date().toDateString();
-            const schedDoneKey = `ramzan_monthly_sched_${todayKey}`;
-            try {
-                localStorage.removeItem(schedDoneKey);
-            } catch (e) { }
-
-            // Cancel all previous alarms
-            try {
-                const nav = await import('@tauri-apps/plugin-notification');
-                await nav.cancelAll();
-                console.log('❌ All previous alarms cancelled');
-            } catch (e) {
-                console.error('Failed to cancel alarms:', e);
-            }
-
-            // Call the schedule function if available
-            if (scheduleAlarmsRef.current) {
-                await scheduleAlarmsRef.current();
-            }
-        };
-
-        reScheduleAlarms();
-    }, [onlyRaipur, soundEnabled]); // Watch both to ensure proper re-scheduling
 
     // helper: check if a date string in format "D Mon" (e.g. "28 Feb", "1 Mar") refers to today
     const isToday = (dateStr) => {
@@ -176,97 +82,7 @@ export default function Page() {
         }
     };
 
-    // Play audio announcement when sehri or iftari time hits
-    const sehriAudioRef = useRef({ play: () => Promise.resolve() });
-    const iftariAudioRef = useRef({ play: () => Promise.resolve() });
-    const playedRef = useRef({ sehri: null, iftari: null });
-    const audioCtxRef = useRef(null);
 
-    // Send an immediate native notification (works in foreground)
-    const tryNotify = async (title, body) => {
-        try {
-            if (typeof window !== 'undefined' && window.__TAURI_INTERNALS__) {
-                const { invoke } = await import('@tauri-apps/api/core');
-                const { isPermissionGranted, requestPermission } = await import('@tauri-apps/plugin-notification');
-                let granted = await isPermissionGranted();
-                if (!granted) {
-                    const permission = await requestPermission();
-                    granted = permission === 'granted';
-                }
-                if (granted) {
-                    // Use invoke directly so it hits the native layer (not just window.Notification)
-                    // Command name is 'notify' per the Tauri plugin Rust source
-                    await invoke('plugin:notification|notify', {
-                        options: { title, body, sound: 'default', channelId: 'ramzan_alert' }
-                    }).catch(() => {
-                        // Fallback to browser notification if invoke fails
-                        if (typeof Notification !== 'undefined' && Notification.permission === 'granted') {
-                            new Notification(title, { body });
-                        }
-                    });
-                }
-            } else if (typeof Notification !== 'undefined' && Notification.permission === 'granted') {
-                new Notification(title, { body });
-            }
-        } catch (e) { }
-    };
-
-    // Schedule a native alarm that fires even when app is closed/phone locked
-    // Android: ExactAlarmAllowWhileIdle  |  iOS: UNUserNotificationCenter (works when locked/closed)
-    // iosSoundName: name of the .caf file in the iOS bundle (without extension), e.g. 'sehri' or 'irftari'
-    const scheduleNativeAlarm = async (date, idStr, titleStr, bodyStr, iosSoundName = 'default') => {
-        if (!date || date <= new Date()) return;
-        if (typeof window === 'undefined' || !window.__TAURI_INTERNALS__) return;
-        try {
-            const { invoke } = await import('@tauri-apps/api/core');
-            const { isPermissionGranted, requestPermission, Schedule } = await import('@tauri-apps/plugin-notification');
-            let granted = await isPermissionGranted();
-            if (!granted) {
-                const permission = await requestPermission();
-                granted = permission === 'granted';
-            }
-            if (!granted) return;
-
-            // Detect platform: channels are Android-only — on iOS create_channel is not needed
-            let isIOS = false;
-            try {
-                const { platform } = await import('@tauri-apps/plugin-os');
-                isIOS = (await platform()) === 'ios';
-            } catch (e) { }
-
-            if (!isIOS) {
-                // Android: Create high-importance channel (required for custom sound + heads-up display)
-                await invoke('plugin:notification|create_channel', {
-                    id: 'ramzan_alert',
-                    name: 'Ramzan Alerts',
-                    description: 'Sehri and Iftari time alerts',
-                    importance: 4,    // Importance.High
-                    visibility: 1,    // Visibility.Public
-                    vibration: true,
-                    sound: 'ramzan_alert'  // matches res/raw/ramzan_alert.mp3 in Android assets
-                }).catch(() => { });
-            }
-
-            // Use invoke directly — the JS sendNotification() wrapper just calls window.Notification
-            // and does NOT reach the native scheduler on mobile.
-            // Rust command name: 'notify' (from commands.rs in tauri-plugin-notification)
-            const notifId = Math.abs(idStr.split('').reduce((a, c) => (a << 5) - a + c.charCodeAt(0), 0)) % 2147483647;
-            await invoke('plugin:notification|notify', {
-                options: {
-                    id: notifId,
-                    title: titleStr,
-                    body: bodyStr,
-                    // iOS: .caf file name (without extension) bundled in app  |  Android: res/raw sound name
-                    sound: isIOS ? iosSoundName : 'ramzan_alert',
-                    // channelId is ignored on iOS but required on Android
-                    ...(isIOS ? {} : { channelId: 'ramzan_alert' }),
-                    schedule: Schedule.at(date, false, true)  // allowWhileIdle=true → fires on locked screen
-                }
-            });
-        } catch (e) {
-            console.debug('scheduleNativeAlarm error', e);
-        }
-    };
 
     // Time table data (same as rendered table) for reliable lookups without DOM access
     const BILASPUR_TIMES = [
@@ -304,367 +120,10 @@ export default function Page() {
         { date: '19 Mar', sehri: '04:50', iftari: '06:19' }, { date: '20 Mar', sehri: '04:50', iftari: '06:19' },
     ];
 
-    // Parse "H:MM" or "HH:MM" for a specific date string like "19 Feb"
-    const parseTimeForDate = (dateLabel, timeStr, treatAsPM = false) => {
-        if (!timeStr || !dateLabel) return null;
-        const m = timeStr.trim().toLowerCase().match(/(\d{1,2}):(\d{2})\s*(am|pm)?/);
-        if (!m) return null;
-        let hh = parseInt(m[1], 10);
-        const mm = parseInt(m[2], 10);
-        const suffix = m[3];
-        if (suffix === 'am') { if (hh === 12) hh = 0; }
-        else if (suffix === 'pm') { if (hh < 12) hh += 12; }
-        else if (treatAsPM && hh < 12) { hh += 12; }
-
-        const parts = dateLabel.trim().split(/\s+/);
-        if (parts.length < 2) return null;
-        const day = parseInt(parts[0], 10);
-        const monStr = parts[1].replace(/\./g, '');
-        const months = { Jan: 0, Feb: 1, Mar: 2, Apr: 3, May: 4, Jun: 5, Jul: 6, Aug: 7, Sep: 8, Oct: 9, Nov: 10, Dec: 11 };
-        const month = months[monStr];
-
-        if (isNaN(day) || month === undefined) return null;
-
-        const d = new Date();
-        d.setFullYear(d.getFullYear(), month, day);
-        d.setHours(hh, mm, 0, 0);
-        return d;
-    };
-
-    // Schedule ALL upcoming Sehri & Iftari native alarms for the month.
-    // iOS has a limit of 64 pending notifications. The table has 30 rows (60 total alarms), which is perfectly safe.
-    // A daily flag ensures we don't spam the OS scheduler over and over, but re-schedules once every day
-    // the user opens the app to ensure things are fresh and handle if the month rolls over.
-    const scheduleNativeAlarmsOnce = async () => {
-        if (typeof window === 'undefined' || !window.__TAURI_INTERNALS__) return;
-        const soundOn = typeof localStorage !== 'undefined' && localStorage.getItem(SOUND_KEY) === 'true';
-        if (!soundOn) return;
-
-        const todayKey = new Date().toDateString();
-        const schedDoneKey = `ramzan_monthly_sched_${todayKey}`;
-        if (typeof localStorage !== 'undefined' && localStorage.getItem(schedDoneKey) === '1') return;
-
-        // Cancel existing pending notifications first so we don't accumulate duplicates from previous sessions
-        try {
-            const nav = await import('@tauri-apps/plugin-notification');
-            await nav.cancelAll();
-        } catch (e) { }
-
-        // Clean up old daily keys from previous versions to avoid localStorage bloat
-        try {
-            const ls = window.localStorage;
-            // Iterate in reverse since we're removing items
-            for (let i = ls.length - 1; i >= 0; i--) {
-                const key = ls.key(i);
-                if (key && (key.startsWith('ramzan_sched_done_') || key.startsWith('ramzan_monthly_sched_'))) {
-                    ls.removeItem(key);
-                }
-            }
-        } catch (e) { }
-
-        const onlyRaipurNow = typeof localStorage !== 'undefined' && localStorage.getItem(STORAGE_KEY) === 'true';
-        const table = onlyRaipurNow ? RAIPUR_TIMES : BILASPUR_TIMES;
-        const cityName = onlyRaipurNow ? 'Raipur' : 'Bilaspur';
-        console.log(`📅 Scheduling native alarms for ${cityName} (${table.length} days)`);
-        const now = new Date();
-
-        let scheduledCount = 0;
-
-        for (const row of table) {
-            const sehriTime = parseTimeForDate(row.date, row.sehri);
-            // Iftari times are all "6:xx" AM format in data but represent PM → treat as PM
-            const iftariTime = parseTimeForDate(row.date, row.iftari, true);
-
-            // Only schedule if the alarm represents a future time
-            if (sehriTime && sehriTime > now) {
-                const monthStr = ('0' + (sehriTime.getMonth() + 1)).slice(-2);
-                const dayStr = ('0' + sehriTime.getDate()).slice(-2);
-
-                await scheduleNativeAlarm(
-                    sehriTime,
-                    `rs_${monthStr}${dayStr}`,
-                    'Sehri Time 🌙',
-                    `Sehri Ka Waqt Khatm Ho Gaya Hai (${row.sehri})`,
-                    'sehri'          // iOS: plays sehri.caf from app bundle
-                );
-                scheduledCount++;
-            }
-
-            if (iftariTime && iftariTime > now) {
-                const monthStr = ('0' + (iftariTime.getMonth() + 1)).slice(-2);
-                const dayStr = ('0' + iftariTime.getDate()).slice(-2);
-
-                await scheduleNativeAlarm(
-                    iftariTime,
-                    `ri_${monthStr}${dayStr}`,
-                    'Iftari Time 🌅',
-                    `Iftari Ka Waqt Ho Gaya Hai (${row.iftari})`,
-                    'irftari'        // iOS: plays irftari.caf from app bundle
-                );
-                scheduledCount++;
-            }
-
-            // Safety limit (iOS hard limit is 64 scheduled notifications)
-            if (scheduledCount >= 60) break;
-        }
-
-        console.log(`✅ Scheduled ${scheduledCount} alarms for ${cityName}`);
-        // Mark as scheduled for today
-        try { localStorage.setItem(schedDoneKey, '1'); } catch (e) { }
-    };
-
-
-    useEffect(() => {
-        console.log('Initializing audio system...');
-        // create Audio objects using Web Audio API for mobile compatibility
-        try {
-            const AudioContext = window.AudioContext || window.webkitAudioContext;
-            if (AudioContext && !audioCtxRef.current) {
-                audioCtxRef.current = new AudioContext();
-                console.log('Audio context created, state:', audioCtxRef.current.state);
-            }
-        } catch (e) {
-            console.error('Failed to create audio context:', e);
-        }
-
-        const loadAudio = async (url, ref, name) => {
-            console.log(`Loading audio: ${name} from ${url}`);
-            try {
-                const response = await fetch(url);
-                if (!response.ok) {
-                    throw new Error(`Failed to fetch ${url}: ${response.status}`);
-                }
-                const arrayBuffer = await response.arrayBuffer();
-                console.log(`${name} fetched, size:`, arrayBuffer.byteLength);
-                let audioBuffer = null;
-                if (audioCtxRef.current) {
-                    audioBuffer = await audioCtxRef.current.decodeAudioData(arrayBuffer);
-                    console.log(`${name} decoded successfully, duration:`, audioBuffer.duration);
-                }
-                ref.current = {
-                    play: () => {
-                        return new Promise((resolve, reject) => {
-                            try {
-                                console.log(`Attempting to play ${name}`);
-                                if (audioCtxRef.current && audioBuffer) {
-                                    console.log(`Using Web Audio API for ${name}, context state:`, audioCtxRef.current.state);
-                                    if (audioCtxRef.current.state === 'suspended') {
-                                        console.log('Resuming suspended audio context');
-                                        audioCtxRef.current.resume();
-                                    }
-                                    const source = audioCtxRef.current.createBufferSource();
-                                    source.buffer = audioBuffer;
-                                    source.connect(audioCtxRef.current.destination);
-                                    source.onended = () => {
-                                        console.log(`${name} finished playing`);
-                                        resolve();
-                                    };
-                                    source.start(0);
-                                    console.log(`${name} started playing`);
-                                } else {
-                                    console.log(`Using HTML5 Audio for ${name}`);
-                                    const a = new Audio(url);
-                                    a.play().then(() => {
-                                        console.log(`${name} played via HTML5 Audio`);
-                                        resolve();
-                                    }).catch((e) => {
-                                        console.error(`${name} play failed:`, e);
-                                        reject(e);
-                                    });
-                                }
-                            } catch (e) {
-                                console.error(`Error playing ${name}:`, e);
-                                reject(e);
-                            }
-                        });
-                    }
-                };
-                console.log(`${name} audio ref configured successfully`);
-            } catch (e) {
-                console.error(`Audio Load Error for ${name}:`, e);
-                const basic = new Audio(url);
-                ref.current = {
-                    play: () => {
-                        console.log(`Playing ${name} via fallback HTML5 Audio`);
-                        return basic.play().catch((e) => {
-                            console.error(`Fallback play failed for ${name}:`, e);
-                        });
-                    }
-                };
-            }
-        };
-
-        loadAudio('/sehri.mp3', sehriAudioRef, 'Sehri');
-        loadAudio('/irftari.mp3', iftariAudioRef, 'Iftari');
-
-        let checker = null;
-
-        const getTodayLabel = () => {
-            const today = new Date();
-            const day = today.getDate();
-            const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-            return `${day} ${months[today.getMonth()]}`;
-        };
-
-        // parse a time string like "5:10", "05:10", or with am/pm like "5:10 pm".
-        // if `treatAsPM` is true and no am/pm is present, times with hour < 12 are treated as PM (hour += 12).
-        const parseTimeStr = (timeStr, treatAsPM = false) => {
-            if (!timeStr) return null;
-            const m = timeStr.trim().toLowerCase().match(/(\d{1,2}):(\d{2})\s*(am|pm)?/);
-            if (!m) return null;
-            let hh = parseInt(m[1], 10);
-            const mm = parseInt(m[2], 10);
-            const suffix = m[3];
-            if (suffix === 'am') {
-                if (hh === 12) hh = 0;
-            } else if (suffix === 'pm') {
-                if (hh < 12) hh += 12;
-            } else if (treatAsPM && hh < 12) {
-                hh += 12;
-            }
-            const d = new Date();
-            d.setHours(hh);
-            d.setMinutes(mm);
-            d.setSeconds(0);
-            d.setMilliseconds(0);
-            return d;
-        };
 
 
 
-        const findTodayRowTimes = () => {
-            const label = getTodayLabel();
-            // look through all tables on page for a matching date cell
-            const tables = document.querySelectorAll('table');
-            for (const table of tables) {
-                const rows = table.querySelectorAll('tbody tr');
-                for (const r of rows) {
-                    const tds = r.querySelectorAll('td');
-                    if (tds.length < 5) continue;
-                    const dateText = tds[1].textContent.trim();
-                    if (dateText === label) {
-                        const sehriText = tds[3].textContent.trim();
-                        const iftariText = tds[4].textContent.trim();
-                        return { sehriText, iftariText };
-                    }
-                }
-            }
-            return null;
-        };
 
-        const isSameMinute = (d1, d2) => {
-            return d1 && d2 && d1.getHours() === d2.getHours() && d1.getMinutes() === d2.getMinutes();
-        };
-
-        const check = () => {
-
-            // allow manual overrides (for normal flow) stored in localStorage
-            const times = findTodayRowTimes();
-            if (!times) return;
-            // if user selected only Raipur, do not play sounds from the main (Bilaspur) player
-            const onlyRaipur = (typeof localStorage !== 'undefined') ? localStorage.getItem(STORAGE_KEY) === 'true' : false;
-            if (onlyRaipur) return;
-            const now = new Date();
-            // debug info for diagnosis
-            try {
-                const sehriTime = parseTimeStr(times.sehriText);
-                // treat iftari as PM when no am/pm is provided
-                const iftariTime = parseTimeStr(times.iftariText, true);
-                const persistedSehri = (typeof localStorage !== 'undefined') ? localStorage.getItem('ramzan_played_sehri') : null;
-                const persistedIftari = (typeof localStorage !== 'undefined') ? localStorage.getItem('ramzan_played_iftari') : null;
-                const dbg = `now=${now.toTimeString().slice(0, 8)} sehriText=${times.sehriText} sehri=${sehriTime ? sehriTime.toTimeString().slice(0, 8) : 'null'} iftariText=${times.iftariText} iftari=${iftariTime ? iftariTime.toTimeString().slice(0, 8) : 'null'} onlyRaipur=${onlyRaipur} soundEnabled=${soundEnabledRef.current} persistedSehri=${persistedSehri} persistedIftari=${persistedIftari}`;
-                console.debug('Ramzan schedule check', dbg);
-            } catch (e) { console.debug(e); }
-            const sehriTime = parseTimeStr(times.sehriText);
-            const iftariTime = parseTimeStr(times.iftariText, true);
-
-            // NOTE: Native background alarms are scheduled once per day via scheduleNativeAlarmsOnce(),
-            // not on every 10-second tick, to avoid duplicate notifications.
-
-            if (sehriTime && isSameMinute(now, sehriTime)) {
-                const key = (new Date()).toDateString();
-                const persisted = (typeof localStorage !== 'undefined') ? localStorage.getItem('ramzan_played_sehri') : null;
-                console.log('Sehri time matched!', { key, persisted, playedRef: playedRef.current.sehri, soundEnabled: soundEnabledRef.current });
-                if (playedRef.current.sehri !== key && persisted !== key) {
-                    playedRef.current.sehri = key;
-                    console.log('Playing Bilaspur sehri notification and sound');
-                    tryNotify('Sehri Time 🌙', `Sehri Ka Waqt Khatm Ho Gaya Hai (${times.sehriText})`);
-                    try {
-                        if (soundEnabledRef.current) {
-                            console.log('Sound is enabled, attempting to play sehri audio');
-                            const p = sehriAudioRef.current?.play();
-                            if (p && typeof p.then === 'function') {
-                                p.then(() => {
-                                    console.log('Sehri audio played successfully');
-                                    try { if (typeof localStorage !== 'undefined') localStorage.setItem('ramzan_played_sehri', key); } catch (e) { }
-                                }).catch((e) => {
-                                    console.error('Sehri audio play failed:', e);
-                                    try { if (typeof localStorage !== 'undefined') localStorage.setItem('ramzan_played_sehri', key); } catch (e) { }
-                                });
-                            } else {
-                                console.log('Play returned non-promise');
-                                try { if (typeof localStorage !== 'undefined') localStorage.setItem('ramzan_played_sehri', key); } catch (e) { }
-                            }
-                        } else {
-                            console.log('Sound is disabled, skipping audio playback');
-                            try { if (typeof localStorage !== 'undefined') localStorage.setItem('ramzan_played_sehri', key); } catch (e) { }
-                        }
-                    } catch (e) { console.error('Error in sehri sound', e); }
-                }
-            }
-
-            if (iftariTime && isSameMinute(now, iftariTime)) {
-                const key = (new Date()).toDateString();
-                const persisted = (typeof localStorage !== 'undefined') ? localStorage.getItem('ramzan_played_iftari') : null;
-                console.log('Iftari time matched!', { key, persisted, playedRef: playedRef.current.iftari, soundEnabled: soundEnabledRef.current });
-                if (playedRef.current.iftari !== key && persisted !== key) {
-                    playedRef.current.iftari = key;
-                    console.log('Playing Bilaspur iftari notification and sound');
-                    tryNotify('Iftari Time 🌅', `Iftari Ka Waqt Ho Gaya Hai (${times.iftariText})`);
-                    try {
-                        if (soundEnabledRef.current) {
-                            console.log('Sound is enabled, attempting to play iftari audio');
-                            const p = iftariAudioRef.current?.play();
-                            if (p && typeof p.then === 'function') {
-                                p.then(() => {
-                                    console.log('Iftari audio played successfully');
-                                    try { if (typeof localStorage !== 'undefined') localStorage.setItem('ramzan_played_iftari', key); } catch (e) { }
-                                }).catch((e) => {
-                                    console.error('Iftari audio play failed:', e);
-                                    try { if (typeof localStorage !== 'undefined') localStorage.setItem('ramzan_played_iftari', key); } catch (e) { }
-                                });
-                            } else {
-                                console.log('Play returned non-promise');
-                                try { if (typeof localStorage !== 'undefined') localStorage.setItem('ramzan_played_iftari', key); } catch (e) { }
-                            }
-                        } else {
-                            console.log('Sound is disabled, skipping audio playback');
-                            try { if (typeof localStorage !== 'undefined') localStorage.setItem('ramzan_played_iftari', key); } catch (e) { }
-                        }
-                    } catch (e) { console.error('Error in iftari sound', e); }
-                }
-            }
-        };
-
-        // Ask notification permission once
-        if (typeof Notification !== 'undefined' && Notification.permission === 'default') {
-            try { Notification.requestPermission().catch(() => { }); } catch (e) { }
-        }
-
-        // Store the schedule function in ref so it can be called from city toggle effect
-        scheduleAlarmsRef.current = scheduleNativeAlarmsOnce;
-
-        // Schedule today's native alarms (once on mount — not every tick)
-        scheduleNativeAlarmsOnce();
-
-        // run immediately and then every 10 seconds
-        check();
-        checker = setInterval(check, 10000);
-
-        return () => {
-            if (checker) clearInterval(checker);
-        };
-    }, []);
 
     return (
         <main className="min-h-screen p-4 md:p-8 bg-base-200 text-base-content">
@@ -693,24 +152,12 @@ export default function Page() {
                 <span className="select-none">Show Raipur's Time Table</span>
             </label>
 
-            <label className="flex items-center gap-2 text-sm text-primary mt-2">
-                <input
-                    type="checkbox"
-                    className="toggle toggle-2xl checked:bg-primary checked:border-primary checked:after:bg-primary"
-                    checked={soundEnabled}
-                    onChange={(e) => handleSoundChange(e.target.checked)}
-                    aria-label="Enable Ramzan sounds"
-                />
-                <span className="flex items-center gap-2 select-none">
-                    {soundEnabled ? <FaVolumeUp /> : <FaVolumeMute />}
-                    <span>Enable Sehri / Iftari Announcement</span>
-                </span>
-            </label>
+            {/* Sound/notification controls removed */}
 
             {/* debug message removed */}
 
             {onlyRaipur ? (
-                <RaipurTimeTable onlyRaipur={onlyRaipur} sehriAudioRef={sehriAudioRef} iftariAudioRef={iftariAudioRef} />
+                <RaipurTimeTable onlyRaipur={onlyRaipur} />
             ) : (
                 <>
                     {/* ##############################Mobile single stacked table showing all 30 rows */}
