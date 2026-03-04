@@ -267,7 +267,8 @@ export default function Page() {
                     {paginatedMasjids.map((m, idx) => (
                         <div
                             key={m.id}
-                            className="grid grid-cols-10 gap-4 px-6 py-4 hover:bg-gray-50 transition-colors"
+                            onClick={() => router.push(`/admin/all-masjids/viewMasjid?id=${m.id}`)}
+                            className="grid grid-cols-10 gap-4 px-6 py-4 hover:bg-gray-50 transition-colors cursor-pointer"
                         >
                             <div className="flex items-center justify-center text-sm text-gray-700">
                                 {startIndex + idx + 1}
@@ -305,9 +306,10 @@ export default function Page() {
                                         <div className="flex items-center">
                                             <span>{m.mobile}</span>
                                             <button
-                                                onClick={() =>
-                                                    handleCopy(m.mobile, m.id)
-                                                }
+                                                onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    handleCopy(m.mobile, m.id);
+                                                }}
                                                 className="ml-2 p-1 text-gray-500 hover:text-gray-700 rounded-md"
                                                 title="Copy mobile number"
                                             >
@@ -346,6 +348,7 @@ export default function Page() {
                                     href={`/admin/all-masjids/edit-jamatTime?id=${m.id}`}
                                 >
                                     <button
+                                        onClick={(e) => e.stopPropagation()}
                                         className="p-2 text-blue-600 hover:text-blue-800 hover:bg-blue-50 rounded-md transition-colors"
                                         title="Edit Masjid"
                                     >
@@ -385,16 +388,26 @@ export default function Page() {
                                     </div>
                                 </div>
                             </div>
-                            <Link
-                                href={`/admin/all-masjids/edit-jamatTime?id=${m.id}`}
-                            >
+                            <div className="flex items-center gap-2">
                                 <button
-                                    className="p-2 text-blue-600 hover:text-blue-800 hover:bg-blue-50 rounded-md transition-colors"
-                                    title="Edit Masjid"
+                                    onClick={() => router.push(`/admin/all-masjids/viewMasjid?id=${m.id}`)}
+                                    className="p-2 text-gray-700 hover:text-gray-900 hover:bg-gray-50 rounded-md transition-colors"
+                                    title="View Masjid"
                                 >
-                                    <Pencil size={18} />
+                                    View
                                 </button>
-                            </Link>
+                                <Link
+                                    href={`/admin/all-masjids/edit-jamatTime?id=${m.id}`}
+                                >
+                                    <button
+                                        onClick={(e) => e.stopPropagation()}
+                                        className="p-2 text-blue-600 hover:text-blue-800 hover:bg-blue-50 rounded-md transition-colors"
+                                        title="Edit Masjid"
+                                    >
+                                        <Pencil size={18} />
+                                    </button>
+                                </Link>
+                            </div>
                         </div>
 
                         {/* Details Grid */}
@@ -419,9 +432,10 @@ export default function Page() {
                                         <div className="flex items-center gap-2">
                                             <span>{m.mobile}</span>
                                             <button
-                                                onClick={() =>
-                                                    handleCopy(m.mobile, m.id)
-                                                }
+                                                onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    handleCopy(m.mobile, m.id);
+                                                }}
                                                 className="p-1 text-gray-500 hover:text-gray-700 rounded-md"
                                                 title="Copy mobile number"
                                             >

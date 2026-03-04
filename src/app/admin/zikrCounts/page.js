@@ -12,6 +12,7 @@ export default function ZikrCountsPage() {
     const [loading, setLoading] = useState(true);
     const [currentPage, setCurrentPage] = useState(1);
     const [pageSize] = useState(15); // fixed page size (changed to 15)
+    const [query, setQuery] = useState('');
 
     useEffect(() => {
         // Check authentication on client side
@@ -34,6 +35,10 @@ export default function ZikrCountsPage() {
     useEffect(() => {
         setCurrentPage(1);
     }, [zikrList]);
+
+    useEffect(() => {
+        setCurrentPage(1);
+    }, [query]);
 
     // no local filtering/pagination — show all zikr records in a table
 
@@ -79,12 +84,19 @@ export default function ZikrCountsPage() {
         return Array.from(map.values());
     }, [zikrList]);
 
+    // apply name search filter
+    const filteredGrouped = React.useMemo(() => {
+        const q = (query || '').trim().toLowerCase();
+        if (!q) return grouped;
+        return grouped.filter((g) => (g.fullName || '').toLowerCase().includes(q));
+    }, [grouped, query]);
+
     // pagination calculations (computed in component scope so JSX can access)
-    const totalPages = Math.max(1, Math.ceil(grouped.length / pageSize));
+    const totalPages = Math.max(1, Math.ceil(filteredGrouped.length / pageSize));
     const start = (currentPage - 1) * pageSize;
-    const pageItems = grouped.slice(start, start + pageSize);
-    const startItem = grouped.length === 0 ? 0 : start + 1;
-    const endItem = Math.min(start + pageSize, grouped.length);
+    const pageItems = filteredGrouped.slice(start, start + pageSize);
+    const startItem = filteredGrouped.length === 0 ? 0 : start + 1;
+    const endItem = Math.min(start + pageSize, filteredGrouped.length);
 
     // Show loading while checking authentication
     if (loading) {
@@ -102,6 +114,23 @@ export default function ZikrCountsPage() {
             </div>
 
             <div className="p-4">
+                <div className="mb-4 flex items-center gap-2">
+                    <input
+                        aria-label="Search by name"
+                        value={query}
+                        onChange={(e) => setQuery(e.target.value)}
+                        placeholder="Search by name..."
+                        className="input input-bordered w-full max-w-xs bg-white text-black placeholder-gray-400 border-gray-300"
+                    />
+                    {query && (
+                        <button
+                            className="px-3 py-1 border rounded bg-white"
+                            onClick={() => setQuery('')}
+                        >
+                            Clear
+                        </button>
+                    )}
+                </div>
                 {zikrLoading ? (
                     <div className="flex items-center gap-2">
                         <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-500"></div>
@@ -109,6 +138,8 @@ export default function ZikrCountsPage() {
                     </div>
                 ) : grouped.length === 0 ? (
                     <div className="text-sm text-gray-500">No zikr records found.</div>
+                ) : filteredGrouped.length === 0 ? (
+                    <div className="text-sm text-gray-500">No records match your search.</div>
                 ) : (
                     <div className="overflow-x-auto">
                         <table className="table w-full">
@@ -156,7 +187,7 @@ export default function ZikrCountsPage() {
                             <div className="flex items-center gap-2">
 
                                 <button
-                                    className="px-3 py-1 bg-black border rounded "
+                                    className="px-3 py-1 bg-white border rounded "
                                     onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
                                     disabled={currentPage === 1 || grouped.length === 0}
                                 >
