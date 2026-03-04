@@ -25,6 +25,8 @@ export default function NoticeAdmin() {
     const [loading, setLoading] = useState(true);
     const [eventImages, setEventImages] = useState([]);
     const [error, setError] = useState(null);
+    const [loadingEvent, setLoadingEvent] = useState(false);
+    const [uploadingNotice, setUploadingNotice] = useState(false);
     const [showDeleteModal, setShowDeleteModal] = useState(false);
     const [imageToDelete, setImageToDelete] = useState(null);
     const [eventImageToDelete, setEventImageToDelete] = useState(null);
@@ -157,36 +159,42 @@ export default function NoticeAdmin() {
     }, [router]);
 
     const fetchImages = async () => {
-        setLoading(true);
+        setUploadingNotice(true);
         setError(null);
         try {
-            await fetchNotices();
+            await fetchNotices({ force: true }); // Force refresh to bypass cache
         } catch (err) {
             setError(err?.message || String(err));
         } finally {
-            setLoading(false);
+            setUploadingNotice(false);
         }
     };
 
     const fetchEventImages = async () => {
-        setLoading(true);
+        setLoadingEvent(true);
         setError(null);
         try {
-            // Get all committees that may contain committeeImages
-            const { data } = await apiClient.get('/api/masjid-committee');
-            const list = data?.data || data || [];
-            // Flatten committeeImages arrays and dedupe
-            const all = [];
-            for (const c of list) {
-                const imgs = Array.isArray(c.committeeImages) ? c.committeeImages.filter(Boolean) : [];
-                for (const u of imgs) all.push(u);
-            }
-            const uniq = Array.from(new Set(all));
-            setEventImages(uniq.slice().reverse());
+            // Fetch stored committee event images from the dedicated endpoint
+            const res = await apiClient.get('/api/masjid-committee-event');
+            const data = res?.data || {};
+            const list = data?.images || data?.data || [];
+
+            // Normalize to an array of image src strings (prefer portrait variant)
+            const srcs = list
+                .map((it) => {
+                    if (!it) return null;
+                    if (typeof it === 'string') return it;
+                    return it.imageSrcPortrait || it.imageSrc || it.publicUrl || it.url || null;
+                })
+                .filter(Boolean);
+
+            // show newest first
+            setEventImages(srcs.slice().reverse());
         } catch (err) {
             console.error('Failed to fetch event images', err);
+            setError(err?.response?.data?.error || err?.message || String(err));
         } finally {
-            setLoading(false);
+            setLoadingEvent(false);
         }
     };
 
@@ -198,16 +206,18 @@ export default function NoticeAdmin() {
     const confirmDelete = async () => {
         if (!imageToDelete) return;
 
-        setLoading(true);
+        setUploadingNotice(true);
         setError(null);
         setShowDeleteModal(false);
 
         try {
             await removeNotice(imageToDelete);
+            // Refresh to ensure UI is in sync
+            await fetchImages();
         } catch (err) {
             setError(err?.response?.data?.error || err.message || String(err));
         } finally {
-            setLoading(false);
+            setUploadingNotice(false);
             setImageToDelete(null);
         }
     };
@@ -224,18 +234,19 @@ export default function NoticeAdmin() {
 
     const confirmEventDelete = async () => {
         if (!eventImageToDelete) return;
-        setLoading(true);
+        setLoadingEvent(true);
         setError(null);
         setShowEventDeleteModal(false);
         try {
             await apiClient.delete('/api/masjid-committee-event', { data: { imageUrl: eventImageToDelete } });
-            setEventImages((prev) => prev.filter((u) => u !== eventImageToDelete));
+            // Refresh the entire list to ensure sync
+            await fetchEventImages();
             toast.success('Event image removed');
         } catch (err) {
             console.error('Failed to delete event image', err);
             setError(err?.response?.data?.error || err?.message || String(err));
         } finally {
-            setLoading(false);
+            setLoadingEvent(false);
             setEventImageToDelete(null);
         }
     };
@@ -448,6 +459,13 @@ export default function NoticeAdmin() {
                 imageUrl,
             });
             toast.success(`Posted to ${data.count} masjid committees`);
+            // Refresh event images list immediately so UI updates without full refresh
+            try {
+                await fetchEventImages();
+            } catch (e) {
+                // non-fatal
+                console.warn('Failed to refresh event images after post', e);
+            }
         } catch (err) {
             const errorMsg = err?.response?.data?.error || err.message || String(err);
             toast.error(`Failed to post: ${errorMsg}`);
@@ -585,6 +603,12 @@ export default function NoticeAdmin() {
             const committeeRes = await apiClient.post("/api/masjid-committee-event", formData);
 
             toast.success(`Posted to ${committeeRes.data.count} committees`);
+            // Refresh event images right away
+            try {
+                await fetchEventImages();
+            } catch (e) {
+                console.warn('Failed to refresh event images after editor post', e);
+            }
         } catch (err) {
             console.error("Post to committee failed", err);
             toast.error(err?.response?.data?.error || err?.message || String(err));
@@ -1298,7 +1322,12 @@ export default function NoticeAdmin() {
 
                                                 toast.success(`Posted to ${committeeRes.data.count} committees`);
                                                 setPendingImage(null);
-                                                // Do NOT call fetchImages() here — we intentionally avoid saving to the notice bucket
+                                                // Refresh event images so the newly-posted committee image appears immediately
+                                                try {
+                                                    await fetchEventImages();
+                                                } catch (e) {
+                                                    console.warn('Failed to refresh event images after upload', e);
+                                                }
                                             } catch (err) {
                                                 console.error('Post to committee failed', err);
                                                 toast.error(err?.response?.data?.error || err?.message || String(err));
@@ -1344,20 +1373,20 @@ export default function NoticeAdmin() {
                     </h2>
                 </div>
 
-                {loading && (
+                {uploadingNotice && (
                     <p className="text-sm text-gray-500">Loading images...</p>
                 )}
                 {error && (
                     <p className="text-sm text-red-500">Error: {error}</p>
                 )}
 
-                {!loading && !error && images.length === 0 && (
+                {!uploadingNotice && !error && images.length === 0 && (
                     <p className="text-sm text-gray-500">
                         No images uploaded yet.
                     </p>
                 )}
 
-                {!loading && images.length > 0 && (
+                {!uploadingNotice && images.length > 0 && (
                     <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
                         {images.map((img, index) => (
                             <div
@@ -1411,37 +1440,48 @@ export default function NoticeAdmin() {
                     <h2 className="text-lg font-medium text-gray-900">Events Images</h2>
                 </div>
 
-                {loading && (
+                {loadingEvent && (
                     <p className="text-sm text-gray-500">Loading images...</p>
                 )}
 
-                {!loading && eventImages.length === 0 && (
+                {!loadingEvent && eventImages.length === 0 && (
                     <p className="text-sm text-gray-500">No event images found.</p>
                 )}
 
-                {!loading && eventImages.length > 0 && (
+                {!loadingEvent && eventImages.length > 0 && (
                     <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
                         {eventImages.map((src, idx) => (
                             <div key={src || idx} className="border rounded overflow-hidden relative">
-                                <div className="absolute top-2 right-2 z-10 flex gap-2">
+                                {/* Delete Icon */}
+                                <div className="absolute top-2 right-2 z-10">
                                     <button
                                         className="bg-white rounded-full p-1 shadow hover:bg-gray-100"
                                         title="Delete"
                                         onClick={() => handleEventDelete(src)}
                                     >
-                                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                                            <polyline points="3 6 5 6 21 6"></polyline>
-                                            <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"></path>
-                                            <path d="M10 11v6"></path>
-                                            <path d="M14 11v6"></path>
-                                        </svg>
+                                        <Trash
+                                            size={18}
+                                            className="text-red-600"
+                                        />
                                     </button>
                                 </div>
-                                <div className="w-full">
-                                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                                    <img src={src} alt={`Event ${idx + 1}`} className="w-full h-40 object-contain bg-gray-50" />
+                                {src ? (
+                                    <div className="w-full">
+                                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                                        <img
+                                            src={src}
+                                            alt={`Event ${idx + 1}`}
+                                            className="w-full h-auto object-contain"
+                                        />
+                                    </div>
+                                ) : (
+                                    <div className="w-full h-32 bg-gray-100 flex items-center justify-center text-sm text-gray-500">
+                                        No preview
+                                    </div>
+                                )}
+                                <div className="p-1 text-xs text-gray-700 truncate">
+                                    Event image
                                 </div>
-                                <div className="p-1 text-xs text-gray-700 truncate">Event image</div>
                             </div>
                         ))}
                     </div>

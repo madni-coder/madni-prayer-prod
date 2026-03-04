@@ -104,3 +104,36 @@ export async function GET() {
         return NextResponse.json({ error: err.message || String(err) }, { status: 500 });
     }
 }
+
+export async function DELETE(request) {
+    try {
+        if (!supabaseUrl || !supabaseKey) {
+            return NextResponse.json({ error: "Missing Supabase environment variables" }, { status: 500 });
+        }
+
+        const body = await request.json();
+        const { imageUrl } = body;
+
+        if (!imageUrl) {
+            return NextResponse.json({ error: "Image URL is required" }, { status: 400 });
+        }
+
+        // Extract filename from the public URL
+        const urlParts = imageUrl.split('/');
+        const fileName = urlParts[urlParts.length - 1].split('?')[0]; // Remove query params if any
+
+        const { error } = await supabase.storage
+            .from("committee")
+            .remove([fileName]);
+
+        if (error) {
+            console.error("Delete error:", error);
+            return NextResponse.json({ error: error.message }, { status: 500 });
+        }
+
+        return NextResponse.json({ success: true, message: "Image deleted successfully" });
+    } catch (err) {
+        console.error("/api/masjid-committee-event DELETE error", err);
+        return NextResponse.json({ error: err.message || String(err) }, { status: 500 });
+    }
+}

@@ -21,47 +21,66 @@ export default function SocialMediaImageUpload({ onUploadComplete, uploadUrl = "
             img.src = url;
         });
 
-    // Convert any image into 9:16 with blurred background (no cropping of main image)
+    // Convert any image into 9:16 format
     const processToPortrait = async (file, targetW = 1080, targetH = 1920) => {
         const url = URL.createObjectURL(file);
         try {
             const img = await loadImage(url);
             const canvas = document.createElement("canvas");
-            canvas.width = targetW;
-            canvas.height = targetH;
-            const ctx = canvas.getContext("2d");
 
-            // Fill base to avoid transparent edges after blur
-            ctx.fillStyle = "#000";
-            ctx.fillRect(0, 0, targetW, targetH);
+            // Calculate aspect ratios
+            const imgAspect = img.width / img.height;
+            const targetAspect = targetW / targetH; // 9:16 = 0.5625
 
-            // 1) Blurred background that COVERS the canvas
-            const coverScale =
-                Math.max(targetW / img.width, targetH / img.height) * 1.1; // slight overdraw to hide blur edges
-            const coverW = img.width * coverScale;
-            const coverH = img.height * coverScale;
-            const coverX = (targetW - coverW) / 2;
-            const coverY = (targetH - coverH) / 2;
+            // Check if image is already portrait (aspect ratio close to 9:16)
+            // Portrait means width < height
+            const isPortrait = img.width <= img.height;
 
-            // Apply blur for background if supported
-            try {
-                ctx.filter = "blur(40px)";
-            } catch (_) {
-                // no-op if not supported
+            if (isPortrait) {
+                // For portrait images, fit to 9:16 by scaling to fill canvas
+                canvas.width = targetW;
+                canvas.height = targetH;
+                const ctx = canvas.getContext("2d");
+
+                // Scale to cover the canvas (may crop slightly)
+                const scale = Math.max(targetW / img.width, targetH / img.height);
+                const scaledW = img.width * scale;
+                const scaledH = img.height * scale;
+                const x = (targetW - scaledW) / 2;
+                const y = (targetH - scaledH) / 2;
+
+                ctx.drawImage(img, x, y, scaledW, scaledH);
+            } else {
+                // For landscape/square images (like 4:3), use blurred background
+                canvas.width = targetW;
+                canvas.height = targetH;
+                const ctx = canvas.getContext("2d");
+
+                // Fill base
+                ctx.fillStyle = "#000";
+                ctx.fillRect(0, 0, targetW, targetH);
+
+                // Blurred background
+                const coverScale = Math.max(targetW / img.width, targetH / img.height);
+                const coverW = img.width * coverScale;
+                const coverH = img.height * coverScale;
+                const coverX = (targetW - coverW) / 2;
+                const coverY = (targetH - coverH) / 2;
+
+                try {
+                    ctx.filter = "blur(40px)";
+                } catch (_) { }
+                ctx.drawImage(img, coverX, coverY, coverW, coverH);
+
+                // Sharp foreground
+                ctx.filter = "none";
+                const containScale = Math.min(targetW / img.width, targetH / img.height);
+                const fw = img.width * containScale;
+                const fh = img.height * containScale;
+                const fx = (targetW - fw) / 2;
+                const fy = (targetH - fh) / 2;
+                ctx.drawImage(img, fx, fy, fw, fh);
             }
-            ctx.drawImage(img, coverX, coverY, coverW, coverH);
-
-            // 2) Sharp foreground that CONTAINS fully (no cropping)
-            ctx.filter = "none";
-            const containScale = Math.min(
-                targetW / img.width,
-                targetH / img.height
-            );
-            const fw = img.width * containScale;
-            const fh = img.height * containScale;
-            const fx = (targetW - fw) / 2;
-            const fy = (targetH - fh) / 2;
-            ctx.drawImage(img, fx, fy, fw, fh);
 
             // Export as JPEG
             const blob = await new Promise((res) =>
