@@ -115,7 +115,7 @@ export default function ContactUs() {
                     About Us
                 </h2>
                 <div className="bg-green-700 rounded-lg p-6 text-white">
-                    <p className="text-base md:text-lg">
+                    <p className="text-base md:text-lg"></p>
 Raahe Hidayat is an initiative dedicated to spreading the authentic beliefs and teachings of Ahl-e-Sunnat wa Jama‘at, based on the Qur’an and the Sunnah of the Beloved Prophet Muhammad ﷺ. Our foundation is built upon deep love and respect for all the Sahaba-e-Kiram (RadiAllahu Ta'ala Anhum) and reverence for the Awliya-e-Kiram, while following the path of the great scholars of the Ummah. Through this platform, we aim to strengthen correct Islamic beliefs (Aqaid), promote love for the Prophet ﷺ, and guide people not only towards religious knowledge and spirituality but also encourage worldly education, ethical entrepreneurship, and business, so that individuals and the community can grow with knowledge, character, and prosperity.                </div>
             </section>
 
