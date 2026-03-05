@@ -419,9 +419,20 @@ const RewardsPage = () => {
                         border: "1px solid rgba(255,215,0,0.08)",
                     }}
                 >
-                    <div style={{ color: "#FFD700", fontWeight: 600 }}>
-                        We will announce winner names on every Friday At 3 PM
-                    </div>
+                    <ul
+                        className="list-disc list-inside mx-auto text-left"
+                        style={{
+                            color: "#FFD700",
+                            fontWeight: 600,
+                            maxWidth: "90%",
+                        }}
+                    >
+                        <li>We  announce winner names on every Friday at 3 PM.</li>
+                        <li>
+                            Reward/Gift is given once in a month to the user who has
+                            recited the most Durood Sharif.
+                        </li>
+                    </ul>
                 </div>
             </div>
 

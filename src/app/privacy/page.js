@@ -51,6 +51,10 @@ export default function PrivacyPolicy() {
         {
             title: "11. Doing Check in Terms & Conditions",
             content: "By agreeing (check) to the Terms and Conditions, the user accepts all rules and regulations governing the app and its features."
+        },
+         {
+            title: "12. Rewards for Durood Sharif",
+            content: "Rewards/Gifts will be given to a user once in a month to who has recited highest number of durood sharif"
         }
     ]
 
