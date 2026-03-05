@@ -41,7 +41,39 @@ export async function GET(request) {
 // DELETE endpoint - delete all zikr records
 export async function DELETE(request) {
     try {
-        const result = await prisma.zikr.deleteMany({});
+        const { searchParams } = new URL(request.url);
+        const id = searchParams.get('id');
+        const mobile = searchParams.get('mobile')?.trim();
+        const fullName = searchParams.get('fullName')?.trim();
+
+        // Require a filter to avoid accidental deletion of all records
+        if (!id && !mobile && !fullName) {
+            return NextResponse.json(
+                { error: 'Please provide `id`, `mobile` or `fullName` query parameter to delete specific records' },
+                { status: 400 }
+            );
+        }
+
+        // Delete by id if provided
+        if (id) {
+            const result = await prisma.zikr.deleteMany({
+                where: { id: parseInt(id) },
+            });
+            return NextResponse.json({ deletedCount: result.count }, { status: 200 });
+        }
+
+        const filters = [];
+        if (mobile) {
+            filters.push({ mobile: { equals: mobile, mode: 'insensitive' } });
+        }
+        if (fullName) {
+            filters.push({ fullName: { equals: fullName, mode: 'insensitive' } });
+        }
+
+        const result = await prisma.zikr.deleteMany({
+            where: { OR: filters },
+        });
+
         return NextResponse.json({ deletedCount: result.count }, { status: 200 });
     } catch (error) {
         console.error('Error deleting zikr records:', error);
@@ -65,7 +97,7 @@ export async function POST(request) {
         }
 
         // Validate required fields (address and areaMasjid optional)
-      
+
 
         // Ensure types is an array of strings
         if (!Array.isArray(types)) {

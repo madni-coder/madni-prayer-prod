@@ -48,6 +48,7 @@ model TasbihUser {
   mobileNumber String
   weeklyCounts BigInt     @default(0)
   count        BigInt     @default(0)
+  history     Json[]   @default([])
   createdAt   DateTime @default(now())
 
   @@map("tasbih_users")

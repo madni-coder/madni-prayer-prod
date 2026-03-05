@@ -605,7 +605,8 @@ export default function DuroodSharifPage() {
                                         {row["mobile number"] ? (
                                             <>
                                                 <button
-                                                    onClick={async () => {
+                                                    onClick={async (e) => {
+                                                        e.stopPropagation();
                                                         const textToCopy = String(row["mobile number"] || "");
                                                         try {
                                                             if (navigator?.clipboard?.writeText) {
@@ -677,7 +678,13 @@ export default function DuroodSharifPage() {
                         {paginated.map((row, idx) => (
                             <tr
                                 key={idx}
-                                className="border-b last:border-b-0 hover:bg-gray-50"
+                                onClick={() => {
+                                    const mobile = row["mobile number"];
+                                    if (mobile) {
+                                        router.push(`/admin/durood-sharif/viewTasbihCounts?mobile=${encodeURIComponent(mobile)}`);
+                                    }
+                                }}
+                                className="border-b last:border-b-0 cursor-pointer transition-colors hover:bg-green-50"
                             >
                                 <td className="py-4 text-gray-800 text-left font-bold">
                                     {row.SERIAL}
@@ -701,7 +708,8 @@ export default function DuroodSharifPage() {
                                     {row["mobile number"] ? (
                                         <div className="flex items-center gap-2">
                                             <button
-                                                onClick={async () => {
+                                                onClick={async (e) => {
+                                                    e.stopPropagation();
                                                     const textToCopy = String(row["mobile number"] || "");
                                                     try {
                                                         if (navigator?.clipboard?.writeText) {
