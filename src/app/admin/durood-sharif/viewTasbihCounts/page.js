@@ -1,7 +1,7 @@
 "use client";
 import React, { useEffect, useState, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { FiUser, FiPhone, FiMapPin, FiMail, FiClock, FiCalendar, FiHash, FiArrowLeft } from 'react-icons/fi';
+import {  FiPhone, FiMapPin, FiMail, FiClock, FiCalendar, FiHash, FiArrowLeft } from 'react-icons/fi';
 import { FaBitcoin } from 'react-icons/fa';
 
 function ViewTasbihCountsContent() {

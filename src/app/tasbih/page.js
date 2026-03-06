@@ -40,6 +40,7 @@ export default function Tasbih() {
         }
         return false;
     });
+    const [isClearingHistory, setIsClearingHistory] = useState(false);
     const [submitting, setSubmitting] = useState(false);
     const [theme, setTheme] = useState("system");
     const [target, setTarget] = useState(() => {
@@ -1196,34 +1197,46 @@ export default function Tasbih() {
                                 <button
                                     className="btn btn-error"
                                     onClick={async () => {
-                                        // Clear from localStorage
-                                        setHistory([]);
-                                        localStorage.removeItem(
-                                            "duroodHistory"
-                                        );
+                                        if (isClearingHistory) return;
+                                        setIsClearingHistory(true);
+                                        try {
+                                            const userData = typeof window !== 'undefined' && localStorage.getItem('userData');
+                                            if (userData) {
+                                                try {
+                                                    const user = JSON.parse(userData);
+                                                    await apiClient.delete('/api/api-tasbihUsers', {
+                                                        data: {
+                                                            mobileNumber: user.mobile || user.email,
+                                                            clearHistory: true,
+                                                        }
+                                                    });
 
-                                        // Call DELETE API to clear history from database
-                                        const userData = localStorage.getItem('userData');
-                                        if (userData) {
-                                            try {
-                                                const user = JSON.parse(userData);
-                                                await apiClient.delete('/api/api-tasbihUsers', {
-                                                    data: {
-                                                        mobileNumber: user.mobile || user.email,
-                                                        clearHistory: true,
-                                                    }
-                                                });
-                                                showToast({ type: 'success', text: 'History cleared successfully!' });
-                                            } catch (error) {
-                                                console.error('Error clearing history from database:', error);
-                                                showToast({ type: 'error', text: 'Failed to clear history from server.' });
+                                                    // Only clear local state after successful server deletion
+                                                    setHistory([]);
+                                                    localStorage.removeItem('duroodHistory');
+                                                    showToast({ type: 'success', text: 'History cleared successfully!' });
+                                                } catch (error) {
+                                                    console.error('Error clearing history from database:', error);
+                                                    showToast({ type: 'error', text: 'Failed to clear history from server.' });
+                                                }
+                                            } else {
+                                                // No authenticated user: clear local only
+                                                setHistory([]);
+                                                localStorage.removeItem('duroodHistory');
+                                                showToast({ type: 'success', text: 'Durood history cleared locally.' });
                                             }
+                                        } finally {
+                                            setIsClearingHistory(false);
+                                            setShowClearHistoryConfirm(false);
                                         }
-
-                                        setShowClearHistoryConfirm(false);
                                     }}
+                                    disabled={isClearingHistory}
                                 >
-                                    Yes
+                                    {isClearingHistory ? (
+                                        <AnimatedLooader className="inline-block" />
+                                    ) : (
+                                        "Yes"
+                                    )}
                                 </button>
                                 <button
                                     className="btn btn-ghost"

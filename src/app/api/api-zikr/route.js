@@ -70,9 +70,13 @@ export async function DELETE(request) {
             filters.push({ fullName: { equals: fullName, mode: 'insensitive' } });
         }
 
+        const whereClause =
+            filters.length === 1
+                ? filters[0]
+                : { AND: filters };
         const result = await prisma.zikr.deleteMany({
-            where: { OR: filters },
-        });
+            where: whereClause
+        })
 
         return NextResponse.json({ deletedCount: result.count }, { status: 200 });
     } catch (error) {
