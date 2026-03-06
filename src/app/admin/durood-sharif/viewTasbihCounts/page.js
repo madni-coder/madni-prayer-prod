@@ -1,10 +1,10 @@
 "use client";
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { FiUser, FiPhone, FiMapPin, FiMail, FiClock, FiCalendar, FiHash, FiArrowLeft } from 'react-icons/fi';
 import { FaBitcoin } from 'react-icons/fa';
 
-export default function ViewTasbihCounts() {
+function ViewTasbihCountsContent() {
     const router = useRouter();
     const searchParams = useSearchParams();
     const mobileNumber = searchParams.get("mobile");
@@ -256,5 +256,20 @@ export default function ViewTasbihCounts() {
                 </div>
             </div>
         </div>
+    );
+}
+
+export default function ViewTasbihCounts() {
+    return (
+        <Suspense fallback={
+            <div className="flex items-center justify-center min-h-screen bg-gray-50">
+                <div className="text-center">
+                    <div className="inline-block animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-[#5fb923]"></div>
+                    <p className="mt-4 text-gray-600">Loading...</p>
+                </div>
+            </div>
+        }>
+            <ViewTasbihCountsContent />
+        </Suspense>
     );
 }
