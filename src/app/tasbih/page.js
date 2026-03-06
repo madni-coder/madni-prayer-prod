@@ -40,6 +40,7 @@ export default function Tasbih() {
         }
         return false;
     });
+    const [isClearingHistory, setIsClearingHistory] = useState(false);
     const [submitting, setSubmitting] = useState(false);
     const [theme, setTheme] = useState("system");
     const [target, setTarget] = useState(() => {
@@ -428,6 +429,13 @@ export default function Tasbih() {
             try {
                 setSubmitting(true);
                 const user = JSON.parse(userData);
+                // Create new history entry
+                const newEntry = {
+                    count: countToSubmit,
+                    weeklyCounts: countToSubmit,
+                    date: new Date().toLocaleDateString(),
+                    time: new Date().toLocaleTimeString(),
+                };
                 const { data } = await apiClient.post(
                     '/api/api-tasbihUsers',
                     {
@@ -436,16 +444,11 @@ export default function Tasbih() {
                         mobileNumber: user.mobile || user.email,
                         tasbihCount: countToSubmit,
                         weeklyCounts: countToSubmit,
+                        history: [newEntry],
                     }
                 );
 
                 if (data && data.ok) {
-                    const newEntry = {
-                        count: countToSubmit,
-                        weeklyCounts: countToSubmit,
-                        date: new Date().toLocaleDateString(),
-                        time: new Date().toLocaleTimeString(),
-                    };
                     setHistory((prev) => [newEntry, ...prev]);
                     setCount(0);
                     setTarget(0);
@@ -1048,7 +1051,7 @@ export default function Tasbih() {
                         aria-label="Clear History"
                         onClick={() => setShowClearHistoryConfirm(true)}
                     >
-                        Clear History
+                        Delete History
                     </button>
                 </h3>
                 {history.length === 0 ? (
@@ -1188,20 +1191,52 @@ export default function Tasbih() {
                             </h3>
                             <p className="py-4">
                                 Are you sure you want to clear all Durood
-                                history?
+                                history permanently?
                             </p>
                             <div className="modal-action justify-center">
                                 <button
                                     className="btn btn-error"
-                                    onClick={() => {
-                                        setHistory([]);
-                                        localStorage.removeItem(
-                                            "duroodHistory"
-                                        );
-                                        setShowClearHistoryConfirm(false);
+                                    onClick={async () => {
+                                        if (isClearingHistory) return;
+                                        setIsClearingHistory(true);
+                                        try {
+                                            const userData = typeof window !== 'undefined' && localStorage.getItem('userData');
+                                            if (userData) {
+                                                try {
+                                                    const user = JSON.parse(userData);
+                                                    await apiClient.delete('/api/api-tasbihUsers', {
+                                                        data: {
+                                                            mobileNumber: user.mobile || user.email,
+                                                            clearHistory: true,
+                                                        }
+                                                    });
+
+                                                    // Only clear local state after successful server deletion
+                                                    setHistory([]);
+                                                    localStorage.removeItem('duroodHistory');
+                                                    showToast({ type: 'success', text: 'History cleared successfully!' });
+                                                } catch (error) {
+                                                    console.error('Error clearing history from database:', error);
+                                                    showToast({ type: 'error', text: 'Failed to clear history from server.' });
+                                                }
+                                            } else {
+                                                // No authenticated user: clear local only
+                                                setHistory([]);
+                                                localStorage.removeItem('duroodHistory');
+                                                showToast({ type: 'success', text: 'Durood history cleared locally.' });
+                                            }
+                                        } finally {
+                                            setIsClearingHistory(false);
+                                            setShowClearHistoryConfirm(false);
+                                        }
                                     }}
+                                    disabled={isClearingHistory}
                                 >
-                                    Yes
+                                    {isClearingHistory ? (
+                                        <AnimatedLooader className="inline-block" />
+                                    ) : (
+                                        "Yes"
+                                    )}
                                 </button>
                                 <button
                                     className="btn btn-ghost"

@@ -7,6 +7,7 @@ export async function DELETE(req) {
         const mobileNumber =
             body["mobile number"] ?? body.mobileNumber ?? body.mobile;
         const addWeeklyToCount = body.addWeeklyToCount === true;
+        const clearHistory = body.clearHistory === true;
         if (!mobileNumber || typeof mobileNumber !== "string") {
             return NextResponse.json(
                 {
@@ -29,7 +30,13 @@ export async function DELETE(req) {
             );
         }
         let updatedUser;
-        if (addWeeklyToCount) {
+        if (clearHistory) {
+            // Clear history array
+            updatedUser = await prisma.tasbihUser.update({
+                where: { id: existingUser.id },
+                data: { history: [] },
+            });
+        } else if (addWeeklyToCount) {
             // Add weeklyCounts to count, then reset weeklyCounts
             const prevCount =
                 typeof existingUser.count === "bigint"
@@ -68,9 +75,11 @@ export async function DELETE(req) {
         return NextResponse.json(
             {
                 ok: true,
-                message: addWeeklyToCount
-                    ? "Weekly counts added to lifetime and erased."
-                    : "Weekly counts erased.",
+                message: clearHistory
+                    ? "History cleared successfully."
+                    : addWeeklyToCount
+                        ? "Weekly counts added to lifetime and erased."
+                        : "Weekly counts erased.",
                 data: safeUser,
             },
             { status: 200 }
@@ -104,6 +113,8 @@ export async function POST(req) {
                 : typeof tasbihCount === "number"
                     ? tasbihCount
                     : 0;
+        // Accept history array from client
+        const history = Array.isArray(body.history) ? body.history : [];
 
         // For new or anonymous submissions, ensure we have either a fullName or a mobile identifier.
         if (!fullName && !mobileNumber) {
@@ -161,6 +172,8 @@ export async function POST(req) {
                     count: tasbihCount,
                     // additionally store weekly count in `weeklyCounts`
                     weeklyCounts: weeklyCounts,
+                    // store history array
+                    history: history,
                 },
             });
         }
@@ -176,6 +189,9 @@ export async function POST(req) {
                 typeof existingUser.weeklyCounts === "bigint"
                     ? Number(existingUser.weeklyCounts)
                     : existingUser.weeklyCounts;
+            // Merge new history with existing history
+            const existingHistory = Array.isArray(existingUser.history) ? existingUser.history : [];
+            const mergedHistory = [...history, ...existingHistory];
             const updatedUser = await prisma.tasbihUser.update({
                 where: { id: existingUser.id },
                 data: {
@@ -185,6 +201,7 @@ export async function POST(req) {
                     weeklyCounts:
                         prevWeeklyCounts +
                         (typeof weeklyCounts === "number" ? weeklyCounts : 0),
+                    history: mergedHistory,
                 },
             });
             // Convert BigInt fields to Number before returning
@@ -298,6 +315,8 @@ export async function GET() {
                     typeof u.weeklyCounts === "bigint"
                         ? Number(u.weeklyCounts)
                         : u.weeklyCounts,
+                // Include history array
+                history: Array.isArray(u.history) ? u.history : [],
             };
         });
         return NextResponse.json({ ok: true, data: filtered }, { status: 200 });

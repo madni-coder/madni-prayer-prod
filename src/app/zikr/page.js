@@ -258,14 +258,38 @@ export default function Page() {
     async function handleClearHistory() {
         try {
             setIsClearing(true);
-            // Do NOT call the global DELETE API (it removes all DB records).
-            // Only clear local client-side history so server data remains intact.
+
+            // If user is not logged in, only clear local history
+            const userRaw = typeof window !== 'undefined' && localStorage.getItem('userData');
+            if (!userRaw) {
+                setHistory([]);
+                localStorage.removeItem("zikrHistory");
+                toast.success("Zikr history cleared locally. Login to remove server records.");
+                return;
+            }
+
+            // Call DELETE API to clear history from the database (route.js) scoped to current user
+            const user = JSON.parse(userRaw);
+            const mobileParam = user.mobile || user.email || '';
+            const fullNameParam = user.fullName || '';
+            const qs = new URLSearchParams();
+            if (mobileParam) qs.append('mobile', mobileParam);
+            if (fullNameParam) qs.append('fullName', fullNameParam);
+            const res = await apiClient.delete(`/api/api-zikr?${qs.toString()}`);
+            const data = res?.data;
+
+            // Clear local state/storage after successful server deletion
             setHistory([]);
             localStorage.removeItem("zikrHistory");
-            toast.success("Zikr history cleared locally.");
+
+            if (data && typeof data.deletedCount !== 'undefined') {
+                toast.success(`Zikr history cleared from  database).`);
+            } else {
+                toast.success("Zikr history cleared from database.");
+            }
         } catch (err) {
             console.error("Error clearing history:", err);
-            toast.error("Failed to clear history. Please try again.");
+            toast.error(err?.response?.data?.error || "Failed to clear history. Please try again.");
         } finally {
             setIsClearing(false);
             setShowClearHistoryConfirm(false);
@@ -452,7 +476,7 @@ export default function Page() {
                                 aria-label="Clear History"
                                 onClick={() => setShowClearHistoryConfirm(true)}
                             >
-                                Clear History
+                                Delete History
                             </button>
                         )}
                     </h3>
@@ -560,14 +584,19 @@ export default function Page() {
                                 Clear History
                             </h3>
                             <p className="py-4">
-                                Are you sure you want to clear all Zikr history?
+                                Are you sure you want to clear all Zikr history permanently?
                             </p>
                             <div className="modal-action justify-center">
                                 <button
                                     className="btn btn-error"
                                     onClick={() => handleClearHistory()}
+                                    disabled={isClearing}
                                 >
-                                    Yes
+                                    {isClearing ? (
+                                        <AnimatedLooader className="inline-block" />
+                                    ) : (
+                                        "Yes"
+                                    )}
                                 </button>
                                 <button
                                     className="btn btn-ghost"
