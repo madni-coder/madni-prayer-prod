@@ -112,7 +112,7 @@ export default function ForceUpdateChecker() {
                     console.log(
                         "[ForceUpdate] ⚠️ No version found! Assuming '0.0.0' so check always runs.",
                     );
-                    currentVersion = "0.0.0";
+                    currentVersion = "7.2.0";
                 }
 
                 const currentCode = versionToCode(currentVersion);
