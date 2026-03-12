@@ -30,7 +30,7 @@ const MOCK_SCHEMAS = {
             { id: "fh2", key: "attend_section", type: "heading", text: "Attendance Preferences", size: "h3" },
             { id: "f8", key: "program_session", label: "Preferred Session", type: "radio", options: ["Morning (9:00 AM)", "Evening (6:00 PM)", "Both"], required: true },
             { id: "f9", key: "food_pref", label: "Food Preference", type: "checkboxGroup", options: ["Vegetarian", "Non-Vegetarian", "No Preference"], required: false },
-            { id: "f10", key: "emergency_contact", label: "Emergency Contact", type: "object", required: false, fields: [{ key: "name", label: "Name", type: "text" }, { key: "phone", label: "Phone", type: "text" }] },
+            { id: "f10", key: "event_address", label: "Event Address", type: "address", required: false },
             { id: "f11", key: "languages", label: "Languages Known", type: "array", itemType: "text", placeholder: "Add a language" },
             {
                 id: "f12", key: "event_rules_btn", label: "📋 View Event Rules", type: "button",
@@ -235,21 +235,51 @@ function ArrayField({ field, value = [], onChange }) {
     );
 }
 
-function ObjectField({ field, value = {}, onChange }) {
-    const subFields = field.fields || [];
+function AddressField({ field, value = {}, onChange }) {
     return (
-        <div className="pl-4 border-l-2 border-gray-200 space-y-3">
-            {subFields.map(sub => (
-                <div key={sub.key}>
-                    <label className="block text-sm font-medium text-gray-600 mb-1">{sub.label}</label>
-                    <input
-                        type={sub.type || "text"}
-                        value={value[sub.key] || ""}
-                        onChange={e => onChange({ ...value, [sub.key]: e.target.value })}
-                        className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm text-gray-900 focus:outline-none focus:ring-1 focus:ring-violet-400"
-                    />
-                </div>
-            ))}
+        <div className="space-y-3">
+            <input
+                type="text"
+                value={value.locality || ""}
+                onChange={e => onChange({ ...value, locality: e.target.value })}
+                placeholder="Locality / Area"
+                className="w-full px-4 py-2.5 border border-gray-300 rounded-xl text-sm text-gray-900 focus:outline-none focus:ring-2 focus:border-transparent transition"
+            />
+            <input
+                type="text"
+                value={value.city || ""}
+                onChange={e => onChange({ ...value, city: e.target.value })}
+                placeholder="City"
+                className="w-full px-4 py-2.5 border border-gray-300 rounded-xl text-sm text-gray-900 focus:outline-none focus:ring-2 focus:border-transparent transition"
+            />
+        </div>
+    );
+}
+
+function MasjidField({ field, value = {}, onChange }) {
+    return (
+        <div className="space-y-3">
+            <input
+                type="text"
+                value={value.masjidName || ""}
+                onChange={e => onChange({ ...value, masjidName: e.target.value })}
+                placeholder="Name of Masjid"
+                className="w-full px-4 py-2.5 border border-gray-300 rounded-xl text-sm text-gray-900 focus:outline-none focus:ring-2 focus:border-transparent transition"
+            />
+            <input
+                type="text"
+                value={value.locality || ""}
+                onChange={e => onChange({ ...value, locality: e.target.value })}
+                placeholder="Locality / Area"
+                className="w-full px-4 py-2.5 border border-gray-300 rounded-xl text-sm text-gray-900 focus:outline-none focus:ring-2 focus:border-transparent transition"
+            />
+            <input
+                type="text"
+                value={value.city || ""}
+                onChange={e => onChange({ ...value, city: e.target.value })}
+                placeholder="City"
+                className="w-full px-4 py-2.5 border border-gray-300 rounded-xl text-sm text-gray-900 focus:outline-none focus:ring-2 focus:border-transparent transition"
+            />
         </div>
     );
 }
@@ -348,7 +378,8 @@ function FieldWrapper({ field, value, onChange, color }) {
             case "checkbox": return <CheckboxField field={field} value={value} onChange={onChange} color={color} />;
             case "checkboxGroup": return <CheckboxGroupField field={field} value={value} onChange={onChange} color={color} />;
             case "array": return <ArrayField field={field} value={value} onChange={onChange} />;
-            case "object": return <ObjectField field={field} value={value} onChange={onChange} />;
+            case "address": return <AddressField field={field} value={value} onChange={onChange} />;
+            case "masjid": return <MasjidField field={field} value={value} onChange={onChange} />;
             case "image": return (
                 <label className="flex flex-col items-center justify-center w-full h-28 border-2 border-dashed border-gray-300 rounded-xl cursor-pointer hover:border-violet-400 transition">
                     <Upload className="w-6 h-6 text-gray-400 mb-1" />

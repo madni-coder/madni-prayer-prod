@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import Link from "next/link";
 import {
     CalendarRange, Plus, Pencil, Trash2, Eye, EyeOff,
@@ -100,7 +101,8 @@ function CreateModal({ onConfirm, onCancel }) {
     const handleSubmit = (e) => {
         e.preventDefault();
         if (!title.trim()) return;
-        const slug = title.trim().toLowerCase().replace(/\s+/g, "-").replace(/[^a-z0-9-]/g, "");
+        const randomStr = Math.random().toString(36).substring(2, 8);
+        const slug = title.trim().toLowerCase().replace(/\s+/g, "-").replace(/[^a-z0-9-]/g, "") + `-${randomStr}`;
         onConfirm({ title: title.trim(), description: description.trim(), slug, color });
     };
 
@@ -126,7 +128,7 @@ function CreateModal({ onConfirm, onCancel }) {
                         />
                         {title && (
                             <p className="mt-1 text-xs text-gray-400">
-                                Slug: /events/{title.toLowerCase().replace(/\s+/g, "-").replace(/[^a-z0-9-]/g, "")}
+                                Slug: /events/{title.toLowerCase().replace(/\s+/g, "-").replace(/[^a-z0-9-]/g, "")}-{'[random_id]'}
                             </p>
                         )}
                     </div>
@@ -169,6 +171,7 @@ function CreateModal({ onConfirm, onCancel }) {
 
 // ─── Main Page ────────────────────────────────────────────────────────────────
 export default function AdminEventsPage() {
+    const router = useRouter();
     const [pages, setPages] = useState(INITIAL_PAGES);
     const [search, setSearch] = useState("");
     const [deleteTarget, setDeleteTarget] = useState(null);
@@ -203,6 +206,7 @@ export default function AdminEventsPage() {
         };
         setPages(prev => [newPage, ...prev]);
         setShowCreateModal(false);
+        router.push(`/admin/events/${data.slug}`);
     };
 
     const liveCount = pages.filter(p => p.isActive).length;

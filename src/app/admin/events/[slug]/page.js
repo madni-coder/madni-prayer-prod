@@ -5,15 +5,16 @@ import Link from "next/link";
 import { useParams } from "next/navigation";
 import {
     ArrowLeft, Plus, Trash2, GripVertical, Settings2, Eye,
-    ChevronDown, ChevronUp, Save, Check, AlertCircle, X,
+    ChevronDown, ChevronUp, Save, Check, CheckCircle, AlertCircle, X,
     Type, Hash, AlignLeft, ChevronDownSquare, CircleDot,
     CheckSquare, List, Braces, MousePointerClick, Bell, Layers,
-    Minus, Heading, Upload, Copy, ToggleLeft
+    Minus, Heading, Upload, Copy, ToggleLeft, MapPin, Moon
 } from "lucide-react";
 
 // ─── Field type definitions ───────────────────────────────────────────────────
 export const FIELD_TYPES = [
-    { type: "text", label: "Short Text", icon: Type, color: "#7c3aed" },
+    { type: "address", label: "Address", icon: MapPin, color: "#10b981" },
+    { type: "masjid", label: "Area Masjid", icon: Moon, color: "#f59e0b" },
     { type: "textarea", label: "Long Text", icon: AlignLeft, color: "#0284c7" },
     { type: "number", label: "Number", icon: Hash, color: "#0891b2" },
     { type: "email", label: "Email", icon: Type, color: "#059669" },
@@ -25,7 +26,6 @@ export const FIELD_TYPES = [
     { type: "date", label: "Date Picker", icon: Type, color: "#0ea5e9" },
     { type: "time", label: "Time Picker", icon: Type, color: "#06b6d4" },
     { type: "array", label: "Dynamic List", icon: List, color: "#f59e0b" },
-    { type: "object", label: "Nested Object", icon: Braces, color: "#8b5cf6" },
     { type: "button", label: "Action Button", icon: MousePointerClick, color: "#ef4444" },
     { type: "toast", label: "Toast Message", icon: Bell, color: "#f97316" },
     { type: "popup", label: "Popup / Modal", icon: Layers, color: "#64748b" },
@@ -99,7 +99,6 @@ function makeNewField(type) {
     }
     if (type === "number") { base.min = ""; base.max = ""; }
     if (type === "array") { base.itemType = "text"; }
-    if (type === "object") { base.fields = [{ key: "sub_key", label: "Sub Field", type: "text" }]; }
     if (type === "button") { base.action = "popup"; base.popupContent = "Message here"; base.toastMessage = ""; base.toastType = "success"; }
     if (type === "toast") { base.toastMessage = "Action triggered!"; base.toastType = "success"; }
     if (type === "popup") { base.popupTitle = "Info"; base.popupContent = "Content here"; }
@@ -490,6 +489,91 @@ function JsonModal({ schema, onClose }) {
     );
 }
 
+// ─── Live Preview Modal ───────────────────────────────────────────────────────
+function LivePreviewModal({ schema, onClose }) {
+    const color = schema.color || "#7c3aed";
+    
+    // Quick renderers to locally simulate frontend
+    const renderInput = (f) => {
+        const baseClass = "w-full px-4 py-2.5 border border-gray-300 rounded-xl text-sm text-gray-900 bg-white pointer-events-none";
+        switch (f.type) {
+            case "textarea": return <textarea placeholder={f.placeholder} rows={3} className={baseClass + " resize-none"} readOnly />;
+            case "dropdown": return <div className="relative"><select className={baseClass + " appearance-none"} readOnly><option>{f.placeholder || "— Select —"}</option></select><ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" /></div>;
+            case "radio": return <div className="flex flex-wrap gap-2">{(f.options||["Option 1"]).map(o => <div key={o} className="px-4 py-2 rounded-xl border border-gray-200 text-sm text-gray-700 flex items-center gap-2"><div className="w-4 h-4 rounded-full border-2 border-gray-300" />{o}</div>)}</div>;
+            case "checkbox": return <div className="flex items-start gap-3"><div className="w-5 h-5 rounded-md border-2 border-gray-300 mt-0.5" /><span className="text-sm text-gray-700 leading-snug">{f.label}</span></div>;
+            case "checkboxGroup": return <div className="flex flex-wrap gap-2">{(f.options||["Option 1"]).map(o => <div key={o} className="px-3.5 py-2 rounded-xl border border-gray-200 text-sm text-gray-700">{o}</div>)}</div>;
+            case "button": return <button className="px-5 py-2.5 text-sm font-semibold text-white rounded-xl shadow-sm pointer-events-none" style={{backgroundColor: color}}>{f.label}</button>;
+            case "image": return <div className="flex flex-col items-center justify-center w-full h-28 border-2 border-dashed border-gray-300 rounded-xl text-gray-400"><Upload className="w-6 h-6 mb-1"/><span className="text-xs">Image Upload Preview</span></div>;
+            case "divider": return <hr className="border-gray-200 my-2" />;
+            case "heading": 
+                const tags = {h1:"text-2xl font-bold", h2:"text-xl font-bold", h3:"text-base font-semibold", p:"text-sm text-gray-500"};
+                return <div className={tags[f.size||"h2"] + " text-gray-800"}>{f.text}</div>;
+            case "address": return <div className="space-y-3"><input placeholder="Locality / Area" className={baseClass} readOnly/><input placeholder="City" className={baseClass} readOnly/></div>;
+            case "masjid": return <div className="space-y-3"><input placeholder="Name of Masjid" className={baseClass} readOnly/><input placeholder="Locality / Area" className={baseClass} readOnly/><input placeholder="City" className={baseClass} readOnly/></div>;
+            case "array": return <div className="space-y-2"><input placeholder={f.placeholder || "Item 1"} className={baseClass} readOnly/><div className="text-sm text-violet-600 font-medium flex items-center gap-1"><Plus className="w-4 h-4"/> Add item</div></div>;
+            default: return <input type={f.type === "number" ? "number" : "text"} placeholder={f.placeholder} className={baseClass} readOnly />;
+        }
+    };
+
+    return (
+        <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black bg-opacity-60 p-2 sm:p-4">
+            <div className="bg-gray-50 rounded-2xl shadow-2xl w-full max-w-xl max-h-[95vh] flex flex-col overflow-hidden animate-[fadeIn_0.2s_ease]">
+                <div className="flex items-center justify-between px-5 py-3.5 bg-white border-b border-gray-200 flex-shrink-0">
+                    <div>
+                        <h3 className="text-base font-bold text-gray-900 flex items-center gap-2">
+                            <Eye className="w-4 h-4 text-violet-600" />
+                            Frontend Preview
+                        </h3>
+                        <p className="text-xs text-gray-500">Exactly how it will appear to users</p>
+                    </div>
+                    <button onClick={onClose} className="p-1.5 bg-gray-100 hover:bg-gray-200 rounded-full text-gray-600 transition">
+                        <X className="w-4 h-4" />
+                    </button>
+                </div>
+                
+                <div className="flex-1 overflow-y-auto p-4 sm:p-6 bg-gray-50 custom-scrollbar">
+                    <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden font-sans">
+                        <div className="relative overflow-hidden" style={{ background: `linear-gradient(135deg, ${color}, ${color}bb)` }}>
+                            <div className="absolute inset-0 opacity-10" style={{ backgroundImage: "radial-gradient(circle at 20% 50%, white 1px, transparent 1px), radial-gradient(circle at 80% 20%, white 1px, transparent 1px)", backgroundSize: "40px 40px" }} />
+                            <div className="relative px-6 py-8 text-white">
+                                <h1 className="text-2xl font-bold leading-tight">{schema.page_title}</h1>
+                                {schema.description && <p className="mt-2 text-sm opacity-90 leading-relaxed">{schema.description}</p>}
+                            </div>
+                        </div>
+                        
+                        <div className="p-6 space-y-6">
+                            {schema.fields.length === 0 ? (
+                                <p className="text-gray-400 text-sm text-center py-4">No fields added to preview yet.</p>
+                            ) : (
+                                schema.fields.map(f => (
+                                    <div key={f.id} className="space-y-1.5">
+                                        {!["divider", "heading", "checkbox", "button"].includes(f.type) && (
+                                            <label className="flex items-center gap-1.5 text-sm font-medium text-gray-700">
+                                                {f.label}
+                                                {f.required && <span className="text-red-500 text-base leading-none">*</span>}
+                                            </label>
+                                        )}
+                                        {renderInput(f)}
+                                        {f.helperText && !["divider", "heading", "button"].includes(f.type) && (
+                                            <p className="text-xs text-gray-400">{f.helperText}</p>
+                                        )}
+                                    </div>
+                                ))
+                            )}
+
+                            <div className="pt-2">
+                                <button className="w-full py-3 text-white font-bold rounded-xl pointer-events-none opacity-90 text-sm flex items-center justify-center gap-2" style={{ backgroundColor: color }}>
+                                    {schema.submit_label || "Submit"}
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    );
+}
+
 // ─── Main Page Builder ────────────────────────────────────────────────────────
 export default function EventPageBuilder() {
     const params = useParams();
@@ -499,6 +583,7 @@ export default function EventPageBuilder() {
     const [showTypePicker, setShowTypePicker] = useState(false);
     const [savedToast, setSavedToast] = useState(false);
     const [showJson, setShowJson] = useState(false);
+    const [showPreviewModal, setShowPreviewModal] = useState(false);
 
     const addField = useCallback((type) => {
         const field = makeNewField(type);
@@ -667,12 +752,21 @@ export default function EventPageBuilder() {
 
                     {/* Bottom Add Field button */}
                     {schema.fields.length > 0 && (
-                        <button
-                            onClick={() => setShowTypePicker(true)}
-                            className="w-full py-3 border-2 border-dashed border-gray-200 rounded-xl text-gray-400 text-sm font-medium flex items-center justify-center gap-2 hover:border-violet-300 hover:text-violet-600 transition">
-                            <Plus className="w-4 h-4" />
-                            Add Another Field
-                        </button>
+                        <div className="space-y-3">
+                            <button
+                                onClick={() => setShowTypePicker(true)}
+                                className="w-full py-3 border-2 border-dashed border-gray-200 rounded-xl text-gray-400 text-sm font-medium flex items-center justify-center gap-2 hover:border-violet-300 hover:text-violet-600 transition">
+                                <Plus className="w-4 h-4" />
+                                Add Another Field
+                            </button>
+                            <button
+                                onClick={() => setShowPreviewModal(true)}
+                                className="w-full py-3.5 rounded-xl text-white text-sm font-bold flex items-center justify-center gap-2 hover:opacity-90 transition shadow-md"
+                                style={{ backgroundColor: ft_color }}>
+                                <CheckCircle className="w-5 h-5" />
+                                DONE
+                            </button>
+                        </div>
                     )}
                 </div>
             </div>
@@ -680,6 +774,7 @@ export default function EventPageBuilder() {
             {/* Modals */}
             {showTypePicker && <TypePickerModal onSelect={addField} onClose={() => setShowTypePicker(false)} />}
             {showJson && <JsonModal schema={schema} onClose={() => setShowJson(false)} />}
+            {showPreviewModal && <LivePreviewModal schema={schema} onClose={() => setShowPreviewModal(false)} />}
             <SavedToast show={savedToast} />
         </div>
     );
