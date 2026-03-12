@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useParams } from "next/navigation";
 import { toast } from "react-toastify";
 import {
@@ -138,6 +138,46 @@ function DropdownField({ field, value, onChange, color }) {
                 ))}
             </select>
             <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
+        </div>
+    );
+}
+
+function DatePickerField({ field, value, onChange }) {
+    const inputRef = useRef(null);
+    return (
+        <div className="relative">
+            <input 
+                id={field.id} ref={inputRef} type="date" value={value || ""}
+                onChange={e => onChange(e.target.value)} required={field.required}
+                min={field.min} max={field.max}
+                className="w-full px-4 py-2.5 border border-gray-300 rounded-xl text-sm text-gray-900 focus:outline-none focus:ring-2 focus:border-transparent transition pr-10 appearance-none bg-white cursor-pointer"
+                onClick={(e) => {
+                    try { if (e.target.showPicker) e.target.showPicker(); } catch(err) {}
+                }}
+            />
+            <button type="button" onClick={() => { try { if (inputRef.current.showPicker) inputRef.current.showPicker(); } catch (err){} }} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition p-1 cursor-pointer">
+                <Calendar className="w-4 h-4" />
+            </button>
+        </div>
+    );
+}
+
+function TimePickerField({ field, value, onChange }) {
+    const inputRef = useRef(null);
+    return (
+        <div className="relative">
+            <input 
+                id={field.id} ref={inputRef} type="time" value={value || ""}
+                onChange={e => onChange(e.target.value)} required={field.required}
+                min={field.min} max={field.max}
+                className="w-full px-4 py-2.5 border border-gray-300 rounded-xl text-sm text-gray-900 focus:outline-none focus:ring-2 focus:border-transparent transition pr-10 appearance-none bg-white cursor-pointer"
+                onClick={(e) => {
+                    try { if (e.target.showPicker) e.target.showPicker(); } catch(err) {}
+                }}
+            />
+            <button type="button" onClick={() => { try { if (inputRef.current.showPicker) inputRef.current.showPicker(); } catch (err){} }} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition p-1 cursor-pointer">
+                <Clock className="w-4 h-4" />
+            </button>
         </div>
     );
 }
@@ -361,18 +401,8 @@ function FieldWrapper({ field, value, onChange, color }) {
             case "number": return <NumberField field={field} value={value} onChange={onChange} />;
             case "email": return <TextField field={{ ...field, type: "email" }} value={value} onChange={onChange} />;
             case "phone": return <TextField field={{ ...field, type: "tel" }} value={value} onChange={onChange} />;
-            case "date": return (
-                <input id={field.id} type="date" value={value || ""}
-                    onChange={e => onChange(e.target.value)} required={field.required}
-                    className="w-full px-4 py-2.5 border border-gray-300 rounded-xl text-sm text-gray-900 focus:outline-none focus:ring-2 transition"
-                />
-            );
-            case "time": return (
-                <input id={field.id} type="time" value={value || ""}
-                    onChange={e => onChange(e.target.value)} required={field.required}
-                    className="w-full px-4 py-2.5 border border-gray-300 rounded-xl text-sm text-gray-900 focus:outline-none focus:ring-2 transition"
-                />
-            );
+            case "date": return <DatePickerField field={field} value={value} onChange={onChange} />;
+            case "time": return <TimePickerField field={field} value={value} onChange={onChange} />;
             case "dropdown": return <DropdownField field={field} value={value} onChange={onChange} color={color} />;
             case "radio": return <RadioField field={field} value={value} onChange={onChange} color={color} />;
             case "checkbox": return <CheckboxField field={field} value={value} onChange={onChange} color={color} />;

@@ -8,7 +8,8 @@ import {
     ChevronDown, ChevronUp, Save, Check, CheckCircle, AlertCircle, X,
     Type, Hash, AlignLeft, ChevronDownSquare, CircleDot,
     CheckSquare, List, Braces, MousePointerClick, Bell, Layers,
-    Minus, Heading, Upload, Copy, ToggleLeft, MapPin, Moon
+    Minus, Heading, Upload, Copy, ToggleLeft, MapPin, Moon,
+    Calendar, Clock
 } from "lucide-react";
 
 // ─── Field type definitions ───────────────────────────────────────────────────
@@ -23,8 +24,8 @@ export const FIELD_TYPES = [
     { type: "radio", label: "Radio Group", icon: CircleDot, color: "#dc2626" },
     { type: "checkbox", label: "Checkbox", icon: CheckSquare, color: "#7c3aed" },
     { type: "checkboxGroup", label: "Checkbox Group", icon: CheckSquare, color: "#9333ea" },
-    { type: "date", label: "Date Picker", icon: Type, color: "#0ea5e9" },
-    { type: "time", label: "Time Picker", icon: Type, color: "#06b6d4" },
+    { type: "date", label: "Date Picker", icon: Calendar, color: "#0ea5e9" },
+    { type: "time", label: "Time Picker", icon: Clock, color: "#06b6d4" },
     { type: "array", label: "Dynamic List", icon: List, color: "#f59e0b" },
     { type: "button", label: "Action Button", icon: MousePointerClick, color: "#ef4444" },
     { type: "toast", label: "Toast Message", icon: Bell, color: "#f97316" },
@@ -219,7 +220,7 @@ function FieldConfig({ field, onChange }) {
 
             {/* Common */}
             {!["divider", "heading"].includes(field.type) && labelInput("Label (visible to user)", "label", "text", "e.g. Full Name")}
-            {!["divider", "heading", "button", "toast", "popup", "checkbox"].includes(field.type) && labelInput("Placeholder", "placeholder", "text", "Optional placeholder")}
+            {!["divider", "heading", "button", "toast", "popup", "checkbox", "date", "time"].includes(field.type) && labelInput("Placeholder", "placeholder", "text", "Optional placeholder")}
             {!["divider", "heading"].includes(field.type) && labelInput("Helper Text", "helperText", "text", "Optional hint text below field")}
 
             {/* Required toggle */}
@@ -230,6 +231,22 @@ function FieldConfig({ field, onChange }) {
                 <div className="grid grid-cols-2 gap-2">
                     {labelInput("Min", "min", "number")}
                     {labelInput("Max", "max", "number")}
+                </div>
+            )}
+
+            {/* Date min/max */}
+            {field.type === "date" && (
+                <div className="grid grid-cols-2 gap-2">
+                    {labelInput("Min Date", "min", "date")}
+                    {labelInput("Max Date", "max", "date")}
+                </div>
+            )}
+
+            {/* Time min/max */}
+            {field.type === "time" && (
+                <div className="grid grid-cols-2 gap-2">
+                    {labelInput("Min Time", "min", "time")}
+                    {labelInput("Max Time", "max", "time")}
                 </div>
             )}
 
@@ -511,6 +528,8 @@ function LivePreviewModal({ schema, onClose }) {
             case "address": return <div className="space-y-3"><input placeholder="Locality / Area" className={baseClass} readOnly/><input placeholder="City" className={baseClass} readOnly/></div>;
             case "masjid": return <div className="space-y-3"><input placeholder="Name of Masjid" className={baseClass} readOnly/><input placeholder="Locality / Area" className={baseClass} readOnly/><input placeholder="City" className={baseClass} readOnly/></div>;
             case "array": return <div className="space-y-2"><input placeholder={f.placeholder || "Item 1"} className={baseClass} readOnly/><div className="text-sm text-violet-600 font-medium flex items-center gap-1"><Plus className="w-4 h-4"/> Add item</div></div>;
+            case "date": return <div className="relative"><input type="date" className={baseClass + " appearance-none"} readOnly min={f.min} max={f.max} /><Calendar className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" /></div>;
+            case "time": return <div className="relative"><input type="time" className={baseClass + " appearance-none"} readOnly min={f.min} max={f.max} /><Clock className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" /></div>;
             default: return <input type={f.type === "number" ? "number" : "text"} placeholder={f.placeholder} className={baseClass} readOnly />;
         }
     };
