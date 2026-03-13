@@ -2,10 +2,11 @@
 
 import { useState, useEffect, useRef } from "react";
 import { useParams } from "next/navigation";
+import Link from "next/link";
 import { toast } from "react-toastify";
 import {
     Plus, Minus, X, ChevronDown, CheckCircle, AlertCircle,
-    Loader2, Upload, Calendar, Clock
+    Loader2, Upload, Calendar, Clock, ArrowLeft
 } from "lucide-react";
 
 // ─── Static Mock Schemas (same as in admin builder) ───────────────────────────
@@ -137,7 +138,7 @@ function DropdownField({ field, value, onChange }) {
                     <option key={opt} value={opt}>{opt}</option>
                 ))}
             </select>
-            <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
+            <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white opacity-80 pointer-events-none" />
         </div>
     );
 }
@@ -147,7 +148,7 @@ function RadioField({ field, value, onChange }) {
         <div className="flex flex-wrap gap-3">
             {(field.options || []).map(opt => (
                 <label key={opt}
-                    className={`flex items-center gap-2 px-4 py-2 rounded-xl border cursor-pointer transition text-sm font-medium ${value === opt ? "border-transparent text-primary-content bg-primary" : "border-base-300 text-base-content hover:border-gray-400"}`}>
+                    className={`flex items-center gap-2 px-4 py-2 rounded-xl border cursor-pointer transition text-sm font-medium ${value === opt ? "border-transparent text-primary-content bg-primary" : "border-base-300 text-white font-bold hover:border-base-200"}`}>
                     <input
                         type="radio"
                         name={field.key}
@@ -168,10 +169,10 @@ function CheckboxField({ field, value, onChange }) {
     return (
         <label className="flex items-start gap-3 cursor-pointer group">
             <div onClick={() => onChange(!value)}
-                className={`w-5 h-5 rounded-md border-2 flex items-center justify-center flex-shrink-0 mt-0.5 transition ${value ? "border-transparent bg-primary" : "border-base-300 group-hover:border-gray-400"}`}>
+                className={`w-5 h-5 rounded-md border-2 flex items-center justify-center flex-shrink-0 mt-0.5 transition ${value ? "border-transparent bg-primary" : "border-base-300 group-hover:border-base-200"}`}>
                 {value && <CheckCircle className="w-3.5 h-3.5 text-primary-content" />}
             </div>
-            <span className="text-sm text-base-content leading-snug">{field.label}</span>
+            <span className="text-sm font-bold text-white leading-snug">{field.label}</span>
         </label>
     );
 }
@@ -187,7 +188,7 @@ function CheckboxGroupField({ field, value = [], onChange }) {
                 const checked = Array.isArray(value) && value.includes(opt);
                 return (
                     <label key={opt}
-                        className={`flex items-center gap-2 px-3.5 py-2 rounded-xl border cursor-pointer transition text-sm font-medium ${checked ? "border-transparent text-primary-content bg-primary" : "border-base-300 text-base-content hover:border-gray-400"}`}>
+                        className={`flex items-center gap-2 px-3.5 py-2 rounded-xl border cursor-pointer transition text-sm font-medium ${checked ? "border-transparent text-primary-content bg-primary" : "border-base-300 text-white font-bold hover:border-base-200"}`}>
                         <input type="checkbox" className="sr-only" checked={checked} onChange={() => toggle(opt)} />
                         {opt}
                     </label>
@@ -218,13 +219,13 @@ function ArrayField({ field, value = [], onChange }) {
                         className="flex-1 px-3 py-2 border border-base-300 bg-base-200 rounded-lg text-sm text-white focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary"
                     />
                     <button type="button" onClick={() => remove(i)}
-                        className="p-2 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition">
+                        className="p-2 text-white font-bold hover:text-red-400 hover:bg-red-50 rounded-lg transition">
                         <X className="w-4 h-4" />
                     </button>
                 </div>
             ))}
             <button type="button" onClick={add}
-                className="flex items-center gap-1.5 text-sm font-medium text-violet-600 hover:text-violet-700 transition">
+                className="flex items-center gap-1.5 text-sm font-bold text-primary hover:text-primary-focus transition">
                 <Plus className="w-4 h-4" />
                 {field.placeholder ? `Add ${field.label}` : "Add item"}
             </button>
@@ -304,7 +305,7 @@ function ButtonField({ field, color }) {
                 {field.label}
             </button>
             {field.helperText && (
-                <p className="text-xs text-gray-400 mt-1">{field.helperText}</p>
+                <p className="text-xs font-bold text-white mt-1">{field.helperText}</p>
             )}
 
             {/* Popup Modal */}
@@ -338,10 +339,10 @@ function FieldWrapper({ field, value, onChange }) {
     if (field.type === "heading") {
         const Tag = field.size || "h3";
         const classes = {
-            h1: "text-2xl font-bold text-gray-900",
-            h2: "text-xl font-bold text-gray-800",
-            h3: "text-base font-semibold text-gray-700",
-            p: "text-sm text-gray-500",
+            h1: "text-2xl font-bold text-white",
+            h2: "text-xl font-bold text-white",
+            h3: "text-base font-bold text-white",
+            p: "text-sm font-bold text-white",
         };
         return <Tag className={classes[field.size || "h3"]}>{field.text}</Tag>;
     }
@@ -383,7 +384,7 @@ function FieldWrapper({ field, value, onChange }) {
             )}
             {renderInput()}
             {field.helperText && field.type !== "button" && (
-                <p className="text-xs text-gray-400">{field.helperText}</p>
+                <p className="text-xs font-bold text-white">{field.helperText}</p>
             )}
         </div>
     );
@@ -513,29 +514,35 @@ export default function DynamicEventPage() {
 
     return (
         <div className="min-h-screen bg-base-200">
-            {/* Hero Header */}
-            <div className="relative overflow-hidden bg-primary">
-                <div className="absolute inset-0 opacity-10"
-                    style={{
-                        backgroundImage: "radial-gradient(circle at 20% 50%, white 1px, transparent 1px), radial-gradient(circle at 80% 20%, white 1px, transparent 1px)",
-                        backgroundSize: "40px 40px"
-                    }} />
-                <div className="relative max-w-xl mx-auto px-6 py-10 text-primary-content">
-                    <div className="inline-flex items-center gap-2 bg-base-100 bg-opacity-20 backdrop-blur-sm px-3 py-1 rounded-full text-xs font-semibold mb-4 uppercase tracking-wide">
-                        <Calendar className="w-3.5 h-3.5" />
-                        Event Registration
+            {/* Page Title Bar */}
+            <div className="bg-base-100 px-4 py-5">
+                <div className="max-w-xl mx-auto flex items-center gap-3">
+                    <Link href="/events" className="inline-flex items-center justify-center w-8 h-8 rounded-full hover:bg-base-200 text-white transition">
+                        <ArrowLeft className="w-5 h-5" />
+                    </Link>
+                    <h1 className="text-2xl font-bold text-white">Event Registration</h1>
+                </div>
+            </div>
+
+            {/* Event Announcement Card */}
+            <div className="max-w-xl mx-auto px-4 pt-4">
+                <div className="flex items-center gap-4 px-4 py-4 bg-primary text-primary-content rounded-xl shadow-md">
+                    <div className="flex-shrink-0 w-11 h-11 rounded-full bg-primary-content/20 flex items-center justify-center">
+                        <Calendar className="w-5 h-5" />
                     </div>
-                    <h1 className="text-2xl sm:text-3xl font-bold leading-tight">{schema.page_title}</h1>
-                    {schema.description && (
-                        <p className="mt-3 text-sm sm:text-base opacity-90 leading-relaxed">{schema.description}</p>
-                    )}
+                    <div>
+                        <div className="text-base font-bold leading-tight">{schema.page_title}</div>
+                        {schema.description && (
+                            <div className="text-sm opacity-90 mt-0.5 line-clamp-1">{schema.description}</div>
+                        )}
+                    </div>
                 </div>
             </div>
 
             {/* Form Card */}
             <div className="max-w-xl mx-auto px-4 py-8">
                 <form onSubmit={handleSubmit}
-                    className="bg-base-100 rounded-2xl shadow-sm border border-base-300 overflow-hidden text-base-content">
+                    className="bg-base-100 rounded-2xl shadow-sm border border-base-300 overflow-hidden text-white">
                     {/* Progress indicator */}
                     <div className="h-1 w-full bg-base-300">
                         <div className="h-full transition-all duration-500 bg-primary"
@@ -573,10 +580,7 @@ export default function DynamicEventPage() {
                     </div>
                 </form>
 
-                {/* Footer */}
-                <p className="text-center text-xs text-gray-400 mt-6">
-                    Powered by the Dynamic Events System
-                </p>
+               
             </div>
         </div>
     );
