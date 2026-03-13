@@ -5,7 +5,7 @@ import { useParams } from "next/navigation";
 import { toast } from "react-toastify";
 import {
     Plus, Minus, X, ChevronDown, CheckCircle, AlertCircle,
-    Loader2, Clock, Calendar, Upload
+    Loader2, Upload, Calendar, Clock
 } from "lucide-react";
 
 // ─── Static Mock Schemas (same as in admin builder) ───────────────────────────
@@ -86,7 +86,7 @@ function TextField({ field, value, onChange }) {
             onChange={e => onChange(e.target.value)}
             placeholder={field.placeholder}
             required={field.required}
-            className="w-full px-4 py-2.5 border border-gray-300 rounded-xl text-sm text-gray-900 focus:outline-none focus:ring-2 focus:border-transparent transition"
+            className="w-full px-4 py-2.5 border border-base-300 bg-base-200 rounded-xl text-sm text-white focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition"
             style={{ "--tw-ring-color": "#7c3aed" }}
         />
     );
@@ -101,7 +101,7 @@ function TextareaField({ field, value, onChange }) {
             placeholder={field.placeholder}
             required={field.required}
             rows={4}
-            className="w-full px-4 py-2.5 border border-gray-300 rounded-xl text-sm text-gray-900 focus:outline-none focus:ring-2 focus:border-transparent transition resize-none"
+            className="w-full px-4 py-2.5 border border-base-300 bg-base-200 rounded-xl text-sm text-white focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition resize-none"
         />
     );
 }
@@ -117,12 +117,12 @@ function NumberField({ field, value, onChange }) {
             required={field.required}
             min={field.min}
             max={field.max}
-            className="w-full px-4 py-2.5 border border-gray-300 rounded-xl text-sm text-gray-900 focus:outline-none focus:ring-2 focus:border-transparent transition"
+            className="w-full px-4 py-2.5 border border-base-300 bg-base-200 rounded-xl text-sm text-white focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition"
         />
     );
 }
 
-function DropdownField({ field, value, onChange, color }) {
+function DropdownField({ field, value, onChange }) {
     return (
         <div className="relative">
             <select
@@ -130,7 +130,7 @@ function DropdownField({ field, value, onChange, color }) {
                 value={value || ""}
                 onChange={e => onChange(e.target.value)}
                 required={field.required}
-                className="w-full px-4 py-2.5 border border-gray-300 rounded-xl text-sm text-gray-900 focus:outline-none focus:ring-2 focus:border-transparent transition appearance-none bg-white"
+                className="w-full px-4 py-2.5 border border-base-300 bg-base-200 rounded-xl text-sm text-white focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition appearance-none"
             >
                 <option value="">{field.placeholder || "— Select —"}</option>
                 {(field.options || []).map(opt => (
@@ -142,53 +142,12 @@ function DropdownField({ field, value, onChange, color }) {
     );
 }
 
-function DatePickerField({ field, value, onChange }) {
-    const inputRef = useRef(null);
-    return (
-        <div className="relative">
-            <input 
-                id={field.id} ref={inputRef} type="date" value={value || ""}
-                onChange={e => onChange(e.target.value)} required={field.required}
-                min={field.min} max={field.max}
-                className="w-full px-4 py-2.5 border border-gray-300 rounded-xl text-sm text-gray-900 focus:outline-none focus:ring-2 focus:border-transparent transition pr-10 appearance-none bg-white cursor-pointer"
-                onClick={(e) => {
-                    try { if (e.target.showPicker) e.target.showPicker(); } catch(err) {}
-                }}
-            />
-            <button type="button" onClick={() => { try { if (inputRef.current.showPicker) inputRef.current.showPicker(); } catch (err){} }} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition p-1 cursor-pointer">
-                <Calendar className="w-4 h-4" />
-            </button>
-        </div>
-    );
-}
-
-function TimePickerField({ field, value, onChange }) {
-    const inputRef = useRef(null);
-    return (
-        <div className="relative">
-            <input 
-                id={field.id} ref={inputRef} type="time" value={value || ""}
-                onChange={e => onChange(e.target.value)} required={field.required}
-                min={field.min} max={field.max}
-                className="w-full px-4 py-2.5 border border-gray-300 rounded-xl text-sm text-gray-900 focus:outline-none focus:ring-2 focus:border-transparent transition pr-10 appearance-none bg-white cursor-pointer"
-                onClick={(e) => {
-                    try { if (e.target.showPicker) e.target.showPicker(); } catch(err) {}
-                }}
-            />
-            <button type="button" onClick={() => { try { if (inputRef.current.showPicker) inputRef.current.showPicker(); } catch (err){} }} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition p-1 cursor-pointer">
-                <Clock className="w-4 h-4" />
-            </button>
-        </div>
-    );
-}
-
-function RadioField({ field, value, onChange, color }) {
+function RadioField({ field, value, onChange }) {
     return (
         <div className="flex flex-wrap gap-3">
             {(field.options || []).map(opt => (
                 <label key={opt}
-                    className={`flex items-center gap-2 px-4 py-2 rounded-xl border cursor-pointer transition text-sm font-medium ${value === opt ? "border-transparent text-white" : "border-gray-200 text-gray-700 hover:border-gray-300"}`}
-                    style={value === opt ? { backgroundColor: color } : {}}>
+                    className={`flex items-center gap-2 px-4 py-2 rounded-xl border cursor-pointer transition text-sm font-medium ${value === opt ? "border-transparent text-primary-content bg-primary" : "border-base-300 text-base-content hover:border-gray-400"}`}>
                     <input
                         type="radio"
                         name={field.key}
@@ -197,7 +156,7 @@ function RadioField({ field, value, onChange, color }) {
                         onChange={() => onChange(opt)}
                         className="sr-only"
                     />
-                    {value === opt ? <CheckCircle className="w-4 h-4 flex-shrink-0" /> : <div className="w-4 h-4 rounded-full border-2 border-gray-300 flex-shrink-0" />}
+                    {value === opt ? <CheckCircle className="w-4 h-4 flex-shrink-0" /> : <div className="w-4 h-4 rounded-full border-2 border-base-300 flex-shrink-0" />}
                     {opt}
                 </label>
             ))}
@@ -205,20 +164,19 @@ function RadioField({ field, value, onChange, color }) {
     );
 }
 
-function CheckboxField({ field, value, onChange, color }) {
+function CheckboxField({ field, value, onChange }) {
     return (
         <label className="flex items-start gap-3 cursor-pointer group">
             <div onClick={() => onChange(!value)}
-                className={`w-5 h-5 rounded-md border-2 flex items-center justify-center flex-shrink-0 mt-0.5 transition ${value ? "border-transparent" : "border-gray-300 group-hover:border-gray-400"}`}
-                style={value ? { backgroundColor: color } : {}}>
-                {value && <CheckCircle className="w-3.5 h-3.5 text-white" />}
+                className={`w-5 h-5 rounded-md border-2 flex items-center justify-center flex-shrink-0 mt-0.5 transition ${value ? "border-transparent bg-primary" : "border-base-300 group-hover:border-gray-400"}`}>
+                {value && <CheckCircle className="w-3.5 h-3.5 text-primary-content" />}
             </div>
-            <span className="text-sm text-gray-700 leading-snug">{field.label}</span>
+            <span className="text-sm text-base-content leading-snug">{field.label}</span>
         </label>
     );
 }
 
-function CheckboxGroupField({ field, value = [], onChange, color }) {
+function CheckboxGroupField({ field, value = [], onChange }) {
     const toggle = (opt) => {
         const current = Array.isArray(value) ? value : [];
         onChange(current.includes(opt) ? current.filter(v => v !== opt) : [...current, opt]);
@@ -229,8 +187,7 @@ function CheckboxGroupField({ field, value = [], onChange, color }) {
                 const checked = Array.isArray(value) && value.includes(opt);
                 return (
                     <label key={opt}
-                        className={`flex items-center gap-2 px-3.5 py-2 rounded-xl border cursor-pointer transition text-sm font-medium ${checked ? "border-transparent text-white" : "border-gray-200 text-gray-700 hover:border-gray-300"}`}
-                        style={checked ? { backgroundColor: color } : {}}>
+                        className={`flex items-center gap-2 px-3.5 py-2 rounded-xl border cursor-pointer transition text-sm font-medium ${checked ? "border-transparent text-primary-content bg-primary" : "border-base-300 text-base-content hover:border-gray-400"}`}>
                         <input type="checkbox" className="sr-only" checked={checked} onChange={() => toggle(opt)} />
                         {opt}
                     </label>
@@ -258,7 +215,7 @@ function ArrayField({ field, value = [], onChange }) {
                         value={item}
                         onChange={e => update(i, e.target.value)}
                         placeholder={field.placeholder || `Item ${i + 1}`}
-                        className="flex-1 px-3 py-2 border border-gray-300 rounded-lg text-sm text-gray-900 focus:outline-none focus:ring-1 focus:ring-violet-400"
+                        className="flex-1 px-3 py-2 border border-base-300 bg-base-200 rounded-lg text-sm text-white focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary"
                     />
                     <button type="button" onClick={() => remove(i)}
                         className="p-2 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition">
@@ -283,14 +240,14 @@ function AddressField({ field, value = {}, onChange }) {
                 value={value.locality || ""}
                 onChange={e => onChange({ ...value, locality: e.target.value })}
                 placeholder="Locality / Area"
-                className="w-full px-4 py-2.5 border border-gray-300 rounded-xl text-sm text-gray-900 focus:outline-none focus:ring-2 focus:border-transparent transition"
+                className="w-full px-4 py-2.5 border border-base-300 bg-base-200 rounded-xl text-sm text-white focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition"
             />
             <input
                 type="text"
                 value={value.city || ""}
                 onChange={e => onChange({ ...value, city: e.target.value })}
                 placeholder="City"
-                className="w-full px-4 py-2.5 border border-gray-300 rounded-xl text-sm text-gray-900 focus:outline-none focus:ring-2 focus:border-transparent transition"
+                className="w-full px-4 py-2.5 border border-base-300 bg-base-200 rounded-xl text-sm text-white focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition"
             />
         </div>
     );
@@ -304,21 +261,21 @@ function MasjidField({ field, value = {}, onChange }) {
                 value={value.masjidName || ""}
                 onChange={e => onChange({ ...value, masjidName: e.target.value })}
                 placeholder="Name of Masjid"
-                className="w-full px-4 py-2.5 border border-gray-300 rounded-xl text-sm text-gray-900 focus:outline-none focus:ring-2 focus:border-transparent transition"
+                className="w-full px-4 py-2.5 border border-base-300 bg-base-200 rounded-xl text-sm text-white focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition"
             />
             <input
                 type="text"
                 value={value.locality || ""}
                 onChange={e => onChange({ ...value, locality: e.target.value })}
                 placeholder="Locality / Area"
-                className="w-full px-4 py-2.5 border border-gray-300 rounded-xl text-sm text-gray-900 focus:outline-none focus:ring-2 focus:border-transparent transition"
+                className="w-full px-4 py-2.5 border border-base-300 bg-base-200 rounded-xl text-sm text-white focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition"
             />
             <input
                 type="text"
                 value={value.city || ""}
                 onChange={e => onChange({ ...value, city: e.target.value })}
                 placeholder="City"
-                className="w-full px-4 py-2.5 border border-gray-300 rounded-xl text-sm text-gray-900 focus:outline-none focus:ring-2 focus:border-transparent transition"
+                className="w-full px-4 py-2.5 border border-base-300 bg-base-200 rounded-xl text-sm text-white focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition"
             />
         </div>
     );
@@ -343,8 +300,7 @@ function ButtonField({ field, color }) {
     return (
         <>
             <button type="button" onClick={handleClick}
-                className="flex items-center gap-2 px-5 py-2.5 text-sm font-semibold text-white rounded-xl hover:opacity-90 active:scale-95 transition shadow-sm"
-                style={{ backgroundColor: color }}>
+                className="flex items-center gap-2 px-5 py-2.5 text-sm font-semibold text-primary-content rounded-xl hover:opacity-90 active:scale-95 transition shadow-sm bg-primary">
                 {field.label}
             </button>
             {field.helperText && (
@@ -365,8 +321,7 @@ function ButtonField({ field, color }) {
                             {field.popupContent}
                         </div>
                         <button onClick={() => setPopupOpen(false)}
-                            className="mt-5 w-full py-2 text-sm font-semibold text-white rounded-xl transition hover:opacity-90"
-                            style={{ backgroundColor: color }}>
+                            className="mt-5 w-full py-2 text-sm font-semibold text-primary-content rounded-xl transition hover:opacity-90 bg-primary">
                             Got it!
                         </button>
                     </div>
@@ -376,8 +331,7 @@ function ButtonField({ field, color }) {
     );
 }
 
-// ─── Field Wrapper ────────────────────────────────────────────────────────────
-function FieldWrapper({ field, value, onChange, color }) {
+function FieldWrapper({ field, value, onChange }) {
     if (field.type === "divider") {
         return <hr className="border-gray-200 my-2" />;
     }
@@ -392,7 +346,7 @@ function FieldWrapper({ field, value, onChange, color }) {
         return <Tag className={classes[field.size || "h3"]}>{field.text}</Tag>;
     }
     if (field.type === "button") {
-        return <ButtonField field={field} color={color} />;
+        return <ButtonField field={field} />;
     }
 
     const renderInput = () => {
@@ -401,19 +355,17 @@ function FieldWrapper({ field, value, onChange, color }) {
             case "number": return <NumberField field={field} value={value} onChange={onChange} />;
             case "email": return <TextField field={{ ...field, type: "email" }} value={value} onChange={onChange} />;
             case "phone": return <TextField field={{ ...field, type: "tel" }} value={value} onChange={onChange} />;
-            case "date": return <DatePickerField field={field} value={value} onChange={onChange} />;
-            case "time": return <TimePickerField field={field} value={value} onChange={onChange} />;
-            case "dropdown": return <DropdownField field={field} value={value} onChange={onChange} color={color} />;
-            case "radio": return <RadioField field={field} value={value} onChange={onChange} color={color} />;
-            case "checkbox": return <CheckboxField field={field} value={value} onChange={onChange} color={color} />;
-            case "checkboxGroup": return <CheckboxGroupField field={field} value={value} onChange={onChange} color={color} />;
+            case "dropdown": return <DropdownField field={field} value={value} onChange={onChange} />;
+            case "radio": return <RadioField field={field} value={value} onChange={onChange} />;
+            case "checkbox": return <CheckboxField field={field} value={value} onChange={onChange} />;
+            case "checkboxGroup": return <CheckboxGroupField field={field} value={value} onChange={onChange} />;
             case "array": return <ArrayField field={field} value={value} onChange={onChange} />;
             case "address": return <AddressField field={field} value={value} onChange={onChange} />;
             case "masjid": return <MasjidField field={field} value={value} onChange={onChange} />;
             case "image": return (
-                <label className="flex flex-col items-center justify-center w-full h-28 border-2 border-dashed border-gray-300 rounded-xl cursor-pointer hover:border-violet-400 transition">
-                    <Upload className="w-6 h-6 text-gray-400 mb-1" />
-                    <span className="text-xs text-gray-500">Click to upload image</span>
+                <label className="flex flex-col items-center justify-center w-full h-28 border-2 border-dashed border-base-300 bg-base-200 rounded-xl cursor-pointer hover:border-primary transition text-white">
+                    <Upload className="w-6 h-6 mb-1 opacity-70" />
+                    <span className="text-xs opacity-70">Click to upload image</span>
                     <input type="file" accept="image/*" className="sr-only" />
                 </label>
             );
@@ -424,7 +376,7 @@ function FieldWrapper({ field, value, onChange, color }) {
     return (
         <div className="space-y-1.5">
             {field.type !== "checkbox" && (
-                <label htmlFor={field.id} className="flex items-center gap-1.5 text-sm font-medium text-gray-700">
+                <label htmlFor={field.id} className="flex items-center gap-1.5 text-sm font-bold text-white">
                     {field.label}
                     {field.required && <span className="text-red-500 text-base leading-none">*</span>}
                 </label>
@@ -440,21 +392,19 @@ function FieldWrapper({ field, value, onChange, color }) {
 // ─── Success Screen ───────────────────────────────────────────────────────────
 function SuccessScreen({ schema, onReset }) {
     return (
-        <div className="min-h-screen flex items-center justify-center p-4" style={{ background: `linear-gradient(135deg, ${schema.color}08, #f9fafb)` }}>
-            <div className="max-w-md w-full text-center space-y-5">
-                <div className="w-20 h-20 rounded-full flex items-center justify-center mx-auto shadow-lg"
-                    style={{ backgroundColor: schema.color }}>
-                    <CheckCircle className="w-10 h-10 text-white" />
+        <div className="min-h-screen flex items-center justify-center p-4 bg-base-200">
+            <div className="max-w-md w-full text-center space-y-5 bg-base-100 p-8 rounded-2xl shadow-xl border border-base-300">
+                <div className="w-20 h-20 rounded-full flex items-center justify-center mx-auto shadow-lg bg-primary">
+                    <CheckCircle className="w-10 h-10 text-primary-content" />
                 </div>
                 <div>
-                    <h2 className="text-2xl font-bold text-gray-900">Registration Complete!</h2>
-                    <p className="text-gray-500 mt-2">
+                    <h2 className="text-2xl font-bold mt-4 text-base-content">Registration Complete!</h2>
+                    <p className="opacity-70 mt-2">
                         Your registration for <strong>{schema.page_title}</strong> has been received. We'll contact you soon.
                     </p>
                 </div>
                 <button onClick={onReset}
-                    className="px-6 py-3 text-white font-semibold rounded-xl hover:opacity-90 transition shadow-md"
-                    style={{ backgroundColor: schema.color }}>
+                    className="px-6 py-3 font-semibold rounded-xl hover:opacity-90 transition shadow-md w-full mt-4 bg-primary text-primary-content">
                     Submit Another Response
                 </button>
             </div>
@@ -495,12 +445,35 @@ export default function DynamicEventPage() {
     const [submitting, setSubmitting] = useState(false);
 
     useEffect(() => {
-        // Simulate a server fetch — in real app this would be API call
-        const timer = setTimeout(() => {
-            setSchema(MOCK_SCHEMAS[slug] || null);
-            setLoading(false);
-        }, 600);
-        return () => clearTimeout(timer);
+        if (!slug) return;
+        setLoading(true);
+        import("axios").then((axios) => {
+            axios.default.get(`/api/events/${slug}`)
+                .then((res) => {
+                    if (res.data?.event) {
+                        const ev = res.data.event;
+                        setSchema({
+                            page_title: ev.title,
+                            page_slug: ev.slug,
+                            description: ev.description,
+                            submit_label: ev.submit_label,
+                            color: ev.theme_color,
+                            isActive: ev.is_active,
+                            fields: ev.schema_fields || []
+                        });
+                    } else {
+                        // fallback or not found, keeping MOCK_SCHEMAS for visual fail-safe
+                        setSchema(MOCK_SCHEMAS[slug] || null);
+                    }
+                })
+                .catch((err) => {
+                    console.error("Failed to load schema:", err);
+                    setSchema(MOCK_SCHEMAS[slug] || null);
+                })
+                .finally(() => {
+                    setLoading(false);
+                });
+        });
     }, [slug]);
 
     const setField = (key, val) => {
@@ -510,11 +483,17 @@ export default function DynamicEventPage() {
     const handleSubmit = async (e) => {
         e.preventDefault();
         setSubmitting(true);
-        // Simulate API call
-        await new Promise(r => setTimeout(r, 1200));
-        console.log("Form submitted:", { slug, formData });
-        setSubmitting(false);
-        setSubmitted(true);
+        try {
+            const axios = (await import("axios")).default;
+            await axios.post(`/api/events/${slug}/submit`, { formData });
+            console.log("Form submitted successfully.");
+            setSubmitted(true);
+        } catch (error) {
+            console.error("Error submitting form:", error);
+            alert("Failed to submit form. Please try again.");
+        } finally {
+            setSubmitting(false);
+        }
     };
 
     if (loading) {
@@ -532,20 +511,17 @@ export default function DynamicEventPage() {
     if (!schema.isActive) return <NotFoundScreen slug={slug} isDraft={true} />;
     if (submitted) return <SuccessScreen schema={schema} onReset={() => { setSubmitted(false); setFormData({}); }} />;
 
-    const color = schema.color || "#7c3aed";
-
     return (
-        <div className="min-h-screen bg-gray-50" style={{ fontFamily: "'Inter', system-ui, sans-serif" }}>
+        <div className="min-h-screen bg-base-200">
             {/* Hero Header */}
-            <div className="relative overflow-hidden"
-                style={{ background: `linear-gradient(135deg, ${color}, ${color}bb)` }}>
+            <div className="relative overflow-hidden bg-primary">
                 <div className="absolute inset-0 opacity-10"
                     style={{
                         backgroundImage: "radial-gradient(circle at 20% 50%, white 1px, transparent 1px), radial-gradient(circle at 80% 20%, white 1px, transparent 1px)",
                         backgroundSize: "40px 40px"
                     }} />
-                <div className="relative max-w-xl mx-auto px-6 py-10 text-white">
-                    <div className="inline-flex items-center gap-2 bg-white bg-opacity-20 backdrop-blur-sm px-3 py-1 rounded-full text-xs font-semibold mb-4 uppercase tracking-wide">
+                <div className="relative max-w-xl mx-auto px-6 py-10 text-primary-content">
+                    <div className="inline-flex items-center gap-2 bg-base-100 bg-opacity-20 backdrop-blur-sm px-3 py-1 rounded-full text-xs font-semibold mb-4 uppercase tracking-wide">
                         <Calendar className="w-3.5 h-3.5" />
                         Event Registration
                     </div>
@@ -559,12 +535,11 @@ export default function DynamicEventPage() {
             {/* Form Card */}
             <div className="max-w-xl mx-auto px-4 py-8">
                 <form onSubmit={handleSubmit}
-                    className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+                    className="bg-base-100 rounded-2xl shadow-sm border border-base-300 overflow-hidden text-base-content">
                     {/* Progress indicator */}
-                    <div className="h-1 w-full" style={{ backgroundColor: `${color}22` }}>
-                        <div className="h-full transition-all duration-500"
+                    <div className="h-1 w-full bg-base-300">
+                        <div className="h-full transition-all duration-500 bg-primary"
                             style={{
-                                backgroundColor: color,
                                 width: `${Math.min(100, (Object.keys(formData).filter(k => formData[k] !== "" && formData[k] !== undefined && formData[k] !== false && !(Array.isArray(formData[k]) && formData[k].length === 0)).length / Math.max(1, schema.fields.filter(f => !["divider", "heading"].includes(f.type)).length)) * 100)}%`
                             }} />
                     </div>
@@ -576,7 +551,6 @@ export default function DynamicEventPage() {
                                 field={field}
                                 value={formData[field.key]}
                                 onChange={val => setField(field.key, val)}
-                                color={color}
                             />
                         ))}
 
@@ -585,8 +559,7 @@ export default function DynamicEventPage() {
                             <button
                                 type="submit"
                                 disabled={submitting}
-                                className="w-full py-3.5 text-white font-bold rounded-xl hover:opacity-90 active:scale-[0.99] transition shadow-md disabled:opacity-70 flex items-center justify-center gap-2 text-base"
-                                style={{ backgroundColor: color }}>
+                                className="w-full py-3.5 text-primary-content font-bold rounded-xl hover:opacity-90 active:scale-[0.99] transition shadow-md disabled:opacity-70 flex items-center justify-center gap-2 text-base bg-primary">
                                 {submitting ? (
                                     <>
                                         <Loader2 className="w-5 h-5 animate-spin" />

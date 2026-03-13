@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import {
@@ -8,8 +8,7 @@ import {
     ChevronDown, ChevronUp, Save, Check, CheckCircle, AlertCircle, X,
     Type, Hash, AlignLeft, ChevronDownSquare, CircleDot,
     CheckSquare, List, Braces, MousePointerClick, Bell, Layers,
-    Minus, Heading, Upload, Copy, ToggleLeft, MapPin, Moon,
-    Calendar, Clock
+    Minus, Heading, Upload, Copy, ToggleLeft, MapPin, Moon
 } from "lucide-react";
 
 // ─── Field type definitions ───────────────────────────────────────────────────
@@ -24,8 +23,6 @@ export const FIELD_TYPES = [
     { type: "radio", label: "Radio Group", icon: CircleDot, color: "#dc2626" },
     { type: "checkbox", label: "Checkbox", icon: CheckSquare, color: "#7c3aed" },
     { type: "checkboxGroup", label: "Checkbox Group", icon: CheckSquare, color: "#9333ea" },
-    { type: "date", label: "Date Picker", icon: Calendar, color: "#0ea5e9" },
-    { type: "time", label: "Time Picker", icon: Clock, color: "#06b6d4" },
     { type: "array", label: "Dynamic List", icon: List, color: "#f59e0b" },
     { type: "button", label: "Action Button", icon: MousePointerClick, color: "#ef4444" },
     { type: "toast", label: "Toast Message", icon: Bell, color: "#f97316" },
@@ -114,7 +111,7 @@ function TypePickerModal({ onSelect, onClose }) {
             <div className="bg-white rounded-2xl shadow-2xl w-full max-w-lg p-6 max-h-[90vh] overflow-y-auto">
                 <div className="flex items-center justify-between mb-5">
                     <h3 className="text-lg font-semibold text-gray-900">Choose Field Type</h3>
-                    <button onClick={onClose} className="p-1.5 hover:bg-gray-100 rounded-lg text-gray-400 hover:text-gray-600 transition">
+                    <button onClick={onClose} className="p-1.5 hover:bg-gray-50 rounded-lg text-gray-700 opacity-50 hover:text-gray-900 transition">
                         <X className="w-5 h-5" />
                     </button>
                 </div>
@@ -127,7 +124,7 @@ function TypePickerModal({ onSelect, onClose }) {
                                 style={{ backgroundColor: ft.color + "18" }}>
                                 <ft.icon className="w-4 h-4" style={{ color: ft.color }} />
                             </div>
-                            <span className="text-sm font-medium text-gray-700 leading-tight">{ft.label}</span>
+                            <span className="text-sm font-medium text-gray-900 leading-tight">{ft.label}</span>
                         </button>
                     ))}
                 </div>
@@ -154,10 +151,10 @@ function OptionsEditor({ options, onChange }) {
                         type="text"
                         value={opt}
                         onChange={e => updateOption(i, e.target.value)}
-                        className="flex-1 px-2.5 py-1.5 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-violet-400 text-gray-800"
+                        className="flex-1 px-2.5 py-1.5 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-violet-400 text-gray-900 bg-white"
                     />
                     <button onClick={() => removeOption(i)}
-                        className="p-1 text-gray-400 hover:text-red-500 rounded transition">
+                        className="p-1 text-gray-700 opacity-50 hover:text-red-500 rounded transition">
                         <X className="w-3.5 h-3.5" />
                     </button>
                 </div>
@@ -177,7 +174,7 @@ function FieldConfig({ field, onChange }) {
     const set = (key, val) => onChange({ ...field, [key]: val });
     const labelInput = (label, key, type = "text", placeholder = "") => (
         <div>
-            <label className="block text-xs font-medium text-gray-500 mb-1">{label}</label>
+            <label className="block text-xs font-medium text-gray-700 opacity-60 mb-1">{label}</label>
             <input
                 type={type}
                 value={field[key] ?? ""}
@@ -195,15 +192,15 @@ function FieldConfig({ field, onChange }) {
                     }
                 }}
                 placeholder={placeholder}
-                className="w-full px-2.5 py-1.5 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-violet-400 text-gray-800"
+                className="w-full px-2.5 py-1.5 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-violet-400 text-gray-900 bg-white"
             />
         </div>
     );
     const toggle = (label, key) => (
         <div className="flex items-center justify-between py-1">
-            <span className="text-xs font-medium text-gray-500">{label}</span>
+            <span className="text-xs font-medium text-gray-700 opacity-60">{label}</span>
             <button onClick={() => set(key, !field[key])}
-                className={`w-9 h-5 rounded-full transition ${field[key] ? "bg-violet-600" : "bg-gray-200"} relative`}>
+                className={`w-9 h-5 rounded-full transition ${field[key] ? "bg-violet-600 text-white" : "bg-gray-100"} relative`}>
                 <span className={`absolute top-0.5 w-4 h-4 bg-white rounded-full shadow transition-all ${field[key] ? "left-4" : "left-0.5"}`} />
             </button>
         </div>
@@ -215,12 +212,12 @@ function FieldConfig({ field, onChange }) {
                 <div className="w-7 h-7 rounded-lg flex items-center justify-center" style={{ backgroundColor: ft.color + "20" }}>
                     <ft.icon className="w-4 h-4" style={{ color: ft.color }} />
                 </div>
-                <span className="text-sm font-semibold text-gray-700">{ft.label} Configuration</span>
+                <span className="text-sm font-semibold text-gray-900">{ft.label} Configuration</span>
             </div>
 
             {/* Common */}
             {!["divider", "heading"].includes(field.type) && labelInput("Label (visible to user)", "label", "text", "e.g. Full Name")}
-            {!["divider", "heading", "button", "toast", "popup", "checkbox", "date", "time"].includes(field.type) && labelInput("Placeholder", "placeholder", "text", "Optional placeholder")}
+            {!["divider", "heading", "button", "toast", "popup", "checkbox"].includes(field.type) && labelInput("Placeholder", "placeholder", "text", "Optional placeholder")}
             {!["divider", "heading"].includes(field.type) && labelInput("Helper Text", "helperText", "text", "Optional hint text below field")}
 
             {/* Required toggle */}
@@ -234,26 +231,10 @@ function FieldConfig({ field, onChange }) {
                 </div>
             )}
 
-            {/* Date min/max */}
-            {field.type === "date" && (
-                <div className="grid grid-cols-2 gap-2">
-                    {labelInput("Min Date", "min", "date")}
-                    {labelInput("Max Date", "max", "date")}
-                </div>
-            )}
-
-            {/* Time min/max */}
-            {field.type === "time" && (
-                <div className="grid grid-cols-2 gap-2">
-                    {labelInput("Min Time", "min", "time")}
-                    {labelInput("Max Time", "max", "time")}
-                </div>
-            )}
-
             {/* Options for dropdown, radio, checkboxGroup */}
             {["dropdown", "radio", "checkboxGroup"].includes(field.type) && (
                 <div>
-                    <label className="block text-xs font-medium text-gray-500 mb-2">Options</label>
+                    <label className="block text-xs font-medium text-gray-700 opacity-60 mb-2">Options</label>
                     <OptionsEditor options={field.options || []} onChange={opts => set("options", opts)} />
                 </div>
             )}
@@ -261,9 +242,9 @@ function FieldConfig({ field, onChange }) {
             {/* Array item type */}
             {field.type === "array" && (
                 <div>
-                    <label className="block text-xs font-medium text-gray-500 mb-1">Item Type</label>
+                    <label className="block text-xs font-medium text-gray-700 opacity-60 mb-1">Item Type</label>
                     <select value={field.itemType || "text"} onChange={e => set("itemType", e.target.value)}
-                        className="w-full px-2.5 py-1.5 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-violet-400 text-gray-800">
+                        className="w-full px-2.5 py-1.5 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-violet-400 text-gray-900 bg-white">
                         <option value="text">Text</option>
                         <option value="number">Number</option>
                         <option value="email">Email</option>
@@ -275,9 +256,9 @@ function FieldConfig({ field, onChange }) {
             {field.type === "button" && (
                 <>
                     <div>
-                        <label className="block text-xs font-medium text-gray-500 mb-1">Action</label>
+                        <label className="block text-xs font-medium text-gray-700 opacity-60 mb-1">Action</label>
                         <select value={field.action || "popup"} onChange={e => set("action", e.target.value)}
-                            className="w-full px-2.5 py-1.5 text-sm border border-gray-200 rounded-lg focus:outline-none text-gray-800">
+                            className="w-full px-2.5 py-1.5 text-sm border border-gray-200 rounded-lg focus:outline-none text-gray-900 bg-white">
                             <option value="popup">Open Popup</option>
                             <option value="toast">Show Toast</option>
                         </select>
@@ -287,9 +268,9 @@ function FieldConfig({ field, onChange }) {
                         <>
                             {labelInput("Toast Message", "toastMessage", "text", "Message to show")}
                             <div>
-                                <label className="block text-xs font-medium text-gray-500 mb-1">Toast Type</label>
+                                <label className="block text-xs font-medium text-gray-700 opacity-60 mb-1">Toast Type</label>
                                 <select value={field.toastType || "success"} onChange={e => set("toastType", e.target.value)}
-                                    className="w-full px-2.5 py-1.5 text-sm border border-gray-200 rounded-lg text-gray-800">
+                                    className="w-full px-2.5 py-1.5 text-sm border border-gray-200 rounded-lg text-white">
                                     <option value="success">Success</option>
                                     <option value="error">Error</option>
                                     <option value="info">Info</option>
@@ -306,9 +287,9 @@ function FieldConfig({ field, onChange }) {
                 <>
                     {labelInput("Toast Message", "toastMessage", "text", "Message to show")}
                     <div>
-                        <label className="block text-xs font-medium text-gray-500 mb-1">Toast Type</label>
+                        <label className="block text-xs font-medium text-gray-700 opacity-60 mb-1">Toast Type</label>
                         <select value={field.toastType || "success"} onChange={e => set("toastType", e.target.value)}
-                            className="w-full px-2.5 py-1.5 text-sm border border-gray-200 rounded-lg text-gray-800">
+                            className="w-full px-2.5 py-1.5 text-sm border border-gray-200 rounded-lg text-gray-900 bg-white">
                             <option value="success">✅ Success</option>
                             <option value="error">❌ Error</option>
                             <option value="info">ℹ️ Info</option>
@@ -323,12 +304,12 @@ function FieldConfig({ field, onChange }) {
                 <>
                     {labelInput("Popup Title", "popupTitle", "text", "Title of the popup")}
                     <div>
-                        <label className="block text-xs font-medium text-gray-500 mb-1">Popup Content</label>
+                        <label className="block text-xs font-medium text-gray-700 opacity-60 mb-1">Popup Content</label>
                         <textarea
                             value={field.popupContent || ""}
                             onChange={e => set("popupContent", e.target.value)}
                             rows={3}
-                            className="w-full px-2.5 py-1.5 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-violet-400 text-gray-800 resize-none"
+                            className="w-full px-2.5 py-1.5 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-violet-400 text-gray-900 bg-white resize-none"
                             placeholder="Content text..."
                         />
                     </div>
@@ -340,9 +321,9 @@ function FieldConfig({ field, onChange }) {
                 <>
                     {labelInput("Text", "text", "text", "Section heading text")}
                     <div>
-                        <label className="block text-xs font-medium text-gray-500 mb-1">Size</label>
+                        <label className="block text-xs font-medium text-gray-700 opacity-60 mb-1">Size</label>
                         <select value={field.size || "h2"} onChange={e => set("size", e.target.value)}
-                            className="w-full px-2.5 py-1.5 text-sm border border-gray-200 rounded-lg text-gray-800">
+                            className="w-full px-2.5 py-1.5 text-sm border border-gray-200 rounded-lg text-gray-900 bg-white">
                             <option value="h1">H1 — Large</option>
                             <option value="h2">H2 — Medium</option>
                             <option value="h3">H3 — Small</option>
@@ -365,7 +346,7 @@ function FieldCard({ field, index, total, onUpdate, onDelete, onMoveUp, onMoveDo
             {/* Header row */}
             <div className="flex items-center gap-2 px-3 py-2.5">
                 {/* Drag Handle (visual only) */}
-                <GripVertical className="w-4 h-4 text-gray-300 flex-shrink-0 cursor-grab" />
+                <GripVertical className="w-4 h-4 text-gray-700 opacity-30 flex-shrink-0 cursor-grab" />
 
                 {/* Field type icon */}
                 <div className="w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0"
@@ -388,19 +369,19 @@ function FieldCard({ field, index, total, onUpdate, onDelete, onMoveUp, onMoveDo
                 {/* Controls */}
                 <div className="flex items-center gap-1 flex-shrink-0">
                     <button disabled={index === 0} onClick={onMoveUp}
-                        className="p-1 text-gray-300 hover:text-gray-600 disabled:opacity-20 transition">
+                        className="p-1 text-gray-700 opacity-30 hover:text-gray-900 opacity-80 disabled:opacity-20 transition">
                         <ChevronUp className="w-4 h-4" />
                     </button>
                     <button disabled={index === total - 1} onClick={onMoveDown}
-                        className="p-1 text-gray-300 hover:text-gray-600 disabled:opacity-20 transition">
+                        className="p-1 text-gray-700 opacity-30 hover:text-gray-900 opacity-80 disabled:opacity-20 transition">
                         <ChevronDown className="w-4 h-4" />
                     </button>
                     <button onClick={() => setExpanded(p => !p)}
-                        className={`p-1.5 rounded-lg transition ${expanded ? "bg-violet-100 text-violet-600" : "text-gray-400 hover:text-gray-600 hover:bg-gray-100"}`}>
+                        className={`p-1.5 rounded-lg transition ${expanded ? "bg-violet-600/20 text-violet-600" : "text-gray-700 opacity-50 hover:text-gray-900 opacity-80 hover:bg-gray-50"}`}>
                         <Settings2 className="w-4 h-4" />
                     </button>
                     <button onClick={onDelete}
-                        className="p-1.5 text-gray-300 hover:text-red-500 hover:bg-red-50 rounded-lg transition">
+                        className="p-1.5 text-gray-700 opacity-30 hover:text-red-500 hover:bg-red-50 rounded-lg transition">
                         <Trash2 className="w-4 h-4" />
                     </button>
                 </div>
@@ -421,52 +402,42 @@ function PageHeaderConfig({ schema, onChange }) {
     const COLORS = ["#7c3aed", "#0284c7", "#059669", "#dc2626", "#d97706", "#db2777", "#0891b2", "#64748b"];
     return (
         <div className="bg-white border border-gray-200 rounded-xl p-4 space-y-3">
-            <h3 className="text-sm font-semibold text-gray-700 flex items-center gap-2">
-                <Settings2 className="w-4 h-4 text-violet-500" />
+            <h3 className="text-sm font-semibold text-gray-900 flex items-center gap-2">
+                <Settings2 className="w-4 h-4 text-violet-600" />
                 Page Settings
             </h3>
             <div>
-                <label className="block text-xs font-medium text-gray-500 mb-1">Page Title</label>
+                <label className="block text-xs font-medium text-gray-700 opacity-60 mb-1">Page Title</label>
                 <input
                     type="text"
                     value={schema.page_title}
                     onChange={e => onChange({ ...schema, page_title: e.target.value })}
-                    className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-violet-400 text-gray-900 font-medium"
+                    className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-violet-400 text-gray-900 font-medium bg-white"
                 />
             </div>
             <div>
-                <label className="block text-xs font-medium text-gray-500 mb-1">Description</label>
+                <label className="block text-xs font-medium text-gray-700 opacity-60 mb-1">Description</label>
                 <input
                     type="text"
                     value={schema.description || ""}
                     onChange={e => onChange({ ...schema, description: e.target.value })}
-                    className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-violet-400 text-gray-800"
+                    className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-violet-400 text-gray-900 bg-white"
                     placeholder="Short description shown to users"
                 />
             </div>
             <div>
-                <label className="block text-xs font-medium text-gray-500 mb-1">Submit Button Label</label>
+                <label className="block text-xs font-medium text-gray-700 opacity-60 mb-1">Submit Button Label</label>
                 <input
                     type="text"
                     value={schema.submit_label || "Submit"}
                     onChange={e => onChange({ ...schema, submit_label: e.target.value })}
-                    className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-violet-400 text-gray-800"
+                    className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-violet-400 text-gray-900 bg-white"
                 />
             </div>
-            <div>
-                <label className="block text-xs font-medium text-gray-500 mb-2">Theme Color</label>
-                <div className="flex gap-2 flex-wrap">
-                    {COLORS.map(c => (
-                        <button key={c} type="button" onClick={() => onChange({ ...schema, color: c })}
-                            className={`w-7 h-7 rounded-full transition-transform ${schema.color === c ? "scale-125 ring-2 ring-offset-2 ring-gray-400" : "hover:scale-110"}`}
-                            style={{ backgroundColor: c }} />
-                    ))}
-                </div>
-            </div>
             <div className="flex items-center justify-between pt-1">
-                <span className="text-xs font-medium text-gray-500">Page Status</span>
+                <span className="text-xs font-medium text-gray-700 opacity-60">Page Status</span>
                 <button onClick={() => onChange({ ...schema, isActive: !schema.isActive })}
-                    className={`flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold transition ${schema.isActive ? "bg-emerald-100 text-emerald-700" : "bg-gray-100 text-gray-500"}`}>
+                    className={`flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold transition ${schema.isActive ? "bg-emerald-100 text-emerald-700" : "bg-gray-50 text-gray-700 opacity-60"}`}>
                     <span className={`w-2 h-2 rounded-full ${schema.isActive ? "bg-emerald-500" : "bg-gray-400"}`} />
                     {schema.isActive ? "Live" : "Draft"}
                 </button>
@@ -494,7 +465,7 @@ function JsonModal({ schema, onClose }) {
             <div className="bg-gray-900 rounded-2xl shadow-2xl w-full max-w-2xl max-h-[85vh] flex flex-col">
                 <div className="flex items-center justify-between p-4 border-b border-gray-700">
                     <span className="text-white font-semibold text-sm">📋 Schema JSON Preview</span>
-                    <button onClick={onClose} className="text-gray-400 hover:text-white transition">
+                    <button onClick={onClose} className="text-gray-700 opacity-50 hover:text-gray-900 transition">
                         <X className="w-5 h-5" />
                     </button>
                 </div>
@@ -508,28 +479,24 @@ function JsonModal({ schema, onClose }) {
 
 // ─── Live Preview Modal ───────────────────────────────────────────────────────
 function LivePreviewModal({ schema, onClose }) {
-    const color = schema.color || "#7c3aed";
-    
     // Quick renderers to locally simulate frontend
     const renderInput = (f) => {
-        const baseClass = "w-full px-4 py-2.5 border border-gray-300 rounded-xl text-sm text-gray-900 bg-white pointer-events-none";
+        const baseClass = "w-full px-4 py-2.5 border border-gray-200 rounded-xl text-sm text-gray-700 bg-white pointer-events-none";
         switch (f.type) {
             case "textarea": return <textarea placeholder={f.placeholder} rows={3} className={baseClass + " resize-none"} readOnly />;
-            case "dropdown": return <div className="relative"><select className={baseClass + " appearance-none"} readOnly><option>{f.placeholder || "— Select —"}</option></select><ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" /></div>;
-            case "radio": return <div className="flex flex-wrap gap-2">{(f.options||["Option 1"]).map(o => <div key={o} className="px-4 py-2 rounded-xl border border-gray-200 text-sm text-gray-700 flex items-center gap-2"><div className="w-4 h-4 rounded-full border-2 border-gray-300" />{o}</div>)}</div>;
-            case "checkbox": return <div className="flex items-start gap-3"><div className="w-5 h-5 rounded-md border-2 border-gray-300 mt-0.5" /><span className="text-sm text-gray-700 leading-snug">{f.label}</span></div>;
-            case "checkboxGroup": return <div className="flex flex-wrap gap-2">{(f.options||["Option 1"]).map(o => <div key={o} className="px-3.5 py-2 rounded-xl border border-gray-200 text-sm text-gray-700">{o}</div>)}</div>;
-            case "button": return <button className="px-5 py-2.5 text-sm font-semibold text-white rounded-xl shadow-sm pointer-events-none" style={{backgroundColor: color}}>{f.label}</button>;
-            case "image": return <div className="flex flex-col items-center justify-center w-full h-28 border-2 border-dashed border-gray-300 rounded-xl text-gray-400"><Upload className="w-6 h-6 mb-1"/><span className="text-xs">Image Upload Preview</span></div>;
+            case "dropdown": return <div className="relative"><select className={baseClass + " appearance-none"} readOnly><option>{f.placeholder || "— Select —"}</option></select><ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-700 opacity-50" /></div>;
+            case "radio": return <div className="flex flex-wrap gap-2">{(f.options || ["Option 1"]).map(o => <div key={o} className="px-4 py-2 rounded-xl border border-gray-200 text-sm text-gray-700 flex items-center gap-2"><div className="w-4 h-4 rounded-full border-2 border-gray-200" />{o}</div>)}</div>;
+            case "checkbox": return <div className="flex items-start gap-3"><div className="w-5 h-5 rounded-md border-2 border-gray-200 mt-0.5" /><span className="text-sm text-gray-700 leading-snug">{f.label}</span></div>;
+            case "checkboxGroup": return <div className="flex flex-wrap gap-2">{(f.options || ["Option 1"]).map(o => <div key={o} className="px-3.5 py-2 rounded-xl border border-gray-200 text-sm text-gray-700">{o}</div>)}</div>;
+            case "button": return <button className="px-5 py-2.5 text-sm font-semibold text-white bg-violet-600 rounded-xl shadow-sm pointer-events-none">{f.label}</button>;
+            case "image": return <div className="flex flex-col items-center justify-center w-full h-28 border-2 border-dashed border-gray-200 rounded-xl text-gray-700 opacity-50"><Upload className="w-6 h-6 mb-1" /><span className="text-xs">Image Upload Preview</span></div>;
             case "divider": return <hr className="border-gray-200 my-2" />;
-            case "heading": 
-                const tags = {h1:"text-2xl font-bold", h2:"text-xl font-bold", h3:"text-base font-semibold", p:"text-sm text-gray-500"};
-                return <div className={tags[f.size||"h2"] + " text-gray-800"}>{f.text}</div>;
-            case "address": return <div className="space-y-3"><input placeholder="Locality / Area" className={baseClass} readOnly/><input placeholder="City" className={baseClass} readOnly/></div>;
-            case "masjid": return <div className="space-y-3"><input placeholder="Name of Masjid" className={baseClass} readOnly/><input placeholder="Locality / Area" className={baseClass} readOnly/><input placeholder="City" className={baseClass} readOnly/></div>;
-            case "array": return <div className="space-y-2"><input placeholder={f.placeholder || "Item 1"} className={baseClass} readOnly/><div className="text-sm text-violet-600 font-medium flex items-center gap-1"><Plus className="w-4 h-4"/> Add item</div></div>;
-            case "date": return <div className="relative"><input type="date" className={baseClass + " appearance-none"} readOnly min={f.min} max={f.max} /><Calendar className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" /></div>;
-            case "time": return <div className="relative"><input type="time" className={baseClass + " appearance-none"} readOnly min={f.min} max={f.max} /><Clock className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" /></div>;
+            case "heading":
+                const tags = { h1: "text-2xl font-bold", h2: "text-xl font-bold", h3: "text-base font-semibold", p: "text-sm opacity-70" };
+                return <div className={tags[f.size || "h2"] + " text-gray-700"}>{f.text}</div>;
+            case "address": return <div className="space-y-3"><input placeholder="Locality / Area" className={baseClass} readOnly /><input placeholder="City" className={baseClass} readOnly /></div>;
+            case "masjid": return <div className="space-y-3"><input placeholder="Name of Masjid" className={baseClass} readOnly /><input placeholder="Locality / Area" className={baseClass} readOnly /><input placeholder="City" className={baseClass} readOnly /></div>;
+            case "array": return <div className="space-y-2"><input placeholder={f.placeholder || "Item 1"} className={baseClass} readOnly /><div className="text-sm text-violet-600 font-medium flex items-center gap-1"><Plus className="w-4 h-4" /> Add item</div></div>;
             default: return <input type={f.type === "number" ? "number" : "text"} placeholder={f.placeholder} className={baseClass} readOnly />;
         }
     };
@@ -539,49 +506,49 @@ function LivePreviewModal({ schema, onClose }) {
             <div className="bg-gray-50 rounded-2xl shadow-2xl w-full max-w-xl max-h-[95vh] flex flex-col overflow-hidden animate-[fadeIn_0.2s_ease]">
                 <div className="flex items-center justify-between px-5 py-3.5 bg-white border-b border-gray-200 flex-shrink-0">
                     <div>
-                        <h3 className="text-base font-bold text-gray-900 flex items-center gap-2">
+                        <h3 className="text-base font-bold text-gray-700 flex items-center gap-2">
                             <Eye className="w-4 h-4 text-violet-600" />
                             Frontend Preview
                         </h3>
-                        <p className="text-xs text-gray-500">Exactly how it will appear to users</p>
+                        <p className="text-xs opacity-70 mt-1">Exactly how it will appear to users</p>
                     </div>
-                    <button onClick={onClose} className="p-1.5 bg-gray-100 hover:bg-gray-200 rounded-full text-gray-600 transition">
+                    <button onClick={onClose} className="p-1.5 bg-gray-50 hover:bg-gray-100 rounded-full text-gray-700 transition">
                         <X className="w-4 h-4" />
                     </button>
                 </div>
-                
+
                 <div className="flex-1 overflow-y-auto p-4 sm:p-6 bg-gray-50 custom-scrollbar">
-                    <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden font-sans">
-                        <div className="relative overflow-hidden" style={{ background: `linear-gradient(135deg, ${color}, ${color}bb)` }}>
+                    <div className="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden font-sans">
+                        <div className="relative overflow-hidden bg-violet-600">
                             <div className="absolute inset-0 opacity-10" style={{ backgroundImage: "radial-gradient(circle at 20% 50%, white 1px, transparent 1px), radial-gradient(circle at 80% 20%, white 1px, transparent 1px)", backgroundSize: "40px 40px" }} />
                             <div className="relative px-6 py-8 text-white">
                                 <h1 className="text-2xl font-bold leading-tight">{schema.page_title}</h1>
                                 {schema.description && <p className="mt-2 text-sm opacity-90 leading-relaxed">{schema.description}</p>}
                             </div>
                         </div>
-                        
-                        <div className="p-6 space-y-6">
+
+                        <div className="p-6 space-y-6 text-gray-700">
                             {schema.fields.length === 0 ? (
-                                <p className="text-gray-400 text-sm text-center py-4">No fields added to preview yet.</p>
+                                <p className="text-gray-700 opacity-50 text-sm text-center py-4">No fields added to preview yet.</p>
                             ) : (
                                 schema.fields.map(f => (
                                     <div key={f.id} className="space-y-1.5">
                                         {!["divider", "heading", "checkbox", "button"].includes(f.type) && (
-                                            <label className="flex items-center gap-1.5 text-sm font-medium text-gray-700">
+                                            <label className="flex items-center gap-1.5 text-sm font-medium">
                                                 {f.label}
                                                 {f.required && <span className="text-red-500 text-base leading-none">*</span>}
                                             </label>
                                         )}
                                         {renderInput(f)}
                                         {f.helperText && !["divider", "heading", "button"].includes(f.type) && (
-                                            <p className="text-xs text-gray-400">{f.helperText}</p>
+                                            <p className="text-xs opacity-50 mt-1">{f.helperText}</p>
                                         )}
                                     </div>
                                 ))
                             )}
 
                             <div className="pt-2">
-                                <button className="w-full py-3 text-white font-bold rounded-xl pointer-events-none opacity-90 text-sm flex items-center justify-center gap-2" style={{ backgroundColor: color }}>
+                                <button className="w-full py-3 text-white font-bold rounded-xl pointer-events-none opacity-90 text-sm flex items-center justify-center gap-2 bg-violet-600">
                                     {schema.submit_label || "Submit"}
                                 </button>
                             </div>
@@ -603,6 +570,34 @@ export default function EventPageBuilder() {
     const [savedToast, setSavedToast] = useState(false);
     const [showJson, setShowJson] = useState(false);
     const [showPreviewModal, setShowPreviewModal] = useState(false);
+    const [isSaving, setIsSaving] = useState(false);
+
+    // Fetch schema from API on load
+    useEffect(() => {
+        if (slug && slug !== "new-event") {
+            import("axios").then((axios) => {
+                axios.default.get(`/api/admin/events/${slug}`)
+                    .then((res) => {
+                        if (res.data?.event) {
+                            const ev = res.data.event;
+                            setSchema({
+                                page_title: ev.title,
+                                page_slug: ev.slug,
+                                description: ev.description,
+                                submit_label: ev.submit_label || "Submit",
+                                color: ev.theme_color || "#7c3aed",
+                                isActive: ev.is_active,
+                                fields: ev.schema_fields || []
+                            });
+                        }
+                    })
+                    .catch((err) => {
+                        console.error("Failed to load schema:", err);
+                        // Fallback to demo/blank if not found
+                    });
+            });
+        }
+    }, [slug]);
 
     const addField = useCallback((type) => {
         const field = makeNewField(type);
@@ -628,42 +623,47 @@ export default function EventPageBuilder() {
         });
     };
 
-    const handleSave = () => {
-        // In real app: POST to API/Supabase
-        console.log("Saving schema:", JSON.stringify(schema, null, 2));
-        setSavedToast(true);
-        setTimeout(() => setSavedToast(false), 3000);
+    const handleSave = async () => {
+        setIsSaving(true);
+        try {
+            const axios = (await import("axios")).default;
+            await axios.put(`/api/admin/events/${schema.page_slug}`, { schema });
+            setSavedToast(true);
+            setTimeout(() => setSavedToast(false), 3000);
+        } catch (error) {
+            console.error("Error saving schema:", error);
+            alert("Failed to save. Check console for details.");
+        } finally {
+            setIsSaving(false);
+        }
     };
-
-    const ft_color = schema.color || "#7c3aed";
 
     return (
         <div className="min-h-screen bg-gray-50">
             {/* ─ Top Bar ─ */}
             <div className="sticky top-0 z-30 bg-white border-b border-gray-200 px-4 py-3 flex items-center gap-3">
                 <Link href="/admin/events"
-                    className="flex items-center gap-1.5 text-sm text-gray-500 hover:text-gray-900 transition">
+                    className="flex items-center gap-1.5 text-sm text-gray-700 opacity-60 hover:text-gray-900 transition">
                     <ArrowLeft className="w-4 h-4" />
                     Back
                 </Link>
                 <div className="flex-1 min-w-0">
                     <h1 className="text-sm font-semibold text-gray-900 truncate">{schema.page_title}</h1>
-                    <p className="text-xs text-gray-400 font-mono">/events/{schema.page_slug}</p>
+                    <p className="text-xs text-gray-700 opacity-50 font-mono">/events/{schema.page_slug}</p>
                 </div>
                 <div className="flex items-center gap-2 flex-shrink-0">
                     <button onClick={() => setShowJson(true)}
-                        className="flex items-center gap-1.5 px-3 py-1.5 border border-gray-200 text-gray-600 text-xs font-medium rounded-lg hover:bg-gray-50 transition">
+                        className="flex items-center gap-1.5 px-3 py-1.5 border border-gray-200 text-gray-700 opacity-80 text-xs font-medium rounded-lg hover:bg-gray-50 transition">
                         <Copy className="w-3.5 h-3.5" />
                         JSON
                     </button>
                     <Link href={`/events/${schema.page_slug}`} target="_blank"
-                        className="flex items-center gap-1.5 px-3 py-1.5 border border-gray-200 text-gray-600 text-xs font-medium rounded-lg hover:bg-gray-50 transition">
+                        className="flex items-center gap-1.5 px-3 py-1.5 border border-gray-200 text-gray-700 opacity-80 text-xs font-medium rounded-lg hover:bg-gray-50 transition">
                         <Eye className="w-3.5 h-3.5" />
                         Preview
                     </Link>
                     <button onClick={handleSave}
-                        className="flex items-center gap-1.5 px-4 py-1.5 text-white text-xs font-semibold rounded-lg hover:opacity-90 transition shadow-sm"
-                        style={{ backgroundColor: ft_color }}>
+                        className="flex items-center gap-1.5 px-4 py-1.5 text-white text-xs font-semibold rounded-lg hover:opacity-90 transition shadow-sm bg-violet-600">
                         <Save className="w-3.5 h-3.5" />
                         Save
                     </button>
@@ -678,17 +678,17 @@ export default function EventPageBuilder() {
 
                     {/* Schema Stats */}
                     <div className="bg-white border border-gray-200 rounded-xl p-4 space-y-2">
-                        <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Overview</h3>
+                        <h3 className="text-xs font-semibold text-gray-700 opacity-60 uppercase tracking-wide">Overview</h3>
                         <div className="flex justify-between text-sm">
-                            <span className="text-gray-600">Total fields</span>
+                            <span className="text-gray-700 opacity-80">Total fields</span>
                             <span className="font-semibold text-gray-900">{schema.fields.length}</span>
                         </div>
                         <div className="flex justify-between text-sm">
-                            <span className="text-gray-600">Required fields</span>
+                            <span className="text-gray-700 opacity-80">Required fields</span>
                             <span className="font-semibold text-gray-900">{schema.fields.filter(f => f.required).length}</span>
                         </div>
                         <div className="flex justify-between text-sm">
-                            <span className="text-gray-600">Field types used</span>
+                            <span className="text-gray-700 opacity-80">Field types used</span>
                             <span className="font-semibold text-gray-900">
                                 {[...new Set(schema.fields.map(f => f.type))].length}
                             </span>
@@ -697,7 +697,7 @@ export default function EventPageBuilder() {
 
                     {/* Field type legend */}
                     <div className="bg-white border border-gray-200 rounded-xl p-4">
-                        <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-3">Field Types in Use</h3>
+                        <h3 className="text-xs font-semibold text-gray-700 opacity-60 uppercase tracking-wide mb-3">Field Types in Use</h3>
                         <div className="flex flex-wrap gap-1.5">
                             {[...new Set(schema.fields.map(f => f.type))].map(t => {
                                 const info = getFieldTypeInfo(t);
@@ -710,7 +710,7 @@ export default function EventPageBuilder() {
                                 );
                             })}
                             {schema.fields.length === 0 && (
-                                <span className="text-xs text-gray-400">No fields yet</span>
+                                <span className="text-xs text-gray-700 opacity-50">No fields yet</span>
                             )}
                         </div>
                     </div>
@@ -722,7 +722,7 @@ export default function EventPageBuilder() {
                     <div className="flex items-center justify-between">
                         <div>
                             <h2 className="text-base font-semibold text-gray-900">Form Fields</h2>
-                            <p className="text-xs text-gray-500 mt-0.5">
+                            <p className="text-xs text-gray-700 opacity-60 mt-0.5">
                                 {schema.fields.length === 0
                                     ? "No fields yet. Click \"Add Field\" to start building."
                                     : `${schema.fields.length} field${schema.fields.length > 1 ? "s" : ""} — drag to reorder`}
@@ -730,8 +730,7 @@ export default function EventPageBuilder() {
                         </div>
                         <button
                             onClick={() => setShowTypePicker(true)}
-                            className="flex items-center gap-1.5 px-3.5 py-2 text-white text-sm font-semibold rounded-xl hover:opacity-90 transition shadow-sm"
-                            style={{ backgroundColor: ft_color }}>
+                            className="flex items-center gap-1.5 px-3.5 py-2 bg-violet-600 text-white text-sm font-semibold rounded-xl hover:opacity-90 transition shadow-sm">
                             <Plus className="w-4 h-4" />
                             Add Field
                         </button>
@@ -740,14 +739,13 @@ export default function EventPageBuilder() {
                     {/* Empty state */}
                     {schema.fields.length === 0 && (
                         <div className="border-2 border-dashed border-gray-200 rounded-2xl py-16 flex flex-col items-center gap-3 text-center">
-                            <div className="w-14 h-14 rounded-2xl bg-gray-100 flex items-center justify-center">
-                                <Plus className="w-7 h-7 text-gray-400" />
+                            <div className="w-14 h-14 rounded-2xl bg-gray-50 flex items-center justify-center">
+                                <Plus className="w-7 h-7 text-gray-700 opacity-50" />
                             </div>
-                            <p className="text-gray-500 font-medium">No fields added yet</p>
-                            <p className="text-gray-400 text-sm">Click "Add Field" to choose a field type and configure it.</p>
+                            <p className="text-gray-700 opacity-60 font-medium">No fields added yet</p>
+                            <p className="text-gray-700 opacity-50 text-sm">Click "Add Field" to choose a field type and configure it.</p>
                             <button onClick={() => setShowTypePicker(true)}
-                                className="mt-2 px-4 py-2 text-sm font-semibold text-white rounded-xl hover:opacity-90 transition"
-                                style={{ backgroundColor: ft_color }}>
+                                className="mt-2 px-4 py-2 text-sm font-semibold text-white rounded-xl hover:opacity-90 transition bg-violet-600">
                                 Add your first field
                             </button>
                         </div>
@@ -774,14 +772,13 @@ export default function EventPageBuilder() {
                         <div className="space-y-3">
                             <button
                                 onClick={() => setShowTypePicker(true)}
-                                className="w-full py-3 border-2 border-dashed border-gray-200 rounded-xl text-gray-400 text-sm font-medium flex items-center justify-center gap-2 hover:border-violet-300 hover:text-violet-600 transition">
+                                className="w-full py-3 border-2 border-dashed border-gray-200 rounded-xl text-gray-700 opacity-50 text-sm font-medium flex items-center justify-center gap-2 hover:border-violet-600 hover:text-violet-600 transition">
                                 <Plus className="w-4 h-4" />
                                 Add Another Field
                             </button>
                             <button
                                 onClick={() => setShowPreviewModal(true)}
-                                className="w-full py-3.5 rounded-xl text-white text-sm font-bold flex items-center justify-center gap-2 hover:opacity-90 transition shadow-md"
-                                style={{ backgroundColor: ft_color }}>
+                                className="w-full py-3.5 rounded-xl text-white text-sm font-bold flex items-center justify-center gap-2 hover:opacity-90 transition shadow-md bg-violet-600">
                                 <CheckCircle className="w-5 h-5" />
                                 DONE
                             </button>

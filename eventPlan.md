@@ -1,6 +1,6 @@
 # 🗓️ Dynamic Events / Programs System — Idea & Architecture Plan
 
-> **Status:** Planning Phase — No API or Prisma changes yet
+> **Status:** Admin Panel UI Ready ✅ — Planning API (Axios), Database, and Frontend (Next.js App).
 > **Goal:** A fully server-driven, dynamic page system where the Admin Panel controls every field, label, input type, and layout of the Events/Programs page — with zero rebuilds required.
 
 ---
@@ -21,7 +21,7 @@ The idea is a **"Page Schema" system**. Instead of hardcoding any field on the E
 │  /admin/events                                              │
 │                                                             │
 │  ┌──────────────────────────────────────────────────────┐   │
-│  │  Page Builder UI                                     │   │
+│  │  Page Builder UI (✅ Ready)                          │   │
 │  │  - Create/Rename Page (e.g. "Eid Milad Program")     │   │
 │  │  - Add / Remove / Reorder Fields                     │   │
 │  │  - Configure each field:                             │   │
@@ -33,17 +33,17 @@ The idea is a **"Page Schema" system**. Instead of hardcoding any field on the E
 │  │      ✦ Placeholder / Helper Text                     │   │
 │  │      ✦ Visibility Conditions (show if X = Y)         │   │
 │  └──────────────────────────────────────────────────────┘   │
-│                        │  Save Schema (JSON)                 │
+│                        │  Save Schema via Axios to API       │
 └────────────────────────┼────────────────────────────────────┘
                          │
                          ▼
               ┌─────────────────────┐
               │   Supabase DB       │
-              │  Table: page_schemas│
+              │  Table: event_pages │
               │  - id               │
-              │  - page_slug        │
-              │  - page_title       │
-              │  - schema (jsonb)   │
+              │  - slug             │
+              │  - title            │
+              │  - schema_fields    │
               │  - is_active        │
               │  - updated_at       │
               └─────────────────────┘
@@ -55,20 +55,35 @@ The idea is a **"Page Schema" system**. Instead of hardcoding any field on the E
 │                                                             │
 │  ┌──────────────────────────────────────────────────────┐   │
 │  │  Dynamic Page Renderer                               │   │
-│  │  1. Fetch schema from API (no cache / ISR)           │   │
+│  │  1. Fetch schema via axios from API (no cache)       │   │
 │  │  2. Render each field based on its type              │   │
-│  │  3. Handle submit → send to API with dynamic data    │   │
+│  │  3. Handle submit → axios.post to API                │   │
 │  └──────────────────────────────────────────────────────┘   │
 └─────────────────────────────────────────────────────────────┘
 ```
 
 ---
 
-## 📁 Folder Structure (No API/Prisma Changes)
+## 📁 Folder Structure
 
-```
+```text
 src/
 ├── app/
+│   ├── api/
+│   │   ├── admin/
+│   │   │   └── events/
+│   │   │       ├── route.js             ← GET all, POST new
+│   │   │       └── [slug]/
+│   │   │           ├── route.js         ← GET one, PUT update, DELETE
+│   │   │           └── submissions/
+│   │   │               └── route.js     ← GET submissions
+│   │   └── events/
+│   │       ├── route.js                 ← GET active events
+│   │       └── [slug]/
+│   │           ├── route.js             ← GET schema
+│   │           └── submit/
+│   │               └── route.js         ← POST form data
+│   │
 │   ├── admin/
 │   │   └── events/
 │   │       ├── page.js                  ← List of all event pages
@@ -76,36 +91,16 @@ src/
 │   │           └── page.js              ← Page builder (field editor)
 │   │
 │   └── events/
+│       ├── page.js                      ← Grid list of active events
 │       └── [slug]/
 │           └── page.js                  ← Dynamic public-facing page
-│
-├── components/
-│   └── dynamic-form/
-│       ├── DynamicFormRenderer.js       ← Renders the full form from schema
-│       ├── FieldRenderer.js             ← Renders a single field by type
-│       ├── fields/
-│       │   ├── TextField.js
-│       │   ├── NumberField.js
-│       │   ├── DropdownField.js
-│       │   ├── RadioField.js
-│       │   ├── CheckboxField.js
-│       │   ├── ArrayField.js            ← Dynamic add/remove list items
-│       │   ├── ObjectField.js           ← Nested key-value fields
-│       │   ├── ButtonField.js
-│       │   ├── ToasterField.js          ← Triggers toast notification
-│       │   └── PopupField.js            ← Opens a modal/popup
-│       │
-│       └── admin/
-│           ├── PageSchemaBuilder.js     ← Main admin builder UI
-│           ├── FieldConfigCard.js       ← Config panel per field
-│           └── FieldTypePicker.js       ← Dropdown to choose field type
 ```
 
 ---
 
 ## 🗃️ The Schema JSON Format (The Brain of the System)
 
-Every page/event in the database has a `schema` JSON field that looks like this:
+Every page/event in the database has a `schema_fields` JSON field that looks like this:
 
 ```json
 {
@@ -124,23 +119,6 @@ Every page/event in the database has a `schema` JSON field that looks like this:
       "helperText": "As per your CNIC"
     },
     {
-      "id": "f2",
-      "key": "age",
-      "label": "Age",
-      "type": "number",
-      "min": 5,
-      "max": 120,
-      "required": true
-    },
-    {
-      "id": "f3",
-      "key": "gender",
-      "label": "Gender",
-      "type": "radio",
-      "options": ["Male", "Female", "Other"],
-      "required": true
-    },
-    {
       "id": "f4",
       "key": "city",
       "label": "City",
@@ -155,40 +133,6 @@ Every page/event in the database has a `schema` JSON field that looks like this:
       "type": "array",
       "itemType": "text",
       "placeholder": "Add a language"
-    },
-    {
-      "id": "f6",
-      "key": "emergency_contact",
-      "label": "Emergency Contact",
-      "type": "object",
-      "fields": [
-        { "key": "name", "label": "Name", "type": "text" },
-        { "key": "phone", "label": "Phone", "type": "text" }
-      ]
-    },
-    {
-      "id": "f7",
-      "key": "confirm_info",
-      "label": "I confirm my information is correct",
-      "type": "checkbox",
-      "required": true
-    },
-    {
-      "id": "f8",
-      "key": "show_rules_popup",
-      "label": "View Event Rules",
-      "type": "button",
-      "action": "popup",
-      "popupContent": "1. Be on time.\n2. Dress appropriately.\n3. Follow staff instructions."
-    },
-    {
-      "id": "f9",
-      "key": "reminder_toast",
-      "label": "Remind Me",
-      "type": "button",
-      "action": "toast",
-      "toastMessage": "Reminder set! Event is on Friday at 8 PM.",
-      "toastType": "success"
     }
   ]
 }
@@ -209,8 +153,6 @@ Every page/event in the database has a `schema` JSON field that looks like this:
 | `radio` | Radio button group | `options[]`, `required` |
 | `checkbox` | Single checkbox | `required`, `label` |
 | `checkboxGroup` | Multiple checkboxes | `options[]`, `required` |
-| `date` | Date picker | `minDate`, `maxDate`, `required` |
-| `time` | Time picker | `required` |
 | `array` | Dynamic list (add/remove items) | `itemType`, `placeholder`, `minItems`, `maxItems` |
 | `object` | Nested sub-form | `fields[]` (recursive schema) |
 | `button` | Action button | `action`: `popup` or `toast` |
@@ -219,52 +161,50 @@ Every page/event in the database has a `schema` JSON field that looks like this:
 | `divider` | Visual section separator | `label` (optional) |
 | `heading` | Display-only heading/text | `text`, `size` (h2, h3, p) |
 | `image` | Image upload | `maxSizeMB`, `accept` |
+| `address` | Locality and City fields combined | `required` |
+| `masjid` | Masjid name, Locality, City | `required` |
 
 ---
 
-## 🖥️ Admin Panel — Events Section UI Plan
+## 🌐 API Routes (Axios based)
 
-### Page: `/admin/events`
-- List of all created event/program pages
-- Each row shows: **Page Title**, **Slug**, **Status** (Active/Draft), **# Fields**, **Last Updated**
-- Buttons: `+ Create New Page`, `Edit`, `Delete`, `Preview`
+All internal API communication will rely purely on **Axios** fetching Next.js Route Handlers.
 
-### Page: `/admin/events/[slug]` (Page Builder)
+### Admin Endpoints
+- **`GET /api/admin/events`** — Fetch all built pages mapping across the Admin dashboard.
+- **`GET /api/admin/events/[slug]`** — Fetch single schema layout into `/admin/events/[slug]`.
+- **`POST /api/admin/events`** — Save new completely built event pages/forms from Admin UI.
+- **`PUT /api/admin/events/[slug]`** — Modify existing event configurations.
+- **`DELETE /api/admin/events/[slug]`** — Safely delete forms and their structure entirely.
+- **`GET /api/admin/events/[slug]/submissions`** — Get user submission list.
 
-#### Left Panel — Field List
-- Drag-and-drop reorder of fields
-- Each field shows: **Icon by type**, **Label**, **Key**, **Type**
-- `+ Add Field` button opens a type picker
-
-#### Right Panel — Field Configuration
-When a field is selected:
-- **Label** input (editable — what user sees)
-- **Field Key** input (slug, used for data storage)
-- **Type selector** (dropdown of all supported types)
-- **Required toggle**
-- **Placeholder** text
-- **Helper text**
-- **Type-specific options** (e.g., options list for dropdown/radio)
-- **Validation rules** (min, max, pattern)
-- **Conditional visibility** (show if `field_key` equals `value`)
-
-#### Top Bar
-- Page Title (editable)
-- Page Slug (editable, auto-generates from title)
-- Status toggle: **Draft** / **Active**
-- `Save` button — writes JSON to Supabase
-- `Preview` button — opens `/events/[slug]` in a new tab
+### Public Endpoints
+- **`GET /api/events`** — Fetch active (`is_active: true`) events only for the front page.
+- **`GET /api/events/[slug]`** — Extract exact form schema data to construct the React interface dynamically on `/events/[slug]`.
+- **`POST /api/events/[slug]/submit`** — The endpoint handling form pushes into `event_submissions` table using received JSON forms.
 
 ---
 
-## 🌐 Frontend — Dynamic Page: `/events/[slug]`
+## 💻 Frontend — Public Pages
 
-### How It Works (No Rebuild Needed)
-1. Page uses **Next.js dynamic route** `[slug]`
-2. On load, it calls an API route to fetch the schema for that slug
-3. The schema is **never cached statically** — always fetched fresh from server
-4. The `DynamicFormRenderer` component reads the schema and renders fields
-5. On submit, the form data is sent to the API as a dynamic JSON object
+### 1. Events Listing Page: `/events/page.js`
+- **Objective:** A landing hub for users querying current registrations/activities.
+- **Data Flow:** Triggers `axios.get('/api/events')` right on load.
+- **Appearance:** Presents a visually engaging grid of Event Cards.
+  - Cards pull from schema settings, displaying the Title and Description natively.
+  - Applies the defined `color` globally for uniform styling.
+  - Contains a clickable "View & Register" button navigating to `/events/[slug]`.
+
+### 2. Dynamic Registration Page: `/events/[slug]/page.js`
+- **Objective:** Formats the specific URL into the generated logic produced by the admin builder.
+- **Data Flow:** Pulls the JSON layout via `axios.get('/api/events/' + slug)`. The `DynamicFormRenderer` component uses the `schema_fields` JSON to append React inputs dynamically.
+- **Appearance / Core UX:**
+  - **Hero Section:** Shows an aesthetic banner with Event Page Title & Description, blending into the page's theme color gradient.
+  - **Dynamic Inputs Display:** Forms appear vertically like a clean Google Form visual.
+  - Text inputs deploy semantic HTML (`<input type="text">`, etc).
+  - Dropdowns trigger contextual `<select>` tags. 
+  - Action Buttons (Alerts/Popups) attach custom JS actions.
+  - **Submission Formatting:** User edits are stored flat locally within `{ [field.key]: inputValue }`. On submit, hits `axios.post('/api/events/' + slug + '/submit', { formData })`. Shows overlay/loading until 200 OK. Returns an aesthetic "✅ Registration Successful" screen.
 
 ### Key Behaviors
 - If a field is removed in admin → it disappears from the page instantly
@@ -274,45 +214,19 @@ When a field is selected:
 
 ---
 
-## 🔄 Data Flow (Runtime — No Rebuild)
+## 🗄️ Supabase Tables (No Prisma)
 
-```
-User visits /events/eid-milad-2026
-        │
-        ▼
-Next.js fetches schema from /api/events/schema?slug=eid-milad-2026
-        │
-        ▼
-API reads from Supabase: SELECT schema FROM page_schemas WHERE slug = 'eid-milad-2026'
-        │
-        ▼
-Schema JSON returned to frontend
-        │
-        ▼
-DynamicFormRenderer builds the UI from schema
-        │
-        ▼
-User fills form → clicks Submit
-        │
-        ▼
-POST /api/events/submit with { slug, formData: { full_name: '...', age: 25, ... } }
-        │
-        ▼
-Data stored in Supabase: event_submissions table
-```
-
----
-
-## 🗄️ Supabase Tables (Concept — No Prisma)
-
-### `page_schemas`
+### `event_pages` (Previously page_schemas)
 | Column | Type | Description |
 |--------|------|-------------|
 | `id` | uuid | Primary key |
-| `page_title` | text | Human-readable title |
-| `page_slug` | text | URL slug (unique) |
-| `schema` | jsonb | The full field schema JSON |
-| `is_active` | boolean | Draft or live |
+| `title` | text | e.g. "Eid Milad-un-Nabi Program" |
+| `slug` | text | URL slug (unique, e.g., eid-milad-2026) |
+| `description` | text | Subtitle/description of the event |
+| `theme_color` | text | Form theme color (e.g., "#7c3aed") |
+| `submit_label` | text | Custom text for submit button |
+| `is_active` | boolean | Is the page Live or still in Draft? |
+| `schema_fields` | jsonb | The array of dynamic field objects (fields) |
 | `created_at` | timestamp | Auto |
 | `updated_at` | timestamp | Tracks last edit |
 
@@ -320,55 +234,31 @@ Data stored in Supabase: event_submissions table
 | Column | Type | Description |
 |--------|------|-------------|
 | `id` | uuid | Primary key |
-| `page_slug` | text | Which event this belongs to |
-| `form_data` | jsonb | Dynamic submitted data |
-| `submitted_by` | uuid | FK to user (optional) |
+| `event_slug` | text | Associates with event_pages.slug |
+| `submitted_data` | jsonb | `{ "full_name": "Ali", "age": 25 }` |
 | `submitted_at` | timestamp | Auto |
-
----
-
-## 🧩 Admin Panel Integration Points
-
-The new Events section will integrate into the existing `/admin` layout just like current sections:
-- `all-masjids`, `notice`, `jamat`, etc. follow the same pattern
-- `/admin/events` will appear in the admin sidebar navigation
-- The admin layout guard already protects all routes under `/admin`
 
 ---
 
 ## 🚦 Implementation Phases
 
-### Phase 1 — Foundation (Current Plan)
-- [ ] Create `page_schemas` table concept (Supabase SQL, no Prisma)
-- [ ] Build admin `/admin/events` list page (UI only, static mock data)
-- [ ] Build admin `/admin/events/[slug]` page builder UI
+### Phase 1 & 2 — Admin UI & Field Builder (✅ COMPLETED)
+- [x] Build admin `/admin/events/[slug]` page builder UI.
+- [x] Implement Drag & Drop, Field Configuration Panels, Live Previews.
 
-### Phase 2 — Dynamic Field Builder
-- [ ] Implement `FieldTypePicker` and `FieldConfigCard` components
-- [ ] Implement drag-and-drop field reordering
-- [ ] Save schema to Supabase via existing API pattern
+### Phase 3 — Database & API (▶ NEXT)
+- [ ] Create `event_pages` and `event_submissions` tables in Supabase SQL (no Prisma).
+- [ ] Create Axios Admin APIs (`/api/admin/events...`).
+- [ ] Create Axios Public APIs (`/api/events...`).
+- [ ] Hook up `/admin/events/[slug]` `Save` button to `POST/PUT /api/admin/events`.
+- [ ] Hook up Admin List page `/admin/events` to `GET /api/admin/events`.
 
-### Phase 3 — Frontend Renderer
-- [ ] Build `DynamicFormRenderer` component
-- [ ] Build all `Field*` components (TextField, DropdownField, etc.)
-- [ ] Build `/events/[slug]` public page
-
-### Phase 4 — Submissions & Polish
-- [ ] Handle form submission → Supabase `event_submissions`
-- [ ] Admin view for submission data
-- [ ] Preview mode in admin
+### Phase 4 — Public Frontend Renderer & Submissions
+- [ ] Build `/events` public listing page using `axios.get('/api/events')`.
+- [ ] Build `/events/[slug]` dynamic renderer using `axios.get('/api/events/[slug]')`.
+- [ ] Handle form submission using `axios.post('/api/events/[slug]/submit')` → `event_submissions`.
+- [ ] Add Admin view/table for submission data (`GET /api/admin/events/[slug]/submissions`).
 
 ---
 
-## ✅ Key Design Principles
-
-1. **Zero Rebuild** — Schema lives in the database. The frontend always reads fresh.
-2. **Supabase-First** — All schema and submission data goes to Supabase (aligns with existing stack).
-3. **Composable Fields** — Every field type is its own React component, making it easy to add new types.
-4. **Recursive Schema** — `object` and `array` types support nested schemas for complex data.
-5. **Admin Owns Everything** — Field labels, types, order, visibility, validation — all from admin UI.
-6. **Consistent with Existing Admin** — New section follows the same pattern as `notice`, `jamat`, etc.
-
----
-
-*Plan authored: March 2026 — Pending user approval before implementation begins.*
+*Plan updated: March 2026 — API & DB Schema Finalized for next phase.*
