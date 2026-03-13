@@ -32,8 +32,9 @@ export default function AdminLogin() {
             localStorage.setItem("isAuthenticated", "true");
             localStorage.setItem("adminEmail", email);
 
-            // Set cookie for middleware
-            document.cookie = "isAuthenticated=true; path=/; max-age=86400"; // 24 hours
+            // Set cookie for middleware — make persistent long-lived (10 years)
+            // Use large max-age so user remains logged in across sessions
+            document.cookie = "isAuthenticated=true; path=/; max-age=315360000; SameSite=Lax"; // 10 years
 
             // Redirect to admin dashboard
             router.push("/admin");
