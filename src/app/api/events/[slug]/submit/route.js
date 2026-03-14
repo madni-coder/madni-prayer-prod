@@ -6,7 +6,7 @@ export const runtime = "nodejs";
 // Handle user submission
 export async function POST(request, { params }) {
     try {
-        const { slug } = params;
+        const { slug } = await params;
         const { formData } = await request.json();
 
         if (!formData) {
