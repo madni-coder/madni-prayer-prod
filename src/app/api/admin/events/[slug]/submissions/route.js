@@ -5,7 +5,19 @@ export const runtime = "nodejs";
 
 export async function GET(request, { params }) {
     try {
-        const { slug } = await params;
+        const authHeader = request.headers.get("authorization");
+
+        if (!authHeader || !authHeader.startsWith("Bearer ")) {
+            return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+        }
+
+        const token = authHeader.slice("Bearer ".length).trim();
+
+        if (!process.env.ADMIN_API_TOKEN || token !== process.env.ADMIN_API_TOKEN) {
+            return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+        }
+
+        const { slug } = params;
         
         const data = await prisma.eventSubmission.findMany({
             where: { eventSlug: slug },
