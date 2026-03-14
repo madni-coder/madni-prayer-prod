@@ -154,6 +154,7 @@ function RadioField({ field, value, onChange }) {
                         type="radio"
                         name={field.key}
                         value={opt}
+                        required={field.required}
                         checked={value === opt}
                         onChange={() => onChange(opt)}
                         className="sr-only"
