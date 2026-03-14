@@ -5,10 +5,10 @@ import Link from "next/link";
 import { useParams } from "next/navigation";
 import {
     ArrowLeft, Plus, Trash2, GripVertical, Settings2, Eye,
-    ChevronDown, ChevronUp, Save, Check, CheckCircle, AlertCircle, X,
+    ChevronDown, ChevronUp, Save, Check, CheckCircle, X,
     Type, Hash, AlignLeft, ChevronDownSquare, CircleDot,
-    CheckSquare, List, Braces, MousePointerClick, Bell, Layers,
-    Minus, Heading, Upload, Copy, ToggleLeft, MapPin, Moon
+    CheckSquare, List, MousePointerClick, Bell, Layers,
+    Minus, Heading, Upload, Copy, MapPin, Moon
 } from "lucide-react";
 
 // ─── Field type definitions ───────────────────────────────────────────────────
