@@ -447,12 +447,17 @@ export default function DynamicEventPage() {
     const [formData, setFormData] = useState({});
     const [submitting, setSubmitting] = useState(false);
     const [alreadyRegistered, setAlreadyRegistered] = useState(false);
+    // prevent a very brief "Not Found" flash while client data hydrates
+    const [showNotFound, setShowNotFound] = useState(false);
+    // whether we've attempted to load the event from the API at least once
+    const [attemptedFetch, setAttemptedFetch] = useState(false);
     const router = useRouter();
 
     useEffect(() => {
         if (!slug) return;
         const controller = new AbortController();
         setLoading(true);
+        setAttemptedFetch(true);
         import("axios").then((axios) => {
             axios.default.get(`/api/events/${slug}`, { signal: controller.signal })
                 .then((res) => {
@@ -496,6 +501,18 @@ export default function DynamicEventPage() {
         }
     }, [slug]);
 
+    // Delay showing the NotFound screen slightly so we don't flash it.
+    // Only show NotFound after we've actually attempted a fetch.
+    useEffect(() => {
+        let t;
+        if (attemptedFetch && !loading && !schema) {
+            t = setTimeout(() => setShowNotFound(true), 350);
+        } else {
+            setShowNotFound(false);
+        }
+        return () => clearTimeout(t);
+    }, [loading, schema, attemptedFetch]);
+
     const setField = (key, val) => {
         setFormData(prev => ({ ...prev, [key]: val }));
     };
@@ -529,6 +546,19 @@ export default function DynamicEventPage() {
     };
 
     if (loading) {
+        return (
+            <div className="min-h-screen flex items-center justify-center bg-base-100">
+                <div className="flex items-center justify-center">
+                    <AnimatedLooader message="Loading event..." />
+                </div>
+            </div>
+        );
+    }
+
+    // Avoid flashing the NotFound screen for a very short moment during
+    // client-side navigation/hydration — keep showing the loader until the
+    // small delay passes (see showNotFound state/effect above).
+    if (!schema && !showNotFound) {
         return (
             <div className="min-h-screen flex items-center justify-center bg-base-100">
                 <div className="flex items-center justify-center">
