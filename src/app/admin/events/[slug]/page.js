@@ -2,7 +2,7 @@
 
 import { useState, useCallback, useEffect } from "react";
 import Link from "next/link";
-import { useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import {
     ArrowLeft, Plus, Trash2, GripVertical, Settings2, Eye,
     ChevronDown, ChevronUp, Save, Check, CheckCircle, X,
@@ -102,6 +102,25 @@ function makeNewField(type) {
     if (type === "popup") { base.popupTitle = "Info"; base.popupContent = "Content here"; }
     if (type === "heading") { base.text = "Section Heading"; base.size = "h2"; }
     return base;
+}
+
+// Sanitize text and strip trailing random id (e.g. " Wy36gq" or "-wy36gq") for display
+function sanitizeText(text) {
+    if (text == null) return "";
+    const str = String(text);
+    const withoutTags = str.replace(/<[^>]*>/g, "");
+    if (typeof document !== "undefined") {
+        const textarea = document.createElement("textarea");
+        textarea.innerHTML = withoutTags;
+        return textarea.value;
+    }
+    return withoutTags;
+}
+
+function displayTitle(text) {
+    const clean = sanitizeText(text);
+    // remove trailing space or hyphen/underscore + 6 alphanumeric chars
+    return clean.replace(/(?:\s|[-_])?[A-Za-z0-9]{6}$/i, "");
 }
 
 // ─── Type Picker Modal ────────────────────────────────────────────────────────
@@ -522,7 +541,7 @@ function LivePreviewModal({ schema, onClose }) {
                         <div className="relative overflow-hidden bg-violet-600">
                             <div className="absolute inset-0 opacity-10" style={{ backgroundImage: "radial-gradient(circle at 20% 50%, white 1px, transparent 1px), radial-gradient(circle at 80% 20%, white 1px, transparent 1px)", backgroundSize: "40px 40px" }} />
                             <div className="relative px-6 py-8 text-white">
-                                <h1 className="text-2xl font-bold leading-tight">{schema.page_title}</h1>
+                                <h1 className="text-2xl font-bold leading-tight">{displayTitle(schema.page_title)}</h1>
                                 {schema.description && <p className="mt-2 text-sm opacity-90 leading-relaxed">{schema.description}</p>}
                             </div>
                         </div>
@@ -564,6 +583,7 @@ function LivePreviewModal({ schema, onClose }) {
 export default function EventPageBuilder() {
     const params = useParams();
     const slug = params?.slug || "new-event";
+    const router = useRouter();
 
     const [schema, setSchema] = useState(() => DEMO_SCHEMA[slug] || BLANK_SCHEMA(slug));
     const [showTypePicker, setShowTypePicker] = useState(false);
@@ -629,7 +649,11 @@ export default function EventPageBuilder() {
             const axios = (await import("axios")).default;
             await axios.put(`/api/admin/events/${schema.page_slug}`, { schema });
             setSavedToast(true);
-            setTimeout(() => setSavedToast(false), 3000);
+            // show a quick toast then redirect back to events list
+            setTimeout(() => {
+                setSavedToast(false);
+                router.push('/admin/events');
+            }, 800);
         } catch (error) {
             console.error("Error saving schema:", error);
             alert("Failed to save. Check console for details.");
@@ -648,7 +672,7 @@ export default function EventPageBuilder() {
                     Back
                 </Link>
                 <div className="flex-1 min-w-0">
-                    <h1 className="text-sm font-semibold text-gray-900 truncate">{schema.page_title}</h1>
+                    <h1 className="text-sm font-semibold text-gray-900 truncate">{displayTitle(schema.page_title)}</h1>
                     <p className="text-xs text-gray-700 opacity-50 font-mono">/events/{schema.page_slug}</p>
                 </div>
                 <div className="flex items-center gap-2 flex-shrink-0">

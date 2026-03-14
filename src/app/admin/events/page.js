@@ -48,6 +48,28 @@ import {
 
 
 // ─── Status Badge ────────────────────────────────────────────────────────────
+// Sanitize text to avoid rendering HTML/code in titles/descriptions
+function sanitizeText(text) {
+    if (text == null) return "";
+    const str = String(text);
+    // strip HTML tags
+    const withoutTags = str.replace(/<[^>]*>/g, "");
+    // decode HTML entities if running in browser
+    if (typeof document !== "undefined") {
+        const textarea = document.createElement("textarea");
+        textarea.innerHTML = withoutTags;
+        return textarea.value;
+    }
+    return withoutTags;
+}
+
+// Remove trailing random id (e.g. " Wy36gq" or "-wy36gq") from titles for display
+function displayTitle(text) {
+    const clean = sanitizeText(text);
+    // remove trailing space or hyphen + 6 alphanumeric chars (case-insensitive)
+    return clean.replace(/(?:\s|[-_])?[A-Za-z0-9]{6}$/i, "");
+}
+
 function StatusBadge({ active }) {
     return (
         <span className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-semibold ${active
@@ -72,7 +94,7 @@ function DeleteModal({ page, onConfirm, onCancel }) {
                     <h3 className="text-lg font-semibold text-gray-900">Delete Event Page</h3>
                 </div>
                 <p className="text-gray-700 opacity-80 text-sm mb-6">
-                    Are you sure you want to delete <strong>"{page.title}"</strong>? This action cannot be undone.
+                    Are you sure you want to delete <strong>"{displayTitle(page.title)}"</strong>? This action cannot be undone.
                 </p>
                 <div className="flex gap-3">
                     <button onClick={onCancel}
@@ -96,10 +118,13 @@ function CreateModal({ onConfirm, onCancel }) {
 
     const handleSubmit = (e) => {
         e.preventDefault();
-        if (!title.trim()) return;
+        const rawTitle = title.trim();
+        if (!rawTitle) return;
+        const cleanTitle = sanitizeText(rawTitle);
+        const cleanDescription = sanitizeText(description.trim());
         const randomStr = Math.random().toString(36).substring(2, 8);
-        const slug = title.trim().toLowerCase().replace(/\s+/g, "-").replace(/[^a-z0-9-]/g, "") + `-${randomStr}`;
-        onConfirm({ title: title.trim(), description: description.trim(), slug });
+        const slug = cleanTitle.toLowerCase().replace(/\s+/g, "-").replace(/[^a-z0-9-]/g, "") + `-${randomStr}`;
+        onConfirm({ title: cleanTitle, description: cleanDescription, slug });
     };
 
     return (
@@ -122,11 +147,14 @@ function CreateModal({ onConfirm, onCancel }) {
                             required
                             className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-violet-400 focus:border-transparent text-gray-900 bg-white"
                         />
-                        {title && (
-                            <p className="mt-1 text-xs text-gray-700 opacity-50">
-                                Slug: /events/{title.toLowerCase().replace(/\s+/g, "-").replace(/[^a-z0-9-]/g, "")}-{'[random_id]'}
-                            </p>
-                        )}
+                        {title && (() => {
+                            const previewSlug = sanitizeText(title || "").toLowerCase().replace(/\s+/g, "-").replace(/[^a-z0-9-]/g, "");
+                            return (
+                                <p className="mt-1 text-xs text-gray-700 opacity-50">
+                                    Slug: /events/{previewSlug}-{'[random_id]'}
+                                </p>
+                            );
+                        })()}
                     </div>
                     <div>
                         <label className="block text-sm font-medium text-gray-900 mb-1">Description</label>
@@ -316,11 +344,11 @@ export default function AdminEventsPage() {
                                         {/* Info */}
                                         <div className="min-w-0">
                                             <div className="flex items-center gap-2 flex-wrap">
-                                                <h2 className="text-base font-semibold text-gray-900 truncate">{page.title}</h2>
+                                                <h2 className="text-base font-semibold text-gray-900 truncate">{displayTitle(page.title)}</h2>
                                                 <StatusBadge active={page.isActive} />
                                             </div>
                                             {page.description && (
-                                                <p className="text-sm text-gray-700 opacity-60 mt-0.5 truncate">{page.description}</p>
+                                                <p className="text-sm text-gray-700 opacity-60 mt-0.5 truncate">{sanitizeText(page.description)}</p>
                                             )}
                                             <p className="text-xs text-gray-700 opacity-50 mt-1 font-mono">/events/{page.slug}</p>
 
