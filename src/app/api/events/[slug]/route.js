@@ -11,8 +11,7 @@ export async function GET(request, { params }) {
         
         const data = await prisma.eventPage.findFirst({
             where: { 
-                slug: slug,
-                isActive: true
+                slug: slug
             },
             select: {
                 title: true,
