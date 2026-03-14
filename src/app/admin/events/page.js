@@ -192,21 +192,20 @@ export default function AdminEventsPage() {
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
-        let mounted = true;
+        const controller = new AbortController();
         import("axios").then((axios) => {
-            axios.default.get("/api/admin/events")
+            axios.default.get("/api/admin/events", { signal: controller.signal })
                 .then(res => {
-                    if (mounted) {
-                        setPages(res.data?.events || []);
-                        setLoading(false);
-                    }
+                    setPages(res.data?.events || []);
+                    setLoading(false);
                 })
                 .catch(err => {
+                    if (err?.code === "ERR_CANCELED" || err?.name === "AbortError") return;
                     console.error("Failed to load events", err);
-                    if (mounted) setLoading(false);
+                    setLoading(false);
                 });
         });
-        return () => { mounted = false; };
+        return () => { controller.abort(); };
     }, []);
 
     const filtered = pages.filter(p =>

@@ -10,22 +10,21 @@ export default function EventsListingPage() {
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
-        let mounted = true;
+        const controller = new AbortController();
         setLoading(true);
         import("axios").then((axios) => {
-            axios.default.get(`/api/events`)
+            axios.default.get(`/api/events`, { signal: controller.signal })
                 .then((res) => {
-                    if (mounted) {
-                        setEvents(res.data?.events || []);
-                        setLoading(false);
-                    }
+                    setEvents(res.data?.events || []);
+                    setLoading(false);
                 })
                 .catch((err) => {
+                    if (err?.code === "ERR_CANCELED" || err?.name === "AbortError") return;
                     console.error("Failed to load active events:", err);
-                    if (mounted) setLoading(false);
+                    setLoading(false);
                 });
         });
-        return () => { mounted = false; };
+        return () => { controller.abort(); };
     }, []);
 
     return (

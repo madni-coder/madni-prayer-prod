@@ -85,28 +85,27 @@ export default function SubmissionsPage() {
 
     useEffect(() => {
         if (!slug) return;
-        let mounted = true;
+        const controller = new AbortController();
 
         import("axios").then(({ default: axios }) => {
-            // Load event info and submissions in parallel
+            const opts = { signal: controller.signal };
             Promise.all([
-                axios.get(`/api/admin/events/${slug}`),
-                axios.get(`/api/admin/events/${slug}/submissions`),
+                axios.get(`/api/admin/events/${slug}`, opts),
+                axios.get(`/api/admin/events/${slug}/submissions`, opts),
             ])
                 .then(([evRes, subRes]) => {
-                    if (!mounted) return;
                     if (evRes.data?.event?.title) setEventTitle(evRes.data.event.title);
                     setSubmissions(subRes.data?.submissions || []);
                     setLoading(false);
                 })
                 .catch((err) => {
-                    if (!mounted) return;
+                    if (err?.code === "ERR_CANCELED" || err?.name === "AbortError") return;
                     setError(err?.response?.data?.error || err.message || "Failed to load");
                     setLoading(false);
                 });
         });
 
-        return () => { mounted = false; };
+        return () => { controller.abort(); };
     }, [slug]);
 
     // Collect all unique column keys from all submissions' submittedData

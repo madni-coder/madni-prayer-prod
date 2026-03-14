@@ -451,9 +451,10 @@ export default function DynamicEventPage() {
 
     useEffect(() => {
         if (!slug) return;
+        const controller = new AbortController();
         setLoading(true);
         import("axios").then((axios) => {
-            axios.default.get(`/api/events/${slug}`)
+            axios.default.get(`/api/events/${slug}`, { signal: controller.signal })
                 .then((res) => {
                     if (res.data?.event) {
                         const ev = res.data.event;
@@ -472,6 +473,7 @@ export default function DynamicEventPage() {
                     }
                 })
                 .catch((err) => {
+                    if (err?.code === "ERR_CANCELED" || err?.name === "AbortError") return;
                     console.error("Failed to load schema:", err);
                     setSchema(MOCK_SCHEMAS[slug] || null);
                 })
@@ -479,6 +481,7 @@ export default function DynamicEventPage() {
                     setLoading(false);
                 });
         });
+        return () => { controller.abort(); };
     }, [slug]);
 
     // Check localStorage to see if this device/browser already registered for this event
