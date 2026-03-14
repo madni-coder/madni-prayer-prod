@@ -125,6 +125,18 @@ function displayTitle(text) {
 
 // ─── Type Picker Modal ────────────────────────────────────────────────────────
 function TypePickerModal({ onSelect, onClose }) {
+    const [selected, setSelected] = useState([]);
+
+    const toggle = (type) => {
+        setSelected(s => s.includes(type) ? s.filter(x => x !== type) : [...s, type]);
+    };
+
+    const handleDone = () => {
+        const toAdd = selected.length ? selected : FIELD_TYPES.map(f => f.type);
+        onSelect(toAdd);
+        onClose();
+    };
+
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 p-4">
             <div className="bg-white rounded-2xl shadow-2xl w-full max-w-lg p-6 max-h-[90vh] overflow-y-auto">
@@ -134,18 +146,36 @@ function TypePickerModal({ onSelect, onClose }) {
                         <X className="w-5 h-5" />
                     </button>
                 </div>
+
                 <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
-                    {FIELD_TYPES.map(ft => (
-                        <button key={ft.type} onClick={() => onSelect(ft.type)}
-                            className="flex items-center gap-2 px-3 py-2.5 border border-gray-200 rounded-xl hover:border-transparent hover:shadow-md hover:scale-[1.02] transition text-left group"
-                            style={{ "--hover-color": ft.color }}>
-                            <div className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0"
-                                style={{ backgroundColor: ft.color + "18" }}>
-                                <ft.icon className="w-4 h-4" style={{ color: ft.color }} />
-                            </div>
-                            <span className="text-sm font-medium text-gray-900 leading-tight">{ft.label}</span>
-                        </button>
-                    ))}
+                    {FIELD_TYPES.map(ft => {
+                        const isSelected = selected.includes(ft.type);
+                        return (
+                            <button key={ft.type} onClick={() => toggle(ft.type)}
+                                className={`flex items-center gap-2 px-3 py-2.5 border rounded-xl hover:shadow-md hover:scale-[1.02] transition text-left group ${isSelected ? 'border-violet-400 bg-violet-50' : 'border-gray-200'}`}
+                                style={{ "--hover-color": ft.color }}>
+                                <div className="relative">
+                                    <div className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0"
+                                        style={{ backgroundColor: ft.color + "18" }}>
+                                        <ft.icon className="w-4 h-4" style={{ color: ft.color }} />
+                                    </div>
+                                    {isSelected && (
+                                        <div className="absolute -top-1 -right-1 bg-violet-600 text-white rounded-full w-5 h-5 flex items-center justify-center shadow-sm">
+                                            <Check className="w-3 h-3" />
+                                        </div>
+                                    )}
+                                </div>
+                                <span className="text-sm font-medium text-gray-900 leading-tight">{ft.label}</span>
+                            </button>
+                        );
+                    })}
+                </div>
+
+                <div className="mt-4 flex items-center justify-end gap-2">
+                    <button onClick={() => { setSelected([]); onClose(); }}
+                        className="px-3 py-2 text-sm rounded-lg bg-gray-100 hover:bg-gray-200 text-gray-700">Cancel</button>
+                    <button onClick={handleDone}
+                        className="px-4 py-2 text-sm rounded-lg bg-violet-600 hover:bg-violet-700 text-white font-semibold">Done</button>
                 </div>
             </div>
         </div>
@@ -619,9 +649,14 @@ export default function EventPageBuilder() {
         }
     }, [slug]);
 
-    const addField = useCallback((type) => {
-        const field = makeNewField(type);
-        setSchema(s => ({ ...s, fields: [...s.fields, field] }));
+    const addField = useCallback((typeOrTypes) => {
+        if (Array.isArray(typeOrTypes)) {
+            const newFields = typeOrTypes.map(t => makeNewField(t));
+            setSchema(s => ({ ...s, fields: [...s.fields, ...newFields] }));
+        } else {
+            const field = makeNewField(typeOrTypes);
+            setSchema(s => ({ ...s, fields: [...s.fields, field] }));
+        }
         setShowTypePicker(false);
     }, []);
 
