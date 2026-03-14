@@ -50,7 +50,7 @@ export default function EventsListingPage() {
                 <div className="mb-10 text-center sm:text-left">
                     <h2 className="text-2xl sm:text-3xl font-extrabold text-base-content tracking-tight">Active Registrations</h2>
                     <p className="mt-2 text-sm sm:text-base text-muted max-w-2xl">
-                        Discover and register for upcoming programs, events, and volunteer opportunities.
+                        Join us for wonderful Islamic programs to enhance your success.
                     </p>
                 </div>
 
@@ -71,7 +71,7 @@ export default function EventsListingPage() {
                             return (
                                 <div
                                     key={event.slug}
-                                    className="group flex flex-col sm:flex-row bg-base-100 rounded-2xl shadow-sm border border-base-300 overflow-hidden hover:shadow-xl transition-all duration-300"
+                                    className="group flex flex-col sm:flex-row bg-base-100 rounded-2xl shadow-sm border border-white overflow-hidden hover:shadow-xl transition-all duration-300"
                                 >
                                     {/* Color Banner / Indicator */}
                                     <div
@@ -81,7 +81,7 @@ export default function EventsListingPage() {
                                     {/* Card Body */}
                                     <div className="flex-1 flex flex-col sm:flex-row items-start sm:items-center justify-between p-5 sm:p-6 gap-6 bg-base-100 text-base-content">
                                         <div className="flex-1 min-w-0">
-                                            <h3 className="text-xl font-bold mb-2 truncate group-hover:text-primary transition-colors">
+                                            <h3 className="text-xl font-bold mb-2 break-words whitespace-normal line-clamp-2 group-hover:text-primary transition-colors">
                                                 {event.title}
                                             </h3>
                                             {event.description && (

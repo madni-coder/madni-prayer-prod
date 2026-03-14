@@ -1,7 +1,7 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
-import { useParams } from "next/navigation";
+import { useState, useEffect } from "react";
+import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import { toast } from "react-toastify";
 import {
@@ -442,8 +442,8 @@ export default function DynamicEventPage() {
     const [schema, setSchema] = useState(null);
     const [loading, setLoading] = useState(true);
     const [formData, setFormData] = useState({});
-    const [submitted, setSubmitted] = useState(false);
     const [submitting, setSubmitting] = useState(false);
+    const router = useRouter();
 
     useEffect(() => {
         if (!slug) return;
@@ -488,10 +488,14 @@ export default function DynamicEventPage() {
             const axios = (await import("axios")).default;
             await axios.post(`/api/events/${slug}/submit`, { formData });
             console.log("Form submitted successfully.");
-            setSubmitted(true);
+            toast.success(`Registration received for ${schema?.page_title || "this event"}`);
+            setFormData({});
+            // wait for toast to show, then navigate back to events listing
+            setTimeout(() => router.push('/events'), 2000);
         } catch (error) {
             console.error("Error submitting form:", error);
-            alert("Failed to submit form. Please try again.");
+            toast.error("Failed to submit form. Please try again.");
+            setTimeout(() => router.push('/events'), 2000);
         } finally {
             setSubmitting(false);
         }
@@ -510,7 +514,6 @@ export default function DynamicEventPage() {
 
     if (!schema) return <NotFoundScreen slug={slug} isDraft={false} />;
     if (!schema.isActive) return <NotFoundScreen slug={slug} isDraft={true} />;
-    if (submitted) return <SuccessScreen schema={schema} onReset={() => { setSubmitted(false); setFormData({}); }} />;
 
     return (
         <div className="min-h-screen bg-base-200">
@@ -580,7 +583,7 @@ export default function DynamicEventPage() {
                     </div>
                 </form>
 
-               
+
             </div>
         </div>
     );
