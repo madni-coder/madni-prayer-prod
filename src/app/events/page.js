@@ -2,7 +2,8 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { ArrowLeft, CalendarRange, Clock, MapPin, Loader2 } from "lucide-react";
+import { ArrowLeft, CalendarRange, Clock, MapPin } from "lucide-react";
+import AnimatedLooader from "../../components/animatedLooader";
 
 export default function EventsListingPage() {
     const [events, setEvents] = useState([]);
@@ -55,9 +56,8 @@ export default function EventsListingPage() {
                 </div>
 
                 {loading ? (
-                    <div className="py-20 flex flex-col items-center justify-center text-muted gap-3">
-                        <Loader2 className="w-8 h-8 animate-spin" />
-                        <span className="text-sm font-medium">Loading events...</span>
+                    <div className="py-20 flex items-center justify-center">
+                        <AnimatedLooader message="Loading events..." />
                     </div>
                 ) : events.length === 0 ? (
                     <div className="bg-base-100 border-2 border-dashed border-base-200 rounded-2xl py-16 px-4 text-center">

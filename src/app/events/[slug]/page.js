@@ -6,8 +6,9 @@ import Link from "next/link";
 import { toast } from "react-toastify";
 import {
     Plus, Minus, X, ChevronDown, CheckCircle, AlertCircle,
-    Loader2, Upload, Calendar, Clock, ArrowLeft
+    Upload, Calendar, Clock, ArrowLeft
 } from "lucide-react";
+import AnimatedLooader from "../../../components/animatedLooader";
 
 // ─── Static Mock Schemas (same as in admin builder) ───────────────────────────
 const MOCK_SCHEMAS = {
@@ -443,6 +444,7 @@ export default function DynamicEventPage() {
     const [loading, setLoading] = useState(true);
     const [formData, setFormData] = useState({});
     const [submitting, setSubmitting] = useState(false);
+    const [alreadyRegistered, setAlreadyRegistered] = useState(false);
     const router = useRouter();
 
     useEffect(() => {
@@ -477,6 +479,18 @@ export default function DynamicEventPage() {
         });
     }, [slug]);
 
+    // Check localStorage to see if this device/browser already registered for this event
+    useEffect(() => {
+        if (!slug) return;
+        try {
+            const key = `registered_event_${slug}`;
+            const stored = typeof window !== "undefined" ? localStorage.getItem(key) : null;
+            if (stored) setAlreadyRegistered(true);
+        } catch (err) {
+            console.warn("localStorage unavailable", err);
+        }
+    }, [slug]);
+
     const setField = (key, val) => {
         setFormData(prev => ({ ...prev, [key]: val }));
     };
@@ -488,6 +502,14 @@ export default function DynamicEventPage() {
             const axios = (await import("axios")).default;
             await axios.post(`/api/events/${slug}/submit`, { formData });
             console.log("Form submitted successfully.");
+            // persist registration locally so the same browser cannot re-submit for same event
+            try {
+                const key = `registered_event_${slug}`;
+                localStorage.setItem(key, JSON.stringify({ time: Date.now(), data: formData }));
+                setAlreadyRegistered(true);
+            } catch (err) {
+                console.warn("Failed to persist registration locally:", err);
+            }
             toast.success(`Registration received for ${schema?.page_title || "this event"}`);
             setFormData({});
             // wait for toast to show, then navigate back to events listing
@@ -503,10 +525,9 @@ export default function DynamicEventPage() {
 
     if (loading) {
         return (
-            <div className="min-h-screen flex items-center justify-center bg-gray-50">
-                <div className="flex flex-col items-center gap-3 text-gray-500">
-                    <Loader2 className="w-8 h-8 animate-spin" />
-                    <p className="text-sm">Loading event...</p>
+            <div className="min-h-screen flex items-center justify-center bg-base-100">
+                <div className="flex items-center justify-center">
+                    <AnimatedLooader message="Loading event..." />
                 </div>
             </div>
         );
@@ -516,14 +537,14 @@ export default function DynamicEventPage() {
     if (!schema.isActive) return <NotFoundScreen slug={slug} isDraft={true} />;
 
     return (
-        <div className="min-h-screen bg-base-200">
+        <main className="min-h-screen bg-base-100 flex flex-col font-sans text-base-content">
             {/* Page Title Bar */}
             <div className="bg-base-100 px-4 py-5">
                 <div className="max-w-xl mx-auto flex items-center gap-3">
-                    <Link href="/events" className="inline-flex items-center justify-center w-8 h-8 rounded-full hover:bg-base-200 text-white transition">
+                    <Link href="/events" className="inline-flex items-center justify-center w-8 h-8 rounded-full hover:bg-base-200 text-base-content transition">
                         <ArrowLeft className="w-5 h-5" />
                     </Link>
-                    <h1 className="text-2xl font-bold text-white">Event Registration</h1>
+                    <h1 className="text-2xl font-bold text-base-content">Event Registration</h1>
                 </div>
             </div>
 
@@ -544,47 +565,57 @@ export default function DynamicEventPage() {
 
             {/* Form Card */}
             <div className="max-w-xl mx-auto px-4 py-8">
-                <form onSubmit={handleSubmit}
-                    className="bg-base-100 rounded-2xl shadow-sm border border-base-300 overflow-hidden text-white">
-                    {/* Progress indicator */}
-                    <div className="h-1 w-full bg-base-300">
-                        <div className="h-full transition-all duration-500 bg-primary"
-                            style={{
-                                width: `${Math.min(100, (Object.keys(formData).filter(k => formData[k] !== "" && formData[k] !== undefined && formData[k] !== false && !(Array.isArray(formData[k]) && formData[k].length === 0)).length / Math.max(1, schema.fields.filter(f => !["divider", "heading"].includes(f.type)).length)) * 100)}%`
-                            }} />
-                    </div>
-
-                    <div className="p-6 space-y-6">
-                        {schema.fields.map(field => (
-                            <FieldWrapper
-                                key={field.id}
-                                field={field}
-                                value={formData[field.key]}
-                                onChange={val => setField(field.key, val)}
-                            />
-                        ))}
-
-                        {/* Submit Button */}
-                        <div className="pt-2">
-                            <button
-                                type="submit"
-                                disabled={submitting}
-                                className="w-full py-3.5 text-primary-content font-bold rounded-xl hover:opacity-90 active:scale-[0.99] transition shadow-md disabled:opacity-70 flex items-center justify-center gap-2 text-base bg-primary">
-                                {submitting ? (
-                                    <>
-                                        <Loader2 className="w-5 h-5 animate-spin" />
-                                        Submitting...
-                                    </>
-                                ) : (
-                                    schema.submit_label || "Submit"
-                                )}
-                            </button>
+                {alreadyRegistered ? (
+                    <div className="bg-base-100 rounded-2xl shadow-sm border border-base-300 overflow-hidden p-6 text-center">
+                        <div className="w-20 h-20 rounded-full flex items-center justify-center mx-auto shadow-lg bg-primary">
+                            <CheckCircle className="w-10 h-10 text-primary-content" />
+                        </div>
+                        <h2 className="text-2xl font-bold mt-4 text-base-content">You are already registered</h2>
+                        <p className="opacity-70 mt-2">
+                            Our records show you've already submitted a registration for <strong>{schema.page_title}</strong>.
+                        </p>
+                        <div className="mt-5 flex gap-3 justify-center">
+                            <Link href="/events" className="px-6 py-3 font-semibold rounded-xl hover:opacity-90 transition shadow-md bg-primary text-primary-content">Back to Events</Link>
                         </div>
                     </div>
-                </form>
+                ) : (
+                    <form onSubmit={handleSubmit}
+                        className="bg-base-100 rounded-2xl shadow-sm border border-base-300 overflow-hidden text-base-content">
+                        {/* Progress indicator */}
+                        <div className="h-1 w-full bg-base-300">
+                            <div className="h-full transition-all duration-500 bg-primary"
+                                style={{
+                                    width: `${Math.min(100, (Object.keys(formData).filter(k => formData[k] !== "" && formData[k] !== undefined && formData[k] !== false && !(Array.isArray(formData[k]) && formData[k].length === 0)).length / Math.max(1, schema.fields.filter(f => !["divider", "heading"].includes(f.type)).length)) * 100)}%`
+                                }} />
+                        </div>
 
+                        <div className="p-6 space-y-6">
+                            {schema.fields.map(field => (
+                                <FieldWrapper
+                                    key={field.id}
+                                    field={field}
+                                    value={formData[field.key]}
+                                    onChange={val => setField(field.key, val)}
+                                />
+                            ))}
 
+                            {/* Submit Button */}
+                            <div className="pt-2">
+                                <button
+                                    type="submit"
+                                    disabled={submitting}
+                                    className="w-full py-3.5 text-primary-content font-bold rounded-xl hover:opacity-90 active:scale-[0.99] transition shadow-md disabled:opacity-70 flex items-center justify-center gap-2 text-base bg-primary">
+                                    {submitting ? (
+                                        <AnimatedLooader className="inline-block" message="Submitting..." />
+                                    ) : (
+                                        schema.submit_label || "Submit"
+                                    )}
+                                </button>
+                            </div>
+                        </div>
+                    </form>
+                )}
             </div>
-        </div>
+        </main>
     );
 }
