@@ -80,10 +80,11 @@ const MOCK_SCHEMAS = {
 // ─── Individual Field Renderers ───────────────────────────────────────────────
 
 function TextField({ field, value, onChange }) {
+    const inputType = field.type === "phone" ? "tel" : (field.type ?? "text");
     return (
         <input
             id={field.id}
-            type="text"
+            type={inputType}
             value={value || ""}
             onChange={e => onChange(e.target.value)}
             placeholder={field.placeholder}
