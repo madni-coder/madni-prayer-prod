@@ -383,8 +383,8 @@ export default function AdminEventsPage() {
                                                 {page.isActive ? "Live" : "Draft"}
                                             </button>
 
-                                            {/* View Frontend */}
-                                            <Link href={`/events/${page.slug}`} target="_blank"
+                                            {/* View Submissions */}
+                                            <Link href={`/admin/events/${page.slug}/submissions`}
                                                 className="flex items-center gap-1 px-2.5 py-1.5 bg-gray-50 text-gray-700 opacity-80 rounded-lg text-xs font-medium hover:bg-gray-100 transition">
                                                 <Eye className="w-3.5 h-3.5" />
                                                 Preview
