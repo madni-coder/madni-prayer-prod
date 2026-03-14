@@ -8,45 +8,44 @@ import {
     FileText, Clock, Users, ChevronRight, Search, ToggleLeft, ToggleRight
 } from "lucide-react";
 
-// ─── Mock Data (local state — no API/Prisma) ─────────────────────────────────
-const INITIAL_PAGES = [
-    {
-        id: "page_1",
-        slug: "eid-milad-2026",
-        title: "Eid Milad-un-Nabi Program 2026",
-        description: "Annual celebration registration form",
-        isActive: true,
-        fieldsCount: 9,
-        submissionsCount: 47,
-        createdAt: "2026-03-01",
-        updatedAt: "2026-03-10",
-        color: "#7c3aed",
-    },
-    {
-        id: "page_2",
-        slug: "juma-khitab-registration",
-        title: "Juma Khitab — Volunteer Registration",
-        description: "Sign-up form for khitab volunteers",
-        isActive: true,
-        fieldsCount: 6,
-        submissionsCount: 12,
-        createdAt: "2026-02-20",
-        updatedAt: "2026-03-05",
-        color: "#0284c7",
-    },
-    {
-        id: "page_3",
-        slug: "monthly-ijtima-2026",
-        title: "Monthly Ijtima — March 2026",
-        description: "Participant registration for monthly gathering",
-        isActive: false,
-        fieldsCount: 5,
-        submissionsCount: 0,
-        createdAt: "2026-03-08",
-        updatedAt: "2026-03-08",
-        color: "#059669",
-    },
-];
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 // ─── Status Badge ────────────────────────────────────────────────────────────
 function StatusBadge({ active }) {
