@@ -349,7 +349,7 @@ export default function AdminEventsPage() {
                                             {page.description && (
                                                 <p className="text-sm text-gray-700 opacity-60 mt-0.5 truncate">{sanitizeText(page.description)}</p>
                                             )}
-                                            <p className="text-xs text-gray-700 opacity-50 mt-1 font-mono">/events/{page.slug}</p>
+                                            {/* slug hidden from admin list */}
 
                                             <div className="flex items-center gap-4 mt-2 text-xs text-gray-700 opacity-60">
                                                 <span className="flex items-center gap-1">

@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import {
     ArrowLeft, Users, CalendarRange, Clock, Download, Search, Inbox
@@ -77,6 +77,7 @@ function exportCsv(columns, rows) {
 // ─── Main Page ─────────────────────────────────────────────────────────────────
 export default function SubmissionsPage() {
     const { slug } = useParams();
+    const router = useRouter();
     const [eventTitle, setEventTitle] = useState(slug);
     const [submissions, setSubmissions] = useState([]);
     const [loading, setLoading] = useState(true);
@@ -133,6 +134,25 @@ export default function SubmissionsPage() {
             JSON.stringify(row.submittedData).toLowerCase().includes(search.toLowerCase())
         )
         : normalised;
+
+    // Pagination
+    const PAGE_SIZE = 15;
+    const [currentPage, setCurrentPage] = useState(1);
+    const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
+
+    // Keep current page valid when filter/search changes
+    useEffect(() => {
+        if (currentPage > totalPages) setCurrentPage(totalPages);
+    }, [totalPages]);
+
+    useEffect(() => {
+        // reset to first page when search changes
+        setCurrentPage(1);
+    }, [search]);
+
+    const startIdx = (currentPage - 1) * PAGE_SIZE;
+    const endIdx = Math.min(filtered.length, startIdx + PAGE_SIZE);
+    const paged = filtered.slice(startIdx, endIdx);
 
     return (
         <div className="space-y-6">
@@ -236,12 +256,14 @@ export default function SubmissionsPage() {
                                 </tr>
                             </thead>
                             <tbody className="divide-y divide-gray-100">
-                                {filtered.map((row, idx) => (
+                                {paged.map((row, idx) => (
                                     <tr
                                         key={row.id}
-                                        className="hover:bg-violet-50/40 transition-colors"
+                                        onClick={() => router.push(`/admin/events/${slug}/submissions/${row.id}`)}
+                                        role="button"
+                                        className="hover:bg-violet-50/40 transition-colors cursor-pointer"
                                     >
-                                        <td className="px-4 py-3 text-gray-400 font-mono text-xs">{idx + 1}</td>
+                                        <td className="px-4 py-3 text-gray-400 font-mono text-xs">{startIdx + idx + 1}</td>
                                         <td className="px-4 py-3 text-gray-500 whitespace-nowrap text-xs">
                                             {formatDate(row.submittedAt)}
                                         </td>
@@ -256,9 +278,24 @@ export default function SubmissionsPage() {
                         </table>
                     </div>
 
-                    {/* Footer */}
-                    <div className="px-4 py-3 border-t border-gray-100 bg-gray-50 text-xs text-gray-400 text-right">
-                        Showing {filtered.length} of {submissions.length} submissions
+                    {/* Pagination Footer */}
+                    <div className="px-4 py-3 border-t border-gray-100 bg-gray-50 flex items-center justify-between text-xs text-gray-600">
+                        <div>
+                            Showing <span className="font-medium">{startIdx + 1}</span> to <span className="font-medium">{endIdx}</span> of <span className="font-medium">{filtered.length}</span> submissions
+                        </div>
+                        <div className="flex items-center gap-2">
+                            <button onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                                disabled={currentPage === 1}
+                                className="px-3 py-1 rounded-lg bg-white border text-sm text-gray-700 disabled:opacity-50">
+                                Prev
+                            </button>
+                            <div className="px-3 py-1 text-sm text-gray-700">Page {currentPage} of {totalPages}</div>
+                            <button onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                                disabled={currentPage === totalPages}
+                                className="px-3 py-1 rounded-lg bg-white border text-sm text-gray-700 disabled:opacity-50">
+                                Next
+                            </button>
+                        </div>
                     </div>
                 </div>
             )}
