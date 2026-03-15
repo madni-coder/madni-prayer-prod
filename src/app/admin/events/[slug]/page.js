@@ -15,8 +15,8 @@ import {
 export const FIELD_TYPES = [
     { type: "address", label: "Address", icon: MapPin, color: "#10b981" },
     { type: "masjid", label: "Area Masjid", icon: Moon, color: "#f59e0b" },
-    { type: "textarea", label: "Long Text", icon: AlignLeft, color: "#0284c7" },
-    { type: "number", label: "Number", icon: Hash, color: "#0891b2" },
+    { type: "text", label: "Full Name", icon: Type, color: "#059669" },
+    { type: "notes", label: "Notes", icon: AlignLeft, color: "#0284c7" },
     { type: "email", label: "Email", icon: Type, color: "#059669" },
     { type: "phone", label: "Phone", icon: Type, color: "#16a34a" },
     { type: "dropdown", label: "Dropdown", icon: ChevronDownSquare, color: "#d97706" },
@@ -95,7 +95,8 @@ function makeNewField(type) {
     if (["dropdown", "radio", "checkboxGroup"].includes(type)) {
         base.options = ["Option 1", "Option 2", "Option 3"];
     }
-    if (type === "number") { base.min = ""; base.max = ""; }
+    if (type === "text") { base.placeholder = "Enter your full name"; }
+    if (type === "notes") { base.placeholder = "Enter notes..."; }
     if (type === "array") { base.itemType = "text"; }
     if (type === "button") { base.action = "popup"; base.popupContent = "Message here"; base.toastMessage = ""; base.toastType = "success"; }
     if (type === "toast") { base.toastMessage = "Action triggered!"; base.toastType = "success"; }
@@ -532,7 +533,9 @@ function LivePreviewModal({ schema, onClose }) {
     const renderInput = (f) => {
         const baseClass = "w-full px-4 py-2.5 border border-gray-200 rounded-xl text-sm text-gray-700 bg-white pointer-events-none";
         switch (f.type) {
-            case "textarea": return <textarea placeholder={f.placeholder} rows={3} className={baseClass + " resize-none"} readOnly />;
+            // textarea is now used as Full Name (single-line)
+            case "text": return <input placeholder={f.placeholder} className={baseClass} readOnly />;
+            case "notes": return <textarea placeholder={f.placeholder} rows={3} className={baseClass + " resize-none"} readOnly />;
             case "dropdown": return <div className="relative"><select className={baseClass + " appearance-none"} readOnly><option>{f.placeholder || "— Select —"}</option></select><ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-700 opacity-50" /></div>;
             case "radio": return <div className="flex flex-wrap gap-2">{(f.options || ["Option 1"]).map(o => <div key={o} className="px-4 py-2 rounded-xl border border-gray-200 text-sm text-gray-700 flex items-center gap-2"><div className="w-4 h-4 rounded-full border-2 border-gray-200" />{o}</div>)}</div>;
             case "checkbox": return <div className="flex items-start gap-3"><div className="w-5 h-5 rounded-md border-2 border-gray-200 mt-0.5" /><span className="text-sm text-gray-700 leading-snug">{f.label}</span></div>;

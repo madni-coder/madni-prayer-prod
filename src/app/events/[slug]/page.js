@@ -355,7 +355,14 @@ function FieldWrapper({ field, value, onChange }) {
 
     const renderInput = () => {
         switch (field.type) {
-            case "textarea": return <TextareaField field={field} value={value} onChange={onChange} />;
+            case "textarea":
+                // Treat legacy/incorrect textarea fields named 'name' as single-line text inputs
+                if (/name/i.test(field.label || "") || /name/i.test(field.key || "")) {
+                    return <TextField field={{ ...field, type: "text" }} value={value} onChange={onChange} />;
+                }
+                return <TextareaField field={field} value={value} onChange={onChange} />;
+            case "notes":
+                return <TextareaField field={field} value={value} onChange={onChange} />;
             case "number": return <NumberField field={field} value={value} onChange={onChange} />;
             case "email": return <TextField field={{ ...field, type: "email" }} value={value} onChange={onChange} />;
             case "phone": return <TextField field={{ ...field, type: "tel" }} value={value} onChange={onChange} />;

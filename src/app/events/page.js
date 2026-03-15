@@ -5,6 +5,24 @@ import Link from "next/link";
 import { ArrowLeft, CalendarRange, Clock, MapPin } from "lucide-react";
 import AnimatedLooader from "../../components/animatedLooader";
 
+// Remove trailing random id (e.g. " Wy36gq" or "-wy36gq") used in some titles
+function sanitizeText(text) {
+    if (text == null) return "";
+    const str = String(text);
+    const withoutTags = str.replace(/<[^>]*>/g, "");
+    if (typeof document !== "undefined") {
+        const textarea = document.createElement("textarea");
+        textarea.innerHTML = withoutTags;
+        return textarea.value;
+    }
+    return withoutTags;
+}
+
+function displayTitle(text) {
+    const clean = sanitizeText(text);
+    return clean.replace(/(?:\s|[-_])?[A-Za-z0-9]{6}$/i, "");
+}
+
 export default function EventsListingPage() {
     const [events, setEvents] = useState([]);
     const [loading, setLoading] = useState(true);
@@ -81,7 +99,7 @@ export default function EventsListingPage() {
                                     <div className="flex-1 flex flex-col sm:flex-row items-start sm:items-center justify-between p-5 sm:p-6 gap-6 bg-base-100 text-base-content">
                                         <div className="flex-1 min-w-0">
                                             <h3 className="text-xl font-bold mb-2 break-words whitespace-normal line-clamp-2 group-hover:text-primary transition-colors">
-                                                {event.title}
+                                                {displayTitle(event.title)}
                                             </h3>
                                             {event.description && (
                                                 <p className="text-sm opacity-70 text-muted line-clamp-2">
