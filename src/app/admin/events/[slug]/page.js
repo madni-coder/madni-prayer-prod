@@ -742,7 +742,6 @@ export default function EventPageBuilder() {
                 </Link>
                 <div className="flex-1 min-w-0">
                     <h1 className="text-sm font-semibold text-gray-900 truncate">{displayTitle(schema.page_title)}</h1>
-                    <p className="text-xs text-gray-700 opacity-50 font-mono">/events/{schema.page_slug}</p>
                 </div>
                 <div className="flex items-center gap-2 flex-shrink-0">
                     <button onClick={handleSave}
