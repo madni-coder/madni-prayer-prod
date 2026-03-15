@@ -102,7 +102,7 @@ export default function EventsListingPage() {
                                                 {displayTitle(event.title)}
                                             </h3>
                                             {event.description && (
-                                                <p className="text-sm opacity-70 text-muted line-clamp-2">
+                                                <p className="text-sm opacity-70 text-info font-bold line-clamp-2">
                                                     {event.description}
                                                 </p>
                                             )}

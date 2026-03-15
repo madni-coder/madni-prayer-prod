@@ -32,36 +32,8 @@ export const FIELD_TYPES = [
     { type: "image", label: "Image Upload", icon: Upload, color: "#10b981" },
 ];
 
-// ─── Mock initial schema ──────────────────────────────────────────────────────
-const DEMO_SCHEMA = {
-    "eid-milad-2026": {
-        page_title: "Eid Milad-un-Nabi Program 2026",
-        page_slug: "eid-milad-2026",
-        description: "Annual celebration registration form",
-        submit_label: "Register Now",
-        color: "#7c3aed",
-        isActive: true,
-        fields: [
-            { id: "f1", key: "full_name", label: "Full Name", type: "text", placeholder: "Enter your full name", required: true, helperText: "As per your CNIC" },
-            { id: "f2", key: "age", label: "Age", type: "number", min: 5, max: 120, required: true },
-            { id: "f3", key: "gender", label: "Gender", type: "radio", options: ["Male", "Female"], required: true },
-            { id: "f4", key: "city", label: "City", type: "dropdown", options: ["Karachi", "Lahore", "Islamabad", "Quetta", "Other"], required: false },
-            { id: "f5", key: "confirm_info", label: "I confirm my information is correct", type: "checkbox", required: true },
-        ],
-    },
-    "juma-khitab-registration": {
-        page_title: "Juma Khitab — Volunteer Registration",
-        page_slug: "juma-khitab-registration",
-        description: "Sign-up form for khitab volunteers",
-        submit_label: "Sign Up",
-        color: "#0284c7",
-        isActive: true,
-        fields: [
-            { id: "f1", key: "full_name", label: "Full Name", type: "text", placeholder: "Your name", required: true },
-            { id: "f2", key: "contact", label: "Contact Number", type: "phone", placeholder: "03xx-xxxxxxx", required: true },
-        ],
-    },
-};
+// ─── Mock initial schema (removed demo entries) ─────────────────────────────
+const DEMO_SCHEMA = {};
 
 const BLANK_SCHEMA = (slug) => ({
     page_title: slug.split("-").map(s => s.charAt(0).toUpperCase() + s.slice(1)).join(" "),

@@ -29,72 +29,8 @@ function displayTitle(text) {
     return clean.replace(/(?:\s|[-_])[A-Za-z0-9]{6}$/i, "").trim();
 }
 
-// ─── Static Mock Schemas (same as in admin builder) ───────────────────────────
-const MOCK_SCHEMAS = {
-    "eid-milad-2026": {
-        page_title: "Eid Milad-un-Nabi Program 2026",
-        page_slug: "eid-milad-2026",
-        description: "Join us for the annual Eid Milad-un-Nabi celebration. Fill in your details below to register and participate in the event.",
-        submit_label: "Register Now",
-        color: "#7c3aed",
-        isActive: true,
-        fields: [
-            { id: "f1", key: "full_name", label: "Full Name", type: "text", placeholder: "Enter your full name", required: true, helperText: "As per your CNIC" },
-            { id: "f2", key: "age", label: "Age", type: "number", placeholder: "Your age", min: 5, max: 120, required: true },
-            { id: "f3", key: "gender", label: "Gender", type: "radio", options: ["Male", "Female"], required: true },
-            { id: "f4", key: "city", label: "City", type: "dropdown", options: ["Karachi", "Lahore", "Islamabad", "Quetta", "Peshawar", "Other"], required: false, placeholder: "Select your city" },
-            { id: "f5", key: "contact", label: "Contact Number", type: "phone", placeholder: "03xx-xxxxxxx", required: true },
-            { id: "f6", key: "email", label: "Email Address", type: "email", placeholder: "you@example.com", required: false, helperText: "We'll send confirmation here" },
-            {
-                id: "f7", key: "section_sep", type: "divider"
-            },
-            { id: "fh2", key: "attend_section", type: "heading", text: "Attendance Preferences", size: "h3" },
-            { id: "f8", key: "program_session", label: "Preferred Session", type: "radio", options: ["Morning (9:00 AM)", "Evening (6:00 PM)", "Both"], required: true },
-            { id: "f9", key: "food_pref", label: "Food Preference", type: "checkboxGroup", options: ["Vegetarian", "Non-Vegetarian", "No Preference"], required: false },
-            { id: "f10", key: "event_address", label: "Event Address", type: "address", required: false },
-            { id: "f11", key: "languages", label: "Languages Known", type: "array", itemType: "text", placeholder: "Add a language" },
-            {
-                id: "f12", key: "event_rules_btn", label: "📋 View Event Rules", type: "button",
-                action: "popup", helperText: "Click to read before registering",
-                popupTitle: "Event Rules & Guidelines",
-                popupContent: "1. Please arrive 15 minutes early.\n2. Dress modestly — Islamic attire preferred.\n3. Phones on silent during the program.\n4. Children must be accompanied by a guardian.\n5. Follow all instructions from the volunteers."
-            },
-            {
-                id: "f13", key: "reminder_btn", label: "🔔 Set Reminder", type: "button",
-                action: "toast", toastMessage: "Reminder set! Event is on Friday, 15th March 2026 at 6:00 PM.", toastType: "success"
-            },
-            { id: "f14", key: "accept_terms", label: "I agree to the event rules and guidelines", type: "checkbox", required: true },
-        ],
-    },
-    "juma-khitab-registration": {
-        page_title: "Juma Khitab — Volunteer Registration",
-        page_slug: "juma-khitab-registration",
-        description: "Sign up to volunteer for the Friday Juma Khitab. We need enthusiastic volunteers to help organize.",
-        submit_label: "Sign Up as Volunteer",
-        color: "#0284c7",
-        isActive: true,
-        fields: [
-            { id: "f1", key: "full_name", label: "Full Name", type: "text", placeholder: "Your full name", required: true },
-            { id: "f2", key: "contact", label: "Phone Number", type: "phone", placeholder: "03xx-xxxxxxx", required: true },
-            { id: "f3", key: "role", label: "Preferred Role", type: "dropdown", options: ["Crowd Management", "Mic / Audio", "Food Distribution", "Parking", "Other"], required: true, placeholder: "Choose a role" },
-            { id: "f4", key: "experience", label: "Previous Experience", type: "textarea", placeholder: "Briefly describe any relevant volunteer experience", required: false },
-            { id: "f5", key: "availability", label: "Day of Availability", type: "checkboxGroup", options: ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"], required: true },
-            { id: "f6", key: "confirm", label: "I confirm I am available and committed to volunteer", type: "checkbox", required: true },
-        ],
-    },
-    "monthly-ijtima-2026": {
-        page_title: "Monthly Ijtima — March 2026",
-        page_slug: "monthly-ijtima-2026",
-        description: "Register to attend the monthly gathering.",
-        submit_label: "Register",
-        color: "#059669",
-        isActive: false,
-        fields: [
-            { id: "f1", key: "name", label: "Your Name", type: "text", required: true, placeholder: "Full name" },
-            { id: "f2", key: "phone", label: "Phone", type: "phone", required: true, placeholder: "Phone number" },
-        ],
-    },
-};
+// ─── Static Mock Schemas (removed demo data) ────────────────────────────────
+const MOCK_SCHEMAS = {};
 
 // ─── Individual Field Renderers ───────────────────────────────────────────────
 
@@ -672,7 +608,7 @@ export default function DynamicEventPage() {
                     <div className="flex-1">
                         <div className="text-2xl font-bold leading-tight text-primary ">{displayTitle(schema.page_title)}</div>
                         {schema.description && (
-                            <div className="text-l text-base-content opacity-80 mt-1 whitespace-pre-line leading-relaxed">{schema.description}</div>
+                            <div className="text-l text-white font-bold opacity-80 mt-1 whitespace-pre-line leading-relaxed">{schema.description}</div>
                         )}
                     </div>
                 </div>
