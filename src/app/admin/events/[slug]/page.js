@@ -100,7 +100,7 @@ function makeNewField(type) {
     if (type === "array") { base.itemType = "text"; }
     if (type === "button") { base.action = "popup"; base.popupContent = "Message here"; base.toastMessage = ""; base.toastType = "success"; }
     if (type === "toast") { base.toastMessage = "Action triggered!"; base.toastType = "success"; }
-    if (type === "popup") { base.popupTitle = "Info"; base.popupContent = "Content here"; }
+    if (type === "popup") { base.popupTitle = "Info"; base.popupContent = "Content here"; base.triggerType = "button"; }
     if (type === "heading") { base.text = "Section Heading"; base.size = "h2"; }
     return base;
 }
@@ -352,6 +352,14 @@ function FieldConfig({ field, onChange }) {
             {/* Popup */}
             {field.type === "popup" && (
                 <>
+                    <div>
+                        <label className="block text-xs font-medium text-gray-700 opacity-60 mb-1">Trigger Type</label>
+                        <select value={field.triggerType || "button"} onChange={e => set("triggerType", e.target.value)}
+                            className="w-full px-2.5 py-1.5 text-sm border border-gray-200 rounded-lg text-gray-900 bg-white">
+                            <option value="button">Button</option>
+                            <option value="underline">Underline / Link</option>
+                        </select>
+                    </div>
                     {labelInput("Popup Title", "popupTitle", "text", "Title of the popup")}
                     <div>
                         <label className="block text-xs font-medium text-gray-700 opacity-60 mb-1">Popup Content</label>

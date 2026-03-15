@@ -313,15 +313,64 @@ function ButtonField({ field, color }) {
 
             {/* Popup Modal */}
             {popupOpen && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 p-4">
-                    <div className="bg-white rounded-2xl shadow-2xl max-w-sm w-full p-6">
+                <div className="fixed inset-0 z-50 flex items-start sm:items-center justify-center bg-black bg-opacity-50 p-4 overflow-y-auto">
+                    <div className="bg-base-100 rounded-2xl shadow-2xl max-w-lg w-full p-6 max-h-[80vh] overflow-y-auto text-base-content">
                         <div className="flex items-center justify-between mb-4">
-                            <h3 className="font-semibold text-gray-900">{field.popupTitle || "Information"}</h3>
-                            <button onClick={() => setPopupOpen(false)} className="p-1 text-gray-400 hover:text-gray-600 rounded">
+                            <h3 className="font-semibold text-base-content">{field.popupTitle || "Information"}</h3>
+                            <button onClick={() => setPopupOpen(false)} className="p-1 text-base-content/60 hover:text-base-content rounded">
                                 <X className="w-5 h-5" />
                             </button>
                         </div>
-                        <div className="text-sm text-gray-600 whitespace-pre-line leading-relaxed">
+                        <div className="text-sm text-base-content whitespace-pre-line leading-relaxed">
+                            {field.popupContent}
+                        </div>
+                        <button onClick={() => setPopupOpen(false)}
+                            className="mt-5 w-full py-2 text-sm font-semibold text-primary-content rounded-xl transition hover:opacity-90 bg-primary">
+                            Got it!
+                        </button>
+                    </div>
+                </div>
+            )}
+        </>
+    );
+}
+
+function PopupField({ field }) {
+    const [popupOpen, setPopupOpen] = useState(false);
+
+    const handleClick = () => {
+        setPopupOpen(true);
+    };
+
+    const triggerType = field.triggerType || field.display || "button";
+
+    return (
+        <>
+            {triggerType === "button" ? (
+                <button type="button" onClick={handleClick}
+                    className="flex items-center gap-2 px-5 py-2.5 text-sm font-semibold text-primary-content rounded-xl hover:opacity-90 active:scale-95 transition shadow-sm bg-primary">
+                    {field.label || "View"}
+                </button>
+            ) : (
+                <button type="button" onClick={handleClick} className="text-sm underline text-white font-semibold">
+                    {field.label || "View"}
+                </button>
+            )}
+
+            {field.helperText && (
+                <p className="text-xs font-bold text-white mt-1">{field.helperText}</p>
+            )}
+
+            {popupOpen && (
+                <div className="fixed inset-0 z-50 flex items-start sm:items-center justify-center bg-black bg-opacity-50 p-4 overflow-y-auto">
+                    <div className="bg-base-100 rounded-2xl shadow-2xl max-w-lg w-full p-6 max-h-[80vh] overflow-y-auto text-base-content">
+                        <div className="flex items-center justify-between mb-4">
+                            <h3 className="font-semibold text-base-content">{field.popupTitle || "Information"}</h3>
+                            <button onClick={() => setPopupOpen(false)} className="p-1 text-base-content/60 hover:text-base-content rounded">
+                                <X className="w-5 h-5" />
+                            </button>
+                        </div>
+                        <div className="text-sm text-base-content whitespace-pre-line leading-relaxed">
                             {field.popupContent}
                         </div>
                         <button onClick={() => setPopupOpen(false)}
@@ -348,6 +397,9 @@ function FieldWrapper({ field, value, onChange }) {
             p: "text-sm font-bold text-white",
         };
         return <Tag className={classes[field.size || "h3"]}>{field.text}</Tag>;
+    }
+    if (field.type === "popup") {
+        return <PopupField field={field} />;
     }
     if (field.type === "button") {
         return <ButtonField field={field} />;
