@@ -10,6 +10,25 @@ import {
 } from "lucide-react";
 import AnimatedLooader from "../../../components/animatedLooader";
 
+// Sanitize and display-friendly title (strip trailing random slug parts)
+function sanitizeText(text) {
+    if (text == null) return "";
+    const str = String(text);
+    const withoutTags = str.replace(/<[^>]*>/g, "");
+    if (typeof document !== "undefined") {
+        const textarea = document.createElement("textarea");
+        textarea.innerHTML = withoutTags;
+        return textarea.value;
+    }
+    return withoutTags;
+}
+
+function displayTitle(text) {
+    const clean = sanitizeText(text);
+    // remove trailing space or hyphen/underscore + 6 alphanumeric chars (common unique suffix)
+    return clean.replace(/(?:\s|[-_])[A-Za-z0-9]{6}$/i, "").trim();
+}
+
 // ─── Static Mock Schemas (same as in admin builder) ───────────────────────────
 const MOCK_SCHEMAS = {
     "eid-milad-2026": {
@@ -160,7 +179,7 @@ function RadioField({ field, value, onChange }) {
                         onChange={() => onChange(opt)}
                         className="sr-only"
                     />
-                    {value === opt ? <CheckCircle className="w-4 h-4 flex-shrink-0" /> : <div className="w-4 h-4 rounded-full border-2 border-base-300 flex-shrink-0" />}
+                    {value === opt ? <CheckCircle className="w-4 h-4 shrink-0 text-white" /> : <div className="w-4 h-4 rounded-full border-2 border-white shrink-0" />}
                     {opt}
                 </label>
             ))}
@@ -463,7 +482,7 @@ function SuccessScreen({ schema, onReset }) {
                 <div>
                     <h2 className="text-2xl font-bold mt-4 text-base-content">Registration Complete!</h2>
                     <p className="opacity-70 mt-2">
-                        Your registration for <strong>{schema.page_title}</strong> has been received. We'll contact you soon.
+                        Your registration for <strong>{displayTitle(schema.page_title)}</strong> has been received. We'll contact you soon.
                     </p>
                 </div>
                 <button onClick={onReset}
@@ -593,7 +612,7 @@ export default function DynamicEventPage() {
             } catch (err) {
                 console.warn("Failed to persist registration locally:", err);
             }
-            toast.success(`Registration received for ${schema?.page_title || "this event"}`);
+            toast.success(`Registration received for ${displayTitle(schema?.page_title) || "this event"}`);
             setFormData({});
             // wait for toast to show, then navigate back to events listing
             setTimeout(() => router.push('/events'), 2000);
@@ -644,16 +663,16 @@ export default function DynamicEventPage() {
                 </div>
             </div>
 
-            {/* Event Announcement Card */}
+            {/* Event Announcement (title only, no filled tile) */}
             <div className="max-w-xl mx-auto px-4 pt-4">
-                <div className="flex items-center gap-4 px-4 py-4 bg-primary text-primary-content rounded-xl shadow-md">
-                    <div className="flex-shrink-0 w-11 h-11 rounded-full bg-primary-content/20 flex items-center justify-center">
-                        <Calendar className="w-5 h-5" />
+                <div className="flex items-start gap-3">
+                    <div className="w-9 h-9 rounded-full bg-primary-content/10 flex items-center justify-center">
+                        <Calendar className="w-6 h-6 text-primary" />
                     </div>
-                    <div>
-                        <div className="text-base font-bold leading-tight">{schema.page_title}</div>
+                    <div className="flex-1">
+                        <div className="text-2xl font-bold leading-tight text-primary ">{displayTitle(schema.page_title)}</div>
                         {schema.description && (
-                            <div className="text-sm opacity-90 mt-0.5 line-clamp-1">{schema.description}</div>
+                            <div className="text-l text-base-content opacity-80 mt-1 whitespace-pre-line leading-relaxed">{schema.description}</div>
                         )}
                     </div>
                 </div>
@@ -668,7 +687,7 @@ export default function DynamicEventPage() {
                         </div>
                         <h2 className="text-2xl font-bold mt-4 text-base-content">You are already registered</h2>
                         <p className="opacity-70 mt-2">
-                            Our records show you've already submitted a registration for <strong>{schema.page_title}</strong>.
+                            Our records show you've already submitted a registration for <strong>{displayTitle(schema.page_title)}</strong>.
                         </p>
                         <div className="mt-5 flex gap-3 justify-center">
                             <Link href="/events" className="px-6 py-3 font-semibold rounded-xl hover:opacity-90 transition shadow-md bg-primary text-primary-content">Back to Events</Link>
