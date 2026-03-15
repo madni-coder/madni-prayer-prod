@@ -172,7 +172,7 @@ function CheckboxField({ field, value, onChange }) {
     return (
         <label className="flex items-start gap-3 cursor-pointer group">
             <div onClick={() => onChange(!value)}
-                className={`w-5 h-5 rounded-md border-2 flex items-center justify-center flex-shrink-0 mt-0.5 transition ${value ? "border-transparent bg-primary" : "border-base-300 group-hover:border-base-200"}`}>
+                className={`w-5 h-5 rounded-md border-2 flex items-center justify-center flex-shrink-0 mt-0.5 transition ${value ? "border-transparent bg-primary" : "border-white group-hover:border-white"}`}>
                 {value && <CheckCircle className="w-3.5 h-3.5 text-primary-content" />}
             </div>
             <span className="text-sm font-bold text-white leading-snug">{field.label}</span>
@@ -191,7 +191,7 @@ function CheckboxGroupField({ field, value = [], onChange }) {
                 const checked = Array.isArray(value) && value.includes(opt);
                 return (
                     <label key={opt}
-                        className={`flex items-center gap-2 px-3.5 py-2 rounded-xl border cursor-pointer transition text-sm font-medium ${checked ? "border-transparent text-primary-content bg-primary" : "border-base-300 text-white font-bold hover:border-base-200"}`}>
+                        className={`flex items-center gap-2 px-3.5 py-2 rounded-xl border cursor-pointer transition text-sm font-medium ${checked ? "border-transparent text-primary-content bg-primary" : "border-white text-white font-bold hover:border-white"}`}>
                         <input type="checkbox" className="sr-only" checked={checked} onChange={() => toggle(opt)} />
                         {opt}
                     </label>
@@ -512,8 +512,10 @@ export default function DynamicEventPage() {
     // Only show NotFound after we've actually attempted a fetch.
     useEffect(() => {
         let t;
+        // Wait a bit longer before showing the NotFound screen to avoid
+        // a brief flash while the client data hydrates / the API responds.
         if (attemptedFetch && !loading && !schema) {
-            t = setTimeout(() => setShowNotFound(true), 350);
+            t = setTimeout(() => setShowNotFound(true), 800);
         } else {
             setShowNotFound(false);
         }

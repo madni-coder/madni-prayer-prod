@@ -54,7 +54,7 @@ export default function EventsListingPage() {
                         <Link href="/" className="p-2 -ml-2 rounded-full hover:bg-base-200 text-muted transition">
                             <ArrowLeft className="w-5 h-5" />
                         </Link>
-                        <h1 className="text-xl font-bold text-base-content flex items-center gap-2">
+                        <h1 className="text-2xl font-bold text-primary flex items-center gap-2">
                             <CalendarRange className="w-6 h-6 text-primary" />
                             Events & Programs
                         </h1>
@@ -66,9 +66,9 @@ export default function EventsListingPage() {
             <div className="flex-1 w-full max-w-5xl mx-auto px-4 py-8 sm:px-6 lg:px-8">
                 {/* Hero / Info */}
                 <div className="mb-10 text-center sm:text-left">
-                    <h2 className="text-2xl sm:text-3xl font-extrabold text-base-content tracking-tight">Active Registrations</h2>
+                    <h2 className="text-2xl sm:text-3xl font-extrabold text-warning tracking-tight">Active Events</h2>
                     <p className="mt-2 text-sm sm:text-base text-muted max-w-2xl">
-                        Join us for wonderful Islamic programs to enhance your success.
+                        Join us for wonderful Islamic programs/events to enhance your success.
                     </p>
                 </div>
 

@@ -138,7 +138,7 @@ function CreateModal({ onConfirm, onCancel }) {
                 </div>
                 <form onSubmit={handleSubmit} className="space-y-4">
                     <div>
-                        <label className="block text-sm font-medium text-gray-900 mb-1">Page Title *</label>
+                        <label className="block text-sm font-medium text-gray-900 mb-1">Event Title *</label>
                         <input
                             type="text"
                             value={title}
