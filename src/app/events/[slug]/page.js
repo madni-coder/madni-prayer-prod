@@ -470,37 +470,58 @@ export default function DynamicEventPage() {
     useEffect(() => {
         if (!slug) return;
         const controller = new AbortController();
+        let timeoutId = null;
+        let cancelled = false;
         setLoading(true);
         setAttemptedFetch(true);
-        import("axios").then((axios) => {
-            axios.default.get(`/api/events/${slug}`, { signal: controller.signal })
-                .then((res) => {
-                    if (res.data?.event) {
-                        const ev = res.data.event;
-                        setSchema({
-                            page_title: ev.title,
-                            page_slug: ev.slug,
-                            description: ev.description,
-                            submit_label: ev.submit_label,
-                            color: ev.theme_color,
-                            isActive: ev.is_active,
-                            fields: ev.schema_fields || []
-                        });
-                    } else {
-                        // fallback or not found, keeping MOCK_SCHEMAS for visual fail-safe
-                        setSchema(MOCK_SCHEMAS[slug] || null);
-                    }
-                })
-                .catch((err) => {
-                    if (err?.code === "ERR_CANCELED" || err?.name === "AbortError") return;
-                    console.error("Failed to load schema:", err);
+
+        const maxRetries = 3;
+
+        const fetchWithRetries = async (attempt = 0) => {
+            try {
+                const { default: axios } = await import("axios");
+                const res = await axios.get(`/api/events/${slug}`, { signal: controller.signal, timeout: 15000 });
+                if (cancelled) return;
+                if (res.data?.event) {
+                    const ev = res.data.event;
+                    setSchema({
+                        page_title: ev.title,
+                        page_slug: ev.slug,
+                        description: ev.description,
+                        submit_label: ev.submit_label,
+                        color: ev.theme_color,
+                        isActive: ev.is_active,
+                        fields: ev.schema_fields || []
+                    });
+                } else {
+                    // fallback or not found, keeping MOCK_SCHEMAS for visual fail-safe
                     setSchema(MOCK_SCHEMAS[slug] || null);
-                })
-                .finally(() => {
-                    setLoading(false);
-                });
-        });
-        return () => { controller.abort(); };
+                }
+                setLoading(false);
+            } catch (err) {
+                if (err?.code === "ERR_CANCELED" || err?.name === "AbortError") return;
+                const isNetworkError = !err.response;
+                // On network errors, retry a few times with exponential backoff
+                if (isNetworkError && attempt < maxRetries) {
+                    const backoff = Math.pow(2, attempt) * 1000; // 1s, 2s, 4s
+                    timeoutId = setTimeout(() => {
+                        if (!controller.signal.aborted && !cancelled) fetchWithRetries(attempt + 1);
+                    }, backoff);
+                    return;
+                }
+                console.error("Failed to load schema:", err);
+                setSchema(MOCK_SCHEMAS[slug] || null);
+                setLoading(false);
+            }
+        };
+
+        fetchWithRetries(0);
+
+        return () => {
+            cancelled = true;
+            controller.abort();
+            if (timeoutId) clearTimeout(timeoutId);
+        };
     }, [slug]);
 
     // Check localStorage to see if this device/browser already registered for this event
