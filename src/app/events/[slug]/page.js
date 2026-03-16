@@ -387,6 +387,16 @@ function FieldWrapper({ field, value, onChange }) {
                     <input type="file" accept="image/*" className="sr-only" />
                 </label>
             );
+            case "links":
+                return (
+                    <div className="flex flex-col gap-2">
+                        {(field.links || []).map((ln, i) => (
+                            <a key={i} href={ln.url || "#"} target="_blank" rel="noopener noreferrer" className="text-sm underline text-white font-semibold">
+                                {ln.name || ln.url}
+                            </a>
+                        ))}
+                    </div>
+                );
             default: return <TextField field={field} value={value} onChange={onChange} />;
         }
     };

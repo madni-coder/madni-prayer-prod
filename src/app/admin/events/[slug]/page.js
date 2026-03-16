@@ -8,7 +8,7 @@ import {
     ChevronDown, ChevronUp, Save, Check, CheckCircle, X,
     Type, Hash, AlignLeft, ChevronDownSquare, CircleDot,
     CheckSquare, List, MousePointerClick, Bell, Layers,
-    Minus, Heading, Upload, Copy, MapPin, Moon
+    Minus, Heading, Upload, Copy, MapPin, Moon, Link as LinkIcon
 } from "lucide-react";
 
 // ─── Field type definitions ───────────────────────────────────────────────────
@@ -29,6 +29,7 @@ export const FIELD_TYPES = [
     { type: "popup", label: "Popup / Modal", icon: Layers, color: "#64748b" },
     { type: "divider", label: "Divider", icon: Minus, color: "#94a3b8" },
     { type: "heading", label: "Heading/Text", icon: Heading, color: "#475569" },
+    { type: "links", label: "Links", icon: LinkIcon, color: "#06b6d4" },
     { type: "image", label: "Image Upload", icon: Upload, color: "#10b981" },
 ];
 
@@ -73,6 +74,7 @@ function makeNewField(type) {
     if (type === "button") { base.action = "popup"; base.popupContent = "Message here"; base.toastMessage = ""; base.toastType = "success"; }
     if (type === "toast") { base.toastMessage = "Action triggered!"; base.toastType = "success"; }
     if (type === "popup") { base.popupTitle = "Info"; base.popupContent = "Content here"; base.triggerType = "button"; }
+    if (type === "links") { base.links = [{ name: "Link 1", url: "" }]; }
     if (type === "heading") { base.text = "Section Heading"; base.size = "h2"; }
     return base;
 }
@@ -271,6 +273,51 @@ function FieldConfig({ field, onChange }) {
                         <option value="number">Number</option>
                         <option value="email">Email</option>
                     </select>
+                </div>
+            )}
+
+            {/* Links editor */}
+            {field.type === "links" && (
+                <div>
+                    <label className="block text-xs font-medium text-gray-700 opacity-60 mb-2">Links</label>
+                    <div className="space-y-2">
+                        {(field.links || []).map((l, i) => (
+                            <div key={i} className="grid grid-cols-12 gap-2 items-center">
+                                <input
+                                    type="text"
+                                    value={l.name || ""}
+                                    onChange={e => {
+                                        const next = [...(field.links || [])];
+                                        next[i] = { ...next[i], name: e.target.value };
+                                        set("links", next);
+                                    }}
+                                    placeholder="Link name"
+                                    className="col-span-5 px-2.5 py-1.5 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-violet-400 text-gray-900 bg-white"
+                                />
+                                <input
+                                    type="text"
+                                    value={l.url || ""}
+                                    onChange={e => {
+                                        const next = [...(field.links || [])];
+                                        next[i] = { ...next[i], url: e.target.value };
+                                        set("links", next);
+                                    }}
+                                    placeholder="https://example.com"
+                                    className="col-span-6 px-2.5 py-1.5 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-violet-400 text-gray-900 bg-white"
+                                />
+                                <button onClick={() => {
+                                    const next = (field.links || []).filter((_, idx) => idx !== i);
+                                    set("links", next);
+                                }} className="col-span-1 p-2 text-gray-700 opacity-50 hover:text-red-500 rounded transition">
+                                    <X className="w-4 h-4" />
+                                </button>
+                            </div>
+                        ))}
+                        <button onClick={() => set("links", [...(field.links || []), { name: `Link ${(field.links || []).length + 1}`, url: "" }])}
+                            className="text-xs text-violet-600 hover:text-violet-700 font-medium flex items-center gap-1 mt-1">
+                            <Plus className="w-3.5 h-3.5" /> Add Link
+                        </button>
+                    </div>
                 </div>
             )}
 
@@ -535,6 +582,16 @@ function LivePreviewModal({ schema, onClose }) {
             case "address": return <div className="space-y-3"><input placeholder="Locality / Area" className={baseClass} readOnly /><input placeholder="City" className={baseClass} readOnly /></div>;
             case "masjid": return <div className="space-y-3"><input placeholder="Name of Masjid" className={baseClass} readOnly /><input placeholder="Locality / Area" className={baseClass} readOnly /><input placeholder="City" className={baseClass} readOnly /></div>;
             case "array": return <div className="space-y-2"><input placeholder={f.placeholder || "Item 1"} className={baseClass} readOnly /><div className="text-sm text-violet-600 font-medium flex items-center gap-1"><Plus className="w-4 h-4" /> Add item</div></div>;
+            case "links":
+                return (
+                    <div className="flex flex-col gap-2">
+                        {(f.links || []).map((ln, idx) => (
+                            <a key={idx} href={ln.url || "#"} target="_blank" rel="noopener noreferrer" className="text-sm text-violet-600 hover:underline">
+                                {ln.name || ln.url}
+                            </a>
+                        ))}
+                    </div>
+                );
             default: return <input type={f.type === "number" ? "number" : "text"} placeholder={f.placeholder} className={baseClass} readOnly />;
         }
     };
