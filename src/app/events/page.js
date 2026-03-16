@@ -70,6 +70,26 @@ export default function EventsListingPage() {
                     <p className="mt-2 text-sm sm:text-base text-muted max-w-2xl">
                         Join us for wonderful Islamic programs/events to enhance your success.
                     </p>
+                    <div className="mt-8">
+                        <div className="mt-3 text-left sm:text-left">
+                            <div className="text-sm font-semibold text-base-content">Exam Syllabus for Girls :</div>
+                            <a href="/girls.pdf" download className="text-cyan-300 underline mt-2 block">
+                                Download this PDF for exam (for girls only)
+                            </a>
+                        </div>
+
+                        <div className="mt-3 text-left sm:text-left">
+                            <div className="text-sm font-semibold text-base-content">Final Exam (Only For Boys) :</div>
+                            <a
+                                href="https://archive.org/details/makhzan-e-malumat/page/19/mode/2up"
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="text-cyan-300 underline mt-2 block"
+                            >
+                                Makhzan-e-Malumat
+                            </a>
+                        </div>
+                    </div>
                 </div>
 
                 {loading ? (
