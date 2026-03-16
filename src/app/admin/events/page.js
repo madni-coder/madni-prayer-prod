@@ -191,10 +191,15 @@ export default function AdminEventsPage() {
     const [showCreateModal, setShowCreateModal] = useState(false);
     const [loading, setLoading] = useState(true);
 
+    // Build full API base for Tauri static export
+    const apiBase = process.env.NEXT_PUBLIC_TAURI_STATIC_EXPORT === "1" || process.env.NEXT_PUBLIC_TAURI_BUILD === "1"
+        ? (process.env.NEXT_PUBLIC_API_BASE_URL || "")
+        : "";
+
     useEffect(() => {
         const controller = new AbortController();
         import("axios").then((axios) => {
-            axios.default.get("/api/admin/events", { signal: controller.signal })
+            axios.default.get(`${apiBase}/api/admin/events`, { signal: controller.signal })
                 .then(res => {
                     setPages(res.data?.events || []);
                     setLoading(false);
@@ -219,7 +224,7 @@ export default function AdminEventsPage() {
         try {
             const axios = (await import("axios")).default;
             // First fetch existing schema to cleanly upsert the active bit
-            const schemaRes = await axios.get(`/api/admin/events/${slug}`);
+            const schemaRes = await axios.get(`${apiBase}/api/admin/events/${slug}`);
             if (schemaRes.data?.event) {
                 const schema = schemaRes.data.event;
                 // Flip the active Boolean inside the payload
@@ -231,7 +236,7 @@ export default function AdminEventsPage() {
                     fields: schema.schema_fields,
                     isActive: !currentStatus
                 }
-                await axios.put(`/api/admin/events/${slug}`, { schema: updatePayload });
+                await axios.put(`${apiBase}/api/admin/events/${slug}`, { schema: updatePayload });
             }
         } catch (err) {
             console.error("Failed to toggle status", err);
@@ -245,12 +250,12 @@ export default function AdminEventsPage() {
         setPages(prev => prev.filter(p => p.slug !== slug));
         try {
             const axios = (await import("axios")).default;
-            await axios.delete(`/api/admin/events/${slug}`);
+            await axios.delete(`${apiBase}/api/admin/events/${slug}`);
         } catch (err) {
             console.error("Failed to delete event", err);
             // Refresh full list if delete failed
             const axios = (await import("axios")).default;
-            const res = await axios.get("/api/admin/events");
+            const res = await axios.get(`${apiBase}/api/admin/events`);
             setPages(res.data?.events || []);
         }
     };

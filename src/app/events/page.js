@@ -30,8 +30,14 @@ export default function EventsListingPage() {
     useEffect(() => {
         const controller = new AbortController();
         setLoading(true);
+
+        const apiBase = process.env.NEXT_PUBLIC_TAURI_STATIC_EXPORT === "1" || process.env.NEXT_PUBLIC_TAURI_BUILD === "1"
+            ? (process.env.NEXT_PUBLIC_API_BASE_URL || "")
+            : "";
+        const apiUrl = `${apiBase}/api/events`.replace(/([^:])\/{2,}/g, "$1/");
+
         import("axios").then((axios) => {
-            axios.default.get(`/api/events`, { signal: controller.signal })
+            axios.default.get(apiUrl, { signal: controller.signal })
                 .then((res) => {
                     setEvents(res.data?.events || []);
                     setLoading(false);
@@ -72,10 +78,10 @@ export default function EventsListingPage() {
                     </p>
                     <div className="mt-8">
                         <div className="mt-3 text-left sm:text-left">
-                            <div className="text-sm font-semibold text-base-content">Exam Syllabus for Girls :</div>
-                            <a href="/girls.pdf" download className="text-cyan-300 underline mt-2 block">
-                                Download this PDF for exam (for girls only)
-                            </a>
+                            <div className="text-sm font-semibold text-base-content z-[-120]">Exam Syllabus for Girls :</div>
+                            <Link href="/pdf-viewer?file=/girls.pdf&title=Exam+Syllabus+for+Girls" className="text-cyan-300 underline mt-2 block">
+                                View PDF for exam (for girls only)
+                            </Link>
                         </div>
 
                         <div className="mt-3 text-left sm:text-left">

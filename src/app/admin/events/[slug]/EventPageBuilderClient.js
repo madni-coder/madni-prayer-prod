@@ -669,11 +669,16 @@ export default function EventPageBuilder({ slug: propSlug }) {
     const dragIndexRef = useRef(null);
     const [dragIndex, setDragIndex] = useState(null);
 
+    // Build full API base for Tauri static export
+    const apiBase = process.env.NEXT_PUBLIC_TAURI_STATIC_EXPORT === "1" || process.env.NEXT_PUBLIC_TAURI_BUILD === "1"
+        ? (process.env.NEXT_PUBLIC_API_BASE_URL || "")
+        : "";
+
     // Fetch schema from API on load
     useEffect(() => {
         if (slug && slug !== "new-event") {
             import("axios").then((axios) => {
-                axios.default.get(`/api/admin/events/${slug}`)
+                axios.default.get(`${apiBase}/api/admin/events/${slug}`)
                     .then((res) => {
                         if (res.data?.event) {
                             const ev = res.data.event;
@@ -752,7 +757,7 @@ export default function EventPageBuilder({ slug: propSlug }) {
         setIsSaving(true);
         try {
             const axios = (await import("axios")).default;
-            await axios.put(`/api/admin/events/${schema.page_slug}`, { schema });
+            await axios.put(`${apiBase}/api/admin/events/${schema.page_slug}`, { schema });
             setSavedToast(true);
             // show a quick toast then redirect back to events list
             setTimeout(() => {

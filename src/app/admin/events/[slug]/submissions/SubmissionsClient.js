@@ -84,6 +84,11 @@ export default function SubmissionsPage({ slug: propSlug }) {
     const [error, setError] = useState(null);
     const [search, setSearch] = useState("");
 
+    // Build full API base for Tauri static export
+    const apiBase = process.env.NEXT_PUBLIC_TAURI_STATIC_EXPORT === "1" || process.env.NEXT_PUBLIC_TAURI_BUILD === "1"
+        ? (process.env.NEXT_PUBLIC_API_BASE_URL || "")
+        : "";
+
     useEffect(() => {
         if (!slug) return;
         const controller = new AbortController();
@@ -91,8 +96,8 @@ export default function SubmissionsPage({ slug: propSlug }) {
         import("axios").then(({ default: axios }) => {
             const opts = { signal: controller.signal };
             Promise.all([
-                axios.get(`/api/admin/events/${slug}`, opts),
-                axios.get(`/api/admin/events/${slug}/submissions`, opts),
+                axios.get(`${apiBase}/api/admin/events/${slug}`, opts),
+                axios.get(`${apiBase}/api/admin/events/${slug}/submissions`, opts),
             ])
                 .then(([evRes, subRes]) => {
                     if (evRes.data?.event?.title) setEventTitle(evRes.data.event.title);

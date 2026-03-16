@@ -476,6 +476,11 @@ export default function DynamicEventPage({ slug: propSlug }) {
     const [attemptedFetch, setAttemptedFetch] = useState(false);
     const router = useRouter();
 
+    // Build full API base for Tauri static export
+    const apiBase = process.env.NEXT_PUBLIC_TAURI_STATIC_EXPORT === "1" || process.env.NEXT_PUBLIC_TAURI_BUILD === "1"
+        ? (process.env.NEXT_PUBLIC_API_BASE_URL || "")
+        : "";
+
     useEffect(() => {
         if (!slug) return;
         const controller = new AbortController();
@@ -489,7 +494,7 @@ export default function DynamicEventPage({ slug: propSlug }) {
         const fetchWithRetries = async (attempt = 0) => {
             try {
                 const { default: axios } = await import("axios");
-                const res = await axios.get(`/api/events/${slug}`, { signal: controller.signal, timeout: 15000 });
+                const res = await axios.get(`${apiBase}/api/events/${slug}`, { signal: controller.signal, timeout: 15000 });
                 if (cancelled) return;
                 if (res.data?.event) {
                     const ev = res.data.event;
@@ -568,7 +573,7 @@ export default function DynamicEventPage({ slug: propSlug }) {
         setSubmitting(true);
         try {
             const axios = (await import("axios")).default;
-            await axios.post(`/api/events/${slug}/submit`, { formData });
+            await axios.post(`${apiBase}/api/events/${slug}/submit`, { formData });
             console.log("Form submitted successfully.");
             // persist registration locally so the same browser cannot re-submit for same event
             try {

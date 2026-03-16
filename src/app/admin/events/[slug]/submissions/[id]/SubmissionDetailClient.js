@@ -64,6 +64,11 @@ export default function SubmissionDetailPage({ slug: propSlug, id: propId }) {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
 
+    // Build full API base for Tauri static export
+    const apiBase = process.env.NEXT_PUBLIC_TAURI_STATIC_EXPORT === "1" || process.env.NEXT_PUBLIC_TAURI_BUILD === "1"
+        ? (process.env.NEXT_PUBLIC_API_BASE_URL || "")
+        : "";
+
     useEffect(() => {
         if (!slug || !id) return;
         let cancelled = false;
@@ -75,11 +80,11 @@ export default function SubmissionDetailPage({ slug: propSlug, id: propId }) {
 
                 // Try fetching single submission endpoint first, fallback to list+find
                 try {
-                    const res = await axios.get(`/api/admin/events/${slug}/submissions/${id}`);
+                    const res = await axios.get(`${apiBase}/api/admin/events/${slug}/submissions/${id}`);
                     if (!cancelled) setSubmission(res.data?.submission || res.data);
                 } catch (err) {
                     // fallback: fetch list and find by id
-                    const list = await axios.get(`/api/admin/events/${slug}/submissions`);
+                    const list = await axios.get(`${apiBase}/api/admin/events/${slug}/submissions`);
                     const found = (list.data?.submissions || []).find(s => String(s.id) === String(id));
                     if (!cancelled) setSubmission(found || null);
                 }

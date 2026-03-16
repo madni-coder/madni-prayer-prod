@@ -1,6 +1,6 @@
 "use client";
 import React, { useEffect, useState, useRef, useCallback } from "react";
-import { useSearchParams } from "next/navigation";
+import { useSearchParams, useRouter } from "next/navigation";
 import QuranLoader from "../../components/QuranLoader";
 
 // Detect iOS devices
@@ -11,9 +11,13 @@ const isIOS = () => {
 };
 
 export default function ClientPdfViewer({ file: fileProp, zoom = 1 }) {
+    const router = useRouter();
     const searchParams = useSearchParams?.();
     const paramFile = searchParams ? searchParams.get("file") : null;
+    const paramTitle = searchParams ? searchParams.get("title") : null;
     const file = fileProp || paramFile || "";
+    const isStandalone = !fileProp;
+    const title = paramTitle || (file ? file.split("/").pop().replace(/\.pdf$/i, "").replace(/[-_]/g, " ") : "PDF Viewer");
 
     const [loading, setLoading] = useState(true);
     const [loadingProgress, setLoadingProgress] = useState(0);
@@ -269,7 +273,23 @@ export default function ClientPdfViewer({ file: fileProp, zoom = 1 }) {
     }
 
     return (
-        <div className="w-full min-h-screen bg-black text-base-content">
+        <div className="w-full min-h-screen bg-black text-base-content flex flex-col">
+            {isStandalone && (
+                <header className="flex items-center justify-between px-10 py-10 bg-base-200 border-b border-base-300 sticky top-0 z-10">
+                    <div>
+                        <span className="font-semibold text-lg capitalize">{title}</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                        <button
+                            className="btn btn-sm btn-error"
+                            onClick={() => router.back()}
+                            aria-label="Go back"
+                        >
+                            Close
+                        </button>
+                    </div>
+                </header>
+            )}
             <QuranLoader
                 isVisible={loading}
                 progress={loadingProgress}
