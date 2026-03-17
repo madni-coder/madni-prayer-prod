@@ -1,5 +1,5 @@
 "use client";
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { toast } from "react-toastify";
 import { MapPin, Save, Check } from "lucide-react";
 import { FaAngleLeft, FaMosque, FaTimes, FaWhatsapp, FaCopy, FaCheck } from "react-icons/fa";
@@ -55,6 +55,7 @@ export default function JamatTimesPage() {
     const [masjidSuggestionsVisible, setMasjidSuggestionsVisible] = useState(false);
     const [filteredMasjids, setFilteredMasjids] = useState([]);
     const [masjidHighlight, setMasjidHighlight] = useState(-1);
+    const masjidInputRef = useRef(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState("");
     const [isOffline, setIsOffline] = useState(
@@ -406,6 +407,23 @@ export default function JamatTimesPage() {
         const exact = visibleMasjids.find((m) => (m.masjidName || "") === q || (m.colony || "") === q || (m.locality || "") === q);
         if (exact) {
             setSelectedMasjidData(exact);
+            // if user typed an exact match, blur to close keyboard
+            try {
+                setTimeout(() => {
+                    try {
+                        if (masjidInputRef && masjidInputRef.current && typeof masjidInputRef.current.blur === "function") {
+                            masjidInputRef.current.blur();
+                        }
+                    } catch (err) { }
+                    try {
+                        if (typeof document !== 'undefined' && document.activeElement && typeof document.activeElement.blur === 'function') {
+                            document.activeElement.blur();
+                        }
+                    } catch (err) { }
+                }, 50);
+            } catch (e) {
+                // ignore
+            }
         } else {
             setSelectedMasjidData(null);
         }
@@ -417,6 +435,23 @@ export default function JamatTimesPage() {
         setMasjidSuggestionsVisible(false);
         setFilteredMasjids([]);
         setMasjidHighlight(-1);
+        // Blur the input to close mobile keyboard after selecting a masjid
+        try {
+            setTimeout(() => {
+                try {
+                    if (masjidInputRef && masjidInputRef.current && typeof masjidInputRef.current.blur === "function") {
+                        masjidInputRef.current.blur();
+                    }
+                } catch (err) { }
+                try {
+                    if (typeof document !== 'undefined' && document.activeElement && typeof document.activeElement.blur === 'function') {
+                        document.activeElement.blur();
+                    }
+                } catch (err) { }
+            }, 50);
+        } catch (e) {
+            // ignore
+        }
     };
 
     const handleMasjidKeyDown = (e) => {
@@ -444,6 +479,23 @@ export default function JamatTimesPage() {
         setFilteredMasjids([]);
         setMasjidSuggestionsVisible(false);
         setMasjidHighlight(-1);
+        // ensure keyboard is hidden when clearing
+        try {
+            setTimeout(() => {
+                try {
+                    if (masjidInputRef && masjidInputRef.current && typeof masjidInputRef.current.blur === "function") {
+                        masjidInputRef.current.blur();
+                    }
+                } catch (err) { }
+                try {
+                    if (typeof document !== 'undefined' && document.activeElement && typeof document.activeElement.blur === 'function') {
+                        document.activeElement.blur();
+                    }
+                } catch (err) { }
+            }, 50);
+        } catch (e) {
+            // ignore
+        }
     };
 
     const selectedMasjidExact = visibleMasjids.some((m) => m.masjidName === selectedMasjid);
@@ -755,6 +807,7 @@ export default function JamatTimesPage() {
                         </h3>
                         <div className="relative">
                             <input
+                                ref={masjidInputRef}
                                 className="input input-primary input-lg w-full pr-10"
                                 value={selectedMasjid}
                                 onChange={handleMasjidChange}

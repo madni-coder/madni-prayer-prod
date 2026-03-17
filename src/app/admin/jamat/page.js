@@ -287,6 +287,9 @@ export default function JamatTimesPage() {
         // no exact match: leave as typed
     };
 
+    // Derived selected masjid object for display (name + address)
+    const selectedMasjidData = masjids.find((m) => m.masjidName === selectedMasjid) || null;
+
     return (
         <div className="min-h-screen bg-white flex flex-col items-center py-10">
             <div className="flex flex-col md:flex-row gap-4 mb-8 w-full max-w-5xl items-stretch md:items-center px-4">
@@ -374,6 +377,20 @@ export default function JamatTimesPage() {
                 {saveMessage && (
                     <div className="alert alert-success mb-4 text-sm">
                         {saveMessage}
+                    </div>
+                )}
+
+                {selectedMasjidData && (
+                    <div className="mb-4 p-3 bg-white border rounded-md shadow-sm">
+                        <div className="text-lg font-semibold text-gray-800">
+                            {selectedMasjidData.masjidName}
+                        </div>
+                        <div className="text-sm text-gray-600 mt-1">
+                            {selectedMasjidData.colony || selectedMasjidData.locality || selectedMasjidData.address || ""}
+                            {selectedMasjidData.locality && selectedMasjidData.colony && (
+                                <span>, {selectedMasjidData.locality}</span>
+                            )}
+                        </div>
                     </div>
                 )}
                 <table className="table w-full border border-gray-200 bg-gray-50 text-sm md:text-base">
