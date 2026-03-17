@@ -372,7 +372,7 @@ export default function AdminEventsPage() {
             </div>
 
             {/* Stats Row */}
-            <div className="grid grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                 {[
                     { label: "Total Pages", value: pages.length, icon: FileText, color: "bg-violet-100 text-violet-600" },
                     { label: "Live Now", value: liveCount, icon: Eye, color: "bg-emerald-50 text-emerald-600" },
@@ -438,7 +438,6 @@ export default function AdminEventsPage() {
                                                     {page.position && page.position > 0 ? page.position : (publicOrder[page.slug] ?? (page.isActive ? "-" : ""))}
                                                 </span>
                                                 <h2 className="text-base font-semibold text-gray-900 truncate">{displayTitle(page.title)}</h2>
-                                                <StatusBadge active={page.isActive} />
                                             </div>
                                             {page.description && (
                                                 <p className="text-sm text-gray-700 opacity-60 mt-0.5 truncate">{sanitizeText(page.description)}</p>
@@ -446,10 +445,7 @@ export default function AdminEventsPage() {
                                             {/* slug hidden from admin list */}
 
                                             <div className="flex items-center gap-4 mt-2 text-xs text-gray-700 opacity-60">
-                                                <span className="flex items-center gap-1">
-                                                    <FileText className="w-3.5 h-3.5" />
-                                                    {page.fieldsCount} fields
-                                                </span>
+
                                                 <span className="flex items-center gap-1">
                                                     <Users className="w-3.5 h-3.5" />
                                                     {page.submissionsCount} submissions
@@ -462,7 +458,7 @@ export default function AdminEventsPage() {
                                         </div>
 
                                         {/* Actions */}
-                                        <div className="flex items-center gap-2 flex-shrink-0">
+                                        <div className="flex items-center gap-2 flex-wrap sm:flex-nowrap sm:flex-shrink-0">
                                             {/* Move up/down controls (also supports drag/drop above) */}
                                             <button onClick={() => moveUp(page.slug)} title="Move up"
                                                 className="p-1 text-gray-700 opacity-60 hover:text-gray-900 rounded hover:bg-gray-50 transition">
@@ -489,14 +485,14 @@ export default function AdminEventsPage() {
                                             <Link href={`/admin/events/${page.slug}/submissions`}
                                                 className="flex items-center gap-1 px-2.5 py-1.5 bg-gray-50 text-gray-700 opacity-80 rounded-lg text-xs font-medium hover:bg-gray-100 transition">
                                                 <Eye className="w-3.5 h-3.5" />
-                                                Preview
+                                                <span className="hidden sm:inline">Preview</span>
                                             </Link>
 
                                             {/* Edit Builder */}
                                             <Link href={`/admin/events/${page.slug}`}
                                                 className="flex items-center gap-1 px-2.5 py-1.5 text-white rounded-lg text-xs font-medium hover:opacity-90 transition bg-violet-600">
                                                 <Pencil className="w-3.5 h-3.5" />
-                                                Edit
+                                                <span className="hidden sm:inline">Edit</span>
                                                 <ChevronRight className="w-3 h-3" />
                                             </Link>
 

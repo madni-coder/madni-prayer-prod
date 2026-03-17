@@ -197,7 +197,7 @@ export default function SubmissionsPage({ slug: propSlug }) {
                             className="flex items-center gap-1.5 px-3 py-1.5 bg-white border border-gray-200 text-gray-700 text-sm font-medium rounded-lg hover:bg-gray-50 transition shadow-sm"
                         >
                             <Download className="w-4 h-4" />
-                            Export CSV
+                            <span className="hidden sm:inline">Export CSV</span>
                         </button>
                     )}
                 </div>
@@ -239,7 +239,8 @@ export default function SubmissionsPage({ slug: propSlug }) {
                 </div>
             ) : (
                 <div className="bg-white border border-gray-200 rounded-2xl shadow-sm overflow-hidden">
-                    <div className="overflow-x-auto">
+                    {/* Desktop / wide screens: table */}
+                    <div className="hidden sm:block overflow-x-auto">
                         <table className="w-full text-sm">
                             <thead>
                                 <tr className="bg-gray-50 border-b border-gray-200">
@@ -281,6 +282,29 @@ export default function SubmissionsPage({ slug: propSlug }) {
                                 ))}
                             </tbody>
                         </table>
+                    </div>
+
+                    {/* Mobile: stacked list view */}
+                    <div className="sm:hidden">
+                        {paged.map((row, idx) => (
+                            <div key={row.id} onClick={() => router.push(`/admin/events/${slug}/submissions/${row.id}`)} role="button"
+                                className="px-4 py-3 border-b last:border-b-0 hover:bg-violet-50/40 transition-colors cursor-pointer">
+                                <div className="flex items-start justify-between gap-3">
+                                    <div className="flex items-center gap-3">
+                                        <div className="text-sm font-medium text-gray-900">#{startIdx + idx + 1}</div>
+                                        <div className="text-xs text-gray-500">{formatDate(row.submittedAt)}</div>
+                                    </div>
+                                </div>
+                                <div className="mt-2 text-sm text-gray-800 space-y-1">
+                                    {columns.slice(0, 2).map(col => (
+                                        <div key={col} className="flex items-start gap-2">
+                                            <div className="text-xs text-gray-500 min-w-[90px]">{col}</div>
+                                            <div className="text-sm text-gray-800 flex-1">{formatValue(row.submittedData[col])}</div>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+                        ))}
                     </div>
 
                     {/* Pagination Footer */}

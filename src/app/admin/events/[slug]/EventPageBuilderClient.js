@@ -779,16 +779,16 @@ export default function EventPageBuilder({ slug: propSlug }) {
                 <Link href="/admin/events"
                     className="flex items-center gap-1.5 text-sm text-gray-700 opacity-60 hover:text-gray-900 transition">
                     <ArrowLeft className="w-4 h-4" />
-                    Back
+                    <span className="hidden sm:inline">Back</span>
                 </Link>
                 <div className="flex-1 min-w-0">
                     <h1 className="text-sm font-semibold text-gray-900 truncate">{displayTitle(schema.page_title)}</h1>
                 </div>
                 <div className="flex items-center gap-2 flex-shrink-0">
                     <button onClick={handleSave}
-                        className="flex items-center gap-2 px-5 py-2.5 text-white text-sm font-semibold rounded-xl hover:opacity-90 transition shadow-sm bg-violet-600">
+                        className="flex items-center gap-2 px-3 sm:px-5 py-2.5 text-white text-sm font-semibold rounded-xl hover:opacity-90 transition shadow-sm bg-violet-600">
                         <Save className="w-4 h-4" />
-                        Save
+                        <span className="hidden sm:inline">Save</span>
                     </button>
                 </div>
             </div>
