@@ -5,7 +5,8 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import {
     CalendarRange, Plus, Pencil, Trash2, Eye,
-    FileText, Clock, Users, ChevronRight, Search, ToggleLeft, ToggleRight
+    FileText, Clock, Users, ChevronRight, Search, ToggleLeft, ToggleRight,
+    ArrowUp, ArrowDown
 } from "lucide-react";
 
 
@@ -190,11 +191,84 @@ export default function AdminEventsPage() {
     const [deleteTarget, setDeleteTarget] = useState(null);
     const [showCreateModal, setShowCreateModal] = useState(false);
     const [loading, setLoading] = useState(true);
+    const [publicOrder, setPublicOrder] = useState({});
+    const [draggingSlug, setDraggingSlug] = useState(null);
 
     // Build full API base for Tauri static export
     const apiBase = process.env.NEXT_PUBLIC_TAURI_STATIC_EXPORT === "1" || process.env.NEXT_PUBLIC_TAURI_BUILD === "1"
         ? (process.env.NEXT_PUBLIC_API_BASE_URL || "")
         : "";
+
+    // Load public-facing events order so admin can show position in the public listing
+    const loadPublicOrder = async () => {
+        try {
+            const axios = (await import("axios")).default;
+            const res = await axios.get(`${apiBase}/api/events`);
+            const list = res.data?.events || [];
+            const map = {};
+            list.forEach((ev, idx) => { map[ev.slug] = idx + 1; });
+            setPublicOrder(map);
+        } catch (err) {
+            console.error("Failed to load public events order", err);
+        }
+    };
+
+    // Persist order to server
+    const persistOrder = async (newPages) => {
+        setPages(newPages);
+        try {
+            const axios = (await import("axios")).default;
+            const payload = newPages.map((p, idx) => ({ slug: p.slug, position: idx + 1 }));
+            await axios.post(`${apiBase}/api/admin/events/reorder`, { order: payload });
+            // refresh public mapping
+            await loadPublicOrder();
+        } catch (err) {
+            console.error("Failed to persist order", err);
+        }
+    };
+
+    const handleDragStart = (e, slug) => {
+        setDraggingSlug(slug);
+        try { e.dataTransfer.effectAllowed = 'move'; } catch (err) { }
+    };
+
+    const handleDragEnter = (e, targetSlug) => {
+        e.preventDefault();
+        if (!draggingSlug || draggingSlug === targetSlug) return;
+        setPages(prev => {
+            const copy = [...prev];
+            const fromIndex = copy.findIndex(p => p.slug === draggingSlug);
+            const toIndex = copy.findIndex(p => p.slug === targetSlug);
+            if (fromIndex === -1 || toIndex === -1) return prev;
+            const [item] = copy.splice(fromIndex, 1);
+            copy.splice(toIndex, 0, item);
+            return copy;
+        });
+    };
+
+    const handleDragOver = (e) => { e.preventDefault(); };
+
+    const handleDrop = async (e) => {
+        e.preventDefault();
+        setDraggingSlug(null);
+        await persistOrder(pages);
+    };
+
+    const moveUp = async (slug) => {
+        const idx = pages.findIndex(p => p.slug === slug);
+        if (idx <= 0) return;
+        const copy = [...pages];
+        [copy[idx - 1], copy[idx]] = [copy[idx], copy[idx - 1]];
+        await persistOrder(copy);
+    };
+
+    const moveDown = async (slug) => {
+        const idx = pages.findIndex(p => p.slug === slug);
+        if (idx === -1 || idx >= pages.length - 1) return;
+        const copy = [...pages];
+        [copy[idx + 1], copy[idx]] = [copy[idx], copy[idx + 1]];
+        await persistOrder(copy);
+    };
 
     useEffect(() => {
         const controller = new AbortController();
@@ -203,6 +277,7 @@ export default function AdminEventsPage() {
                 .then(res => {
                     setPages(res.data?.events || []);
                     setLoading(false);
+                    loadPublicOrder();
                 })
                 .catch(err => {
                     if (err?.code === "ERR_CANCELED" || err?.name === "AbortError") return;
@@ -237,6 +312,8 @@ export default function AdminEventsPage() {
                     isActive: !currentStatus
                 }
                 await axios.put(`${apiBase}/api/admin/events/${slug}`, { schema: updatePayload });
+                // refresh public order mapping after change
+                await loadPublicOrder();
             }
         } catch (err) {
             console.error("Failed to toggle status", err);
@@ -251,12 +328,15 @@ export default function AdminEventsPage() {
         try {
             const axios = (await import("axios")).default;
             await axios.delete(`${apiBase}/api/admin/events/${slug}`);
+            // refresh public order mapping after deletion
+            await loadPublicOrder();
         } catch (err) {
             console.error("Failed to delete event", err);
             // Refresh full list if delete failed
             const axios = (await import("axios")).default;
             const res = await axios.get(`${apiBase}/api/admin/events`);
             setPages(res.data?.events || []);
+            loadPublicOrder();
         }
     };
 
@@ -338,7 +418,13 @@ export default function AdminEventsPage() {
                 <div className="space-y-3">
                     {filtered.map(page => (
                         <div key={page.id}
-                            className="bg-white border border-gray-200 rounded-xl shadow-sm hover:shadow-md transition overflow-hidden">
+                            draggable
+                            onDragStart={(e) => handleDragStart(e, page.slug)}
+                            onDragEnter={(e) => handleDragEnter(e, page.slug)}
+                            onDragOver={handleDragOver}
+                            onDrop={handleDrop}
+                            onDragEnd={() => setDraggingSlug(null)}
+                            className={`bg-white border border-gray-200 rounded-xl shadow-sm hover:shadow-md transition overflow-hidden ${draggingSlug === page.slug ? "opacity-80" : ""}`}>
                             <div className="flex items-start gap-0">
                                 {/* Color Bar */}
                                 <div className="w-1.5 rounded-l-xl self-stretch bg-violet-600" />
@@ -348,6 +434,9 @@ export default function AdminEventsPage() {
                                         {/* Info */}
                                         <div className="min-w-0">
                                             <div className="flex items-center gap-2 flex-wrap">
+                                                <span title="Position in public listing" className="inline-flex items-center justify-center w-8 h-8 rounded-md bg-gray-100 text-sm font-semibold text-gray-900">
+                                                    {page.position && page.position > 0 ? page.position : (publicOrder[page.slug] ?? (page.isActive ? "-" : ""))}
+                                                </span>
                                                 <h2 className="text-base font-semibold text-gray-900 truncate">{displayTitle(page.title)}</h2>
                                                 <StatusBadge active={page.isActive} />
                                             </div>
@@ -374,6 +463,15 @@ export default function AdminEventsPage() {
 
                                         {/* Actions */}
                                         <div className="flex items-center gap-2 flex-shrink-0">
+                                            {/* Move up/down controls (also supports drag/drop above) */}
+                                            <button onClick={() => moveUp(page.slug)} title="Move up"
+                                                className="p-1 text-gray-700 opacity-60 hover:text-gray-900 rounded hover:bg-gray-50 transition">
+                                                <ArrowUp className="w-4 h-4" />
+                                            </button>
+                                            <button onClick={() => moveDown(page.slug)} title="Move down"
+                                                className="p-1 text-gray-700 opacity-60 hover:text-gray-900 rounded hover:bg-gray-50 transition">
+                                                <ArrowDown className="w-4 h-4" />
+                                            </button>
                                             {/* Toggle Active */}
                                             <button
                                                 onClick={() => toggleActive(page.slug, page.isActive)}

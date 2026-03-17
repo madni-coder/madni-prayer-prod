@@ -14,14 +14,16 @@ export async function GET() {
                 slug: true,
                 description: true,
                 themeColor: true,
+                position: true,
                 updatedAt: true
             },
-            orderBy: { updatedAt: 'desc' }
+            orderBy: [{ position: 'asc' }, { updatedAt: 'desc' }]
         });
 
         const formattedEvents = events.map(ev => ({
             ...ev,
             theme_color: ev.themeColor,
+            position: ev.position || 0,
             updated_at: ev.updatedAt
         }));
 

@@ -188,6 +188,7 @@ model EventPage {
   themeColor    String?            @map("theme_color")
   submitLabel   String?            @map("submit_label")
   isActive      Boolean            @default(false) @map("is_active")
+  position      Int                @default(0) @map("position")
   schemaFields  Json               @default("[]") @map("schema_fields")
   createdAt     DateTime           @default(now()) @map("created_at")
   updatedAt     DateTime           @default(now()) @map("updated_at")

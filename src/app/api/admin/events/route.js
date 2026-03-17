@@ -14,21 +14,26 @@ export async function GET() {
                 description: true,
                 themeColor: true,
                 isActive: true,
+                position: true,
                 updatedAt: true,
                 schemaFields: true,
                 _count: {
                     select: { submissions: true }
                 }
             },
-            orderBy: { updatedAt: "desc" },
+            orderBy: [
+                { position: "asc" },
+                { updatedAt: "desc" }
+            ],
         });
-        
+
         // Map keys back to what frontend expects for easy drop-in
         const formattedEvents = events.map(ev => ({
             ...ev,
             id: ev.id,
             color: ev.themeColor,
             isActive: ev.isActive,
+            position: ev.position || 0,
             fieldsCount: Array.isArray(ev.schemaFields) ? ev.schemaFields.length : 0,
             submissionsCount: ev._count?.submissions || 0,
             updatedAt: ev.updatedAt.toISOString().split("T")[0] // Just the date
@@ -43,10 +48,14 @@ export async function GET() {
 export async function POST(request) {
     try {
         const { schema } = await request.json();
-        
+
         if (!schema || !schema.page_slug) {
             return NextResponse.json({ error: "Schema and page_slug are required" }, { status: 400 });
         }
+
+        // place new page at the end by default
+        const agg = await prisma.eventPage.aggregate({ _max: { position: true } });
+        const nextPos = (agg._max?.position || 0) + 1;
 
         const data = await prisma.eventPage.create({
             data: {
@@ -56,7 +65,8 @@ export async function POST(request) {
                 themeColor: schema.color,
                 submitLabel: schema.submit_label,
                 isActive: schema.isActive,
-                schemaFields: schema.fields
+                schemaFields: schema.fields,
+                position: nextPos
             }
         });
 
