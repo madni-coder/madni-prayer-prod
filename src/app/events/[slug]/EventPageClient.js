@@ -124,11 +124,21 @@ function RadioField({ field, value, onChange }) {
 }
 
 function CheckboxField({ field, value, onChange }) {
+    const checked = !!value;
     return (
         <label className="flex items-start gap-3 cursor-pointer group">
-            <div onClick={() => onChange(!value)}
-                className={`w-5 h-5 rounded-md border-2 flex items-center justify-center flex-shrink-0 mt-0.5 transition ${value ? "border-transparent bg-primary" : "border-white group-hover:border-white"}`}>
-                {value && <CheckCircle className="w-3.5 h-3.5 text-primary-content" />}
+            <input
+                id={field.id}
+                name={field.key}
+                type="checkbox"
+                className="sr-only"
+                checked={checked}
+                onChange={e => onChange(e.target.checked)}
+                required={field.required}
+            />
+            <div
+                className={`w-5 h-5 rounded-md border-2 flex items-center justify-center flex-shrink-0 mt-0.5 transition ${checked ? "border-transparent bg-primary" : "border-white group-hover:border-white"}`}>
+                {checked && <CheckCircle className="w-3.5 h-3.5 text-primary-content" />}
             </div>
             <span className="text-sm font-bold text-white leading-snug">{field.label}</span>
         </label>
@@ -142,12 +152,21 @@ function CheckboxGroupField({ field, value = [], onChange }) {
     };
     return (
         <div className="flex flex-wrap gap-2">
-            {(field.options || []).map(opt => {
+            {(field.options || []).map((opt, idx) => {
                 const checked = Array.isArray(value) && value.includes(opt);
                 return (
-                    <label key={opt}
+                    <label key={opt + "-" + idx}
                         className={`flex items-center gap-2 px-3.5 py-2 rounded-xl border cursor-pointer transition text-sm font-medium ${checked ? "border-transparent text-primary-content bg-primary" : "border-white text-white font-bold hover:border-white"}`}>
-                        <input type="checkbox" className="sr-only" checked={checked} onChange={() => toggle(opt)} />
+                        <input
+                            type="checkbox"
+                            className="sr-only"
+                            name={field.key}
+                            id={`${field.id || field.key}-${idx}`}
+                            checked={checked}
+                            onChange={() => toggle(opt)}
+                            // only set required on the first checkbox so the group is validated as a group
+                            required={field.required && idx === 0}
+                        />
                         {opt}
                     </label>
                 );
@@ -240,6 +259,81 @@ function MasjidField({ field, value = {}, onChange }) {
     );
 }
 
+// ─── Shared Info Modal ───────────────────────────────────────────────────────
+function InfoModal({ title, content, onClose }) {
+    return (
+        <div
+            className="fixed inset-0 z-50 flex items-end sm:items-center justify-center"
+            onMouseDown={onClose}
+        >
+            {/* Backdrop */}
+            <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" />
+
+            {/* Sheet — bottom-sheet on mobile, centered card on sm+ */}
+            <div
+                className="relative bg-base-100 w-full sm:max-w-lg sm:rounded-2xl rounded-t-3xl shadow-2xl flex flex-col max-h-[88vh] sm:max-h-[80vh] sm:mx-4"
+                onMouseDown={e => e.stopPropagation()}
+            >
+                {/* Sticky header — drag handle merged inside, amber/warning toned */}
+                <div className="flex flex-col shrink-0 sm:rounded-t-2xl rounded-t-3xl"
+                    style={{ background: "linear-gradient(160deg, #3d2800 0%, #2a1c00 100%)", borderBottom: "1px solid rgba(251,191,36,0.18)" }}>
+                    {/* Drag handle — mobile only, lives inside header so no double strip */}
+                    <div className="flex justify-center pt-2.5 pb-0 sm:hidden" aria-hidden>
+                        <div className="w-9 h-[4px] rounded-full" style={{ background: "rgba(251,191,36,0.35)" }} />
+                    </div>
+                    <div className="flex items-center justify-between px-5 py-3.5">
+                        <div className="flex items-center gap-2.5 min-w-0">
+                            <div className="w-7 h-7 rounded-lg flex items-center justify-center shrink-0"
+                                style={{ background: "rgba(251,191,36,0.18)" }}>
+                                <AlertCircle className="w-4 h-4" style={{ color: "#fbbf24" }} />
+                            </div>
+                            <h3 className="text-base font-bold leading-snug truncate" style={{ color: "#fef3c7" }}>
+                                {title || "Information"}
+                            </h3>
+                        </div>
+                        <button
+                            type="button"
+                            onClick={onClose}
+                            aria-label="Close"
+                            className="ml-3 w-8 h-8 flex items-center justify-center rounded-full transition-colors shrink-0"
+                            style={{ background: "rgba(251,191,36,0.18)", color: "#fbbf24" }}
+                            onMouseEnter={e => e.currentTarget.style.background = "rgba(251,191,36,0.32)"}
+                            onMouseLeave={e => e.currentTarget.style.background = "rgba(251,191,36,0.18)"}
+                        >
+                            <X className="w-4 h-4" strokeWidth={2.5} />
+                        </button>
+                    </div>
+                </div>
+
+                {/* Scrollable body */}
+                <div className="flex-1 overflow-y-auto px-5 py-4 bg-base-100">
+                    <p className="text-sm text-base-content whitespace-pre-line leading-[1.9] tracking-wide">
+                        {content}
+                    </p>
+                </div>
+
+                {/* Sticky footer — matching amber tone */}
+                <div className="px-5 py-2.5 shrink-0 sm:rounded-b-2xl rounded-b-none flex justify-center"
+                    style={{ background: "linear-gradient(160deg, #2a1c00 0%, #3d2800 100%)", borderTop: "1px solid rgba(251,191,36,0.18)", paddingBottom: "max(0.625rem, env(safe-area-inset-bottom))" }}>
+                    <button
+                        type="button"
+                        onClick={onClose}
+                        className="px-10 py-2.5 rounded-full text-sm font-semibold transition active:scale-[0.97]"
+                        style={{
+                            background: "rgba(251,191,36,0.12)",
+                            border: "1.5px solid rgba(251,191,36,0.55)",
+                            color: "#fbbf24",
+                            boxShadow: "0 0 18px rgba(251,191,36,0.12)"
+                        }}
+                    >
+                        Got it
+                    </button>
+                </div>
+            </div>
+        </div>
+    );
+}
+
 function ButtonField({ field, color }) {
     const [popupOpen, setPopupOpen] = useState(false);
 
@@ -259,32 +353,20 @@ function ButtonField({ field, color }) {
     return (
         <>
             <button type="button" onClick={handleClick}
-                className="flex items-center gap-2 px-5 py-2.5 text-sm font-semibold text-primary-content rounded-xl hover:opacity-90 active:scale-95 transition shadow-sm bg-primary">
+                className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full border-2 bg-transparent hover:bg-amber-500/10 active:scale-[0.97] transition font-bold tracking-widest text-xs uppercase"
+                style={{ borderColor: "#f59e0b", color: "#f59e0b" }}>
                 {field.label}
+                <ChevronDown className="w-3.5 h-3.5 -rotate-90 shrink-0" />
             </button>
             {field.helperText && (
-                <p className="text-xs font-bold text-white mt-1">{field.helperText}</p>
+                <p className="text-xs font-bold text-white/60 mt-1 pl-1">{field.helperText}</p>
             )}
-
-            {/* Popup Modal */}
             {popupOpen && (
-                <div className="fixed inset-0 z-50 flex items-start sm:items-center justify-center bg-black bg-opacity-50 p-4 overflow-y-auto">
-                    <div className="bg-base-100 rounded-2xl shadow-2xl max-w-lg w-full p-6 max-h-[80vh] overflow-y-auto text-base-content">
-                        <div className="flex items-center justify-between mb-4">
-                            <h3 className="font-semibold text-base-content">{field.popupTitle || "Information"}</h3>
-                            <button onClick={() => setPopupOpen(false)} className="p-1 text-base-content/60 hover:text-base-content rounded">
-                                <X className="w-5 h-5" />
-                            </button>
-                        </div>
-                        <div className="text-sm text-base-content whitespace-pre-line leading-relaxed">
-                            {field.popupContent}
-                        </div>
-                        <button onClick={() => setPopupOpen(false)}
-                            className="mt-5 w-full py-2 text-sm font-semibold text-primary-content rounded-xl transition hover:opacity-90 bg-primary">
-                            Got it!
-                        </button>
-                    </div>
-                </div>
+                <InfoModal
+                    title={field.popupTitle}
+                    content={field.popupContent}
+                    onClose={() => setPopupOpen(false)}
+                />
             )}
         </>
     );
@@ -292,48 +374,34 @@ function ButtonField({ field, color }) {
 
 function PopupField({ field }) {
     const [popupOpen, setPopupOpen] = useState(false);
-
-    const handleClick = () => {
-        setPopupOpen(true);
-    };
-
     const triggerType = field.triggerType || field.display || "button";
 
     return (
         <>
-            {triggerType === "button" ? (
-                <button type="button" onClick={handleClick}
-                    className="flex items-center gap-2 px-5 py-2.5 text-sm font-semibold text-primary-content rounded-xl hover:opacity-90 active:scale-95 transition shadow-sm bg-primary">
+            {triggerType === "link" ? (
+                <button type="button" onClick={() => setPopupOpen(true)}
+                    className="inline-flex items-center gap-1.5 text-sm font-semibold underline-offset-2 hover:underline transition"
+                    style={{ color: "#f59e0b" }}>
+                    <AlertCircle className="w-3.5 h-3.5 shrink-0" />
                     {field.label || "View"}
                 </button>
             ) : (
-                <button type="button" onClick={handleClick} className="text-sm underline text-white font-semibold">
+                <button type="button" onClick={() => setPopupOpen(true)}
+                    className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full border-2 bg-transparent hover:bg-amber-500/10 active:scale-[0.97] transition font-bold tracking-widest text-xs uppercase"
+                    style={{ borderColor: "#f59e0b", color: "#f59e0b" }}>
                     {field.label || "View"}
+                    <ChevronDown className="w-3.5 h-3.5 -rotate-90 shrink-0" />
                 </button>
             )}
-
             {field.helperText && (
-                <p className="text-xs font-bold text-white mt-1">{field.helperText}</p>
+                <p className="text-xs font-bold text-white/60 mt-1 pl-1">{field.helperText}</p>
             )}
-
             {popupOpen && (
-                <div className="fixed inset-0 z-50 flex items-start sm:items-center justify-center bg-black bg-opacity-50 p-4 overflow-y-auto">
-                    <div className="bg-base-100 rounded-2xl shadow-2xl max-w-lg w-full p-6 max-h-[80vh] overflow-y-auto text-base-content">
-                        <div className="flex items-center justify-between mb-4">
-                            <h3 className="font-semibold text-base-content">{field.popupTitle || "Information"}</h3>
-                            <button onClick={() => setPopupOpen(false)} className="p-1 text-base-content/60 hover:text-base-content rounded">
-                                <X className="w-5 h-5" />
-                            </button>
-                        </div>
-                        <div className="text-sm text-base-content whitespace-pre-line leading-relaxed">
-                            {field.popupContent}
-                        </div>
-                        <button onClick={() => setPopupOpen(false)}
-                            className="mt-5 w-full py-2 text-sm font-semibold text-primary-content rounded-xl transition hover:opacity-90 bg-primary">
-                            Got it!
-                        </button>
-                    </div>
-                </div>
+                <InfoModal
+                    title={field.popupTitle}
+                    content={field.popupContent}
+                    onClose={() => setPopupOpen(false)}
+                />
             )}
         </>
     );
@@ -570,6 +638,18 @@ export default function DynamicEventPage({ slug: propSlug }) {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
+
+        // Run HTML5 form validation first
+        const form = e.target;
+        if (form && typeof form.checkValidity === "function" && !form.checkValidity()) {
+            if (typeof form.reportValidity === "function") {
+                form.reportValidity();
+            } else {
+                toast.error("Please complete the required fields.");
+            }
+            return;
+        }
+
         setSubmitting(true);
         try {
             const axios = (await import("axios")).default;
