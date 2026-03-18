@@ -52,11 +52,6 @@ const navigation = [
         icon: Book,
     },
     {
-        name: "Free Services",
-        href: "/admin/freeServices",
-        icon: Wind,
-    },
-    {
         name: "Users  ",
         href: "/admin/users",
         icon: UsersRound
