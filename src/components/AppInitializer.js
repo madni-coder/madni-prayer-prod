@@ -8,7 +8,6 @@ import { useZikrContext } from "../context/ZikrContext";
 import { useTasbihUserContext } from "../context/TasbihUserContext";
 import { useAllMasjidContext } from "../context/AllMasjidContext";
 import { useLocalStoreContext } from "../context/LocalStoreContext";
-import { useFreeServiceContext } from "../context/FreeServiceContext";
 import { useQuranContext } from "../context/QuranContext";
 import { usePrayerTimeContext } from "../context/PrayerTimeContext";
 import { useKanzulContext } from "../context/KanzulContext";
@@ -22,7 +21,6 @@ export default function AppInitializer({ children }) {
     const { fetchAll: fetchTasbihUsers } = useTasbihUserContext();
     const { fetchAll: fetchAllMasjids } = useAllMasjidContext();
     const { fetchAll: fetchLocalStores } = useLocalStoreContext();
-    const { fetchAll: fetchFreeServices } = useFreeServiceContext();
     const { fetchAll: fetchQuran } = useQuranContext();
     const { fetchTimes: fetchPrayerTimes } = usePrayerTimeContext();
     const { fetchPdf: fetchKanzul } = useKanzulContext();
@@ -37,7 +35,6 @@ export default function AppInitializer({ children }) {
         fetchTasbihUsers?.();
         fetchAllMasjids?.();
         fetchLocalStores?.();
-        fetchFreeServices?.();
         fetchQuran?.();
         fetchPrayerTimes?.();
         fetchKanzul?.();
@@ -50,7 +47,6 @@ export default function AppInitializer({ children }) {
         fetchTasbihUsers,
         fetchAllMasjids,
         fetchLocalStores,
-        fetchFreeServices,
         fetchQuran,
         fetchPrayerTimes,
         fetchKanzul,

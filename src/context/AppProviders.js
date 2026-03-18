@@ -9,7 +9,6 @@ import { ZikrProvider } from "./ZikrContext";
 import { TasbihUserProvider } from "./TasbihUserContext";
 import { AllMasjidProvider } from "./AllMasjidContext";
 import { LocalStoreProvider } from "./LocalStoreContext";
-import { FreeServiceProvider } from "./FreeServiceContext";
 import { QuranProvider } from "./QuranContext";
 import { PrayerTimeProvider } from "./PrayerTimeContext";
 import { JamatTimeProvider } from "./JamatTimeContext";
@@ -30,25 +29,23 @@ export default function AppProviders({ children }) {
                                 <ZikrProvider>
                                     <TasbihUserProvider>
                                         <LocalStoreProvider>
-                                            <FreeServiceProvider>
-                                                <QuranProvider>
-                                                    <PrayerTimeProvider>
-                                                        <JamatTimeProvider>
-                                                            <MasjidCommitteeProvider>
-                                                                <MasjidCommitteeEventProvider>
-                                                                    <KanzulProvider>
-                                                                        <PdfProxyProvider>
-                                                                            <AppInitializer>
-                                                                                {children}
-                                                                            </AppInitializer>
-                                                                        </PdfProxyProvider>
-                                                                    </KanzulProvider>
-                                                                </MasjidCommitteeEventProvider>
-                                                            </MasjidCommitteeProvider>
-                                                        </JamatTimeProvider>
-                                                    </PrayerTimeProvider>
-                                                </QuranProvider>
-                                            </FreeServiceProvider>
+                                            <QuranProvider>
+                                                <PrayerTimeProvider>
+                                                    <JamatTimeProvider>
+                                                        <MasjidCommitteeProvider>
+                                                            <MasjidCommitteeEventProvider>
+                                                                <KanzulProvider>
+                                                                    <PdfProxyProvider>
+                                                                        <AppInitializer>
+                                                                            {children}
+                                                                        </AppInitializer>
+                                                                    </PdfProxyProvider>
+                                                                </KanzulProvider>
+                                                            </MasjidCommitteeEventProvider>
+                                                        </MasjidCommitteeProvider>
+                                                    </JamatTimeProvider>
+                                                </PrayerTimeProvider>
+                                            </QuranProvider>
                                         </LocalStoreProvider>
                                     </TasbihUserProvider>
                                 </ZikrProvider>
