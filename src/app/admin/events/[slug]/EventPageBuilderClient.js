@@ -43,6 +43,7 @@ const BLANK_SCHEMA = (slug) => ({
     submit_label: "Submit",
     color: "#7c3aed",
     isActive: false,
+    allowMultipleRegistrations: false,
     fields: [],
 });
 
@@ -525,6 +526,17 @@ function PageHeaderConfig({ schema, onChange }) {
                     {schema.isActive ? "Live" : "Draft"}
                 </button>
             </div>
+            <div className="flex items-center justify-between pt-1">
+                <div>
+                    <span className="text-sm font-medium text-gray-700">Multiple Users</span>
+                    <p className="text-xs text-gray-500 mt-0.5">Allow multiple registrations from the same device</p>
+                </div>
+                <button
+                    onClick={() => onChange({ ...schema, allowMultipleRegistrations: !schema.allowMultipleRegistrations })}
+                    className={`relative w-11 h-6 rounded-full transition-colors flex-shrink-0 ${schema.allowMultipleRegistrations ? "bg-violet-600" : "bg-gray-200"}`}>
+                    <span className={`absolute top-1 w-4 h-4 bg-white rounded-full shadow transition-all ${schema.allowMultipleRegistrations ? "left-6" : "left-1"}`} />
+                </button>
+            </div>
         </div>
     );
 }
@@ -689,6 +701,7 @@ export default function EventPageBuilder({ slug: propSlug }) {
                                 submit_label: ev.submit_label || "Submit",
                                 color: ev.theme_color || "#7c3aed",
                                 isActive: ev.is_active,
+                                allowMultipleRegistrations: ev.allow_multiple_registrations || false,
                                 fields: ev.schema_fields || []
                             });
                         }

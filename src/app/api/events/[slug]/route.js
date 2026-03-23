@@ -8,9 +8,9 @@ export const dynamic = "force-dynamic";
 export async function GET(request, { params }) {
     try {
         const { slug } = await params;
-        
+
         const data = await prisma.eventPage.findFirst({
-            where: { 
+            where: {
                 slug: slug
             },
             select: {
@@ -20,6 +20,7 @@ export async function GET(request, { params }) {
                 themeColor: true,
                 submitLabel: true,
                 isActive: true,
+                allowMultipleRegistrations: true,
                 schemaFields: true
             }
         });
@@ -31,6 +32,7 @@ export async function GET(request, { params }) {
             theme_color: data.themeColor,
             submit_label: data.submitLabel,
             is_active: data.isActive,
+            allow_multiple_registrations: data.allowMultipleRegistrations,
             schema_fields: data.schemaFields
         };
 

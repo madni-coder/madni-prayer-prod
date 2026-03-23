@@ -19,6 +19,7 @@ export async function GET(request, { params }) {
             theme_color: data.themeColor,
             submit_label: data.submitLabel,
             is_active: data.isActive,
+            allow_multiple_registrations: data.allowMultipleRegistrations,
             position: data.position || 0,
             schema_fields: data.schemaFields
         };
@@ -46,6 +47,7 @@ export async function PUT(request, { params }) {
                     themeColor: schema.color || "#7c3aed",
                     submitLabel: schema.submit_label || "Submit",
                     isActive: schema.isActive || false,
+                    allowMultipleRegistrations: schema.allowMultipleRegistrations || false,
                     schemaFields: schema.fields || [],
                     updatedAt: new Date()
                 }
@@ -61,6 +63,7 @@ export async function PUT(request, { params }) {
                     themeColor: schema.color || "#7c3aed",
                     submitLabel: schema.submit_label || "Submit",
                     isActive: schema.isActive || false,
+                    allowMultipleRegistrations: schema.allowMultipleRegistrations || false,
                     schemaFields: schema.fields || [],
                     position: nextPos
                 }

@@ -573,6 +573,7 @@ export default function DynamicEventPage({ slug: propSlug }) {
                         submit_label: ev.submit_label,
                         color: ev.theme_color,
                         isActive: ev.is_active,
+                        allowMultipleRegistrations: ev.allow_multiple_registrations || false,
                         fields: ev.schema_fields || []
                     });
                 } else {
@@ -607,8 +608,10 @@ export default function DynamicEventPage({ slug: propSlug }) {
     }, [slug]);
 
     // Check localStorage to see if this device/browser already registered for this event
+    // Skip this check if the event allows multiple registrations
     useEffect(() => {
         if (!slug) return;
+        if (schema?.allowMultipleRegistrations) return;
         try {
             const key = `registered_event_${slug}`;
             const stored = typeof window !== "undefined" ? localStorage.getItem(key) : null;
@@ -616,7 +619,7 @@ export default function DynamicEventPage({ slug: propSlug }) {
         } catch (err) {
             console.warn("localStorage unavailable", err);
         }
-    }, [slug]);
+    }, [slug, schema?.allowMultipleRegistrations]);
 
     // Delay showing the NotFound screen slightly so we don't flash it.
     // Only show NotFound after we've actually attempted a fetch.
@@ -655,13 +658,15 @@ export default function DynamicEventPage({ slug: propSlug }) {
             const axios = (await import("axios")).default;
             await axios.post(`${apiBase}/api/events/${slug}/submit`, { formData });
             console.log("Form submitted successfully.");
-            // persist registration locally so the same browser cannot re-submit for same event
-            try {
-                const key = `registered_event_${slug}`;
-                localStorage.setItem(key, JSON.stringify({ time: Date.now(), data: formData }));
-                setAlreadyRegistered(true);
-            } catch (err) {
-                console.warn("Failed to persist registration locally:", err);
+            // persist registration locally so the same device cannot re-submit — unless multiple registrations are allowed
+            if (!schema?.allowMultipleRegistrations) {
+                try {
+                    const key = `registered_event_${slug}`;
+                    localStorage.setItem(key, JSON.stringify({ time: Date.now(), data: formData }));
+                    setAlreadyRegistered(true);
+                } catch (err) {
+                    console.warn("Failed to persist registration locally:", err);
+                }
             }
             toast.success(`Registration received for ${displayTitle(schema?.page_title) || "this event"}`);
             setFormData({});

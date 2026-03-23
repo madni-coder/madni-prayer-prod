@@ -173,7 +173,8 @@ model EventPage {
   description   String?
   themeColor    String?            @map("theme_color")
   submitLabel   String?            @map("submit_label")
-  isActive      Boolean            @default(false) @map("is_active")
+  isActive                  Boolean            @default(false) @map("is_active")
+  allowMultipleRegistrations Boolean           @default(false) @map("allow_multiple_registrations")
   position      Int                @default(0) @map("position")
   schemaFields  Json               @default("[]") @map("schema_fields")
   createdAt     DateTime           @default(now()) @map("created_at")
