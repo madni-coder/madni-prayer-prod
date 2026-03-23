@@ -10,9 +10,16 @@ export default function ForceUpdateChecker() {
     const [blocked, setBlocked] = useState(false);
     const [message, setMessage] = useState("");
     const [isIosState, setIsIosState] = useState(null);
+    const [debugInfo, setDebugInfo] = useState(null);
 
     useEffect(() => {
         let mounted = true;
+        const debugLog = [];
+
+        const addDebug = (msg) => {
+            console.log(msg);
+            debugLog.push(msg);
+        };
 
         // Convert semantic version to comparable integer (e.g., "5.2.0" -> 5002000)
         const versionToCode = (version) => {
@@ -37,7 +44,7 @@ export default function ForceUpdateChecker() {
                     (window.__TAURI__ !== undefined ||
                         window.__TAURI_INTERNALS__ !== undefined);
                 if (!isTauri) {
-                    console.log(
+                    addDebug(
                         "[ForceUpdate] Not running in Tauri — skipping check.",
                     );
                     return;
@@ -49,15 +56,15 @@ export default function ForceUpdateChecker() {
                     const { platform } = await import("@tauri-apps/plugin-os");
                     const os = await platform();
                     isIosLocal = os === "ios";
-                    console.log("[ForceUpdate] Platform:", os);
+                    addDebug("[ForceUpdate] Platform: " + os);
                 } catch {
                     // Fallback: use userAgent if Tauri OS plugin unavailable
                     isIosLocal =
                         typeof navigator !== "undefined" &&
                         /iPad|iPhone|iPod/.test(navigator.userAgent);
-                    console.log(
-                        "[ForceUpdate] OS plugin unavailable, userAgent iOS:",
-                        isIosLocal,
+                    addDebug(
+                        "[ForceUpdate] OS plugin unavailable, userAgent iOS: " +
+                            isIosLocal,
                     );
                 }
                 // persist platform for the Update button (outside effect scope)
@@ -67,21 +74,23 @@ export default function ForceUpdateChecker() {
                     /* ignore */
                 }
 
-                // Get current version via Tauri if available, otherwise fallback to env/window value
+                // Get current version via multiple fallback methods
                 let currentVersion = null;
+                let versionSource = "none";
 
                 // Try Tauri API first (works in production APK)
                 try {
                     const tauriApp = await import("@tauri-apps/api/app");
                     currentVersion = await tauriApp.getVersion();
-                    console.log(
-                        "[ForceUpdate] Got version from Tauri:",
-                        currentVersion,
+                    versionSource = "tauri-api";
+                    addDebug(
+                        "[ForceUpdate] Got version from Tauri API: " +
+                            currentVersion,
                     );
                 } catch (e1) {
-                    console.log(
-                        "[ForceUpdate] Tauri getVersion failed:",
-                        e1?.message,
+                    addDebug(
+                        "[ForceUpdate] Tauri getVersion failed: " +
+                            e1?.message,
                     );
                 }
 
@@ -89,38 +98,52 @@ export default function ForceUpdateChecker() {
                 if (!currentVersion) {
                     currentVersion =
                         process?.env?.NEXT_PUBLIC_APP_VERSION || null;
-                    if (currentVersion)
-                        console.log(
-                            "[ForceUpdate] Version from env:",
-                            currentVersion,
+                    if (currentVersion) {
+                        versionSource = "env-var";
+                        addDebug(
+                            "[ForceUpdate] Version from env: " +
+                                currentVersion,
                         );
+                    }
                 }
 
                 // Fallback 2: window variable (can be set manually for testing)
                 if (!currentVersion && typeof window !== "undefined") {
                     currentVersion = window?.__APP_VERSION || null;
-                    if (currentVersion)
-                        console.log(
-                            "[ForceUpdate] Version from window:",
-                            currentVersion,
+                    if (currentVersion) {
+                        versionSource = "window-var";
+                        addDebug(
+                            "[ForceUpdate] Version from window: " +
+                                currentVersion,
                         );
+                    }
                 }
 
-                // ⚠️ If still no version: DO NOT SKIP — assume very old version
-                // so the check always runs on devices where Tauri API fails
+                // ⚠️ If still no version found — skip force update check entirely
+                // This prevents false positives when the app can't determine its own version
                 if (!currentVersion) {
-                    console.log(
-                        "[ForceUpdate] ⚠️ No version found! Assuming '0.0.0' so check always runs.",
+                    addDebug(
+                        "[ForceUpdate] ⚠️ No version found from any source! Skipping force update check to avoid false positive.",
                     );
-                    currentVersion = "7.2.0";
+                    // Show debug info temporarily so dev can see what's happening
+                    if (mounted) {
+                        setDebugInfo(debugLog.join("\n"));
+                        setTimeout(() => {
+                            if (mounted) setDebugInfo(null);
+                        }, 15000);
+                    }
+                    return;
                 }
 
                 const currentCode = versionToCode(currentVersion);
-                console.log(
-                    "[ForceUpdate] Current version code:",
-                    currentCode,
-                    "from version:",
-                    currentVersion,
+                addDebug(
+                    "[ForceUpdate] Current version: " +
+                        currentVersion +
+                        " (code: " +
+                        currentCode +
+                        ", source: " +
+                        versionSource +
+                        ")",
                 );
 
                 // ✅ Always use the absolute Vercel URL — env var is an override.
@@ -130,7 +153,7 @@ export default function ForceUpdateChecker() {
                     process?.env?.NEXT_PUBLIC_UPDATE_CONFIG_URL ||
                     HARDCODED_CONFIG_URL;
 
-                console.log("[ForceUpdate] Fetching config from:", configUrl);
+                addDebug("[ForceUpdate] Fetching config from: " + configUrl);
 
                 // Add a timeout so a bad network doesn't hang the app forever
                 const controller = new AbortController();
@@ -145,47 +168,52 @@ export default function ForceUpdateChecker() {
                     clearTimeout(timeoutId);
                 }
                 if (!res.ok) {
-                    console.log(
-                        "[ForceUpdate] Config fetch failed:",
-                        res.status,
+                    addDebug(
+                        "[ForceUpdate] Config fetch failed: " + res.status,
                     );
                     return;
                 }
                 const cfg = await res.json();
-                console.log("[ForceUpdate] Config loaded:", cfg);
+                addDebug(
+                    "[ForceUpdate] Config loaded: " + JSON.stringify(cfg),
+                );
 
                 // Support OS-specific semantic min versions and numeric codes first
                 let minCode = 0;
+                let minVersionUsed = "";
                 if (isIosLocal) {
                     if (cfg?.min_version_ios) {
                         minCode = versionToCode(cfg.min_version_ios);
-                        console.log(
-                            "[ForceUpdate] Min iOS version from semantic:",
-                            cfg.min_version_ios,
-                            "-> code:",
-                            minCode,
+                        minVersionUsed = cfg.min_version_ios + " (ios-specific)";
+                        addDebug(
+                            "[ForceUpdate] Min iOS version: " +
+                                cfg.min_version_ios +
+                                " -> code: " +
+                                minCode,
                         );
                     } else if (cfg?.min_version_code_ios) {
                         minCode = parseInt(cfg.min_version_code_ios, 10) || 0;
-                        console.log(
-                            "[ForceUpdate] Min iOS version code from config:",
-                            minCode,
+                        minVersionUsed = "code:" + minCode + " (ios-specific)";
+                        addDebug(
+                            "[ForceUpdate] Min iOS version code: " + minCode,
                         );
                     }
                 } else {
                     if (cfg?.min_version_android) {
                         minCode = versionToCode(cfg.min_version_android);
-                        console.log(
-                            "[ForceUpdate] Min Android version from semantic:",
-                            cfg.min_version_android,
-                            "-> code:",
-                            minCode,
+                        minVersionUsed = cfg.min_version_android + " (android-specific)";
+                        addDebug(
+                            "[ForceUpdate] Min Android version: " +
+                                cfg.min_version_android +
+                                " -> code: " +
+                                minCode,
                         );
                     } else if (cfg?.min_version_code_android) {
                         minCode = parseInt(cfg.min_version_code_android, 10) || 0;
-                        console.log(
-                            "[ForceUpdate] Min Android version code from config:",
-                            minCode,
+                        minVersionUsed = "code:" + minCode + " (android-specific)";
+                        addDebug(
+                            "[ForceUpdate] Min Android version code: " +
+                                minCode,
                         );
                     }
                 }
@@ -194,55 +222,63 @@ export default function ForceUpdateChecker() {
                 if (!minCode) {
                     if (cfg?.min_version) {
                         minCode = versionToCode(cfg.min_version);
-                        console.log(
-                            "[ForceUpdate] Min version from semantic:",
-                            cfg.min_version,
-                            "-> code:",
-                            minCode,
+                        minVersionUsed = cfg.min_version + " (generic)";
+                        addDebug(
+                            "[ForceUpdate] Min version (generic): " +
+                                cfg.min_version +
+                                " -> code: " +
+                                minCode,
                         );
                     } else if (cfg?.min_version_code) {
                         minCode = parseInt(cfg.min_version_code, 10) || 0;
-                        console.log(
-                            "[ForceUpdate] Min version code from config:",
-                            minCode,
+                        minVersionUsed = "code:" + minCode + " (generic)";
+                        addDebug(
+                            "[ForceUpdate] Min version code: " + minCode,
                         );
                     }
                 }
 
                 // ✅ Pick correct store URL based on platform
-                                const storeUrl = isIosLocal
-                                        ? cfg?.ios_store_url ||
-                                            cfg?.app_store_url ||
-                                            cfg?.storeUrl ||
-                                            null
-                                        : cfg?.store_url ||
-                                            cfg?.play_store_url ||
-                                            cfg?.storeUrl ||
-                                            null;
+                const storeUrl = isIosLocal
+                    ? cfg?.ios_store_url ||
+                        cfg?.app_store_url ||
+                        cfg?.storeUrl ||
+                        null
+                    : cfg?.store_url ||
+                        cfg?.play_store_url ||
+                        cfg?.storeUrl ||
+                        null;
 
-                console.log(
-                    "[ForceUpdate] Platform:",
-                    isIosLocal ? "iOS" : "Android",
-                    "| Store URL:",
-                    storeUrl,
+                addDebug(
+                    "[ForceUpdate] Platform: " +
+                        (isIosLocal ? "iOS" : "Android") +
+                        " | Store URL: " +
+                        storeUrl,
                 );
 
-                console.log(
-                    "[ForceUpdate] Comparison:",
-                    currentCode,
-                    "<",
-                    minCode,
-                    "=",
-                    currentCode < minCode,
+                const shouldBlock = currentCode < minCode;
+                addDebug(
+                    "[ForceUpdate] Comparison: app=" +
+                        currentVersion +
+                        "(" +
+                        currentCode +
+                        ") vs min=" +
+                        minVersionUsed +
+                        "(" +
+                        minCode +
+                        ") => block=" +
+                        shouldBlock,
                 );
 
-                if (currentCode < minCode && mounted) {
-                    console.log("[ForceUpdate] BLOCKING: Version too old!");
+                if (shouldBlock && mounted) {
+                    addDebug("[ForceUpdate] BLOCKING: Version too old!");
                     setMessage(
                         cfg?.message ||
                             "A new mandatory update is required to continue using the app.",
                     );
                     setBlocked(true);
+                    // Show debug info on the force update screen
+                    setDebugInfo(debugLog.join("\n"));
                     if (storeUrl) {
                         try {
                             const { openUrl } = await import(
@@ -254,12 +290,20 @@ export default function ForceUpdateChecker() {
                         }
                     }
                 } else {
-                    console.log(
+                    addDebug(
                         "[ForceUpdate] Version check passed. App is up to date.",
                     );
                 }
             } catch (err) {
                 console.error("[ForceUpdate] Error during version check:", err);
+                addDebug("[ForceUpdate] ERROR: " + err?.message);
+                // Show debug info temporarily on error too
+                if (mounted) {
+                    setDebugInfo(debugLog.join("\n"));
+                    setTimeout(() => {
+                        if (mounted) setDebugInfo(null);
+                    }, 15000);
+                }
             }
         }
 
@@ -270,6 +314,32 @@ export default function ForceUpdateChecker() {
         };
     }, []);
 
+    // Show debug info overlay when not blocked but debug info is available
+    // (e.g., when version detection failed and we skipped the check)
+    if (!blocked && debugInfo) {
+        return (
+            <div style={{
+                position: "fixed",
+                bottom: 10,
+                left: 10,
+                right: 10,
+                background: "rgba(0,0,0,0.85)",
+                color: "#0f0",
+                padding: 10,
+                borderRadius: 8,
+                fontSize: 10,
+                fontFamily: "monospace",
+                whiteSpace: "pre-wrap",
+                zIndex: 99998,
+                maxHeight: "30vh",
+                overflow: "auto",
+            }}>
+                <strong>🔍 ForceUpdate Debug (auto-hides):</strong>
+                {"\n" + debugInfo}
+            </div>
+        );
+    }
+
     if (!blocked) return null;
 
     return (
@@ -277,6 +347,26 @@ export default function ForceUpdateChecker() {
             <div style={boxStyle}>
                 <h2 style={{ marginTop: 0 }}>Update Required</h2>
                 <p>{message}</p>
+                {debugInfo && (
+                    <details style={{ marginBottom: 10 }}>
+                        <summary style={{ cursor: "pointer", fontSize: 12, color: "#888" }}>
+                            Debug Info (tap to expand)
+                        </summary>
+                        <pre style={{
+                            fontSize: 9,
+                            color: "#0f0",
+                            background: "#000",
+                            padding: 8,
+                            borderRadius: 4,
+                            whiteSpace: "pre-wrap",
+                            maxHeight: "30vh",
+                            overflow: "auto",
+                            marginTop: 6,
+                        }}>
+                            {debugInfo}
+                        </pre>
+                    </details>
+                )}
                 <div
                     style={{
                         display: "flex",

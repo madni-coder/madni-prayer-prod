@@ -111,7 +111,7 @@ export default function JamatTimesPage() {
             }
             try {
                 const masjidData = masjids.find(
-                    (m) => m.masjidName === selectedMasjid
+                    (m) => m.id === selectedMasjid
                 );
                 if (masjidData) {
                     const newTimes = prayers.map((prayer, idx) => {
@@ -202,7 +202,7 @@ export default function JamatTimesPage() {
         try {
             // Find the selected masjid data to get the ID
             const masjidData = masjids.find(
-                (m) => m.masjidName === selectedMasjid
+                (m) => m.id === selectedMasjid
             );
 
             if (!masjidData) {
@@ -271,7 +271,7 @@ export default function JamatTimesPage() {
         // exact masjid name match
         const exactMasjid = masjids.find((m) => m.masjidName === value);
         if (exactMasjid) {
-            setSelectedMasjid(exactMasjid.masjidName);
+            setSelectedMasjid(exactMasjid.id);
             setSelectedColony(exactMasjid.colony || "");
             setSearchQuery(exactMasjid.masjidName);
             return;
@@ -288,7 +288,7 @@ export default function JamatTimesPage() {
     };
 
     // Derived selected masjid object for display (name + address)
-    const selectedMasjidData = masjids.find((m) => m.masjidName === selectedMasjid) || null;
+    const selectedMasjidData = masjids.find((m) => m.id === selectedMasjid) || null;
 
     return (
         <div className="min-h-screen bg-white flex flex-col items-center py-10">
@@ -317,7 +317,7 @@ export default function JamatTimesPage() {
                     )}
 
                     {/* Suggestions dropdown: render masjid name + colony/address */}
-                    {searchQuery.trim().length > 0 && (!selectedMasjid || searchQuery !== selectedMasjid) && (
+                    {searchQuery.trim().length > 0 && (!selectedMasjidData || searchQuery !== selectedMasjidData.masjidName) && (
                         <div className="absolute left-0 right-0 mt-2 z-30">
                             <div className="bg-white border rounded shadow-lg max-h-60 overflow-auto">
                                 {masjids
@@ -335,7 +335,7 @@ export default function JamatTimesPage() {
                                             key={m.id}
                                             onMouseDown={(e) => e.preventDefault()}
                                             onClick={() => {
-                                                setSelectedMasjid(m.masjidName);
+                                                setSelectedMasjid(m.id);
                                                 setSelectedColony(m.colony || "");
                                                 setSearchQuery(m.masjidName);
                                             }}
