@@ -125,8 +125,8 @@ export default function ForceUpdateChecker() {
                     addDebug(
                         "[ForceUpdate] ⚠️ No version found from any source! Skipping force update check to avoid false positive.",
                     );
-                    // Show debug info temporarily so dev can see what's happening
-                    if (mounted) {
+                    // Only show debug overlay in development mode
+                    if (process.env.NODE_ENV === "development" && mounted) {
                         setDebugInfo(debugLog.join("\n"));
                         setTimeout(() => {
                             if (mounted) setDebugInfo(null);
@@ -297,8 +297,8 @@ export default function ForceUpdateChecker() {
             } catch (err) {
                 console.error("[ForceUpdate] Error during version check:", err);
                 addDebug("[ForceUpdate] ERROR: " + err?.message);
-                // Show debug info temporarily on error too
-                if (mounted) {
+                // Only show debug overlay in development mode
+                if (process.env.NODE_ENV === "development" && mounted) {
                     setDebugInfo(debugLog.join("\n"));
                     setTimeout(() => {
                         if (mounted) setDebugInfo(null);
@@ -314,9 +314,8 @@ export default function ForceUpdateChecker() {
         };
     }, []);
 
-    // Show debug info overlay when not blocked but debug info is available
-    // (e.g., when version detection failed and we skipped the check)
-    if (!blocked && debugInfo) {
+    // Only show debug overlay in development mode (not in production for end users)
+    if (!blocked && debugInfo && process.env.NODE_ENV === "development") {
         return (
             <div style={{
                 position: "fixed",
