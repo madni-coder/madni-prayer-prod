@@ -538,6 +538,7 @@ export default function DynamicEventPage({ slug: propSlug }) {
     const [formData, setFormData] = useState({});
     const [submitting, setSubmitting] = useState(false);
     const [alreadyRegistered, setAlreadyRegistered] = useState(false);
+    const [fillForOther, setFillForOther] = useState(false);
     // prevent a very brief "Not Found" flash while client data hydrates
     const [showNotFound, setShowNotFound] = useState(false);
     // whether we've attempted to load the event from the API at least once
@@ -608,10 +609,8 @@ export default function DynamicEventPage({ slug: propSlug }) {
     }, [slug]);
 
     // Check localStorage to see if this device/browser already registered for this event
-    // Skip this check if the event allows multiple registrations
     useEffect(() => {
         if (!slug) return;
-        if (schema?.allowMultipleRegistrations) return;
         try {
             const key = `registered_event_${slug}`;
             const stored = typeof window !== "undefined" ? localStorage.getItem(key) : null;
@@ -619,7 +618,7 @@ export default function DynamicEventPage({ slug: propSlug }) {
         } catch (err) {
             console.warn("localStorage unavailable", err);
         }
-    }, [slug, schema?.allowMultipleRegistrations]);
+    }, [slug]);
 
     // Delay showing the NotFound screen slightly so we don't flash it.
     // Only show NotFound after we've actually attempted a fetch.
@@ -658,20 +657,23 @@ export default function DynamicEventPage({ slug: propSlug }) {
             const axios = (await import("axios")).default;
             await axios.post(`${apiBase}/api/events/${slug}/submit`, { formData });
             console.log("Form submitted successfully.");
-            // persist registration locally so the same device cannot re-submit — unless multiple registrations are allowed
-            if (!schema?.allowMultipleRegistrations) {
-                try {
-                    const key = `registered_event_${slug}`;
-                    localStorage.setItem(key, JSON.stringify({ time: Date.now(), data: formData }));
-                    setAlreadyRegistered(true);
-                } catch (err) {
-                    console.warn("Failed to persist registration locally:", err);
-                }
+            // Always persist registration locally to mark device as having submitted
+            try {
+                const key = `registered_event_${slug}`;
+                localStorage.setItem(key, JSON.stringify({ time: Date.now() }));
+                setAlreadyRegistered(true);
+            } catch (err) {
+                console.warn("Failed to persist registration locally:", err);
             }
             toast.success(`Registration received for ${displayTitle(schema?.page_title) || "this event"}`);
             setFormData({});
-            // wait for toast to show, then navigate back to events listing
-            setTimeout(() => router.push('/events'), 2000);
+            if (schema?.allowMultipleRegistrations) {
+                // Stay on page — show "already registered" card with Fill for other link
+                setFillForOther(false);
+            } else {
+                // navigate back to events listing
+                setTimeout(() => router.push('/events'), 2000);
+            }
         } catch (error) {
             console.error("Error submitting form:", error);
             toast.error("Failed to submit form. Please try again.");
@@ -736,18 +738,26 @@ export default function DynamicEventPage({ slug: propSlug }) {
 
             {/* Form Card */}
             <div className="max-w-xl mx-auto px-4 py-8">
-                {alreadyRegistered ? (
+                {alreadyRegistered && !fillForOther ? (
                     <div className="bg-base-100 rounded-2xl shadow-sm border border-base-300 overflow-hidden p-6 text-center">
                         <div className="w-20 h-20 rounded-full flex items-center justify-center mx-auto shadow-lg bg-primary">
                             <CheckCircle className="w-10 h-10 text-primary-content" />
                         </div>
-                        <h2 className="text-2xl font-bold mt-4 text-base-content">You are already registered</h2>
+                        <h2 className="text-2xl font-bold mt-4 text-base-content">You have already registered</h2>
                         <p className="opacity-70 mt-2">
                             Our records show you've already submitted a registration for <strong>{displayTitle(schema.page_title)}</strong>.
                         </p>
                         <div className="mt-5 flex gap-3 justify-center">
                             <Link href="/events" className="px-6 py-3 font-semibold rounded-xl hover:opacity-90 transition shadow-md bg-primary text-primary-content">Back to Events</Link>
                         </div>
+                        {schema.allowMultipleRegistrations && (
+                            <button
+                                type="button"
+                                onClick={() => { setFillForOther(true); setFormData({}); }}
+                                className="mt-4 text-base font-semibold text-amber-500 underline underline-offset-2 hover:opacity-80 transition">
+                                Fill the form for others ?
+                            </button>
+                        )}
                     </div>
                 ) : (
                     <form onSubmit={handleSubmit}
