@@ -32,39 +32,54 @@ export default function ContactUs() {
 
         async function getAppVersion() {
             try {
-                // Check if running in Tauri app
+                // ✅ Step 1: Try Tauri native API — gives actual installed APK/IPA version
                 const isTauri =
                     typeof window !== "undefined" &&
                     (window.__TAURI__ !== undefined ||
                         window.__TAURI_INTERNALS__ !== undefined);
 
                 if (isTauri) {
-                    // Get actual installed version from Tauri app
                     try {
                         const tauriApp = await import("@tauri-apps/api/app");
                         const version = await tauriApp.getVersion();
                         if (mounted && version) {
                             setAppVersion(version);
-                            console.log("[ContactUs] Got version from Tauri app:", version);
+                            console.log("[ContactUs] ✅ Got version from Tauri native API:", version);
+                            return;
                         }
-                        return;
                     } catch (e) {
-                        console.log("[ContactUs] Failed to get Tauri version:", e?.message);
+                        console.log("[ContactUs] Tauri getVersion failed, trying fallback:", e?.message);
                     }
                 }
 
-                // Fallback to API for web users
+                // ✅ Step 2: Fallback — fetch app-config.json from Vercel
+                // This always has the correct current_version matching the Play Store build
+                try {
+                    const CONFIG_URL = "https://raahehidayat.vercel.app/app-config.json";
+                    const res = await fetch(CONFIG_URL, { cache: "no-store" });
+                    if (res.ok) {
+                        const cfg = await res.json();
+                        if (mounted && cfg?.current_version) {
+                            setAppVersion(cfg.current_version);
+                            console.log("[ContactUs] ✅ Got version from app-config.json:", cfg.current_version);
+                            return;
+                        }
+                    }
+                } catch (e) {
+                    console.log("[ContactUs] app-config fetch failed:", e?.message);
+                }
+
+                // ✅ Step 3: Last resort — /api/version (web browser fallback only)
                 fetch("/api/version")
                     .then((res) => res.json())
                     .then((data) => {
-                        if (mounted && data && data.version) {
+                        if (mounted && data?.version) {
                             setAppVersion(data.version);
                             console.log("[ContactUs] Got version from API:", data.version);
                         }
                     })
-                    .catch(() => {
-                        /* ignore errors */
-                    });
+                    .catch(() => { /* ignore */ });
+
             } catch (error) {
                 console.error("[ContactUs] Error getting version:", error);
             }
