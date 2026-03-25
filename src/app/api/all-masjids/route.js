@@ -86,7 +86,6 @@ export async function POST(request) {
             asar,
             maghrib,
             isha,
-            taravih = null,
             juma,
             role = null,
             mobile = null,
@@ -126,7 +125,6 @@ export async function POST(request) {
             asar,
             maghrib,
             isha,
-            taravih,
             juma,
             name,
             role,
@@ -181,7 +179,6 @@ export async function PATCH(request) {
             asar,
             maghrib,
             isha,
-            taravih,
             juma,
             role,
             mobile,
@@ -223,7 +220,7 @@ export async function PATCH(request) {
         if (asar !== undefined) updateData.asar = asar;
         if (maghrib !== undefined) updateData.maghrib = maghrib;
         if (isha !== undefined) updateData.isha = isha;
-        if (taravih !== undefined) updateData.taravih = taravih;
+        // taravih removed from model; no-op
         if (juma !== undefined) updateData.juma = juma;
         if (role !== undefined) updateData.role = role;
         if (mobile !== undefined) updateData.mobile = mobile;

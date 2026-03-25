@@ -12,7 +12,6 @@ const prayers = [
     { name: "Asr", defaultTime: "4:30" },
     { name: "Maghrib", defaultTime: "7:15" },
     { name: "Isha", defaultTime: "8:45" },
-    { name: "Taravih", defaultTime: "00:00" },
     { name: "Juma", defaultTime: "1:30" },
 ];
 
@@ -100,8 +99,7 @@ function EditJamatTimePage() {
                     (data.asar || prayers[2].defaultTime).replace(/ am| pm/gi, ""),
                     (data.maghrib || prayers[3].defaultTime).replace(/ am| pm/gi, ""),
                     (data.isha || prayers[4].defaultTime).replace(/ am| pm/gi, ""),
-                    (data.taravih || prayers[5].defaultTime).replace(/ am| pm/gi, ""),
-                    (data.juma || prayers[6].defaultTime).replace(/ am| pm/gi, ""),
+                    (data.juma || prayers[5].defaultTime).replace(/ am| pm/gi, ""),
                 ]);
             } else {
                 setError("Failed to fetch masjid data");
@@ -194,8 +192,7 @@ function EditJamatTimePage() {
                 asar: times[2],
                 maghrib: times[3],
                 isha: times[4],
-                taravih: times[5],
-                juma: times[6],
+                juma: times[5],
             };
 
             const { data } = await ctxPatch(payload);

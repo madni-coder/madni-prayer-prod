@@ -1,0 +1,3 @@
+-- Placeholder migration recreated to satisfy migration history
+-- No-op migration: original changes already present in the database
+-- Add specific SQL here if you want to fully reconstruct the original migration

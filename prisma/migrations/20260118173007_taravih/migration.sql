@@ -1,2 +1,2 @@
--- AlterTable
-ALTER TABLE "all_masjid" ADD COLUMN     "taravih" TEXT;
+-- Recreated migration: add taravih column
+ALTER TABLE "all_masjid" ADD COLUMN IF NOT EXISTS "taravih" TEXT;

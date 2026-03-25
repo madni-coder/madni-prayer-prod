@@ -15,7 +15,6 @@ const prayers = [
     { name: "Asr", defaultTime: "4:30" },
     { name: "Maghrib", defaultTime: "7:15" },
     { name: "Isha", defaultTime: "8:45" },
-    { name: "Taravih", defaultTime: "00:00" },
     { name: "Juma", defaultTime: "1:30" },
 ];
 
@@ -250,8 +249,7 @@ export default function EventUpdates() {
                 asar: times[2],
                 maghrib: times[3],
                 isha: times[4],
-                taravih: times[5],
-                juma: times[6],
+                juma: times[5],
             };
             await apiClient.patch("/api/all-masjids", payload);
             setTimeUpdateMsg({ type: "success", text: "Jamat times updated successfully!" });
@@ -301,8 +299,7 @@ export default function EventUpdates() {
                     (copy.asar || prayers[2].defaultTime).replace(/ am| pm/gi, ""),
                     (copy.maghrib || prayers[3].defaultTime).replace(/ am| pm/gi, ""),
                     (copy.isha || prayers[4].defaultTime).replace(/ am| pm/gi, ""),
-                    (copy.taravih || prayers[5].defaultTime).replace(/ am| pm/gi, ""),
-                    (copy.juma || prayers[6].defaultTime).replace(/ am| pm/gi, ""),
+                    (copy.juma || prayers[5].defaultTime).replace(/ am| pm/gi, ""),
                 ]);
             } catch (err) {
                 setError(err?.response?.data?.error || err.message || "Failed to load masjid details");
@@ -509,7 +506,7 @@ export default function EventUpdates() {
                                         !['masjidName', 'name', 'mobileNumbers', 'mobile', 'phone', 'contactNumber',
                                             'fullAddress', 'address', 'city', 'mutwalliName', 'committeeMembers', 'memberNames',
                                             'imaamName', 'masjidId', 'loginId', 'committeeImage',
-                                            'fazar', 'zuhar', 'asar', 'maghrib', 'isha', 'taravih', 'juma',
+                                            'fazar', 'zuhar', 'asar', 'maghrib', 'isha', 'juma',
                                             'role', 'pasteMapUrl'].includes(k) &&
                                         masjid[k] !== undefined &&
                                         masjid[k] !== null

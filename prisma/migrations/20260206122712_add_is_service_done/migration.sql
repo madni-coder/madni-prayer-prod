@@ -1,0 +1,3 @@
+-- Placeholder migration recreated to satisfy migration history
+-- No-op migration: ensure folder exists and migration.sql is present
+-- Add any specific statements here if needed in the future

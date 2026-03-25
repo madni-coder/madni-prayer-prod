@@ -178,7 +178,6 @@ export default function JamatTimesPage() {
                     asar: freshData.asar,
                     maghrib: freshData.maghrib,
                     isha: freshData.isha,
-                    taravih: freshData.taravih,
                     juma: freshData.juma,
                     pasteMapUrl: freshData.pasteMapUrl || "",
                     savedAt: savedMasjid.savedAt || new Date().toISOString(),
@@ -191,7 +190,6 @@ export default function JamatTimesPage() {
                     savedMasjid.maghrib !== freshData.maghrib ||
                     savedMasjid.isha !== freshData.isha ||
                     savedMasjid.juma !== freshData.juma ||
-                    savedMasjid.taravih !== freshData.taravih ||
                     savedMasjid.locality !== freshData.locality;
 
                 if (isDataDifferent) {
@@ -205,8 +203,7 @@ export default function JamatTimesPage() {
                         if (savedMasjid.asar !== freshData.asar) changed.push("Asar");
                         if (savedMasjid.maghrib !== freshData.maghrib) changed.push("Maghrib");
                         if (savedMasjid.isha !== freshData.isha) changed.push("Isha");
-                        if (savedMasjid.taravih !== freshData.taravih) changed.push("Taravih");
-                        if (savedMasjid.juma !== freshData.juma) changed.push("Juma Khutba");
+                        if (savedMasjid.juma !== freshData.juma) changed.push("Juma");
 
                         if (changed.length > 0) {
                             setChangedPrayers(changed);
@@ -229,8 +226,7 @@ export default function JamatTimesPage() {
                             prev.asar !== freshData.asar ||
                             prev.maghrib !== freshData.maghrib ||
                             prev.isha !== freshData.isha ||
-                            prev.juma !== freshData.juma ||
-                            prev.taravih !== freshData.taravih;
+                            prev.juma !== freshData.juma;
                         if (isPrevDifferent) {
                             return freshData;
                         }
@@ -351,7 +347,6 @@ export default function JamatTimesPage() {
             asar: selectedMasjidData.asar,
             maghrib: selectedMasjidData.maghrib,
             isha: selectedMasjidData.isha,
-            taravih: selectedMasjidData.taravih,
             juma: selectedMasjidData.juma,
             pasteMapUrl: selectedMasjidData.pasteMapUrl || "",
             savedAt: new Date().toISOString(),
@@ -698,12 +693,7 @@ export default function JamatTimesPage() {
                 color: "border-indigo-500",
             },
             {
-                name: "Taravih",
-                time: selectedMasjidData.taravih || "—",
-                color: "border-purple-500",
-            },
-            {
-                name: "Juma Khutba",
+                name: "Juma",
                 time: selectedMasjidData.juma,
                 color: "border-green-500",
             },

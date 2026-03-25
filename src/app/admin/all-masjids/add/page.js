@@ -11,7 +11,6 @@ const prayers = [
     { name: "Asr", defaultTime: "4:45" },
     { name: "Maghrib", defaultTime: "6:10" },
     { name: "Isha", defaultTime: "8:45" },
-    { name: "Taravih", defaultTime: "00:00" },
     { name: "Juma", defaultTime: "1:30" },
 ];
 
@@ -83,8 +82,7 @@ export default function AddMasjidPage() {
                 asar: times[2],
                 maghrib: times[3],
                 isha: times[4],
-                taravih: times[5],
-                juma: times[6],
+                juma: times[5],
             };
 
             const { data } = await create(payload);
