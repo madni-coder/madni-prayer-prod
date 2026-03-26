@@ -3,7 +3,7 @@ import React, { useState, useEffect } from "react";
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { FaAngleLeft } from "react-icons/fa";
+import { FaAngleLeft, FaEnvelope, FaPhone, FaMapMarkerAlt, FaTag } from "react-icons/fa";
 
 export default function ContactUs() {
     const router = useRouter();
@@ -93,112 +93,117 @@ export default function ContactUs() {
     }, []);
 
     return (
-        <main className="flex min-h-screen flex-col items-center justify-center bg-[#1a2332] text-gray-100 p-4 sm:p-6 pb-16">
-            <header className="mb-8 w-full max-w-4xl">
-                <div className="flex items-center gap-4 mb-4">
-                    <button
-                        className="flex items-center gap-2 text-lg text-primary hover:text-green-600 font-semibold"
-                        onClick={() => router.push("/")}
-                        aria-label="Back to Home"
-                    >
-                        <FaAngleLeft /> Back
-                    </button>
-                    <h1 className="text-3xl md:text-4xl font-extrabold tracking-tight text-green-400 mb-0">
-                        Contact Us
-                    </h1>
-                </div>
-            </header>
-
-            {/* Information Demo Section */}
-            <section className="mb-8 w-full max-w-4xl">
-                <h2 className="text-xl md:text-2xl font-semibold mb-4 text-green-400">
-                    Motive Of Our App
-                </h2>
-                <div className="bg-green-700 rounded-lg p-6 text-white">
-                    <p className="text-base md:text-lg">
-                        Our platform is designed to help you stay connected with
-                        Jamat Times manage daily prayer times, and access
-                        essential Islamic resources. Experience a seamless and
-                        modern interface tailored for your spiritual journey.
-                    </p>
-                </div>
-            </section>
-
-            {/* About Us Section */}
-            <section className="mb-8 w-full max-w-4xl">
-                <h2 className="text-xl md:text-2xl font-semibold mb-4 text-green-400">
-                    About Us
-                </h2>
-                <div className="bg-green-700 rounded-lg p-6 text-white">
-                    <p className="text-base md:text-lg"></p>
-Raahe Hidayat is an initiative dedicated to spreading the authentic beliefs and teachings of Ahl-e-Sunnat wa Jama‘at, based on the Qur’an and the Sunnah of the Beloved Prophet Muhammad ﷺ. Our foundation is built upon deep love and respect for all the Sahaba-e-Kiram (RadiAllahu Ta'ala Anhum) and reverence for the Awliya-e-Kiram, while following the path of the great scholars of the Ummah. Through this platform, we aim to strengthen correct Islamic beliefs (Aqaid), promote love for the Prophet ﷺ, and guide people not only towards religious knowledge and spirituality but also encourage worldly education, ethical entrepreneurship, and business, so that individuals and the community can grow with knowledge, character, and prosperity.                </div>
-            </section>
-
-            {/* Contact Information Section */}
-            <section className="mb-8">
-                <h3 className="text-lg font-medium text-green-400 mb-6 text-center">
-                    Get in touch
-                </h3>
-                <div className="space-y-4">
-                    <div className="flex items-center gap-4">
-                        <span className="text-blue-400">📧</span>
-                        <span className="text-gray-300 font-medium">Email</span>
-                        <span className="text-gray-400">
-                            raahehidayatindia@gmail.com
-                        </span>
-                    </div>
-                    <div className="flex items-center gap-4">
-                        <span className="text-gray-300">📞</span>
-                        <span className="text-gray-300 font-medium">Phone</span>
-                        <span className="text-gray-400">88171 88825, 96913 02711</span>
-
-                    </div>
-                    <div className="flex items-center gap-4">
-                        <span className="text-red-400">📍</span>
-                        <span className="text-gray-300 font-medium">
-                            Address
-                        </span>
-                        <span className="text-gray-400">
-                            Bilaspur , Chhattisgarh
-                        </span>
-                        <div>
-
+        <div className="min-h-screen bg-gradient-to-br from-background via-background to-muted/20">
+            <div className="container mx-auto px-4 py-12 max-w-4xl">
+                <div className="mb-8">
+                    <div className="grid grid-cols-[auto_1fr_auto] items-center mb-4 gap-4">
+                        <div className="flex justify-start">
+                            <button
+                                className="flex items-center gap-2 text-lg text-primary hover:text-primary/80 font-semibold mt-[-40]"
+                                onClick={() => router.push("/")}
+                                aria-label="Back to Home"
+                            >
+                                <FaAngleLeft /> Back
+                            </button>
                         </div>
 
-                    </div>
-                    <div>
-                        {appVersion ? (
-                            <div className="flex items-center gap-4 mb-2">
-                                <span className="text-gray-300">🔖</span>
-                                <span className="text-gray-300 font-medium">App version</span>
-                                <span className="text-green-400 font-semibold">{appVersion}</span>
-                            </div>
-                        ) : null}
+                        <div className="text-center">
+                            <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold leading-tight bg-gradient-to-r from-primary to-primary/60 bg-clip-text text-transparent mb-0 mr-4 mt-[-40]">
+                                Contact Us
+                            </h1>
+                        </div>
 
-                        <Link
-                            href="/privacy"
-                            className="text-green-400 hover:text-green-300 hover:underline font-semibold transition-colors duration-200"
-                        >
-                            See Privacy Policy →
-                        </Link>
+                        <div />
                     </div>
                 </div>
-            </section>
 
-            {/* Footer Section */}
-            <footer className="mt-10 pt-6 border-t border-gray-600 text-center text-xs w-full space-y-3">
+                <div className="space-y-6">
+                    <div className="rounded-lg bg-card text-card-foreground shadow-sm hover:shadow-md transition-shadow duration-300">
+                        <div className="p-6">
+                            <h2 className="text-xl md:text-2xl font-semibold text-primary mb-4">Motive Of Our App</h2>
+                            <p className="text-muted-foreground leading-relaxed">
+                                Our platform is designed to help you stay connected with Jamat Times, manage daily prayer times, and access essential Islamic resources. Experience a seamless and modern interface tailored for your spiritual journey.
+                            </p>
+                        </div>
+                    </div>
 
-                <span className="text-gray-400">
-                    Developed by{" "}
-                    <Link
-                        href="https://www.geeksinvention.com/"
-                        target="_blank"
-                        className="text-green-600 hover:underline font-semibold"
-                    >
-                        Geeks Invention Pvt Ltd
-                    </Link>
-                </span>
-            </footer>
-        </main>
+                    <div className="rounded-lg bg-card text-card-foreground shadow-sm hover:shadow-md transition-shadow duration-300">
+                        <div className="p-6">
+                            <h2 className="text-xl md:text-2xl font-semibold text-primary mb-4">About Us</h2>
+                            <p className="text-muted-foreground leading-relaxed">
+                                Raahe Hidayat is an initiative dedicated to spreading the authentic beliefs and teachings of Ahl-e-Sunnat wa Jama‘at, based on the Qur’an and the Sunnah of the Beloved Prophet Muhammad ﷺ. Our foundation is built upon deep love and respect for all the Sahaba-e-Kiram and reverence for the Awliya-e-Kiram. Through this platform, we aim to strengthen correct Islamic beliefs, promote love for the Prophet ﷺ, and guide people towards religious knowledge, spirituality, and ethical growth.
+                            </p>
+                        </div>
+                    </div>
+
+                    <div className="rounded-lg bg-card text-card-foreground shadow-sm hover:shadow-md transition-shadow duration-300">
+                        <div className="p-6">
+                            <h3 className="text-center text-xl md:text-2xl font-semibold bg-gradient-to-r from-primary to-primary/60 bg-clip-text text-transparent mb-6">Get in touch</h3>
+
+                            <div className="grid grid-cols-1 gap-4">
+                                <div className="flex items-start gap-4">
+                                    <div className="w-10 h-10 rounded-md bg-primary/10 text-primary flex items-center justify-center text-lg">
+                                        <FaEnvelope className="text-xl" />
+                                    </div>
+                                    <div>
+                                        <div className="text-sm text-muted-foreground font-medium">Email</div>
+                                        <div className="text-base text-card-foreground">raahehidayatindia@gmail.com</div>
+                                    </div>
+                                </div>
+
+                                <div className="flex items-start gap-4">
+                                    <div className="w-10 h-10 rounded-md bg-primary/10 text-primary flex items-center justify-center text-lg">
+                                        <FaPhone className="text-xl" />
+                                    </div>
+                                    <div>
+                                        <div className="text-sm text-muted-foreground font-medium">Phone</div>
+                                        <div className="text-base text-card-foreground">88171 88825, 96913 02711</div>
+                                    </div>
+                                </div>
+
+                                <div className="flex items-start gap-4">
+                                    <div className="w-10 h-10 rounded-md bg-primary/10 text-primary flex items-center justify-center text-lg">
+                                        <FaMapMarkerAlt className="text-xl" />
+                                    </div>
+                                    <div>
+                                        <div className="text-sm text-muted-foreground font-medium">Address</div>
+                                        <div className="text-base text-card-foreground">Bilaspur, Chhattisgarh</div>
+                                    </div>
+                                </div>
+
+                                <div className="flex items-start gap-4">
+                                    <div className="w-10 h-10 rounded-md bg-primary/10 text-primary flex items-center justify-center text-lg">
+                                        <FaTag className="text-xl" />
+                                    </div>
+                                    <div>
+                                        <div className="text-sm text-muted-foreground font-medium">App version</div>
+                                        <div className="text-base">
+                                            <span className="inline-block bg-primary/10 text-primary  font-semibold">{appVersion || '—'}</span>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div className="pt-2">
+                                    <Link href="/privacy" className="text-primary hover:underline font-semibold">See Privacy Policy →</Link>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div className="my-8" />
+
+                <div className="rounded-lg bg-muted/30 text-card-foreground shadow-sm">
+                    <div className="p-6 text-center">
+                        <p className="text-muted-foreground">Developed by</p>
+                        <p className="text-muted-foreground mt-1">
+                            <Link href="https://www.geeksinvention.com/" target="_blank" className="text-primary hover:underline font-semibold block">
+                                Geeks Invention Pvt Ltd
+                            </Link>
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
     );
 }
