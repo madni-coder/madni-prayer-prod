@@ -8,16 +8,18 @@ function formatNumber(n) {
 export default async function AdminDashboard() {
     const now = new Date();
 
-    // Start of ISO week (Monday)
-    const day = now.getDay(); // 0 (Sun) - 6 (Sat)
-    const diffToMonday = (day + 6) % 7; // days since Monday
-    const startOfWeek = new Date(now);
-    startOfWeek.setDate(now.getDate() - diffToMonday);
-    startOfWeek.setHours(0, 0, 0, 0);
+    // Use UTC-based period starts to avoid local timezone drift when comparing
+    // against `createdAt` (which may be stored in UTC in the DB).
+    // Start of ISO week (Monday) in UTC
+    const utcDay = now.getUTCDay(); // 0 (Sun) - 6 (Sat)
+    const diffToMonday = (utcDay + 6) % 7; // days since Monday
+    const startOfWeek = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate()));
+    startOfWeek.setUTCDate(startOfWeek.getUTCDate() - diffToMonday);
+    startOfWeek.setUTCHours(0, 0, 0, 0);
 
-    // Start of month
-    const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
-    startOfMonth.setHours(0, 0, 0, 0);
+    // Start of month in UTC
+    const startOfMonth = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), 1));
+    startOfMonth.setUTCHours(0, 0, 0, 0);
 
     const [totalUsers, weekUsers, monthUsers] = await Promise.all([
         prisma.user.count(),
