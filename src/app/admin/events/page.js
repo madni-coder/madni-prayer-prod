@@ -7,46 +7,7 @@ import {
     CalendarRange, Plus, Pencil, Trash2, Eye,
     FileText, Clock, Users, ChevronRight, Search, ToggleLeft, ToggleRight,
     ArrowUp, ArrowDown
-} from "lucide-react";
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+} from "lucide-react"
 
 // ─── Status Badge ────────────────────────────────────────────────────────────
 // Sanitize text to avoid rendering HTML/code in titles/descriptions
@@ -312,8 +273,24 @@ export default function AdminEventsPage() {
                     isActive: !currentStatus
                 }
                 await axios.put(`${apiBase}/api/admin/events/${slug}`, { schema: updatePayload });
-                // refresh public order mapping after change
-                await loadPublicOrder();
+                // If we just set the page to draft, move it to the end of the list and persist order
+                const newStatus = !currentStatus;
+                if (!newStatus) {
+                    // move the page to the end locally and persist order
+                    setPages(prev => {
+                        const copy = [...prev];
+                        const idx = copy.findIndex(p => p.slug === slug);
+                        if (idx === -1) return prev;
+                        const [item] = copy.splice(idx, 1);
+                        copy.push(item);
+                        // persistOrder will call setPages again after saving
+                        persistOrder(copy);
+                        return copy;
+                    });
+                } else {
+                    // Just refresh public order mapping for live changes
+                    await loadPublicOrder();
+                }
             }
         } catch (err) {
             console.error("Failed to toggle status", err);
@@ -424,10 +401,10 @@ export default function AdminEventsPage() {
                             onDragOver={handleDragOver}
                             onDrop={handleDrop}
                             onDragEnd={() => setDraggingSlug(null)}
-                            className={`bg-white border border-gray-200 rounded-xl shadow-sm hover:shadow-md transition overflow-hidden ${draggingSlug === page.slug ? "opacity-80" : ""}`}>
+                            className={`rounded-xl shadow-sm hover:shadow-md transition overflow-hidden ${draggingSlug === page.slug ? "opacity-80" : ""} ${page.isActive ? "bg-white border border-gray-200" : "bg-red-50 border border-red-200"}`}>
                             <div className="flex items-start gap-0">
                                 {/* Color Bar */}
-                                <div className="w-1.5 rounded-l-xl self-stretch bg-violet-600" />
+                                <div className={`w-1.5 rounded-l-xl self-stretch ${page.isActive ? "bg-violet-600" : "bg-red-600"}`} />
 
                                 <div className="flex-1 p-4">
                                     <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
