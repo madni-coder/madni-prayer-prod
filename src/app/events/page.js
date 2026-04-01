@@ -86,14 +86,20 @@ export default function EventsListingPage() {
 
                         <div className="mt-3 text-left sm:text-left">
                             <div className="text-sm font-semibold text-base-content">Final Exam (Only For Boys) :</div>
-                            <a
-                                href="https://archive.org/details/makhzan-e-malumat/page/19/mode/2up"
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="text-cyan-300 underline mt-2 block"
+                            <button
+                                onClick={async () => {
+                                    const url = "https://archive.org/details/makhzan-e-malumat/page/19/mode/2up";
+                                    try {
+                                        const { openUrl } = await import("@tauri-apps/plugin-opener");
+                                        await openUrl(url);
+                                    } catch {
+                                        window.open(url, "_blank", "noopener,noreferrer");
+                                    }
+                                }}
+                                className="text-cyan-300 underline mt-2 block cursor-pointer bg-transparent border-none p-0 text-left"
                             >
                                 Makhzan-e-Malumat
-                            </a>
+                            </button>
                         </div>
                     </div>
                 </div>
