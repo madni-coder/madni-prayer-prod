@@ -34,6 +34,12 @@ const sections = [
         accent: '#ec4899',
     },
     {
+        name: "Prayer Times",
+        href: "/prayer-times",
+        icon: <FaClock className="text-4xl lg:text-5xl text-yellow-500 drop-shadow-[0_0_15px_rgba(234,179,8,0.5)]" />,
+        accent: '#f59e0b',
+    },
+    {
         name: "Events & Programs",
         href: "/events",
         icon: (
@@ -41,12 +47,7 @@ const sections = [
         ),
         accent: '#f43f5e',
     },
-    {
-        name: "Prayer Times",
-        href: "/prayer-times",
-        icon: <FaClock className="text-4xl lg:text-5xl text-yellow-500 drop-shadow-[0_0_15px_rgba(234,179,8,0.5)]" />,
-        accent: '#f59e0b',
-    },
+  
     {
         name: "Qibla Finder",
         href: "/qibla",

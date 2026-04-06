@@ -76,32 +76,7 @@ export default function EventsListingPage() {
                     <p className="mt-2 text-sm sm:text-base text-muted max-w-2xl">
                         Join us for wonderful Islamic programs/events to enhance your success.
                     </p>
-                    <div className="mt-8">
-                        <div className="mt-3 text-left sm:text-left">
-                            <div className="text-sm font-semibold text-base-content z-[-120]">Exam Syllabus for Girls :</div>
-                            <Link href="/pdf-viewer?file=/girls.pdf&title=Exam+Syllabus+for+Girls" className="text-cyan-300 underline mt-2 block">
-                                View PDF for exam (for girls only)
-                            </Link>
-                        </div>
-
-                        <div className="mt-3 text-left sm:text-left">
-                            <div className="text-sm font-semibold text-base-content">Final Exam (Only For Boys) :</div>
-                            <button
-                                onClick={async () => {
-                                    const url = "https://archive.org/details/makhzan-e-malumat/page/19/mode/2up";
-                                    try {
-                                        const { openUrl } = await import("@tauri-apps/plugin-opener");
-                                        await openUrl(url);
-                                    } catch {
-                                        window.open(url, "_blank", "noopener,noreferrer");
-                                    }
-                                }}
-                                className="text-cyan-300 underline mt-2 block cursor-pointer bg-transparent border-none p-0 text-left"
-                            >
-                                Makhzan-e-Malumat
-                            </button>
-                        </div>
-                    </div>
+                   
                 </div>
 
                 {loading ? (
