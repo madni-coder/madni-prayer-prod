@@ -41,26 +41,33 @@ export async function POST(request) {
 }
 
 /**
- * GET /api/committee-event-responses?masjidLoginId=<int>
- * Returns all responses for a given masjid across all events,
- * keyed by event, so the admin can see every event + that masjid's vote.
+ * GET /api/committee-event-responses
+ *   ?eventId=<uuid>              → all responses for that event (admin view)
+ *   ?masjidLoginId=<int>         → all responses by that masjid  (masjid view)
+ *   ?masjidLoginId=<int>&eventId=<uuid> → specific masjid + event
  */
 export async function GET(request) {
     try {
         const { searchParams } = new URL(request.url);
         const masjidLoginId = searchParams.get("masjidLoginId");
-        const eventId = searchParams.get("eventId");
+        const eventId       = searchParams.get("eventId");
 
-        if (!masjidLoginId) {
-            return NextResponse.json({ error: "masjidLoginId is required" }, { status: 400 });
+        if (!masjidLoginId && !eventId) {
+            return NextResponse.json(
+                { error: "Provide at least one of: eventId, masjidLoginId" },
+                { status: 400 }
+            );
         }
 
-        const where = { masjidLoginId: Number(masjidLoginId) };
-        if (eventId) where.eventId = eventId;
+        const where = {};
+        if (masjidLoginId) where.masjidLoginId = Number(masjidLoginId);
+        if (eventId)       where.eventId = eventId;
 
         const responses = await prisma.committeeEventResponse.findMany({
             where,
-            include: { event: { select: { id: true, title: true, createdAt: true } } },
+            include: {
+                event: { select: { id: true, title: true, description: true, createdAt: true } },
+            },
             orderBy: { submittedAt: "desc" },
         });
 
