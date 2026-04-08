@@ -25,8 +25,10 @@ function mapLocalhostForAndroidEmulator(base) {
 
 const resolvedBase = mapLocalhostForAndroidEmulator(defaultBase);
 
+const finalBaseURL = resolvedBase || (typeof window !== "undefined" ? window.location.origin : "");
+
 const apiClient = axios.create({
-    baseURL: resolvedBase,
+    baseURL: finalBaseURL,
     withCredentials: false,
 });
 

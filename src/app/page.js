@@ -10,16 +10,14 @@ import {
     FaClock,
     FaRegCompass,
     FaGift,
-    FaMicrophone,
-    FaPhoneSquare,
-    FaHandPointRight,
     FaUser,
     FaStore,
     FaBriefcase,
     FaRegIdBadge,
     FaMosque,
-    FaFileAlt
+    FaFileAlt,
 } from "react-icons/fa";
+import { FaUserGroup }from 'react-icons/fa6'
 import { Megaphone, UsersRound, CalendarRange } from "lucide-react";
 import Image from "next/image";
 import TasbihSvgIcon from "../components/TasbihSvgIcon";
@@ -107,9 +105,17 @@ const sections = [
         name: "Masjid Committee",
         href: "/committee",
         icon: (
-            <FaMosque className="text-4xl lg:text-5xl text-indigo-400 drop-shadow-[0_0_15px_rgba(129,140,248,0.5)]" />
+            <FaUserGroup className="text-4xl lg:text-5xl text-indigo-400 drop-shadow-[0_0_15px_rgba(129,140,248,0.5)]" />
         ),
         accent: '#818cf8',
+    },
+    {
+        name: "All Masjids",
+        href: "/masjidLists",
+        icon: (
+            <FaMosque className="text-4xl lg:text-5xl text-teal-400 drop-shadow-[0_0_15px_rgba(45,212,191,0.5)]" />
+        ),
+        accent: '#2dd4bf',
     },
     {
         name: "Contact Us",
