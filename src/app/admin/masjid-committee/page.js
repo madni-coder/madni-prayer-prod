@@ -4,7 +4,7 @@ import { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import {
     RefreshCw, PlusCircle, Trash2, CalendarCheck2,
-    ImageIcon, FileText, ChevronRight, Users
+    ImageIcon, FileText, ChevronRight, Users, Pencil
 } from "lucide-react";
 
 export default function MasjidCommitteePage() {
@@ -166,6 +166,17 @@ export default function MasjidCommitteePage() {
                                         size={15}
                                         className="text-white/60 group-hover:text-white transition-colors"
                                     />
+                                    {/* Edit Button */}
+                                    <button
+                                        onClick={(e) => {
+                                            e.stopPropagation();
+                                            router.push(`/admin/masjid-committee/${ev.id}`);
+                                        }}
+                                        className="ml-1 p-1.5 text-white/60 hover:text-white hover:bg-white/20 rounded-lg transition-colors"
+                                        title="Edit event"
+                                    >
+                                        <Pencil size={13} />
+                                    </button>
                                     {/* Delete Button */}
                                     <button
                                         onClick={(e) => handleDeleteEvent(e, ev.id)}

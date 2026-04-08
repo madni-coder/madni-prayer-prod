@@ -1,6 +1,9 @@
 "use client";
 
-export const dynamic = 'force-dynamic';
+// Module-level cache — survives navigations within the same browser session
+let _cachedEvents = null;
+let _cacheTime    = 0;
+const CACHE_TTL_MS = 5 * 60 * 1000; // 5 minutes
 
 import { useEffect, useState, useRef } from "react";
 import { useRouter } from "next/navigation";
@@ -20,6 +23,36 @@ const btnClass = (color, active) => {
 };
 
 // ─── In-Card Image Carousel ───────────────────────────────────────────────────
+function CarouselImage({ src, alt }) {
+    const [loaded, setLoaded] = useState(false);
+    return (
+        <div className="relative w-full shrink-0" style={{ minWidth: "100%" }}>
+            {/* Shimmer skeleton shown while image loads */}
+            {!loaded && (
+                <div
+                    className="w-full"
+                    style={{
+                        minHeight: "220px",
+                        background: "linear-gradient(90deg, #1e293b 25%, #334155 50%, #1e293b 75%)",
+                        backgroundSize: "200% 100%",
+                        animation: "shimmer 1.4s infinite",
+                    }}
+                />
+            )}
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+                src={src}
+                alt={alt}
+                onLoad={() => setLoaded(true)}
+                onError={(e) => { e.currentTarget.style.display = "none"; setLoaded(true); }}
+                draggable={false}
+                className="w-full block transition-opacity duration-400"
+                style={{ opacity: loaded ? 1 : 0, position: loaded ? "static" : "absolute", top: 0, left: 0 }}
+            />
+        </div>
+    );
+}
+
 function CardCarousel({ images }) {
     const valid = (images || []).filter(Boolean);
     const [idx, setIdx] = useState(0);
@@ -40,63 +73,61 @@ function CardCarousel({ images }) {
     };
 
     return (
-        <div
-            className="relative w-full overflow-hidden rounded-t-2xl bg-black"
-            onTouchStart={onTouchStart}
-            onTouchEnd={onTouchEnd}
-        >
-            {/* Slides — each image shown at full natural height */}
+        <>
+            {/* Shimmer keyframe — injected once */}
+            <style>{`
+                @keyframes shimmer {
+                    0%   { background-position: 200% 0; }
+                    100% { background-position: -200% 0; }
+                }
+            `}</style>
             <div
-                className="flex transition-transform duration-500 ease-in-out"
-                style={{ transform: `translateX(-${idx * 100}%)` }}
+                className="relative w-full overflow-hidden rounded-t-2xl"
+                onTouchStart={onTouchStart}
+                onTouchEnd={onTouchEnd}
             >
-                {valid.map((src, i) => (
-                    // eslint-disable-next-line @next/next/no-img-element
-                    <img
-                        key={i}
-                        src={src}
-                        alt={`Event image ${i + 1}`}
-                        onError={(e) => { e.currentTarget.style.display = "none"; }}
-                        className="w-full shrink-0 block"
-                        style={{ minWidth: "100%" }}
-                        draggable={false}
-                    />
-                ))}
+                {/* Slides */}
+                <div
+                    className="flex transition-transform duration-500 ease-in-out"
+                    style={{ transform: `translateX(-${idx * 100}%)` }}
+                >
+                    {valid.map((src, i) => (
+                        <CarouselImage key={src} src={src} alt={`Event image ${i + 1}`} />
+                    ))}
+                </div>
+
+                {/* Bottom gradient overlay */}
+                <div className="absolute bottom-0 left-0 right-0 h-12 bg-gradient-to-t from-slate-900/60 to-transparent pointer-events-none" />
+
+                {valid.length > 1 && (
+                    <>
+                        <button onClick={prev} aria-label="Previous image"
+                            className="absolute left-2.5 top-1/2 -translate-y-1/2 w-8 h-8 flex items-center justify-center bg-black/50 hover:bg-black/80 text-white rounded-full backdrop-blur-sm transition-all z-10">
+                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M15 19l-7-7 7-7" />
+                            </svg>
+                        </button>
+                        <button onClick={next} aria-label="Next image"
+                            className="absolute right-2.5 top-1/2 -translate-y-1/2 w-8 h-8 flex items-center justify-center bg-black/50 hover:bg-black/80 text-white rounded-full backdrop-blur-sm transition-all z-10">
+                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M9 5l7 7-7 7" />
+                            </svg>
+                        </button>
+
+                        <div className="absolute top-3 right-3 z-10 bg-black/60 backdrop-blur-sm text-white px-2.5 py-1 rounded-full text-xs font-semibold">
+                            {idx + 1} / {valid.length}
+                        </div>
+
+                        <div className="absolute bottom-3 left-1/2 -translate-x-1/2 z-10 flex gap-1.5 bg-black/30 backdrop-blur-sm px-2.5 py-1.5 rounded-full">
+                            {valid.map((_, i) => (
+                                <button key={i} onClick={() => setIdx(i)} aria-label={`Image ${i + 1}`}
+                                    className={`h-1.5 rounded-full transition-all duration-300 ${i === idx ? "bg-emerald-400 w-5" : "bg-white/50 w-1.5"}`} />
+                            ))}
+                        </div>
+                    </>
+                )}
             </div>
-
-            {/* Bottom gradient overlay — blends into card body */}
-            <div className="absolute bottom-0 left-0 right-0 h-12 bg-gradient-to-t from-slate-900/60 to-transparent pointer-events-none" />
-
-            {valid.length > 1 && (
-                <>
-                    <button onClick={prev} aria-label="Previous image"
-                        className="absolute left-2.5 top-1/2 -translate-y-1/2 w-8 h-8 flex items-center justify-center bg-black/50 hover:bg-black/80 text-white rounded-full backdrop-blur-sm transition-all z-10">
-                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M15 19l-7-7 7-7" />
-                        </svg>
-                    </button>
-                    <button onClick={next} aria-label="Next image"
-                        className="absolute right-2.5 top-1/2 -translate-y-1/2 w-8 h-8 flex items-center justify-center bg-black/50 hover:bg-black/80 text-white rounded-full backdrop-blur-sm transition-all z-10">
-                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M9 5l7 7-7 7" />
-                        </svg>
-                    </button>
-
-                    {/* Counter */}
-                    <div className="absolute top-3 right-3 z-10 bg-black/60 backdrop-blur-sm text-white px-2.5 py-1 rounded-full text-xs font-semibold">
-                        {idx + 1} / {valid.length}
-                    </div>
-
-                    {/* Dots */}
-                    <div className="absolute bottom-3 left-1/2 -translate-x-1/2 z-10 flex gap-1.5 bg-black/30 backdrop-blur-sm px-2.5 py-1.5 rounded-full">
-                        {valid.map((_, i) => (
-                            <button key={i} onClick={() => setIdx(i)} aria-label={`Image ${i + 1}`}
-                                className={`h-1.5 rounded-full transition-all duration-300 ${i === idx ? "bg-emerald-400 w-5" : "bg-white/50 w-1.5"}`} />
-                        ))}
-                    </div>
-                </>
-            )}
-        </div>
+        </>
     );
 }
 
@@ -274,13 +305,27 @@ export default function RhPrograms() {
     useEffect(() => {
         let mounted = true;
         (async () => {
+            // Use cache if fresh — avoids re-downloading images on every visit
+            const now = Date.now();
+            if (_cachedEvents && (now - _cacheTime) < CACHE_TTL_MS) {
+                if (mounted) {
+                    setEvents(_cachedEvents);
+                    setLoading(false);
+                }
+                return;
+            }
+
             setLoading(true);
             setError(null);
             try {
-                const res = await fetch("/api/committee-events");
+                const res  = await fetch("/api/committee-events");
                 const json = await res.json();
                 if (!res.ok) throw new Error(json.error || "Failed to load events");
-                if (mounted) setEvents(json.events || []);
+                const evts = json.events || [];
+                // Store in module-level cache
+                _cachedEvents = evts;
+                _cacheTime    = Date.now();
+                if (mounted) setEvents(evts);
             } catch (err) {
                 console.error("Failed to load committee events", err);
                 if (mounted) setError("Failed to load announcements. Please try again.");

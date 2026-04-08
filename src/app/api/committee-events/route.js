@@ -105,3 +105,61 @@ export async function DELETE(request) {
         return NextResponse.json({ error: err.message ?? String(err) }, { status: 500 });
     }
 }
+
+// ── PATCH /api/committee-events?id=<uuid> ────────────────────────────────────
+// Updates title, description, buttons. Accepts new images/pdfs via FormData.
+// Pass keepImageUrls and keepPdfAttachments (JSON arrays) to retain existing files.
+export async function PATCH(request) {
+    try {
+        const id = new URL(request.url).searchParams.get("id");
+        if (!id) return NextResponse.json({ error: "id is required" }, { status: 400 });
+
+        const fd = await request.formData();
+        const title       = (fd.get("title")       || "").trim();
+        const description = (fd.get("description") || "").trim();
+
+        let buttons;
+        const rawButtons = fd.get("buttons");
+        if (rawButtons) {
+            try { buttons = JSON.parse(rawButtons); } catch { buttons = []; }
+        }
+
+        // Existing files the client wants to KEEP
+        let keepImageUrls = [];
+        let keepPdfs      = [];
+        try { keepImageUrls = JSON.parse(fd.get("keepImageUrls")      || "[]"); } catch { /**/ }
+        try { keepPdfs      = JSON.parse(fd.get("keepPdfAttachments") || "[]"); } catch { /**/ }
+
+        // Upload NEW images
+        const newImageUrls = [];
+        for (const img of fd.getAll("images")) {
+            if (img?.size > 0) {
+                const url = await uploadFile(img, "committee-events/images");
+                if (url) newImageUrls.push(url);
+            }
+        }
+
+        // Upload NEW PDFs
+        const newPdfs = [];
+        for (const pdf of fd.getAll("pdfs")) {
+            if (pdf?.size > 0) {
+                const url = await uploadFile(pdf, "committee-events/pdfs");
+                if (url) newPdfs.push({ name: pdf.name, url });
+            }
+        }
+
+        const updateData = {
+            ...(title       && { title }),
+            ...(description !== undefined && { description }),
+            ...(buttons !== undefined     && { buttons }),
+            imageUrls:      [...keepImageUrls, ...newImageUrls],
+            pdfAttachments: [...keepPdfs, ...newPdfs],
+        };
+
+        const event = await prisma.committeeEvent.update({ where: { id }, data: updateData });
+        return NextResponse.json({ success: true, event });
+    } catch (err) {
+        console.error("/api/committee-events PATCH", err);
+        return NextResponse.json({ error: err.message ?? String(err) }, { status: 500 });
+    }
+}

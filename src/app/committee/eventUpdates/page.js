@@ -407,67 +407,76 @@ export default function EventUpdates() {
                 {/* Event image + header always visible; details can be toggled to save space when many images are shown */}
                 {!loading && masjid && (
                     <>
-                        {/* Committee Announcements Card — click to open rhPrograms viewer */}
+                        {/* Committee Announcements Card — premium design */}
                         <button
                             onClick={() => router.push('/committee/rhPrograms')}
                             className="w-full text-left group focus:outline-none mb-4"
                             aria-label="Open Committee Announcements"
                         >
-                            <div className="relative overflow-hidden rounded-2xl shadow-2xl border border-emerald-500/30 transition-transform duration-300 group-hover:scale-[1.02] group-active:scale-[0.98]">
-                                {/* Gradient header */}
-                                <div className="bg-gradient-to-r from-teal-600 to-emerald-600 px-5 py-4 flex items-center gap-3">
-                                    <div className="bg-white/20 rounded-full p-2.5 shrink-0">
-                                        <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
-                                        </svg>
+                            <div className="relative overflow-hidden rounded-2xl shadow-2xl transition-transform duration-300 group-hover:scale-[1.02] group-active:scale-[0.98]"
+                                style={{
+                                    background: "linear-gradient(135deg, #0f172a 0%, #1e3a5f 40%, #0d9488 100%)",
+                                }}
+                            >
+                                {/* Animated shimmer overlay */}
+                                <div className="absolute inset-0 opacity-30"
+                                    style={{
+                                        background: "radial-gradient(ellipse at 20% 50%, rgba(52,211,153,0.4) 0%, transparent 60%), radial-gradient(ellipse at 80% 20%, rgba(59,130,246,0.3) 0%, transparent 50%)",
+                                    }}
+                                />
+
+                                {/* Decorative floating dots */}
+                                <div className="absolute top-4 right-6 w-2 h-2 rounded-full bg-emerald-400/40 animate-pulse" />
+                                <div className="absolute top-8 right-12 w-1.5 h-1.5 rounded-full bg-blue-400/30 animate-pulse" style={{ animationDelay: "0.3s" }} />
+                                <div className="absolute bottom-6 right-8 w-1 h-1 rounded-full bg-teal-300/50 animate-pulse" style={{ animationDelay: "0.6s" }} />
+
+                                {/* Main content */}
+                                <div className="relative z-10 px-5 py-5">
+                                    {/* Top row: icon + title + arrow */}
+                                    <div className="flex items-center gap-3.5 mb-4">
+                                        <div className="relative">
+                                            <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center shadow-lg shadow-emerald-500/30">
+                                                <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
+                                                </svg>
+                                            </div>
+                                            {/* Notification dot */}
+                                            <div className="absolute -top-1 -right-1 w-3.5 h-3.5 bg-red-500 rounded-full border-2 border-slate-900 animate-pulse" />
+                                        </div>
+                                        <div className="flex-1 min-w-0">
+                                            <h3 className="text-white font-bold text-lg leading-tight">Announcements For Committee</h3>
+                                            <p className="text-emerald font-bold text-xs mt-0.5">From Raahe Hidayat Team</p>
+                                        </div>
+                                        {/* Arrow with glow */}
+                                        <div className="shrink-0 w-10 h-10 rounded-full bg-white/10 border border-white/20 flex items-center justify-center group-hover:bg-white/20 group-hover:border-white/30 transition-all duration-300">
+                                            <svg className="w-4 h-4 text-white group-hover:translate-x-0.5 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M9 5l7 7-7 7" />
+                                            </svg>
+                                        </div>
                                     </div>
-                                    <div className="flex-1 min-w-0">
-                                        <h3 className="text-white font-bold text-lg leading-tight">Committee Announcements</h3>
-                                        <p className="text-white/80 text-sm">From Raahe Hidayat Team</p>
-                                    </div>
-                                    {/* Arrow indicator */}
-                                    <div className="shrink-0 bg-white/20 rounded-full p-2 group-hover:bg-white/30 transition-colors">
-                                        <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M9 5l7 7-7 7" />
-                                        </svg>
+
+                                    {/* Bottom row: info chips */}
+                                    <div className="flex items-center gap-2.5">
+                                        <div className="flex items-center gap-2 bg-white/10 backdrop-blur-sm rounded-xl px-3.5 py-2 border border-white/10">
+                                            <svg className="w-4 h-4 text-emerald-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.8" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                                            </svg>
+                                            <span className="text-white/90 text-xs font-medium">View Programs</span>
+                                        </div>
+                                        <div className="flex items-center gap-2 bg-white/10 backdrop-blur-sm rounded-xl px-3.5 py-2 border border-white/10">
+                                            <svg className="w-4 h-4 text-blue-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.8" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                                            </svg>
+                                            <span className="text-white/90 text-xs font-medium">Vote &amp; Comment</span>
+                                        </div>
+                                        {loadingCommitteeImages && (
+                                            <div className="w-4 h-4 border-2 border-emerald-400 border-t-transparent rounded-full animate-spin shrink-0 ml-auto" />
+                                        )}
                                     </div>
                                 </div>
 
-                                {/* Body */}
-                                <div className="bg-slate-800/70 backdrop-blur-sm px-5 py-4 flex items-center gap-4">
-                                    {/* Thumbnail preview or icon */}
-                                    {(() => {
-                                        const rawImgs = (Array.isArray(committeeImages) && committeeImages.length)
-                                            ? committeeImages
-                                            : (Array.isArray(masjid.committeeImages)
-                                                ? masjid.committeeImages.filter(Boolean).slice().reverse()
-                                                : masjid.committeeImage ? [masjid.committeeImage] : []);
-                                        const validImgs = rawImgs.filter((img) => img && typeof img === 'string' && img.length > 5);
-                                        if (validImgs.length > 0) {
-                                            return (
-                                                <div className="relative h-16 w-16 rounded-xl overflow-hidden border-2 border-emerald-500/40 shrink-0">
-                                                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                                                    <img src={validImgs[0]} alt="Announcement preview" className="w-full h-full object-cover" />
-                                                   
-                                                </div>
-                                            );
-                                        }
-                                        return (
-                                            <div className="h-16 w-16 rounded-xl bg-emerald-900/40 border-2 border-emerald-500/30 flex items-center justify-center shrink-0">
-                                                <svg className="w-8 h-8 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                                                </svg>
-                                            </div>
-                                        );
-                                    })()}
-                                    <div className="flex-1 min-w-0">
-                                        <p className="text-white font-semibold text-sm">View all program images</p>
-                                        <p className="text-slate-400 text-xs mt-0.5">Tap to open full image viewer</p>
-                                    </div>
-                                    {loadingCommitteeImages && (
-                                        <div className="w-5 h-5 border-2 border-emerald-400 border-t-transparent rounded-full animate-spin shrink-0" />
-                                    )}
-                                </div>
+                                {/* Bottom border glow line */}
+                                <div className="h-[2px]" style={{ background: "linear-gradient(to right, transparent, #34d399, #3b82f6, transparent)" }} />
                             </div>
                         </button>
 

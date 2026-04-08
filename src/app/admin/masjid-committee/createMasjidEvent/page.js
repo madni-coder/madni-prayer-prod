@@ -23,15 +23,15 @@ function FilePreview({ file, onRemove }) {
     const isPdf = file.type === "application/pdf";
     const [previewUrl] = useState(() => (isPdf ? null : URL.createObjectURL(file)));
     return (
-        <div className="relative group rounded-xl overflow-hidden border border-gray-200 bg-gray-50">
+        <div className={`relative group rounded-xl overflow-hidden border border-gray-200 bg-gray-50 shrink-0 ${!isPdf ? 'w-24 aspect-[9/16]' : 'w-full max-w-[200px]'}`}>
             {isPdf ? (
-                <div className="flex items-center gap-2 px-3 py-3">
+                <div className="flex items-center gap-2 px-3 py-3 h-full">
                     <FileText size={24} className="text-red-500 shrink-0" />
                     <span className="text-xs text-gray-700 font-medium truncate flex-1">{file.name}</span>
                 </div>
             ) : (
                 /* eslint-disable-next-line @next/next/no-img-element */
-                <img src={previewUrl} alt={file.name} className="w-full h-28 object-cover" />
+                <img src={previewUrl} alt={file.name} className="w-full h-full object-cover" />
             )}
             <button
                 type="button"
@@ -167,11 +167,11 @@ export default function CreateMasjidEventPage() {
 
                         {/* Preview Images */}
                         {files.filter((f) => f.type === "image").length > 0 && (
-                            <div className="grid grid-cols-2 gap-2 p-4 border-b border-gray-100">
+                            <div className="flex flex-wrap gap-3 p-4 border-b border-gray-100">
                                 {files.filter((f) => f.type === "image").map((f, i) => {
                                     const url = URL.createObjectURL(f.file);
                                     /* eslint-disable-next-line @next/next/no-img-element */
-                                    return <img key={i} src={url} alt="" className="w-full h-28 object-cover rounded-lg" />;
+                                    return <img key={i} src={url} alt="" className="w-24 aspect-[9/16] object-cover rounded-xl shadow-sm shrink-0" />;
                                 })}
                             </div>
                         )}
@@ -294,7 +294,7 @@ export default function CreateMasjidEventPage() {
 
                             {/* File previews */}
                             {files.length > 0 && (
-                                <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 mt-2">
+                                <div className="flex flex-wrap gap-3 mt-2">
                                     {files.map((f, i) => (
                                         <FilePreview key={i} file={f.file} onRemove={() => removeFile(i)} />
                                     ))}
