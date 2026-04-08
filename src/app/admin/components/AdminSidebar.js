@@ -14,7 +14,8 @@ import {
     Wind,
     Briefcase,
     UserCheck,
-    CalendarRange
+    CalendarRange,
+    Users2
 } from "lucide-react";
 
 const navigation = [
@@ -74,6 +75,11 @@ const navigation = [
         name: "Events / Programs",
         href: "/admin/events",
         icon: CalendarRange,
+    },
+    {
+        name: "Masjid Committee",
+        href: "/admin/masjid-committee",
+        icon: Users2,
     },
 ];
 

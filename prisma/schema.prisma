@@ -193,3 +193,34 @@ model EventSubmission {
 
   @@map("event_submissions")
 }
+
+model CommitteeEvent {
+  id             String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  title          String
+  description    String   @db.Text
+  buttons        Json     @default("[]")
+  imageUrls      Json     @default("[]")     @map("image_urls")
+  pdfAttachments Json     @default("[]")     @map("pdf_attachments")
+  isActive       Boolean  @default(true)     @map("is_active")
+  createdAt      DateTime @default(now())    @map("created_at")
+  updatedAt      DateTime @default(now()) @updatedAt @map("updated_at")
+
+  responses      CommitteeEventResponse[]
+
+  @@map("committee_events")
+}
+
+model CommitteeEventResponse {
+  id            String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  eventId       String   @map("event_id") @db.Uuid
+  masjidLoginId Int      @map("masjid_login_id")   // loginId from AllMasjid
+  masjidName    String   @map("masjid_name")
+  vote          String   // e.g. "Agree", "Disagree", or whatever label the admin configured
+  comment       String?  @db.Text
+  submittedAt   DateTime @default(now()) @map("submitted_at")
+
+  event         CommitteeEvent @relation(fields: [eventId], references: [id], onDelete: Cascade)
+
+  @@unique([eventId, masjidLoginId])   // one response per masjid per event
+  @@map("committee_event_responses")
+}
