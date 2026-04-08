@@ -87,7 +87,6 @@ export default function CreateMasjidEventPage() {
 
     // ── Submit ──────────────────────────────────────────────────────────────
     const handleSubmit = async () => {
-        if (!title.trim() || !description.trim()) return;
         setSubmitting(true);
         try {
             const fd = new FormData();
@@ -226,7 +225,7 @@ export default function CreateMasjidEventPage() {
 
                         {/* Event Title */}
                         <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-5">
-                            <label className="block text-sm font-bold text-gray-700 mb-2">Event Title <span className="text-red-500">*</span></label>
+                            <label className="block text-sm font-bold text-gray-700 mb-2">Event Title</label>
                             <input
                                 type="text"
                                 value={title}
@@ -238,7 +237,7 @@ export default function CreateMasjidEventPage() {
 
                         {/* Description */}
                         <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-5">
-                            <label className="block text-sm font-bold text-gray-700 mb-2">Description <span className="text-red-500">*</span></label>
+                            <label className="block text-sm font-bold text-gray-700 mb-2">Description</label>
                             <textarea
                                 rows={6}
                                 value={description}
@@ -338,7 +337,7 @@ export default function CreateMasjidEventPage() {
                                         <button
                                             type="button"
                                             onClick={() => removeButton(btn.id)}
-                                            disabled={buttons.length <= 1}
+                                            disabled={false}
                                             className="p-1.5 text-gray-400 hover:text-red-500 disabled:opacity-30 transition-colors"
                                         >
                                             <Trash2 size={14} />
@@ -401,7 +400,7 @@ export default function CreateMasjidEventPage() {
                             <button
                                 type="button"
                                 onClick={handleSubmit}
-                                disabled={submitting || !title.trim() || !description.trim()}
+                                disabled={submitting}
                                 className="w-full flex items-center justify-center gap-2 py-3 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-bold transition-colors disabled:opacity-40 disabled:cursor-not-allowed shadow-sm"
                             >
                                 {submitting ? (
@@ -410,9 +409,6 @@ export default function CreateMasjidEventPage() {
                                     <><Send size={15} /> Publish Event</>
                                 )}
                             </button>
-                            {(!title.trim() || !description.trim()) && (
-                                <p className="text-xs text-center text-gray-400 mt-2">Add a title & description to publish</p>
-                            )}
                         </div>
                     </div>
                 </div>

@@ -9,11 +9,11 @@ import { useRouter } from "next/navigation";
 const btnClass = (color, active) => {
     const base = "flex-1 py-2.5 rounded-xl font-semibold text-sm transition-all duration-200 active:scale-[0.97]";
     const map = {
-        green:  { on: "bg-emerald-500 border-2 border-emerald-500 text-white shadow-lg shadow-emerald-500/30 scale-[1.03]",  off: "bg-transparent border-2 border-emerald-500/50 text-emerald-400 hover:bg-emerald-500/10" },
-        red:    { on: "bg-red-500 border-2 border-red-500 text-white shadow-lg shadow-red-500/30 scale-[1.03]",               off: "bg-transparent border-2 border-red-500/50 text-red-400 hover:bg-red-500/10" },
-        blue:   { on: "bg-blue-500 border-2 border-blue-500 text-white shadow-lg shadow-blue-500/30 scale-[1.03]",            off: "bg-transparent border-2 border-blue-500/50 text-blue-400 hover:bg-blue-500/10" },
-        orange: { on: "bg-orange-500 border-2 border-orange-500 text-white shadow-lg shadow-orange-500/30 scale-[1.03]",      off: "bg-transparent border-2 border-orange-500/50 text-orange-400 hover:bg-orange-500/10" },
-        purple: { on: "bg-purple-500 border-2 border-purple-500 text-white shadow-lg shadow-purple-500/30 scale-[1.03]",      off: "bg-transparent border-2 border-purple-500/50 text-purple-400 hover:bg-purple-500/10" },
+        green: { on: "bg-emerald-500 border-2 border-emerald-500 text-white shadow-lg shadow-emerald-500/30 scale-[1.03]", off: "bg-transparent border-2 border-emerald-500/50 text-emerald-400 hover:bg-emerald-500/10" },
+        red: { on: "bg-red-500 border-2 border-red-500 text-white shadow-lg shadow-red-500/30 scale-[1.03]", off: "bg-transparent border-2 border-red-500/50 text-red-400 hover:bg-red-500/10" },
+        blue: { on: "bg-blue-500 border-2 border-blue-500 text-white shadow-lg shadow-blue-500/30 scale-[1.03]", off: "bg-transparent border-2 border-blue-500/50 text-blue-400 hover:bg-blue-500/10" },
+        orange: { on: "bg-orange-500 border-2 border-orange-500 text-white shadow-lg shadow-orange-500/30 scale-[1.03]", off: "bg-transparent border-2 border-orange-500/50 text-orange-400 hover:bg-orange-500/10" },
+        purple: { on: "bg-purple-500 border-2 border-purple-500 text-white shadow-lg shadow-purple-500/30 scale-[1.03]", off: "bg-transparent border-2 border-purple-500/50 text-purple-400 hover:bg-purple-500/10" },
     };
     const c = map[color] || map.green;
     return `${base} ${active ? c.on : c.off}`;
@@ -32,7 +32,7 @@ function CardCarousel({ images }) {
     const next = () => setIdx((i) => (i + 1) % valid.length);
 
     const onTouchStart = (e) => { touchStartX.current = e.touches[0].clientX; };
-    const onTouchEnd   = (e) => {
+    const onTouchEnd = (e) => {
         if (touchStartX.current === null) return;
         const dx = e.changedTouches[0].clientX - touchStartX.current;
         if (Math.abs(dx) > 40) dx < 0 ? next() : prev();
@@ -105,14 +105,14 @@ function CardCarousel({ images }) {
 const MAX_COMMENT = 500;
 
 function EventCard({ event }) {
-    const [vote, setVote]           = useState(null);
-    const [comment, setComment]     = useState("");
+    const [vote, setVote] = useState(null);
+    const [comment, setComment] = useState("");
     const [submitted, setSubmitted] = useState(false);
     const [submitting, setSubmitting] = useState(false);
     const [submitError, setSubmitError] = useState(null);
 
-    const buttons        = Array.isArray(event.buttons)         ? event.buttons         : [];
-    const imageUrls      = Array.isArray(event.image_urls)      ? event.image_urls      : [];
+    const buttons = Array.isArray(event.buttons) ? event.buttons : [];
+    const imageUrls = Array.isArray(event.image_urls) ? event.image_urls : [];
     const pdfAttachments = Array.isArray(event.pdf_attachments) ? event.pdf_attachments : [];
 
     // Masjid identity from localStorage
@@ -160,18 +160,7 @@ function EventCard({ event }) {
             {imageUrls.length > 0 && <CardCarousel images={imageUrls} />}
 
             {/* ── 2. Card Header ── */}
-            <div className={`px-5 py-4 flex items-center gap-3 border-b border-slate-700/40 ${imageUrls.length > 0 ? "bg-slate-900" : "bg-gradient-to-r from-slate-800 to-slate-700"}`}>
-                <div className="bg-emerald-500/20 rounded-full p-2 shrink-0">
-                    <svg className="w-5 h-5 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2"
-                            d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                    </svg>
-                </div>
-                <div className="flex-1 min-w-0">
-                    <h2 className="text-white font-bold text-base leading-tight truncate">{event.title}</h2>
-                    <p className="text-slate-400 text-xs mt-0.5">Review and share your feedback</p>
-                </div>
-            </div>
+
 
             {/* ── 3. Description ── */}
             <div className="px-5 py-4 bg-slate-800/60">
@@ -220,53 +209,56 @@ function EventCard({ event }) {
                 </div>
             )}
 
-            {/* ── 6. Comment Section ── */}
-            <div className="h-px bg-slate-700/40 mx-5" />
-            <div className="px-5 py-4 bg-slate-800/60">
-                <label className="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-2">
-                    Your Comment
-                </label>
-                <textarea
-                    rows={4}
-                    placeholder="Share your thoughts… (max 500 characters)"
-                    value={comment}
-                    onChange={(e) => e.target.value.length <= MAX_COMMENT && setComment(e.target.value)}
-                    disabled={submitted}
-                    className="w-full bg-slate-700/60 border border-slate-600/50 rounded-xl px-4 py-3 text-sm text-white placeholder-slate-500 resize-none focus:outline-none focus:ring-2 focus:ring-emerald-500/50 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
-                />
-                <div className="flex justify-end mt-1">
-                    <span className={`text-xs ${comment.length >= MAX_COMMENT ? "text-red-400" : "text-slate-500"}`}>
-                        {comment.length} / {MAX_COMMENT}
-                    </span>
-                </div>
-            </div>
+            {/* ── 6 & 7. Comment + Submit — only when vote buttons exist ── */}
+            {buttons.length > 0 && (
+                <>
+                    <div className="h-px bg-slate-700/40 mx-5" />
+                    <div className="px-5 py-4 bg-slate-800/60">
+                        <label className="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-2">
+                            Your Comment
+                        </label>
+                        <textarea
+                            rows={4}
+                            placeholder="Share your thoughts… (max 500 characters)"
+                            value={comment}
+                            onChange={(e) => e.target.value.length <= MAX_COMMENT && setComment(e.target.value)}
+                            disabled={submitted}
+                            className="w-full bg-slate-700/60 border border-slate-600/50 rounded-xl px-4 py-3 text-sm text-white placeholder-slate-500 resize-none focus:outline-none focus:ring-2 focus:ring-emerald-500/50 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                        />
+                        <div className="flex justify-end mt-1">
+                            <span className={`text-xs ${comment.length >= MAX_COMMENT ? "text-red-400" : "text-slate-500"}`}>
+                                {comment.length} / {MAX_COMMENT}
+                            </span>
+                        </div>
+                    </div>
 
-            {/* ── 7. Submit Button ── */}
-            {!submitted && (
-                <div className="px-5 pb-5 bg-slate-800/80">
-                    <button
-                        onClick={handleSubmit}
-                        disabled={!vote || submitting}
-                        className="w-full py-3 rounded-xl font-semibold text-sm text-white bg-gradient-to-r from-teal-600 to-emerald-600 hover:from-teal-500 hover:to-emerald-500 disabled:opacity-40 disabled:cursor-not-allowed transition-all duration-200 shadow-lg shadow-emerald-900/30 flex items-center justify-center gap-2"
-                    >
-                        {submitting ? (
-                            <><div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" /> Submitting…</>
-                        ) : (
-                            <>
-                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
-                                </svg>
-                                Submit
-                            </>
-                        )}
-                    </button>
-                    {!vote && buttons.length > 0 && (
-                        <p className="text-center text-slate-500 text-xs mt-2">Please select an option above to submit</p>
+                    {!submitted && (
+                        <div className="px-5 pb-5 bg-slate-800/80">
+                            <button
+                                onClick={handleSubmit}
+                                disabled={!vote || submitting}
+                                className="w-full py-3 rounded-xl font-semibold text-sm text-white bg-gradient-to-r from-teal-600 to-emerald-600 hover:from-teal-500 hover:to-emerald-500 disabled:opacity-40 disabled:cursor-not-allowed transition-all duration-200 shadow-lg shadow-emerald-900/30 flex items-center justify-center gap-2"
+                            >
+                                {submitting ? (
+                                    <><div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" /> Submitting…</>
+                                ) : (
+                                    <>
+                                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
+                                        </svg>
+                                        Submit
+                                    </>
+                                )}
+                            </button>
+                            {!vote && (
+                                <p className="text-center text-slate-500 text-xs mt-2">Please select an option above to submit</p>
+                            )}
+                            {submitError && (
+                                <p className="text-center text-red-400 text-xs mt-2">{submitError}</p>
+                            )}
+                        </div>
                     )}
-                    {submitError && (
-                        <p className="text-center text-red-400 text-xs mt-2">{submitError}</p>
-                    )}
-                </div>
+                </>
             )}
         </div>
     );
@@ -275,9 +267,9 @@ function EventCard({ event }) {
 // ─── Main Page ────────────────────────────────────────────────────────────────
 export default function RhPrograms() {
     const router = useRouter();
-    const [events, setEvents]   = useState([]);
+    const [events, setEvents] = useState([]);
     const [loading, setLoading] = useState(true);
-    const [error, setError]     = useState(null);
+    const [error, setError] = useState(null);
 
     useEffect(() => {
         let mounted = true;
@@ -285,7 +277,7 @@ export default function RhPrograms() {
             setLoading(true);
             setError(null);
             try {
-                const res  = await fetch("/api/committee-events");
+                const res = await fetch("/api/committee-events");
                 const json = await res.json();
                 if (!res.ok) throw new Error(json.error || "Failed to load events");
                 if (mounted) setEvents(json.events || []);
@@ -310,12 +302,7 @@ export default function RhPrograms() {
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M15 19l-7-7 7-7" />
                     </svg>
                 </button>
-                <div className="bg-white/20 rounded-full p-2.5 shrink-0">
-                    <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2"
-                            d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
-                    </svg>
-                </div>
+
                 <div>
                     <h1 className="text-white font-bold text-lg leading-tight">Event Announcement</h1>
                     <p className="text-white/90 text-sm">From Raahe Hidayat Team</p>

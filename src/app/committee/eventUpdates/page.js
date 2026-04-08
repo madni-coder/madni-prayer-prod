@@ -448,11 +448,7 @@ export default function EventUpdates() {
                                                 <div className="relative h-16 w-16 rounded-xl overflow-hidden border-2 border-emerald-500/40 shrink-0">
                                                     {/* eslint-disable-next-line @next/next/no-img-element */}
                                                     <img src={validImgs[0]} alt="Announcement preview" className="w-full h-full object-cover" />
-                                                    {validImgs.length > 1 && (
-                                                        <div className="absolute inset-0 bg-black/40 flex items-center justify-center">
-                                                            <span className="text-white text-xs font-bold">+{validImgs.length}</span>
-                                                        </div>
-                                                    )}
+                                                   
                                                 </div>
                                             );
                                         }

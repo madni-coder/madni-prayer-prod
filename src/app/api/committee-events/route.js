@@ -31,10 +31,6 @@ export async function POST(request) {
         const fd = await request.formData();
         const title = (fd.get("title") || "").trim();
         const description = (fd.get("description") || "").trim();
-        if (!title || !description) {
-            return NextResponse.json({ error: "title and description are required" }, { status: 400 });
-        }
-
         let buttons = [];
         try { buttons = JSON.parse(fd.get("buttons") || "[]"); } catch { /* keep [] */ }
 
