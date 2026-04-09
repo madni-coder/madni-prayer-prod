@@ -198,7 +198,7 @@ export default function ContactUs() {
                         <p className="text-muted-foreground">Developed by</p>
                         <p className="text-muted-foreground mt-1">
                             <Link href="https://www.geeksinvention.com/" target="_blank" className="text-primary hover:underline font-semibold block">
-                                Geeks Invention Pvt Ltd
+                                Geeks Invention Pvt Ltd.
                             </Link>
                         </p>
                     </div>

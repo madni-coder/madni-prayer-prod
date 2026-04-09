@@ -17,7 +17,7 @@ import {
     FaMosque,
     FaFileAlt,
 } from "react-icons/fa";
-import { FaUserGroup }from 'react-icons/fa6'
+import { FaUserGroup } from 'react-icons/fa6'
 import { Megaphone, UsersRound, CalendarRange } from "lucide-react";
 import Image from "next/image";
 import TasbihSvgIcon from "../components/TasbihSvgIcon";
@@ -37,8 +37,8 @@ const sections = [
         icon: <FaClock className="text-4xl lg:text-5xl text-yellow-500 drop-shadow-[0_0_15px_rgba(234,179,8,0.5)]" />,
         accent: '#f59e0b',
     },
-    
-  
+
+
     {
         name: "Qibla Finder",
         href: "/qibla",
@@ -309,7 +309,7 @@ export default function Home() {
                         <div className="absolute inset-0 w-[50%] bg-white/60 -translate-x-[200%] skew-x-[-30deg] animate-[shimmer_2.5s_infinite]" />
                     </div>
                 </div>
-               
+
             </header>
 
             <div className="mt-[-20] grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-6 w-full max-w-7xl relative z-15 px-0 sm:px-4">
