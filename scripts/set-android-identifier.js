@@ -15,20 +15,20 @@ try {
     // Set correct Android identifier
     tauriConf.identifier = 'com.prayer.madni';
 
-    // ✅ Ensure window loads from Vercel (same as iOS behavior)
-    if (!tauriConf.app) tauriConf.app = {};
-    if (!tauriConf.app.windows) tauriConf.app.windows = [{}];
-    tauriConf.app.windows[0].url = VERCEL_URL;
+    // Ensure no hardcoded window URL — app must load from local bundle (out/)
+    if (tauriConf.app && tauriConf.app.windows && tauriConf.app.windows[0]) {
+        delete tauriConf.app.windows[0].url;
+    }
 
-    // ✅ Also set devUrl to Vercel
+    // devUrl is only used during `tauri dev`, set to localhost
     if (!tauriConf.build) tauriConf.build = {};
-    tauriConf.build.devUrl = VERCEL_URL;
+    tauriConf.build.devUrl = 'http://localhost:3000';
 
     fs.writeFileSync(tauriConfPath, JSON.stringify(tauriConf, null, 4), 'utf8');
     console.log('✅ Updated tauri.conf.json for Android:');
     console.log('   identifier     = com.prayer.madni');
-    console.log('   windows[0].url = ' + VERCEL_URL);
-    console.log('   build.devUrl   = ' + VERCEL_URL);
+    console.log('   windows[0].url = removed (local bundle)');
+    console.log('   build.devUrl   = http://localhost:3000');
 
     // ── 2. Sync current_version in public/app-config.json ──────────────────
     // This keeps the Vercel-side version in sync with the Play Store build version
