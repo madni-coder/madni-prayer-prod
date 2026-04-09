@@ -94,7 +94,9 @@ export async function POST(request) {
             loginId = null,
             memberNames = [],
             mobileNumbers = [],
-            password = 0
+            password = 0,
+            imaamName = null,
+            moizzanName = null
         } = body;
 
         const required = [
@@ -134,7 +136,9 @@ export async function POST(request) {
             loginId,
             memberNames,
             mobileNumbers,
-            password
+            password,
+            imaamName,
+            moizzanName
         });
 
         return NextResponse.json(
@@ -187,7 +191,9 @@ export async function PATCH(request) {
             loginId,
             memberNames,
             mobileNumbers,
-            password
+            password,
+            imaamName,
+            moizzanName
         } = body;
 
         if (!id) {
@@ -230,6 +236,8 @@ export async function PATCH(request) {
         if (memberNames !== undefined) updateData.memberNames = memberNames;
         if (mobileNumbers !== undefined) updateData.mobileNumbers = mobileNumbers;
         if (password !== undefined) updateData.password = password;
+        if (imaamName !== undefined) updateData.imaamName = imaamName;
+        if (moizzanName !== undefined) updateData.moizzanName = moizzanName;
 
         const updated = await prisma.allMasjid.update({
             where: { id: parseInt(id) },

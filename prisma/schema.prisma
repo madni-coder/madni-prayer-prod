@@ -32,7 +32,9 @@ model AllMasjid {
   city        String?
   loginId Int? @unique
   memberNames String[] @default([])
-mobileNumbers String[] @default([])
+  mobileNumbers String[] @default([])
+  imaamName String?
+  moizzanName String?
   createdAt  DateTime @default(now())
   updatedAt  DateTime @updatedAt
   password Int?

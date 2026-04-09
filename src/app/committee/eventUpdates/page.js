@@ -481,37 +481,50 @@ export default function EventUpdates() {
                         </button>
 
                         {/* Header Card (summary) */}
-                        <div className="bg-gradient-to-r from-emerald-600 to-teal-600 rounded-xl p-6 shadow-lg mt-4">
-                            <div className="flex items-center justify-between gap-4">
+                        <div className="bg-gradient-to-br from-emerald-600 to-teal-700 rounded-xl p-4 sm:p-5 shadow-lg mt-4 border border-emerald-500/30 relative overflow-hidden">
+                            {/* Subtle decorative background element */}
+                            <div className="absolute top-0 right-0 w-32 h-32 bg-white opacity-5 rounded-full -translate-y-1/2 translate-x-1/3 blur-2xl"></div>
+                            
+                            <div className="relative flex items-center justify-between gap-3 sm:gap-4">
                                 <div className="flex-1 min-w-0">
-                                    <h2 className="text-2xl sm:text-3xl font-bold text-white mb-1 break-words">
+                                    <h2 className="text-lg sm:text-xl font-bold text-white mb-1 line-clamp-2 leading-tight">
                                         {masjid.masjidName || masjid.name || "—"}
                                     </h2>
-                                    <div className="flex items-center gap-2 flex-wrap">
-                                        <p className="text-emerald-50 text-sm break-all">Login ID: {currentMasjidId}</p>
-                                        <button
-                                            onClick={handleCopyMasjidId}
-                                            className="p-1.5 hover:bg-white/20 rounded-lg transition-all shrink-0"
-                                            title="Copy Login ID"
-                                        >
-                                            {copied ? (
-                                                <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" />
-                                                </svg>
-                                            ) : (
-                                                <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
-                                                </svg>
-                                            )}
-                                        </button>
+                                    <div className="flex items-center gap-2 mt-1.5">
+                                        <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-black/20 border border-white/5 w-fit shadow-inner">
+                                            <span className="text-emerald-100/90 text-xs font-medium tracking-wide">ID: {currentMasjidId}</span>
+                                            <button
+                                                onClick={handleCopyMasjidId}
+                                                className="p-0.5 hover:bg-white/20 rounded transition-colors"
+                                                title="Copy Login ID"
+                                            >
+                                                {copied ? (
+                                                    <svg className="w-3.5 h-3.5 text-emerald-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M5 13l4 4L19 7" />
+                                                    </svg>
+                                                ) : (
+                                                    <svg className="w-3.5 h-3.5 text-emerald-100/70 hover:text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                                                    </svg>
+                                                )}
+                                            </button>
+                                        </div>
                                     </div>
                                 </div>
-                                <div className="flex items-center gap-2">
+                                <div className="flex-shrink-0">
                                     <button
                                         onClick={() => setShowDetails((s) => !s)}
-                                        className="px-3 py-2 rounded-lg bg-white/10 border border-white/10 text-white text-sm hover:bg-white/20"
+                                        className="px-3 py-1.5 sm:px-4 sm:py-2 rounded-lg bg-white/10 backdrop-blur-sm border border-white/20 text-white text-xs sm:text-sm font-semibold hover:bg-white/20 hover:scale-105 active:scale-95 transition-all shadow-sm flex items-center gap-1.5"
                                     >
-                                        {showDetails ? 'Hide Details' : 'Show Details'}
+                                        <span>{showDetails ? 'Hide' : 'Details'}</span>
+                                        <svg 
+                                            className={`w-3.5 h-3.5 transition-transform duration-300 ${showDetails ? 'rotate-180' : ''}`} 
+                                            fill="none" 
+                                            stroke="currentColor" 
+                                            viewBox="0 0 24 24"
+                                        >
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M19 9l-7 7-7-7" />
+                                        </svg>
                                     </button>
                                 </div>
                             </div>
@@ -521,27 +534,21 @@ export default function EventUpdates() {
                         {showDetails && (
                             <div className="bg-slate-800/50 backdrop-blur-sm rounded-xl p-6 shadow-lg border border-slate-700/50 mt-4">
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                    {renderField("Role", masjid.role || "Mutawalli")}
-                                    {renderField("Name", masjid.mutwalliName || (masjid.memberNames && masjid.memberNames[0]) || "—")}
-                                    {renderField("Mobile Number", Array.isArray(masjid.mobileNumbers) && masjid.mobileNumbers.length > 0 ? masjid.mobileNumbers[0] : (masjid.mobileNumbers || masjid.mobile || "—"))}
-                                    {renderField("Login ID", currentMasjidId || masjid.loginId || "—")}
-
-                                    <div className="col-span-1 md:col-span-2 border-t border-slate-700/50 my-2 h-0"></div>
-
-                                    {renderField("Masjid Name", masjid.masjidName || masjid.name)}
-                                    {renderField("Mobile Numbers", masjid.mobileNumbers && Array.isArray(masjid.mobileNumbers) ? masjid.mobileNumbers.join(', ') : (masjid.mobileNumbers || masjid.mobile || masjid.phone || masjid.contactNumber))}
-                                    {renderField("Address", masjid.fullAddress || masjid.address)}
+                                    {renderField("Colony", masjid.colony)}
                                     {renderField("City", masjid.city)}
-                                    {renderField("Mutwalli Name", masjid.mutwalliName)}
-                                    {renderField("Committee Members", masjid.memberNames && Array.isArray(masjid.memberNames) ? masjid.memberNames.join(', ') : (masjid.memberNames || masjid.committeeMembers))}
                                     {renderField("Imam Name", masjid.imaamName)}
+                                    {renderField("Moizzan Name", masjid.moizzanName)}
+                                    {renderField("Mutawalli Name", masjid.mutwalliName || masjid.name || (masjid.memberNames && masjid.memberNames.length > 0 ? masjid.memberNames[0] : null))}
+                                    {renderField("Mobile Number", masjid.mobile || "—")}
+                                    {renderField("Committee Members", masjid.memberNames && Array.isArray(masjid.memberNames) && masjid.memberNames.length > 0 ? masjid.memberNames.join(', ') : masjid.committeeMembers)}
+                                    {renderField("Committee Mobile Numbers", masjid.mobileNumbers && Array.isArray(masjid.mobileNumbers) && masjid.mobileNumbers.length > 0 ? masjid.mobileNumbers.join(', ') : (masjid.phone || masjid.contactNumber))}
 
                                     {/* Show any remaining fields that aren't in excluded list */}
                                     {Object.keys(masjid).filter(k =>
                                         !excludedFields.includes(k) &&
                                         !['masjidName', 'name', 'mobileNumbers', 'mobile', 'phone', 'contactNumber',
-                                            'fullAddress', 'address', 'city', 'mutwalliName', 'committeeMembers', 'memberNames',
-                                            'imaamName', 'masjidId', 'loginId', 'committeeImage',
+                                            'fullAddress', 'address', 'city', 'colony', 'locality', 'mutwalliName', 'committeeMembers', 'memberNames',
+                                            'imaamName', 'moizzanName', 'masjidId', 'loginId', 'committeeImage',
                                             'fazar', 'zuhar', 'asar', 'maghrib', 'isha', 'juma',
                                             'role', 'pasteMapUrl'].includes(k) &&
                                         masjid[k] !== undefined &&

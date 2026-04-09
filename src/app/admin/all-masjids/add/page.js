@@ -28,6 +28,8 @@ export default function AddMasjidPage() {
     const [memberNames, setMemberNames] = useState("");
     const [mobileNumbers, setMobileNumbers] = useState("");
     const [password, setPassword] = useState("");
+    const [imaamName, setImaamName] = useState("");
+    const [moizzanName, setMoizzanName] = useState("");
     // add per-role mobile cache
     const [roleMobiles, setRoleMobiles] = useState({});
     // add per-role name cache
@@ -76,6 +78,8 @@ export default function AddMasjidPage() {
                 memberNames: memberNames ? memberNames.split(',').map(s => s.trim()).filter(Boolean) : [],
                 mobileNumbers: mobileNumbers ? mobileNumbers.split(',').map(s => s.trim()).filter(Boolean) : [],
                 password: password ? parseInt(password) : 0,
+                imaamName: imaamName.trim() || null,
+                moizzanName: moizzanName.trim() || null,
                 // map times
                 fazar: times[0],
                 zuhar: times[1],
@@ -193,7 +197,7 @@ export default function AddMasjidPage() {
                             </label>
                             <input
                                 type="text"
-                                className="input input-bordered w-full bg-white text-black border-gray-300 rounded-full text-sm md:text-base"
+                                className="input input-bordered w-full bg-white text-gray-900 border-2 border-slate-400 focus:border-blue-500 focus:bg-white shadow-sm rounded-full text-sm md:text-base"
                                 value={masjidName}
                                 onChange={(e) => setMasjidName(e.target.value)}
                                 required
@@ -205,7 +209,7 @@ export default function AddMasjidPage() {
                             </label>
                             <input
                                 type="text"
-                                className="input input-bordered w-full bg-white text-black border-gray-300 rounded-full text-sm md:text-base"
+                                className="input input-bordered w-full bg-white text-gray-900 border-2 border-slate-400 focus:border-blue-500 focus:bg-white shadow-sm rounded-full text-sm md:text-base"
                                 value={colony}
                                 onChange={(e) => setColony(e.target.value)}
                                 required
@@ -217,7 +221,7 @@ export default function AddMasjidPage() {
                             </label>
                             <input
                                 type="text"
-                                className="input input-bordered w-full bg-white text-black border-gray-300 rounded-full text-sm md:text-base"
+                                className="input input-bordered w-full bg-white text-gray-900 border-2 border-slate-400 focus:border-blue-500 focus:bg-white shadow-sm rounded-full text-sm md:text-base"
                                 value={locality}
                                 onChange={(e) => setLocality(e.target.value)}
                             />
@@ -227,7 +231,7 @@ export default function AddMasjidPage() {
                                 Role
                             </label>
                             <select
-                                className="input input-bordered w-full bg-white text-black border-gray-300 rounded-full text-sm md:text-base"
+                                className="input input-bordered w-full bg-white text-gray-900 border-2 border-slate-400 focus:border-blue-500 focus:bg-white shadow-sm rounded-full text-sm md:text-base"
                                 value={role}
                                 onChange={handleRoleChange}
                             >
@@ -254,7 +258,7 @@ export default function AddMasjidPage() {
                                 <input
                                     type="text"
                                     className={
-                                        "input input-bordered w-full bg-white text-black border-gray-300 text-sm md:text-base " +
+                                        "input input-bordered w-full bg-white text-gray-900 border-2 border-slate-400 focus:border-blue-500 focus:bg-white shadow-sm text-sm md:text-base " +
                                         (role
                                             ? "rounded-r-full"
                                             : "rounded-full")
@@ -266,6 +270,32 @@ export default function AddMasjidPage() {
                                     }
                                 />
                             </div>
+                        </div>
+
+                        <div className="mb-4">
+                            <label className="block text-gray-700 mb-2 text-sm md:text-base">
+                                Imaam Name
+                            </label>
+                            <input
+                                type="text"
+                                className="input input-bordered w-full bg-white text-gray-900 border-2 border-slate-400 focus:border-blue-500 focus:bg-white shadow-sm rounded-full text-sm md:text-base"
+                                value={imaamName}
+                                onChange={(e) => setImaamName(e.target.value)}
+                                placeholder="Enter Imaam Name"
+                            />
+                        </div>
+
+                        <div className="mb-4">
+                            <label className="block text-gray-700 mb-2 text-sm md:text-base">
+                                Moizzan Name
+                            </label>
+                            <input
+                                type="text"
+                                className="input input-bordered w-full bg-white text-gray-900 border-2 border-slate-400 focus:border-blue-500 focus:bg-white shadow-sm rounded-full text-sm md:text-base"
+                                value={moizzanName}
+                                onChange={(e) => setMoizzanName(e.target.value)}
+                                placeholder="Enter Moizzan Name"
+                            />
                         </div>
 
                         {/* Mobile field: show selected role as a badge ahead of the input and persist per-role mobile */}
@@ -283,7 +313,7 @@ export default function AddMasjidPage() {
                                 <input
                                     type="tel"
                                     className={
-                                        "input input-bordered w-full bg-white text-black border-gray-300 text-sm md:text-base " +
+                                        "input input-bordered w-full bg-white text-gray-900 border-2 border-slate-400 focus:border-blue-500 focus:bg-white shadow-sm text-sm md:text-base " +
                                         (role
                                             ? "rounded-r-full"
                                             : "rounded-full")
@@ -306,7 +336,7 @@ export default function AddMasjidPage() {
                             </label>
                             <input
                                 type="number"
-                                className="input input-bordered w-full bg-white text-black border-gray-300 rounded-full text-sm md:text-base"
+                                className="input input-bordered w-full bg-white text-gray-900 border-2 border-slate-400 focus:border-blue-500 focus:bg-white shadow-sm rounded-full text-sm md:text-base"
                                 value={loginId}
                                 onChange={(e) => setLoginId(e.target.value)}
                             />
@@ -317,7 +347,7 @@ export default function AddMasjidPage() {
                             </label>
                             <input
                                 type="number"
-                                className="input input-bordered w-full bg-white text-black border-gray-300 rounded-full text-sm md:text-base"
+                                className="input input-bordered w-full bg-white text-gray-900 border-2 border-slate-400 focus:border-blue-500 focus:bg-white shadow-sm rounded-full text-sm md:text-base"
                                 value={password}
                                 onChange={(e) => setPassword(e.target.value)}
                             />
@@ -328,7 +358,7 @@ export default function AddMasjidPage() {
                             </label>
                             <input
                                 type="text"
-                                className="input input-bordered w-full bg-white text-black border-gray-300 rounded-full text-sm md:text-base"
+                                className="input input-bordered w-full bg-white text-gray-900 border-2 border-slate-400 focus:border-blue-500 focus:bg-white shadow-sm rounded-full text-sm md:text-base"
                                 value={memberNames}
                                 onChange={(e) => setMemberNames(e.target.value)}
                             />
@@ -339,7 +369,7 @@ export default function AddMasjidPage() {
                             </label>
                             <input
                                 type="text"
-                                className="input input-bordered w-full bg-white text-black border-gray-300 rounded-full text-sm md:text-base"
+                                className="input input-bordered w-full bg-white text-gray-900 border-2 border-slate-400 focus:border-blue-500 focus:bg-white shadow-sm rounded-full text-sm md:text-base"
                                 value={mobileNumbers}
                                 onChange={(e) => setMobileNumbers(e.target.value)}
                             />
@@ -350,7 +380,7 @@ export default function AddMasjidPage() {
                             </label>
                             <input
                                 type="text"
-                                className="input input-bordered w-full bg-white text-black border-gray-300 rounded-full text-sm md:text-base"
+                                className="input input-bordered w-full bg-white text-gray-900 border-2 border-slate-400 focus:border-blue-500 focus:bg-white shadow-sm rounded-full text-sm md:text-base"
                                 value={pasteMapUrl}
                                 onChange={(e) => setPasteMapUrl(e.target.value)}
                                 placeholder="Paste Google Map URL here"
@@ -429,7 +459,7 @@ export default function AddMasjidPage() {
                                                         type="text"
                                                         inputMode="numeric"
                                                         pattern="[0-9:]*"
-                                                        className="input input-bordered input-sm bg-white text-gray-800 border-gray-300 text-sm md:text-base w-24 text-center"
+                                                        className="input input-bordered input-sm bg-white text-gray-900 border-2 border-slate-400 focus:border-blue-500 focus:bg-white shadow-sm text-sm md:text-base w-24 text-center"
                                                         value={editValue}
                                                         onChange={(e) =>
                                                             setEditValue(

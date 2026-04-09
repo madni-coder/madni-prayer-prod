@@ -46,6 +46,8 @@ function EditJamatTimePage() {
     const [memberNames, setMemberNames] = useState("");
     const [mobileNumbers, setMobileNumbers] = useState("");
     const [password, setPassword] = useState("");
+    const [imaamName, setImaamName] = useState("");
+    const [moizzanName, setMoizzanName] = useState("");
     const LOCAL_CITY_KEY = "masjid_city_isRaipur";
     const [isRaipur, setIsRaipur] = useState(false);
     const [times, setTimes] = useState(prayers.map((p) => p.defaultTime));
@@ -79,6 +81,8 @@ function EditJamatTimePage() {
                 setMemberNames(data.memberNames && Array.isArray(data.memberNames) ? data.memberNames.join(', ') : "");
                 setMobileNumbers(data.mobileNumbers && Array.isArray(data.mobileNumbers) ? data.mobileNumbers.join(', ') : "");
                 setPassword(data.password || "");
+                setImaamName(data.imaamName || "");
+                setMoizzanName(data.moizzanName || "");
                 try {
                     if (typeof window !== "undefined") {
                         const stored = localStorage.getItem(LOCAL_CITY_KEY);
@@ -186,6 +190,8 @@ function EditJamatTimePage() {
                 memberNames: memberNames ? memberNames.split(',').map(s => s.trim()).filter(Boolean) : [],
                 mobileNumbers: mobileNumbers ? mobileNumbers.split(',').map(s => s.trim()).filter(Boolean) : [],
                 password: password ? parseInt(password) : 0,
+                imaamName: imaamName.trim() || null,
+                moizzanName: moizzanName.trim() || null,
                 // map times
                 fazar: times[0],
                 zuhar: times[1],
@@ -256,7 +262,7 @@ function EditJamatTimePage() {
                             </label>
                             <input
                                 type="text"
-                                className="input input-bordered w-full bg-white text-black border-gray-300 rounded-full py-2"
+                                className="input input-bordered w-full bg-white text-gray-900 border-2 border-slate-400 focus:border-blue-500 focus:bg-white shadow-sm rounded-full py-2"
                                 value={masjidName}
                                 onChange={(e) => setMasjidName(e.target.value)}
                                 required
@@ -268,7 +274,7 @@ function EditJamatTimePage() {
                             </label>
                             <input
                                 type="text"
-                                className="input input-bordered w-full bg-white text-black border-gray-300 rounded-full py-2"
+                                className="input input-bordered w-full bg-white text-gray-900 border-2 border-slate-400 focus:border-blue-500 focus:bg-white shadow-sm rounded-full py-2"
                                 value={colony}
                                 onChange={(e) => setColony(e.target.value)}
                                 required
@@ -280,7 +286,7 @@ function EditJamatTimePage() {
                             </label>
                             <input
                                 type="text"
-                                className="input input-bordered w-full bg-white text-black border-gray-300 rounded-full py-2"
+                                className="input input-bordered w-full bg-white text-gray-900 border-2 border-slate-400 focus:border-blue-500 focus:bg-white shadow-sm rounded-full py-2"
                                 value={locality}
                                 onChange={(e) => setLocality(e.target.value)}
                             />
@@ -290,7 +296,7 @@ function EditJamatTimePage() {
                                 Role
                             </label>
                             <select
-                                className="input input-bordered w-full bg-white text-black border-gray-300 rounded-full py-2"
+                                className="input input-bordered w-full bg-white text-gray-900 border-2 border-slate-400 focus:border-blue-500 focus:bg-white shadow-sm rounded-full py-2"
                                 value={role}
                                 onChange={(e) => setRole(e.target.value)}
                             >
@@ -307,9 +313,31 @@ function EditJamatTimePage() {
                             </label>
                             <input
                                 type="text"
-                                className="input input-bordered w-full bg-white text-black border-gray-300 rounded-full py-2"
+                                className="input input-bordered w-full bg-white text-gray-900 border-2 border-slate-400 focus:border-blue-500 focus:bg-white shadow-sm rounded-full py-2"
                                 value={name}
                                 onChange={(e) => setName(e.target.value)}
+                            />
+                        </div>
+                        <div className="mb-4">
+                            <label className="block text-gray-700 mb-2">
+                                Imaam Name
+                            </label>
+                            <input
+                                type="text"
+                                className="input input-bordered w-full bg-white text-gray-900 border-2 border-slate-400 focus:border-blue-500 focus:bg-white shadow-sm rounded-full py-2"
+                                value={imaamName}
+                                onChange={(e) => setImaamName(e.target.value)}
+                            />
+                        </div>
+                        <div className="mb-4">
+                            <label className="block text-gray-700 mb-2">
+                                Moizzan Name
+                            </label>
+                            <input
+                                type="text"
+                                className="input input-bordered w-full bg-white text-gray-900 border-2 border-slate-400 focus:border-blue-500 focus:bg-white shadow-sm rounded-full py-2"
+                                value={moizzanName}
+                                onChange={(e) => setMoizzanName(e.target.value)}
                             />
                         </div>
                         <div className="mb-4">
@@ -318,7 +346,7 @@ function EditJamatTimePage() {
                             </label>
                             <input
                                 type="number"
-                                className="input input-bordered w-full bg-white text-black border-gray-300 rounded-full py-2"
+                                className="input input-bordered w-full bg-white text-gray-900 border-2 border-slate-400 focus:border-blue-500 focus:bg-white shadow-sm rounded-full py-2"
                                 value={mobile}
                                 onChange={(e) => setMobile(e.target.value)}
                                 minLength={10}
@@ -331,7 +359,7 @@ function EditJamatTimePage() {
                             </label>
                             <input
                                 type="number"
-                                className="input input-bordered w-full bg-white text-black border-gray-300 rounded-full py-2"
+                                className="input input-bordered w-full bg-white text-gray-900 border-2 border-slate-400 focus:border-blue-500 focus:bg-white shadow-sm rounded-full py-2"
                                 value={loginId}
                                 onChange={(e) => setLoginId(e.target.value)}
                             />
@@ -342,7 +370,7 @@ function EditJamatTimePage() {
                             </label>
                             <input
                                 type="number"
-                                className="input input-bordered w-full bg-white text-black border-gray-300 rounded-full py-2"
+                                className="input input-bordered w-full bg-white text-gray-900 border-2 border-slate-400 focus:border-blue-500 focus:bg-white shadow-sm rounded-full py-2"
                                 value={password}
                                 onChange={(e) => setPassword(e.target.value)}
                             />
@@ -353,7 +381,7 @@ function EditJamatTimePage() {
                             </label>
                             <input
                                 type="text"
-                                className="input input-bordered w-full bg-white text-black border-gray-300 rounded-full py-2"
+                                className="input input-bordered w-full bg-white text-gray-900 border-2 border-slate-400 focus:border-blue-500 focus:bg-white shadow-sm rounded-full py-2"
                                 value={memberNames}
                                 onChange={(e) => setMemberNames(e.target.value)}
                             />
@@ -364,7 +392,7 @@ function EditJamatTimePage() {
                             </label>
                             <input
                                 type="text"
-                                className="input input-bordered w-full bg-white text-black border-gray-300 rounded-full py-2"
+                                className="input input-bordered w-full bg-white text-gray-900 border-2 border-slate-400 focus:border-blue-500 focus:bg-white shadow-sm rounded-full py-2"
                                 value={mobileNumbers}
                                 onChange={(e) => setMobileNumbers(e.target.value)}
                             />
@@ -375,7 +403,7 @@ function EditJamatTimePage() {
                             </label>
                             <input
                                 type="text"
-                                className="input input-bordered w-full bg-white text-black border-gray-300 rounded-full py-2"
+                                className="input input-bordered w-full bg-white text-gray-900 border-2 border-slate-400 focus:border-blue-500 focus:bg-white shadow-sm rounded-full py-2"
                                 value={pasteMapUrl}
                                 onChange={(e) => setPasteMapUrl(e.target.value)}
                                 placeholder="Paste Google Map URL here"
@@ -453,7 +481,7 @@ function EditJamatTimePage() {
                                                         type="text"
                                                         inputMode="numeric"
                                                         pattern="[0-9:]*"
-                                                        className="input input-bordered input-sm bg-white text-gray-800 border-gray-300 w-24 text-center"
+                                                        className="input input-bordered input-sm bg-white text-gray-900 border-2 border-slate-400 focus:border-blue-500 focus:bg-white shadow-sm w-24 text-center"
                                                         value={editValue}
                                                         onChange={(e) =>
                                                             setEditValue(

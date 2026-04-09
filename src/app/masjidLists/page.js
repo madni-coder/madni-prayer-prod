@@ -43,6 +43,13 @@ export default function MasjidListsPage() {
             );
         }
 
+        // Sort alphabetically
+        filtered.sort((a, b) => {
+            const nameA = a.masjidName || a.name || "";
+            const nameB = b.masjidName || b.name || "";
+            return nameA.localeCompare(nameB, undefined, { sensitivity: 'base' });
+        });
+
         return filtered;
     }, [masjids, isRaipur, searchQuery]);
 

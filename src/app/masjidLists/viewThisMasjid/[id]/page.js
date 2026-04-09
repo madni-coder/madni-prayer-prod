@@ -67,8 +67,20 @@ export default function ViewThisMasjidPage({ params }) {
 
     const mapUrl = masjid.pasteMapUrl || "";
 
+    const excludedFields = ['password', 'createdAt', 'updatedAt', 'created_at', 'updated_at', 'id', 'committeeImage', 'committeeImages'];
+
+    const renderField = (label, value) => {
+        if (!value) return null;
+        return (
+            <div className="py-3 px-4 bg-slate-800/30 rounded-lg">
+                <div className="text-xs text-emerald-400 uppercase tracking-wider mb-1 break-words">{label}</div>
+                <div className="text-white font-medium break-words whitespace-pre-wrap">{String(value)}</div>
+            </div>
+        );
+    };
+
     return (
-        <main className="flex min-h-screen flex-col bg-base-100 text-base-content relative overflow-hidden" style={{ paddingBottom: "calc(env(safe-area-inset-bottom, 0px) + 20px)" }}>
+        <main className="flex min-h-screen flex-col bg-[#0f172a] text-white relative overflow-hidden" style={{ paddingBottom: "calc(env(safe-area-inset-bottom, 0px) + 20px)" }}>
             
             {/* Soft decorative background glow top-right */}
             <div className="absolute top-0 right-0 w-[60vw] h-[60vw] max-w-[600px] max-h-[600px] bg-[#1a3842] rounded-full blur-[120px] pointer-events-none opacity-40 translate-x-1/3 -translate-y-1/3" />
@@ -92,20 +104,7 @@ export default function ViewThisMasjidPage({ params }) {
                     <h1 className="text-4xl font-extrabold text-primary mb-4 tracking-tight drop-shadow-sm break-words leading-tight">
                         {masjid.masjidName}
                     </h1>
-                    <div className="flex flex-col gap-2">
-                        {masjid.colony && (
-                            <span className="inline-flex items-center gap-2 bg-base-200 px-3.5 py-1.5 rounded-md border border-base-300 text-sm text-base-content/80 shadow-sm self-start">
-                                <FaMapMarkerAlt className="text-primary" /> 
-                                {masjid.colony}
-                                {masjid.city && `, ${masjid.city}`}
-                            </span>
-                        )}
-                        {masjid.city && (
-                            <span className="inline-flex items-center gap-2 bg-base-200 px-3.5 py-1.5 rounded-md border border-base-300 text-sm text-base-content/80 shadow-sm self-start">
-                                <FaCity className="text-primary" /> {masjid.city}
-                            </span>
-                        )}
-                    </div>
+                   
                 </div>
             </div>
 
@@ -113,119 +112,50 @@ export default function ViewThisMasjidPage({ params }) {
             <div className="w-full h-px bg-gradient-to-r from-transparent via-[#2b3a40] to-transparent opacity-80" />
 
             {/* Details Content Container (Full Width) */}
-            <div className="w-full px-6 sm:px-10 py-8 z-10 flex flex-col gap-10 pb-20">
-                
-                {/* LOCATION DATA */}
-                <section>
-                    <h2 className="text-[#64748b] text-[11px] font-bold tracking-[0.2em] uppercase mb-4 pl-1">
-                        Location Data
-                    </h2>
-                    <div className="h-px w-full bg-[#1e2936] mb-5"></div>
-                    
-                    <div className="flex flex-col gap-5">
-                        <div className="flex items-start gap-4 p-1">
-                            <div className="mt-0.5 p-2.5 bg-[#1e2936] rounded-xl text-[#94a3b8] flex-shrink-0">
-                                <FaMapMarkerAlt />
-                            </div>
-                            <div className="flex flex-col pt-0.5">
-                                <span className="text-[#64748b] text-xs font-semibold mb-1">Full Address</span>
-                                <span className="text-[#cbd5e1] text-sm leading-relaxed">
-                                    {masjid.locality ? `${masjid.locality}, ` : ''}
-                                    {masjid.colony}
-                                    {masjid.city ? `, ${masjid.city}` : ''}
-                                </span>
-                            </div>
-                        </div>
+            <div className="w-full px-4 sm:px-6 py-8 z-10 flex flex-col pb-20">
+                <div className="bg-slate-800/50 backdrop-blur-sm rounded-xl p-6 shadow-lg border border-slate-700/50">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        {renderField("Colony", masjid.colony)}
+                        {renderField("City", masjid.city)}
+                        {renderField("Imam Name", masjid.imaamName)}
+                        {renderField("Moizzan Name", masjid.moizzanName)}
+                        {renderField("Mutawalli Name", masjid.mutwalliName || masjid.name || (masjid.memberNames && masjid.memberNames.length > 0 ? masjid.memberNames[0] : null))}
+                        {renderField("Mobile Number", masjid.mobile || "—")}
+                        {renderField("Committee Members", masjid.memberNames && Array.isArray(masjid.memberNames) && masjid.memberNames.length > 0 ? masjid.memberNames.join(', ') : masjid.committeeMembers)}
+                        {renderField("Committee Mobile Numbers", masjid.mobileNumbers && Array.isArray(masjid.mobileNumbers) && masjid.mobileNumbers.length > 0 ? masjid.mobileNumbers.join(', ') : (masjid.phone || masjid.contactNumber))}
 
-                        {mapUrl && (
-                            <div className="flex items-start gap-4 p-1">
-                                <div className="mt-0.5 p-2.5 bg-[#1e2936] rounded-xl text-[#60a5fa] flex-shrink-0">
-                                    <FaMapMarkedAlt />
-                                </div>
-                                <div className="flex flex-col pt-0.5">
-                                    <span className="text-[#64748b] text-xs font-semibold mb-1.5">Google Maps</span>
-                                    <a 
-                                        href={mapUrl} 
-                                        target="_blank" 
-                                        rel="noopener noreferrer" 
-                                        className="inline-flex items-center gap-1.5 text-sm font-medium text-[#60a5fa] hover:text-[#3b82f6] underline underline-offset-4 decoration-[#60a5fa]/40 transition-colors"
-                                    >
-                                        View on Map <FaShareAlt className="text-[10px] ml-0.5 mt-0.5" />
-                                    </a>
-                                </div>
-                            </div>
+                        {/* Show any remaining fields that aren't in excluded list */}
+                        {Object.keys(masjid).filter(k => 
+                            !excludedFields.includes(k) && 
+                            !['masjidName', 'name', 'mobileNumbers', 'mobile', 'phone', 'contactNumber', 
+                              'fullAddress', 'address', 'city', 'colony', 'locality', 'mutwalliName', 'committeeMembers', 'memberNames', 
+                              'imaamName', 'moizzanName', 'masjidId', 'loginId', 'committeeImage',
+                              'fazar', 'zuhar', 'asar', 'maghrib', 'isha', 'juma', 
+                              'role', 'pasteMapUrl'].includes(k) &&
+                            masjid[k] !== undefined && 
+                            masjid[k] !== null &&
+                            masjid[k] !== "" &&
+                            !(Array.isArray(masjid[k]) && masjid[k].length === 0)
+                        ).map(key => 
+                            renderField(
+                                key.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase()), 
+                                masjid[key]
+                            )
                         )}
                     </div>
-                </section>
+                </div>
 
-                {/* REPRESENTATIVE */}
-                <section>
-                    <h2 className="text-[#64748b] text-[11px] font-bold tracking-[0.2em] uppercase mb-4 pl-1">
-                        Representative
-                    </h2>
-                    <div className="h-px w-full bg-[#1e2936] mb-5"></div>
-                    
-                    <div className="flex flex-col gap-5">
-                        {!masjid.name && !masjid.mobile ? (
-                            <p className="text-sm text-[#64748b] italic p-1">No representative contact info provided.</p>
-                        ) : (
-                            <>
-                                {masjid.name && (
-                                    <div className="flex items-start gap-4 p-1">
-                                        <div className="mt-0.5 p-2.5 bg-[#1e2936] rounded-xl text-[#fbbf24] flex-shrink-0">
-                                            <FaUserTie />
-                                        </div>
-                                        <div className="flex flex-col pt-0.5">
-                                            <span className="text-[#64748b] text-xs font-semibold mb-1">Name</span>
-                                            <span className="text-[#cbd5e1] text-sm">{masjid.name}</span>
-                                            {masjid.role && <span className="text-[#64748b] text-xs mt-1">Role: {masjid.role}</span>}
-                                        </div>
-                                    </div>
-                                )}
-                                {masjid.mobile && (
-                                    <div className="flex items-start gap-4 p-1">
-                                        <div className="mt-0.5 p-2.5 bg-[#1e2936] rounded-xl text-[#34d399] flex-shrink-0">
-                                            <FaPhoneAlt />
-                                        </div>
-                                        <div className="flex flex-col pt-0.5">
-                                            <span className="text-[#64748b] text-xs font-semibold mb-1.5">Contact Number</span>
-                                            <a href={`tel:${masjid.mobile}`} className="text-[#34d399] text-sm font-medium hover:underline underline-offset-4 decoration-[#34d399]/40 transition-all w-max py-0.5 px-0">
-                                                {masjid.mobile}
-                                            </a>
-                                        </div>
-                                    </div>
-                                )}
-                            </>
-                        )}
+                {mapUrl && (
+                    <div className="mt-6 flex justify-center">
+                        <a 
+                            href={mapUrl} 
+                            target="_blank" 
+                            rel="noopener noreferrer" 
+                            className="inline-flex items-center gap-2 px-6 py-3 bg-blue-600/20 text-blue-400 rounded-xl border border-blue-500/30 hover:bg-blue-600/30 transition-all font-semibold"
+                        >
+                            <FaMapMarkedAlt /> View Location on Google Maps <FaShareAlt className="text-xs" />
+                        </a>
                     </div>
-                </section>
-
-                {/* COMMITTEE MEMBERS */}
-                {masjid.memberNames && masjid.memberNames.length > 0 && (
-                    <section>
-                        <h2 className="text-[#64748b] text-[11px] font-bold tracking-[0.2em] uppercase mb-4 pl-1">
-                            Committee Members
-                        </h2>
-                        
-                        <div className="flex flex-col gap-3">
-                            {masjid.memberNames.map((memberName, idx) => {
-                                const memberMobile = (masjid.mobileNumbers && masjid.mobileNumbers[idx]) || null;
-                                return (
-                                    <div key={idx} className="bg-[#172027]/80 rounded-[14px] p-4 flex flex-col sm:flex-row sm:items-center justify-between border border-[#1e2936]/60 shadow-[inset_0_1px_0_rgba(255,255,255,0.02)] gap-2">
-                                        <div className="flex items-center gap-3">
-                                            <div className="w-[5px] h-[5px] rounded-full bg-[#10b981]" />
-                                            <span className="text-sm font-semibold text-[#e2e8f0]">{memberName}</span>
-                                        </div>
-                                        {memberMobile && (
-                                            <a href={`tel:${memberMobile}`} className="flex items-center gap-2 text-[#10b981] hover:text-[#059669] transition-colors ml-[18px] sm:ml-0 text-xs font-medium bg-[#10b981]/10 px-2.5 py-1.5 rounded-lg border border-[#10b981]/20 w-fit">
-                                                <FaPhoneAlt className="text-[10px]" /> {memberMobile}
-                                            </a>
-                                        )}
-                                    </div>
-                                );
-                            })}
-                        </div>
-                    </section>
                 )}
             </div>
 

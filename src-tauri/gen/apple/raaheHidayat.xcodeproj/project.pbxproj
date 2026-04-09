@@ -33,7 +33,7 @@
 		644637D0F1C1DE0099559CCF /* WebKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = WebKit.framework; path = System/Library/Frameworks/WebKit.framework; sourceTree = SDKROOT; };
 		76CB6FFDE25EA5936E19E378 /* MetalKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = MetalKit.framework; path = System/Library/Frameworks/MetalKit.framework; sourceTree = SDKROOT; };
 		8433286BE327FAAF9EA3729F /* assets */ = {isa = PBXFileReference; lastKnownFileType = folder; path = assets; sourceTree = SOURCE_ROOT; };
-		8AB13310EB755077A2248EE0 /* raaheHidayat.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = raaheHidayat.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		8AB13310EB755077A2248EE0 /* Raahe Hidayat.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "Raahe Hidayat.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 		9D96C8DF88F2D88C2D86696A /* libapp.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; path = libapp.a; sourceTree = "<group>"; };
 		A83B65E5D15F75CF423A2E3D /* raaheHidayat_iOS.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = raaheHidayat_iOS.entitlements; sourceTree = "<group>"; };
 		ACDE741E271C80207011E241 /* bindings.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = bindings.h; sourceTree = "<group>"; };
@@ -201,7 +201,7 @@
 		EDCCE6D0BC12915B9D88CFC0 /* Products */ = {
 			isa = PBXGroup;
 			children = (
-				8AB13310EB755077A2248EE0 /* raaheHidayat.app */,
+				8AB13310EB755077A2248EE0 /* Raahe Hidayat.app */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -226,7 +226,7 @@
 			packageProductDependencies = (
 			);
 			productName = raaheHidayat_iOS;
-			productReference = 8AB13310EB755077A2248EE0 /* raaheHidayat.app */;
+			productReference = 8AB13310EB755077A2248EE0 /* Raahe Hidayat.app */;
 			productType = "com.apple.product-type.application";
 		};
 /* End PBXNativeTarget section */
@@ -378,10 +378,8 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_ENTITLEMENTS = raaheHidayat_iOS/raaheHidayat_iOS.entitlements;
 				CODE_SIGN_IDENTITY = "Apple Development";
-				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Distribution";
-				CODE_SIGN_STYLE = Manual;
-				DEVELOPMENT_TEAM = "R8953SWC87";
-				"DEVELOPMENT_TEAM[sdk=iphoneos*]" = R8953SWC87;
+				CODE_SIGN_STYLE = Automatic;
+				DEVELOPMENT_TEAM = R8953SWC87;
 				ENABLE_BITCODE = NO;
 				"EXCLUDED_ARCHS[sdk=iphoneos*]" = x86_64;
 				FRAMEWORK_SEARCH_PATHS = (
@@ -410,7 +408,6 @@
 				PRODUCT_BUNDLE_IDENTIFIER = com.prayer.raahe;
 				PRODUCT_NAME = "Raahe Hidayat";
 				PROVISIONING_PROFILE_SPECIFIER = "";
-				"PROVISIONING_PROFILE_SPECIFIER[sdk=iphoneos*]" = "Raahe Hidayat";
 				SDKROOT = iphoneos;
 				TARGETED_DEVICE_FAMILY = "1,2";
 				VALID_ARCHS = "arm64  x86_64";
@@ -484,10 +481,8 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_ENTITLEMENTS = raaheHidayat_iOS/raaheHidayat_iOS.entitlements;
 				CODE_SIGN_IDENTITY = "Apple Development";
-				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Distribution";
-				CODE_SIGN_STYLE = Manual;
-				DEVELOPMENT_TEAM = "R8953SWC87";
-				"DEVELOPMENT_TEAM[sdk=iphoneos*]" = R8953SWC87;
+				CODE_SIGN_STYLE = Automatic;
+				DEVELOPMENT_TEAM = R8953SWC87;
 				ENABLE_BITCODE = NO;
 				"EXCLUDED_ARCHS[sdk=iphoneos*]" = x86_64;
 				FRAMEWORK_SEARCH_PATHS = (
@@ -516,7 +511,6 @@
 				PRODUCT_BUNDLE_IDENTIFIER = com.prayer.raahe;
 				PRODUCT_NAME = "Raahe Hidayat";
 				PROVISIONING_PROFILE_SPECIFIER = "";
-				"PROVISIONING_PROFILE_SPECIFIER[sdk=iphoneos*]" = "Raahe Hidayat";
 				SDKROOT = iphoneos;
 				TARGETED_DEVICE_FAMILY = "1,2";
 				VALID_ARCHS = "arm64  x86_64";
