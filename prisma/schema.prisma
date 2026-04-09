@@ -172,6 +172,7 @@ model EventPage {
   title         String
   slug          String             @unique
   description   String?
+  gender        String             @default("Both")
   themeColor    String?            @map("theme_color")
   submitLabel   String?            @map("submit_label")
   isActive                  Boolean            @default(false) @map("is_active")

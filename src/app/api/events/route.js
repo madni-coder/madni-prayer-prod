@@ -13,6 +13,7 @@ export async function GET() {
                 title: true,
                 slug: true,
                 description: true,
+                gender: true,
                 themeColor: true,
                 position: true,
                 updatedAt: true

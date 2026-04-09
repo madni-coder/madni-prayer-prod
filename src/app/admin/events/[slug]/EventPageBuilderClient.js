@@ -8,7 +8,7 @@ import {
     ChevronDown, ChevronUp, Save, Check, CheckCircle, X,
     Type, Hash, AlignLeft, ChevronDownSquare, CircleDot,
     CheckSquare, List, MousePointerClick, Bell, Layers,
-    Minus, Heading, Upload, Copy, MapPin, Moon, Link as LinkIcon
+    Minus, Heading, Upload, Copy, MapPin, Moon, Link as LinkIcon, Users
 } from "lucide-react";
 
 // ─── Field type definitions ───────────────────────────────────────────────────
@@ -19,6 +19,7 @@ export const FIELD_TYPES = [
     { type: "notes", label: "Notes", icon: AlignLeft, color: "#0284c7" },
     { type: "email", label: "Email", icon: Type, color: "#059669" },
     { type: "phone", label: "Phone", icon: Type, color: "#16a34a" },
+    { type: "gender", label: "Gender", icon: Users, color: "#db2777" },
     { type: "dropdown", label: "Dropdown", icon: ChevronDownSquare, color: "#d97706" },
     { type: "radio", label: "Radio Group", icon: CircleDot, color: "#dc2626" },
     { type: "checkbox", label: "Checkbox", icon: CheckSquare, color: "#7c3aed" },
@@ -40,6 +41,7 @@ const BLANK_SCHEMA = (slug) => ({
     page_title: slug.split("-").map(s => s.charAt(0).toUpperCase() + s.slice(1)).join(" "),
     page_slug: slug,
     description: "",
+    gender: "Both",
     submit_label: "Submit",
     color: "#7c3aed",
     isActive: false,
@@ -68,6 +70,10 @@ function makeNewField(type) {
     };
     if (["dropdown", "radio", "checkboxGroup"].includes(type)) {
         base.options = ["Option 1", "Option 2", "Option 3"];
+    }
+    if (type === "gender") {
+        base.options = ["Male", "Female"];
+        base.type = "radio"; // Just map it down to radio out of the box
     }
     if (type === "text") { base.placeholder = "Enter your full name"; }
     if (type === "notes") { base.placeholder = "Enter notes..."; }
@@ -510,6 +516,18 @@ function PageHeaderConfig({ schema, onChange }) {
                 />
             </div>
             <div>
+                <label className="block text-xs font-medium text-gray-700 opacity-60 mb-1">Gender Restriction</label>
+                <select
+                    value={schema.gender || "Both"}
+                    onChange={e => onChange({ ...schema, gender: e.target.value })}
+                    className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none text-gray-900 bg-white"
+                >
+                    <option value="Both">Both (Male & Female)</option>
+                    <option value="Male">Male Only</option>
+                    <option value="Female">Female Only</option>
+                </select>
+            </div>
+            <div>
                 <label className="block text-xs font-medium text-gray-700 opacity-60 mb-1">Submit Button Label</label>
                 <input
                     type="text"
@@ -698,6 +716,7 @@ export default function EventPageBuilder({ slug: propSlug }) {
                                 page_title: ev.title,
                                 page_slug: ev.slug,
                                 description: ev.description,
+                                gender: ev.gender || "Both",
                                 submit_label: ev.submit_label || "Submit",
                                 color: ev.theme_color || "#7c3aed",
                                 isActive: ev.is_active,

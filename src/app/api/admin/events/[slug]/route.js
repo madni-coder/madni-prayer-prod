@@ -16,6 +16,7 @@ export async function GET(request, { params }) {
 
         const formattedEvent = {
             ...data,
+            gender: data.gender,
             theme_color: data.themeColor,
             submit_label: data.submitLabel,
             is_active: data.isActive,
@@ -44,6 +45,7 @@ export async function PUT(request, { params }) {
                 data: {
                     title: schema.page_title,
                     description: schema.description || "",
+                    gender: schema.gender || "Both",
                     themeColor: schema.color || "#7c3aed",
                     submitLabel: schema.submit_label || "Submit",
                     isActive: schema.isActive || false,
@@ -60,6 +62,7 @@ export async function PUT(request, { params }) {
                     slug: slug,
                     title: schema.page_title,
                     description: schema.description || "",
+                    gender: schema.gender || "Both",
                     themeColor: schema.color || "#7c3aed",
                     submitLabel: schema.submit_label || "Submit",
                     isActive: schema.isActive || false,

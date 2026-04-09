@@ -113,6 +113,13 @@ export default function EventsListingPage() {
                                                     {event.description}
                                                 </p>
                                             )}
+                                            {event.gender && event.gender !== "Both" && (
+                                                <div className="mt-2 text-xs">
+                                                    <span className={`inline-flex items-center px-2 py-0.5 rounded text-white font-medium ${event.gender === 'Female' ? 'bg-pink-500' : 'bg-blue-500'}`}>
+                                                        For {event.gender}
+                                                    </span>
+                                                </div>
+                                            )}
                                         </div>
 
                                         <Link

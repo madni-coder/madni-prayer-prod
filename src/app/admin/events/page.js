@@ -77,6 +77,7 @@ function DeleteModal({ page, onConfirm, onCancel }) {
 function CreateModal({ onConfirm, onCancel }) {
     const [title, setTitle] = useState("");
     const [description, setDescription] = useState("");
+    const [gender, setGender] = useState("Both");
 
     const handleSubmit = (e) => {
         e.preventDefault();
@@ -86,7 +87,7 @@ function CreateModal({ onConfirm, onCancel }) {
         const cleanDescription = sanitizeText(description.trim());
         const randomStr = Math.random().toString(36).substring(2, 8);
         const slug = cleanTitle.toLowerCase().replace(/\s+/g, "-").replace(/[^a-z0-9-]/g, "") + `-${randomStr}`;
-        onConfirm({ title: cleanTitle, description: cleanDescription, slug });
+        onConfirm({ title: cleanTitle, description: cleanDescription, gender, slug });
     };
 
     return (
@@ -127,6 +128,18 @@ function CreateModal({ onConfirm, onCancel }) {
                             placeholder="Short description"
                             className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-violet-400 text-gray-900 bg-white"
                         />
+                    </div>
+                    <div>
+                        <label className="block text-sm font-medium text-gray-900 mb-1">Gender</label>
+                        <select
+                            value={gender}
+                            onChange={e => setGender(e.target.value)}
+                            className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-violet-400 text-gray-900 bg-white"
+                        >
+                            <option value="Both">Both (Male & Female)</option>
+                            <option value="Male">Male Only</option>
+                            <option value="Female">Female Only</option>
+                        </select>
                     </div>
                     <div className="flex gap-3 pt-2">
                         <button type="button" onClick={onCancel}
@@ -267,6 +280,7 @@ export default function AdminEventsPage() {
                 const updatePayload = {
                     page_title: schema.title,
                     description: schema.description,
+                    gender: schema.gender || "Both",
                     color: schema.theme_color,
                     submit_label: schema.submit_label,
                     fields: schema.schema_fields,
