@@ -127,7 +127,7 @@ export default function MasjidListsPage() {
                             checked={isRaipur}
                             onChange={(e) => setIsRaipur(e.target.checked)}
                         />
-                        <div className="w-12 h-6 bg-neutral peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-white/20 rounded-full peer peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
+                        <div className="w-12 h-6 bg-error peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-white/20 rounded-full peer peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
                     </label>
                     <span className="text-sm font-medium text-base-content/80">Only Raipur</span>
                 </div>
@@ -154,7 +154,7 @@ export default function MasjidListsPage() {
                                             <h2 className="text-base font-bold text-base-content break-words">
                                                 {masjid.masjidName}
                                             </h2>
-                                            <p className="text-xs text-neutral-400 mt-1 break-words leading-relaxed">
+                                            <p className="text-xs font-bold mt-1 break-words leading-relaxed">
                                                 {masjid.colony}
                                                 {masjid.locality && `, ${masjid.locality}`}
                                                 {masjid.city && `, ${masjid.city}`}
@@ -188,8 +188,31 @@ export default function MasjidListsPage() {
                                 <FaChevronLeft className="text-xs" />
                             </button>
                             
-                            <div className="w-7 h-7 rounded-full bg-[#10b981] flex flex-col items-center justify-center text-xs font-bold text-black shadow-[0_2px_10px_rgba(16,185,129,0.3)]">
-                                {currentPage}
+                            <div className="flex items-center gap-1">
+                                {Array.from({ length: totalPages }, (_, i) => i + 1)
+                                    .filter(p => p === 1 || p === totalPages || (p >= currentPage - 1 && p <= currentPage + 1))
+                                    .reduce((acc, p, i, arr) => {
+                                        if (i > 0 && arr[i - 1] !== p - 1) acc.push('...');
+                                        acc.push(p);
+                                        return acc;
+                                    }, [])
+                                    .map((page, idx) => (
+                                        page === '...' ? (
+                                            <span key={`ellipsis-${idx}`} className="text-xs text-neutral-500 px-1">...</span>
+                                        ) : (
+                                            <button 
+                                                key={page}
+                                                onClick={() => setCurrentPage(page)}
+                                                className={`w-7 h-7 rounded-full flex flex-col items-center justify-center text-xs font-bold transition-all ${
+                                                    currentPage === page 
+                                                    ? "bg-[#10b981] text-black shadow-[0_2px_10px_rgba(16,185,129,0.3)]" 
+                                                    : "text-[#78716c] hover:bg-white/5"
+                                                }`}
+                                            >
+                                                {page}
+                                            </button>
+                                        )
+                                    ))}
                             </div>
                             
                             <button 

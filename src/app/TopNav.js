@@ -16,9 +16,9 @@ import {
     FaStore,
     FaBriefcase,
     FaUsers,
-    FaChevronRight,
     FaStarAndCrescent,
-    FaFileAlt
+    FaFileAlt,
+    FaMosque
 
 } from "react-icons/fa";
 import TasbihSvgIcon from "../components/TasbihSvgIcon";
@@ -48,6 +48,11 @@ const navLinks = [
         icon: <TasbihSvgIcon className="w-6 h-6" />,
     },
     { name: "Zikr", href: "/zikr", icon: <img src="/iconZikr.png" alt="Zikr" className="w-6 h-6 object-contain bg-white rounded-full p-0.5" /> },
+    {
+        name: "All Masjids",
+        href: "/masjidLists",
+        icon: <FaMosque className="text-lg text-teal-400" />,
+    },
     { name: "Rewards", href: "/rewards", icon: <FaGift className="text-lg text-red-400" /> },
     {
         name: "Aelaan Naama",
