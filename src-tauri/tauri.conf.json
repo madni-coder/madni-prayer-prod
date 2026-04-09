@@ -2,7 +2,7 @@
     "$schema": "../node_modules/@tauri-apps/cli/config.schema.json",
     "productName": "Raahe Hidayat",
     "version": "8.5.0",
-    "identifier": "com.prayer.raahe",
+    "identifier": "com.prayer.madni",
     "build": {
         "frontendDist": "../out",
         "devUrl": "http://localhost:3000",
@@ -13,7 +13,6 @@
         "windows": [
             {
                 "title": "Raahe Hidayat",
-                "url": "https://raahehidayat.vercel.app",
                 "width": 800,
                 "height": 600,
                 "resizable": true,

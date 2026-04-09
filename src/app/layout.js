@@ -7,7 +7,6 @@ import BottomNav from "./BottomNav";
 import IosClassSetter from "./IosClassSetter.client";
 import ForceUpdateChecker from "../components/ForceUpdateChecker.client";
 import AppProviders from "../context/AppProviders";
-import ServiceWorkerRegister from "../components/ServiceWorkerRegister.client";
 
 const geistSans = Geist({
     variable: "--font-geist-sans",
@@ -34,7 +33,6 @@ export default function RootLayout({ children }) {
 
                 <IosClassSetter />
                 <ForceUpdateChecker />
-                <ServiceWorkerRegister />
 
                 <AppProviders>
                     {children}
