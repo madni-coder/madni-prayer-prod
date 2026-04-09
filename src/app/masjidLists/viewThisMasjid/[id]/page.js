@@ -145,28 +145,7 @@ export default function ViewThisMasjidPage({ params }) {
                     </div>
                 </div>
 
-                {mapUrl && (
-                    <div className="mt-6 flex justify-center">
-                        <button 
-                            onClick={async (e) => {
-                                e.preventDefault();
-                                if (typeof window !== "undefined" && window.__TAURI_INTERNALS__) {
-                                    try {
-                                        const { open } = await import('@tauri-apps/plugin-shell');
-                                        await open(mapUrl);
-                                        return;
-                                    } catch (err) {
-                                        console.error("Failed to open URL using Tauri:", err);
-                                    }
-                                }
-                                window.open(mapUrl, '_blank', 'noopener,noreferrer');
-                            }}
-                            className="inline-flex items-center gap-2 px-6 py-3 bg-warning/80 text-white rounded-xl border border-blue-500/30 hover:bg-blue-600/30 transition-all font-semibold cursor-pointer"
-                        >
-                            <FaMapMarkedAlt /> See Location Of This Masjid
-                        </button>
-                    </div>
-                )}
+               
             </div>
 
            

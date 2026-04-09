@@ -127,7 +127,7 @@ export default function MasjidListsPage() {
                             checked={isRaipur}
                             onChange={(e) => setIsRaipur(e.target.checked)}
                         />
-                        <div className="w-12 h-6 bg-error peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-white/20 rounded-full peer peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
+                        <div className="w-12 h-6 bg-black peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-white/20 rounded-full peer peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
                     </label>
                     <span className="text-sm font-medium text-base-content/80">Only Raipur</span>
                 </div>
