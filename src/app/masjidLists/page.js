@@ -91,21 +91,20 @@ export default function MasjidListsPage() {
             
             <div className="w-full max-w-lg flex flex-col gap-5">
                 
-                {/* Back Button */}
-                <div style={{ alignSelf: "flex-start" }}>
+                {/* Header Area */}
+                <div className="w-full flex flex-col -mt-10 mb-2 gap-2">
                     <button
-                        className="flex items-center gap-2 mb-[-500] mt-[-50] text-lg text-primary hover:text-green-600 font-semibold"
+                        className="flex w-fit items-center gap-1 text-lg text-primary hover:text-green-600 font-semibold z-20"
                         onClick={() => router.push("/")}
                         aria-label="Back to Home"
                     >
                         <FaAngleLeft /> Back
                     </button>
+                    
+                    <h1 className="text-center text-3xl font-bold tracking-wider text-primary uppercase m-0 drop-shadow-sm">
+                        ALL MASJIDS
+                    </h1>
                 </div>
-
-                {/* Header */}
-                <h1 className="text-center text-3xl font-bold tracking-wider text-primary uppercase mt-[-30] mb-2 drop-shadow-sm">
-                    ALL MASJIDS
-                </h1>
 
                 {/* Search Bar */}
                 <div className="relative w-full">
