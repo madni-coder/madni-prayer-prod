@@ -97,7 +97,7 @@ const SplitText = ({
                                 onCompleteRef.current?.();
                             },
                             willChange: 'transform, opacity',
-                            force3D: true
+                            force3D: false
                         }
                     );
                 }
@@ -138,7 +138,7 @@ const SplitText = ({
             wordWrap: 'break-word',
             willChange: 'transform, opacity'
         };
-        const classes = `split-parent overflow-hidden inline-block whitespace-normal ${className}`;
+        const classes = `split-parent inline-block whitespace-normal ${className}`;
         const Tag = tag || 'p';
 
         return (
