@@ -32,6 +32,14 @@ const sections = [
         accent: '#ec4899',
     },
     {
+        name: "Events & Programs",
+        href: "/events",
+        icon: (
+            <CalendarRange className="text-4xl lg:text-5xl text-rose-500 drop-shadow-[0_0_15px_rgba(244,63,94,0.5)]" />
+        ),
+        accent: '#f43f5e',
+    },
+    {
         name: "Prayer Times",
         href: "/prayer-times",
         icon: <FaClock className="text-4xl lg:text-5xl text-yellow-500 drop-shadow-[0_0_15px_rgba(234,179,8,0.5)]" />,
@@ -77,14 +85,7 @@ const sections = [
         icon: <Megaphone className="text-4xl lg:text-5xl text-blue-400 drop-shadow-[0_0_15px_rgba(96,165,250,0.5)]" />,
         accent: '#60a5fa',
     },
-    {
-        name: "Events & Programs",
-        href: "/events",
-        icon: (
-            <CalendarRange className="text-4xl lg:text-5xl text-rose-500 drop-shadow-[0_0_15px_rgba(244,63,94,0.5)]" />
-        ),
-        accent: '#f43f5e',
-    },
+    
     {
         name: "Olmaa's Stores",
         href: "/local-stores",
