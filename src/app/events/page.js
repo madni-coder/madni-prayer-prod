@@ -123,7 +123,7 @@ export default function EventsListingPage() {
                                         </div>
 
                                         <Link
-                                            href={`/events/${event.slug}`}
+                                            href={`/events/view?slug=${event.slug}`}
                                             className="inline-flex items-center justify-center gap-2 px-6 py-2.5 rounded-xl text-sm font-semibold text-primary-content shadow-sm hover:shadow-md transition-all whitespace-nowrap bg-primary"
                                         >
                                             View event

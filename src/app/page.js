@@ -87,7 +87,7 @@ const sections = [
     },
     
     {
-        name: "Olmaa's Stores",
+        name: "Raahe Tijarat",
         href: "/local-stores",
         icon: (
             <FaStore className="text-4xl lg:text-5xl text-emerald-400 drop-shadow-[0_0_15px_rgba(52,211,153,0.5)]" />

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { toast } from "react-toastify";
 import {
@@ -530,8 +530,9 @@ function NotFoundScreen({ slug, isDraft }) {
 }
 
 // ─── Main Public Event Page ───────────────────────────────────────────────────
-export default function DynamicEventPage({ slug: propSlug }) {
-    const slug = propSlug || "";
+export default function DynamicEventPage() {
+    const searchParams = useSearchParams();
+    const slug = searchParams ? (searchParams.get("slug") || "") : "";
 
     const [schema, setSchema] = useState(null);
     const [loading, setLoading] = useState(true);

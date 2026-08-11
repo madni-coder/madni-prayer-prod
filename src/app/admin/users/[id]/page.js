@@ -1,22 +1,32 @@
+import prisma from '../../../../lib/prisma';
+import { notFound } from 'next/navigation';
+
 // Static export (Tauri) requires dynamicParams = false
-export const dynamicParams = true;
+export const dynamicParams = false;
 
 export async function generateStaticParams() {
     const placeholder = [{ id: "__placeholder" }];
     try {
+        const users = await prisma.user.findMany({ select: { id: true } });
+        if (users && users.length > 0) {
+            return users.map((u) => ({ id: String(u.id) }));
+        }
+    } catch (err) {
+        console.error("Prisma query error in generateStaticParams:", err);
+    }
+    try {
         const base = (process.env.NEXT_PUBLIC_API_BASE_URL || "https://raahehidayat.vercel.app").replace(/\/$/, "");
         const res = await fetch(`${base}/api/auth/users`, { cache: "no-store" });
-        if (!res.ok) return placeholder;
-        const json = await res.json();
-        const users = Array.isArray(json.data) ? json.data : (Array.isArray(json) ? json : []);
-        return users.length > 0 ? users.map((u) => ({ id: String(u.id) })) : placeholder;
+        if (res.ok) {
+            const json = await res.json();
+            const users = Array.isArray(json.data) ? json.data : (Array.isArray(json) ? json : []);
+            if (users.length > 0) return users.map((u) => ({ id: String(u.id) }));
+        }
     } catch {
-        return placeholder;
+        // fallback
     }
+    return placeholder;
 }
-
-import prisma from '../../../../lib/prisma';
-import { notFound } from 'next/navigation';
 
 export default async function Page({ params }) {
     // In Next.js params can be a Promise in some runtime setups — await it.
