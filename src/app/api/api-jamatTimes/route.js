@@ -1,5 +1,35 @@
 import { NextResponse } from "next/server";
 import prisma from "../../../../lib/prisma";
+import { sendTopicPush, PUSH_TOPICS } from "../../../../lib/push";
+
+const PRAYER_LABELS = {
+    fazar: "Fajr",
+    zuhar: "Zuhr",
+    asar: "Asar",
+    maghrib: "Maghrib",
+    isha: "Isha",
+    juma: "Juma",
+};
+
+// Notifies devices that saved this masjid, scoped to only the prayer(s)
+// that actually changed. Awaited (but failure-safe) so serverless platforms
+// like Vercel don't kill the request before the push finishes sending.
+async function notifyJamatTimeChange(before, after) {
+    if (!before || !after) return;
+    const changed = Object.keys(PRAYER_LABELS).filter((key) => before[key] !== after[key]);
+    if (changed.length === 0) return;
+
+    const body = changed
+        .map((key) => `${PRAYER_LABELS[key]} updated to ${after[key]}`)
+        .join(", ");
+
+    await sendTopicPush({
+        topic: PUSH_TOPICS.masjid(after.id),
+        title: after.masjidName,
+        body,
+        data: { type: "jamat_time_change", masjidId: String(after.id) },
+    });
+}
 
 // PATCH: Update jamat times for an existing masjid
 export async function PATCH(request) {
@@ -42,10 +72,14 @@ export async function PATCH(request) {
             );
         }
 
+        const before = await prisma.allMasjid.findUnique({ where: whereClause });
+
         const updated = await prisma.allMasjid.update({
             where: whereClause,
             data: updateData,
         });
+
+        await notifyJamatTimeChange(before, updated);
 
         return NextResponse.json(
             { message: "Jamat times updated successfully", data: updated },

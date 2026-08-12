@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "258249599958",
+    "project_id": "raahe-hidayat-dc38e",
+    "storage_bucket": "raahe-hidayat-dc38e.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:258249599958:android:ff93184404625f69489277",
+        "android_client_info": {
+          "package_name": "com.prayer.madni"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBAB2lZBZ0iRu61yjNnlBuXESs3qcANZ1Q"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

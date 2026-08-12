@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 import prisma from "../../../../lib/prisma";
+import { sendTopicPush, PUSH_TOPICS } from "../../../../lib/push";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -10,6 +11,10 @@ const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
 const supabaseKey =
     process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 const supabase = createClient(supabaseUrl, supabaseKey);
+
+function truncate(text, max) {
+    return text.length > max ? `${text.slice(0, max - 1)}…` : text;
+}
 
 /** Upload a File to Supabase storage bucket "committee" and return its public URL */
 async function uploadFile(file, folder) {
@@ -54,6 +59,13 @@ export async function POST(request) {
 
         const event = await prisma.committeeEvent.create({
             data: { title, description, buttons, imageUrls, pdfAttachments, isActive: true },
+        });
+
+        await sendTopicPush({
+            topic: PUSH_TOPICS.EVENTS_PROGRAMS,
+            title: title || "New Event/Program",
+            body: description ? truncate(description, 100) : "New event/program added — tap to view.",
+            data: { type: "committee_event", eventId: event.id },
         });
 
         return NextResponse.json({ success: true, event });

@@ -17,6 +17,7 @@ import { MasjidCommitteeProvider } from "./MasjidCommitteeContext";
 import { MasjidCommitteeEventProvider } from "./MasjidCommitteeEventContext";
 import { KanzulProvider } from "./KanzulContext";
 import { PdfProxyProvider } from "./PdfProxyContext";
+import { PushNotificationProvider } from "./PushNotificationContext";
 
 export default function AppProviders({ children }) {
     return (
@@ -36,9 +37,11 @@ export default function AppProviders({ children }) {
                                                             <MasjidCommitteeEventProvider>
                                                                 <KanzulProvider>
                                                                     <PdfProxyProvider>
-                                                                        <AppInitializer>
-                                                                            {children}
-                                                                        </AppInitializer>
+                                                                        <PushNotificationProvider>
+                                                                            <AppInitializer>
+                                                                                {children}
+                                                                            </AppInitializer>
+                                                                        </PushNotificationProvider>
                                                                     </PdfProxyProvider>
                                                                 </KanzulProvider>
                                                             </MasjidCommitteeEventProvider>

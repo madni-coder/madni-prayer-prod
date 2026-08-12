@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		E1933796054B07D214D9711B /* GoogleService-Info.plist in Resources */ = {isa = PBXBuildFile; fileRef = DFDC5E621F55E4916FBFBDD1 /* GoogleService-Info.plist */; };
 		308747EFB4A027D5CEF8A609 /* MetalKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 76CB6FFDE25EA5936E19E378 /* MetalKit.framework */; };
 		38A8EAD11FE070E40EA8A22F /* main.mm in Sources */ = {isa = PBXBuildFile; fileRef = F3CE75CB21BC50F3538BBB7E /* main.mm */; };
 		3D2013EADE996E85BA0D160F /* WebKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 644637D0F1C1DE0099559CCF /* WebKit.framework */; };
@@ -22,6 +23,7 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
+		DFDC5E621F55E4916FBFBDD1 /* GoogleService-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = "GoogleService-Info.plist"; sourceTree = "<group>"; };
 		004B08C70266F0D6A3CFB5C5 /* libapp.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; path = libapp.a; sourceTree = "<group>"; };
 		013DC2C611DAD1B79DFEAFA6 /* libapp.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; path = libapp.a; sourceTree = "<group>"; };
 		01B053CBC607F111722890F4 /* libapp.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; path = libapp.a; sourceTree = "<group>"; };
@@ -186,6 +188,7 @@
 			children = (
 				C8C29D3BB9B8B13B0F9F0BD0 /* Info.plist */,
 				A83B65E5D15F75CF423A2E3D /* raaheHidayat_iOS.entitlements */,
+				DFDC5E621F55E4916FBFBDD1 /* GoogleService-Info.plist */,
 			);
 			path = raaheHidayat_iOS;
 			sourceTree = "<group>";
@@ -264,6 +267,7 @@
 				C99D86FFD6CC74FB36197686 /* Assets.xcassets in Resources */,
 				C2AAE9866ADDF7402D88F5C3 /* LaunchScreen.storyboard in Resources */,
 				F62678BE8B9B1BE85347DFDB /* assets in Resources */,
+				E1933796054B07D214D9711B /* GoogleService-Info.plist in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

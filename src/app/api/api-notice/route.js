@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 // Importing Supabase client library
 import { createClient } from "@supabase/supabase-js";
+import { sendTopicPush, PUSH_TOPICS } from "../../../../lib/push";
 
 // Ensure this route runs in the Node.js runtime (Buffer, Node streams, etc.)
 export const runtime = "nodejs";
@@ -80,6 +81,13 @@ export async function POST(request) {
         } catch (_) {
             // non-fatal – badge will update on next cache expiry
         }
+
+        await sendTopicPush({
+            topic: PUSH_TOPICS.NOTICES,
+            title: "New Notice Posted",
+            body: "A new Aelaan Naama has been added.",
+            data: { type: "notice", fileName },
+        });
 
         return NextResponse.json({ fileName, imageSrc, imageSrcPortrait });
     } catch (err) {

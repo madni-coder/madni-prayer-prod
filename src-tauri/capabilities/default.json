@@ -7,7 +7,7 @@
         "opener:default",
         "os:default",
         "haptics:default",
-        "notification:default",
+        "notifications:default",
         "geolocation:default",
         "geolocation:allow-get-current-position",
         "geolocation:allow-watch-position",

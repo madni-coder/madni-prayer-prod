@@ -131,3 +131,6 @@ tasks.register("injectCustomIcons") {
 
 // Ensure icons are injected before the build/resource merge runs
 tasks.matching { it.name == "preBuild" }.configureEach { dependsOn("injectCustomIcons") }
+
+// Firebase Cloud Messaging (push notifications) — reads google-services.json in this directory
+apply(plugin = "com.google.gms.google-services")

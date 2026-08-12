@@ -5,6 +5,7 @@ import { MapPin, Save, Check } from "lucide-react";
 import { FaAngleLeft, FaMosque, FaTimes, FaWhatsapp, FaCopy, FaCheck } from "react-icons/fa";
 import { useRouter } from "next/navigation";
 import apiClient from "../../lib/apiClient";
+import { usePushNotificationContext } from "../../context/PushNotificationContext";
 
 function DigitalClock() {
     const [time, setTime] = useState(new Date());
@@ -48,6 +49,7 @@ function DigitalClock() {
 
 export default function JamatTimesPage() {
     const router = useRouter();
+    const { setMasjidTopic } = usePushNotificationContext();
     const [masjids, setMasjids] = useState([]);
     const [onlyRaipur, setOnlyRaipur] = useState(false);
     const [selectedMasjid, setSelectedMasjid] = useState(""); // acts as unified search query
@@ -339,6 +341,7 @@ export default function JamatTimesPage() {
         if (!selectedMasjidData) return;
 
         const dataToSave = {
+            id: selectedMasjidData.id,
             masjidName: selectedMasjidData.masjidName,
             colony: selectedMasjidData.colony,
             locality: selectedMasjidData.locality || "",
@@ -357,6 +360,8 @@ export default function JamatTimesPage() {
             console.log("💾 Masjid saved to localStorage:", dataToSave);
             setSavedMasjid(dataToSave);
             showToast("✅ Masjid saved successfully!");
+            // Subscribe this device to jamat-time-change push notifications for this masjid only
+            setMasjidTopic(selectedMasjidData.id);
         } catch (err) {
             console.error("❌ Error saving masjid:", err);
             showToast("❌ Failed to save masjid. Please try again.", "error");

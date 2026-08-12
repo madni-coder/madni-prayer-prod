@@ -1,4 +1,5 @@
 import prisma from "../../../../lib/prisma";
+import { sendTopicPush, PUSH_TOPICS } from "../../../../lib/push";
 
 export async function POST(request) {
     const body = await request.json();
@@ -54,6 +55,14 @@ export async function POST(request) {
             const result = await prisma.reward.createMany({
                 data: dataToInsert,
             });
+
+            await sendTopicPush({
+                topic: PUSH_TOPICS.WEEKLY_REWARDS,
+                title: "Weekly Rewards Announced",
+                body: "This week's Durood Shareef rewards list is out.",
+                data: { type: "weekly_rewards" },
+            });
+
             return new Response(
                 JSON.stringify({ success: true, inserted: result.count }),
                 { status: 201 }

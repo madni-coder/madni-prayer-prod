@@ -1,8 +1,13 @@
 import { NextResponse } from "next/server";
 import prisma from "../../../../../../lib/prisma";
+import { sendTopicPush, PUSH_TOPICS } from "../../../../../../lib/push";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
+
+function truncate(text, max) {
+    return text.length > max ? `${text.slice(0, max - 1)}…` : text;
+}
 
 export async function GET(request, { params }) {
     try {
@@ -70,6 +75,20 @@ export async function PUT(request, { params }) {
                     schemaFields: schema.fields || [],
                     position: nextPos
                 }
+            });
+        }
+
+        // Notify only when the page actually goes live (false/absent -> true),
+        // not on every unrelated edit to an already-published page.
+        const wasActive = existing?.isActive || false;
+        if (!wasActive && data.isActive) {
+            await sendTopicPush({
+                topic: PUSH_TOPICS.EVENTS_PROGRAMS,
+                title: data.title || "New Event/Program",
+                body: data.description
+                    ? truncate(data.description, 100)
+                    : "New event/program added — tap to view.",
+                data: { type: "event_page", slug: data.slug },
             });
         }
 
