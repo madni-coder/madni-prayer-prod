@@ -65,7 +65,7 @@ export async function POST(request) {
             topic: PUSH_TOPICS.EVENTS_PROGRAMS,
             title: title || "New Event/Program",
             body: description ? truncate(description, 100) : "New event/program added — tap to view.",
-            data: { type: "committee_event", eventId: event.id },
+            data: { type: "committee_event", eventId: event.id, path: "/events" },
         });
 
         return NextResponse.json({ success: true, event });

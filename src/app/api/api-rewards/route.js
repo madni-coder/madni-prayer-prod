@@ -59,8 +59,8 @@ export async function POST(request) {
             await sendTopicPush({
                 topic: PUSH_TOPICS.WEEKLY_REWARDS,
                 title: "Weekly Rewards Announced",
-                body: "This week's Durood Shareef rewards list is out.",
-                data: { type: "weekly_rewards" },
+                body: "Have a look on the winners list of this week",
+                data: { type: "weekly_rewards", path: "/rewards" },
             });
 
             return new Response(

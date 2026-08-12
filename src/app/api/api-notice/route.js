@@ -86,7 +86,7 @@ export async function POST(request) {
             topic: PUSH_TOPICS.NOTICES,
             title: "New Notice Posted",
             body: "A new Aelaan Naama has been added.",
-            data: { type: "notice", fileName },
+            data: { type: "notice", fileName, path: "/notice" },
         });
 
         return NextResponse.json({ fileName, imageSrc, imageSrcPortrait });

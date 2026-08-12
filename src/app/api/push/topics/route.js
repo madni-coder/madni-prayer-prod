@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { updateTopicSubscriptions } from "../../../../../lib/push";
 
 // POST /api/push/topics
-// Body: { token: string, platform: "android" | "ios", subscribe?: string[], unsubscribe?: string[] }
+// Body: { token: string, platform: "android" | "ios" | "web", subscribe?: string[], unsubscribe?: string[] }
 // Proxies to Firebase Admin's topic subscribe/unsubscribe — the service
 // account credential never leaves the server, so the client can only ever
 // reach this through the token it already holds for its own device.
@@ -10,9 +10,9 @@ export async function POST(request) {
     try {
         const { token, platform, subscribe = [], unsubscribe = [] } = await request.json();
 
-        if (!token || !["android", "ios"].includes(platform)) {
+        if (!token || !["android", "ios", "web"].includes(platform)) {
             return NextResponse.json(
-                { error: "token and platform ('android' | 'ios') are required" },
+                { error: "token and platform ('android' | 'ios' | 'web') are required" },
                 { status: 400 }
             );
         }

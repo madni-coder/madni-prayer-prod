@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import prisma from "../../../../lib/prisma";
+import { sendTopicPush, PUSH_TOPICS } from "../../../../lib/push";
 
 // GET - Fetch all job lists or a single job by ID
 export async function GET(request) {
@@ -76,6 +77,13 @@ export async function POST(request) {
                 requirements: requirements || [],
                 responsibilities: responsibilities || [],
             },
+        });
+
+        await sendTopicPush({
+            topic: PUSH_TOPICS.JOB_PORTAL,
+            title: "New Job Posted",
+            body: `${newJob.title} at ${newJob.company} — tap to view.`,
+            data: { type: "job_list", jobId: String(newJob.id), path: "/jobPortal/jobLists" },
         });
 
         return NextResponse.json(newJob, { status: 201 });

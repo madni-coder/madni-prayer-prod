@@ -88,7 +88,7 @@ export async function PUT(request, { params }) {
                 body: data.description
                     ? truncate(data.description, 100)
                     : "New event/program added — tap to view.",
-                data: { type: "event_page", slug: data.slug },
+                data: { type: "event_page", slug: data.slug, path: "/events" },
             });
         }
 

@@ -20,14 +20,14 @@ async function notifyJamatTimeChange(before, after) {
     if (changed.length === 0) return;
 
     const body = changed
-        .map((key) => `${PRAYER_LABELS[key]} updated to ${after[key]}`)
+        .map((key) => `${PRAYER_LABELS[key]} jamat time updated`)
         .join(", ");
 
     await sendTopicPush({
         topic: PUSH_TOPICS.masjid(after.id),
         title: after.masjidName,
         body,
-        data: { type: "jamat_time_change", masjidId: String(after.id) },
+        data: { type: "jamat_time_change", masjidId: String(after.id), path: "/jamat-times" },
     });
 }
 

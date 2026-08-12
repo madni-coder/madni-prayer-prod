@@ -1,10 +1,12 @@
 "use client";
 import { createContext, useContext, useEffect, useRef } from "react";
+import { useRouter } from "next/navigation";
 import apiClient from "../lib/apiClient";
+import { firebaseWebConfig, firebaseVapidKey, isFirebaseWebConfigured, serviceWorkerUrl } from "../lib/firebaseClient";
 
 // Broadcast topics every device subscribes to on launch — no DB needed,
 // FCM/Firebase owns the subscription fan-out.
-const BROADCAST_TOPICS = ["events_programs", "weekly_rewards", "notices"];
+const BROADCAST_TOPICS = ["events_programs", "weekly_rewards", "notices", "job_portal"];
 const MASJID_TOPIC_KEY = "pushMasjidTopic"; // { masjidId, topic }
 
 const PushNotificationContext = createContext();
@@ -46,18 +48,33 @@ function readStoredMasjidTopic() {
 export function PushNotificationProvider({ children }) {
     const tokenRef = useRef(null);
     const platformRef = useRef(null);
+    const router = useRouter();
 
     useEffect(() => {
         if (typeof window === "undefined" || !window.__TAURI_INTERNALS__) return;
         let cancelled = false;
+        let unlistenClicked = null;
 
         (async () => {
             const platform = await detectPlatform();
             if (!platform || cancelled) return;
 
             try {
-                const { isPermissionGranted, requestPermission, registerForPushNotifications } =
-                    await import("@choochmeque/tauri-plugin-notifications-api");
+                const {
+                    isPermissionGranted,
+                    requestPermission,
+                    registerForPushNotifications,
+                    onNotificationClicked,
+                } = await import("@choochmeque/tauri-plugin-notifications-api");
+
+                // Handles cold-start too: if the app was launched by tapping a
+                // notification, the click data is delivered as soon as this
+                // listener is registered.
+                unlistenClicked = await onNotificationClicked((clicked) => {
+                    const path = clicked?.data?.path;
+                    if (path) router.push(path);
+                });
+                if (cancelled) return;
 
                 let granted = await isPermissionGranted();
                 if (!granted) granted = (await requestPermission()) === "granted";
@@ -80,8 +97,76 @@ export function PushNotificationProvider({ children }) {
 
         return () => {
             cancelled = true;
+            unlistenClicked?.unregister();
         };
-    }, []);
+    }, [router]);
+
+    // Plain-browser path (not the Tauri app): Web Push via Firebase Cloud
+    // Messaging. Mutually exclusive with the effect above — Tauri's webview
+    // would otherwise also satisfy `"serviceWorker" in navigator`.
+    useEffect(() => {
+        if (typeof window === "undefined" || window.__TAURI_INTERNALS__) return;
+        if (!("serviceWorker" in navigator) || !("Notification" in window)) return;
+        if (!isFirebaseWebConfigured()) {
+            console.warn("[push] web push not configured — skipping (missing NEXT_PUBLIC_FIREBASE_* env vars)");
+            return;
+        }
+        let cancelled = false;
+
+        (async () => {
+            try {
+                const { initializeApp, getApps, getApp } = await import("firebase/app");
+                const { getMessaging, getToken, onMessage } = await import("firebase/messaging");
+
+                let granted = Notification.permission === "granted";
+                if (Notification.permission === "default") {
+                    granted = (await Notification.requestPermission()) === "granted";
+                }
+                if (!granted || cancelled) return;
+
+                const registration = await navigator.serviceWorker.register(serviceWorkerUrl());
+                if (cancelled) return;
+
+                const app = getApps().length ? getApp() : initializeApp(firebaseWebConfig);
+                const messaging = getMessaging(app);
+
+                const token = await getToken(messaging, {
+                    vapidKey: firebaseVapidKey,
+                    serviceWorkerRegistration: registration,
+                });
+                if (!token || cancelled) return;
+
+                tokenRef.current = token;
+                platformRef.current = "web";
+
+                const stored = readStoredMasjidTopic();
+                await postTopics(token, "web", {
+                    subscribe: stored?.topic ? [...BROADCAST_TOPICS, stored.topic] : BROADCAST_TOPICS,
+                });
+
+                // FCM only auto-displays a notification when the tab isn't
+                // focused (handled by the service worker); a focused tab
+                // must show it manually.
+                onMessage(messaging, (payload) => {
+                    const { title, body } = payload.notification || {};
+                    const path = payload.data?.path;
+                    if (!title) return;
+                    const n = new Notification(title, { body, icon: "/mosqueLogo.png" });
+                    n.onclick = () => {
+                        window.focus();
+                        if (path) router.push(path);
+                        n.close();
+                    };
+                });
+            } catch (err) {
+                console.error("[push] web registration failed:", err?.message || err);
+            }
+        })();
+
+        return () => {
+            cancelled = true;
+        };
+    }, [router]);
 
     // Called whenever the user saves/changes their masjid in jamat-times.
     // Pass null to clear (no masjid saved).
