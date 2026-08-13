@@ -286,7 +286,10 @@ export default function ForceUpdateChecker() {
                             );
                             await openUrl(storeUrl);
                         } catch (e) {
-                            window.open(storeUrl, "_blank");
+                            addDebug(
+                                "[ForceUpdate] openUrl failed: " + e?.message,
+                            );
+                            if (!isIosLocal) window.open(storeUrl, "_blank");
                         }
                     }
                 } else {
@@ -407,7 +410,8 @@ export default function ForceUpdateChecker() {
                                         );
                                         await openUrl(storeUrl);
                                     } catch (e) {
-                                        window.open(storeUrl, "_blank");
+                                        if (!isIosForClick)
+                                            window.open(storeUrl, "_blank");
                                     }
                                 }
                             } catch (e) {

@@ -121,8 +121,7 @@ export default function LocalStoresPage() {
 
                 </div>
                 <div>
-                    <h1 className="text-2xl font-bold text-primary mb-1">Olmaa's Stores</h1>
-                    <p className="text-sm text-muted mb-2">This stores belongs to only Olmaa,Imaam or Moizzan </p>
+                    <h1 className="text-2xl font-bold text-primary mb-1">Raahe Tijarat</h1>
                 </div>
                 {loading ? (
                     <div className="min-h-screen flex items-center justify-center bg-base-200">

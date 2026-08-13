@@ -9,6 +9,11 @@ import { firebaseWebConfig, firebaseVapidKey, isFirebaseWebConfigured, serviceWo
 const BROADCAST_TOPICS = ["events_programs", "weekly_rewards", "notices", "job_portal"];
 const MASJID_TOPIC_KEY = "pushMasjidTopic"; // { masjidId, topic }
 
+// Re-run registration at most this often on foreground/resume — cheap
+// enough to be safe, but avoids hammering the server on rapid tab/app
+// switches.
+const REREGISTER_MIN_INTERVAL_MS = 5 * 60 * 1000;
+
 const PushNotificationContext = createContext();
 
 async function detectPlatform() {
@@ -54,18 +59,51 @@ export function PushNotificationProvider({ children }) {
         if (typeof window === "undefined" || !window.__TAURI_INTERNALS__) return;
         let cancelled = false;
         let unlistenClicked = null;
+        let lastRegisteredAt = 0;
+
+        const registerPush = async ({ force = false } = {}) => {
+            if (!force && Date.now() - lastRegisteredAt < REREGISTER_MIN_INTERVAL_MS) return;
+
+            const platform = await detectPlatform();
+            if (!platform || cancelled) return;
+
+            try {
+                const { isPermissionGranted, requestPermission, registerForPushNotifications } = await import(
+                    "@choochmeque/tauri-plugin-notifications-api"
+                );
+
+                let granted = await isPermissionGranted();
+                if (!granted) granted = (await requestPermission()) === "granted";
+                if (!granted || cancelled) return;
+
+                // Re-requests a token every time this runs (mount + each
+                // foreground/resume). iOS/FCM tokens can rotate or go stale
+                // while the app sits killed/idle with no way to refresh
+                // themselves in the background, silently breaking topic
+                // delivery until the app is reopened — so we re-subscribe
+                // proactively instead of only once per process lifetime.
+                const token = await registerForPushNotifications();
+                if (!token || cancelled) return;
+
+                tokenRef.current = token;
+                platformRef.current = platform;
+                lastRegisteredAt = Date.now();
+
+                const stored = readStoredMasjidTopic();
+                await postTopics(token, platform, {
+                    subscribe: stored?.topic ? [...BROADCAST_TOPICS, stored.topic] : BROADCAST_TOPICS,
+                });
+            } catch (err) {
+                console.error("[push] registration failed:", err?.message || err);
+            }
+        };
 
         (async () => {
             const platform = await detectPlatform();
             if (!platform || cancelled) return;
 
             try {
-                const {
-                    isPermissionGranted,
-                    requestPermission,
-                    registerForPushNotifications,
-                    onNotificationClicked,
-                } = await import("@choochmeque/tauri-plugin-notifications-api");
+                const { onNotificationClicked } = await import("@choochmeque/tauri-plugin-notifications-api");
 
                 // Handles cold-start too: if the app was launched by tapping a
                 // notification, the click data is delivered as soon as this
@@ -76,28 +114,23 @@ export function PushNotificationProvider({ children }) {
                 });
                 if (cancelled) return;
 
-                let granted = await isPermissionGranted();
-                if (!granted) granted = (await requestPermission()) === "granted";
-                if (!granted || cancelled) return;
-
-                const token = await registerForPushNotifications();
-                if (!token || cancelled) return;
-
-                tokenRef.current = token;
-                platformRef.current = platform;
-
-                const stored = readStoredMasjidTopic();
-                await postTopics(token, platform, {
-                    subscribe: stored?.topic ? [...BROADCAST_TOPICS, stored.topic] : BROADCAST_TOPICS,
-                });
+                await registerPush({ force: true });
             } catch (err) {
                 console.error("[push] registration failed:", err?.message || err);
             }
         })();
 
+        const handleVisibilityChange = () => {
+            if (document.visibilityState === "visible") registerPush();
+        };
+        document.addEventListener("visibilitychange", handleVisibilityChange);
+        window.addEventListener("focus", handleVisibilityChange);
+
         return () => {
             cancelled = true;
             unlistenClicked?.unregister();
+            document.removeEventListener("visibilitychange", handleVisibilityChange);
+            window.removeEventListener("focus", handleVisibilityChange);
         };
     }, [router]);
 

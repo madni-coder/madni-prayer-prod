@@ -139,7 +139,7 @@ export default function MasjidListsPage() {
                             return (
                                 <div 
                                     key={masjid.id}
-                                    onClick={() => router.push(`/masjidLists/viewThisMasjid/${masjid.id}`)}
+                                    onClick={() => router.push(`/masjidLists/viewThisMasjid?id=${masjid.id}`)}
                                     className="w-full bg-base-200 rounded-2xl p-4 flex items-center justify-between cursor-pointer hover:bg-base-300 active:bg-base-300 transition-colors border border-base-300/50 shadow-sm"
                                 >
                                     <div className="flex items-center gap-4 flex-1">

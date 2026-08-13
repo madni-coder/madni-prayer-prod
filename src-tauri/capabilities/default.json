@@ -17,7 +17,9 @@
             "allow": [
                 { "url": "comgooglemaps:*" },
                 { "url": "geo:*" },
-                { "url": "google.navigation:*" }
+                { "url": "google.navigation:*" },
+                { "url": "https://*" },
+                { "url": "http://*" }
             ]
         }
     ]

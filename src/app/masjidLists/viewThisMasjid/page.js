@@ -1,16 +1,15 @@
 "use client";
 
-import { useEffect, useState, use } from "react";
-import { useRouter } from "next/navigation";
-import { useAllMasjidContext } from "../../../../context/AllMasjidContext";
-import AnimatedLooader from "../../../../components/animatedLooader";
+import { useEffect, useState, Suspense } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
+import { useAllMasjidContext } from "../../../context/AllMasjidContext";
+import AnimatedLooader from "../../../components/animatedLooader";
 import { FaMapMarkerAlt, FaPhoneAlt, FaUserTie, FaShareAlt, FaMapMarkedAlt, FaChevronLeft, FaCity } from "react-icons/fa";
 
-export default function ViewThisMasjidPage({ params }) {
+function ViewThisMasjidContent() {
     const router = useRouter();
-    // Unwrap the route params promise using 'use()'
-    const unwrappedParams = use(params);
-    const { id } = unwrappedParams;
+    const searchParams = useSearchParams();
+    const id = searchParams.get("id");
     const { getById, masjids, fetchAll, loading } = useAllMasjidContext();
     const [masjid, setMasjid] = useState(null);
     const [localLoading, setLocalLoading] = useState(true);
@@ -150,5 +149,17 @@ export default function ViewThisMasjidPage({ params }) {
 
            
         </main>
+    );
+}
+
+export default function ViewThisMasjidPage() {
+    return (
+        <Suspense fallback={
+            <div className="min-h-screen flex items-center justify-center bg-base-100">
+                <AnimatedLooader message="Loading Masjid Details..." />
+            </div>
+        }>
+            <ViewThisMasjidContent />
+        </Suspense>
     );
 }
