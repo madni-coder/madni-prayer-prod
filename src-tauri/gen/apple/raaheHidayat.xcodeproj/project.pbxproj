@@ -287,12 +287,12 @@
 			outputFileListPaths = (
 			);
 			outputPaths = (
-				"$(SRCROOT)/Externals/x86_64/release/libapp.a",
-				"$(SRCROOT)/Externals/arm64/release/libapp.a",
+				"$(SRCROOT)/Externals/x86_64/$(CONFIGURATION)/libapp.a",
+				"$(SRCROOT)/Externals/arm64/$(CONFIGURATION)/libapp.a",
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "if [ -f \"${SRCROOT}/Externals/arm64/release/libapp.a\" -a -f \"${SRCROOT}/Externals/x86_64/release/libapp.a\" ]; then\n\t\t\techo \"Using existing release libapp.a; skipping tauri xcode-script.\"\n\t\telse\n\t\t\tnpm run -- tauri ios xcode-script -v --platform ${PLATFORM_DISPLAY_NAME:?} --sdk-root ${SDKROOT:?} --framework-search-paths \"${FRAMEWORK_SEARCH_PATHS:?}\" --header-search-paths \"${HEADER_SEARCH_PATHS:?}\" --gcc-preprocessor-definitions \"${GCC_PREPROCESSOR_DEFINITIONS:-}\" --configuration release ${FORCE_COLOR} ${ARCHS:?}\n\t\tfi";
+			shellScript = "set -e\nCONFIG=\"${CONFIGURATION:?}\"\nif [ \"$CONFIG\" = \"release\" ]; then\n\tCARGO_FLAG=\"--release\"\n\tCARGO_OUT_DIR=\"release\"\nelse\n\tCARGO_FLAG=\"\"\n\tCARGO_OUT_DIR=\"debug\"\nfi\n\ncd \"${SRCROOT}/../..\"\n\nfor ARCH in ${ARCHS:?}; do\n\tcase \"$ARCH\" in\n\t\tarm64) RUST_TARGET=\"aarch64-apple-ios\" ;;\n\t\tx86_64) RUST_TARGET=\"x86_64-apple-ios\" ;;\n\t\t*) echo \"error: unsupported arch $ARCH\" >&2; exit 1 ;;\n\tesac\n\t. \"$HOME/.cargo/env\" 2>/dev/null || true\n\tcargo build $CARGO_FLAG --target \"$RUST_TARGET\" --lib\n\tmkdir -p \"${SRCROOT}/Externals/${ARCH}/${CONFIG}\"\n\tcp \"target/${RUST_TARGET}/${CARGO_OUT_DIR}/libapp_lib.a\" \"${SRCROOT}/Externals/${ARCH}/${CONFIG}/libapp.a\"\ndone";
 		};
 /* End PBXShellScriptBuildPhase section */
 
