@@ -21,7 +21,10 @@ echo "📦 Building Rust libraries..."
 cd "$SRC_TAURI_DIR"
 
 # Build for device (arm64) - required for App Store
-cargo build --release --target aarch64-apple-ios --lib
+# --features tauri/custom-protocol is REQUIRED here: without it Tauri compiles
+# with dev=true and the app loads devUrl (http://localhost:3000) even in a
+# Release/App Store build, instead of the bundled production assets.
+cargo build --release --features tauri/custom-protocol --target aarch64-apple-ios --lib
 
 # Create Externals directory if needed
 mkdir -p gen/apple/Externals/arm64/release

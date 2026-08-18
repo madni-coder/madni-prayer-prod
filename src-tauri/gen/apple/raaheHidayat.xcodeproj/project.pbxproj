@@ -7,7 +7,6 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		E1933796054B07D214D9711B /* GoogleService-Info.plist in Resources */ = {isa = PBXBuildFile; fileRef = DFDC5E621F55E4916FBFBDD1 /* GoogleService-Info.plist */; };
 		308747EFB4A027D5CEF8A609 /* MetalKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 76CB6FFDE25EA5936E19E378 /* MetalKit.framework */; };
 		38A8EAD11FE070E40EA8A22F /* main.mm in Sources */ = {isa = PBXBuildFile; fileRef = F3CE75CB21BC50F3538BBB7E /* main.mm */; };
 		3D2013EADE996E85BA0D160F /* WebKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 644637D0F1C1DE0099559CCF /* WebKit.framework */; };
@@ -18,18 +17,19 @@
 		C99D86FFD6CC74FB36197686 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 47F451381B92817BBDA33E2E /* Assets.xcassets */; };
 		D5AE08C71C9853DFC4144E3A /* Metal.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = F7901816740D69630F3B437B /* Metal.framework */; };
 		DA0E3147D6DDAD384B0B891D /* QuartzCore.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 163550CB5311B3B664B854A0 /* QuartzCore.framework */; };
+		E1933796054B07D214D9711B /* GoogleService-Info.plist in Resources */ = {isa = PBXBuildFile; fileRef = DFDC5E621F55E4916FBFBDD1 /* GoogleService-Info.plist */; };
 		EF3FC3344F5D7CD33D3B1D71 /* libapp.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 004B08C70266F0D6A3CFB5C5 /* libapp.a */; };
 		F62678BE8B9B1BE85347DFDB /* assets in Resources */ = {isa = PBXBuildFile; fileRef = 8433286BE327FAAF9EA3729F /* assets */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
-		DFDC5E621F55E4916FBFBDD1 /* GoogleService-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = "GoogleService-Info.plist"; sourceTree = "<group>"; };
 		004B08C70266F0D6A3CFB5C5 /* libapp.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; path = libapp.a; sourceTree = "<group>"; };
 		013DC2C611DAD1B79DFEAFA6 /* libapp.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; path = libapp.a; sourceTree = "<group>"; };
 		01B053CBC607F111722890F4 /* libapp.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; path = libapp.a; sourceTree = "<group>"; };
 		163550CB5311B3B664B854A0 /* QuartzCore.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = QuartzCore.framework; path = System/Library/Frameworks/QuartzCore.framework; sourceTree = SDKROOT; };
 		17C09C4146F4E7A8B5AE721C /* Security.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Security.framework; path = System/Library/Frameworks/Security.framework; sourceTree = SDKROOT; };
 		19ADEF437E19AF82258D2EED /* LaunchScreen.storyboard */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; path = LaunchScreen.storyboard; sourceTree = "<group>"; };
+		36B9C234303489A9000DD6A3 /* raaheHidayat_iOSrelease.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = raaheHidayat_iOSrelease.entitlements; sourceTree = "<group>"; };
 		47F451381B92817BBDA33E2E /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		493D53076E9F93E4A5BF1A65 /* lib.rs */ = {isa = PBXFileReference; lastKnownFileType = text; path = lib.rs; sourceTree = "<group>"; };
 		644637D0F1C1DE0099559CCF /* WebKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = WebKit.framework; path = System/Library/Frameworks/WebKit.framework; sourceTree = SDKROOT; };
@@ -42,6 +42,7 @@
 		C8C29D3BB9B8B13B0F9F0BD0 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
 		CF644F1668E54574536E4A76 /* CoreGraphics.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreGraphics.framework; path = System/Library/Frameworks/CoreGraphics.framework; sourceTree = SDKROOT; };
 		D76AF18B8165242267983246 /* libapp.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; path = libapp.a; sourceTree = "<group>"; };
+		DFDC5E621F55E4916FBFBDD1 /* GoogleService-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = "GoogleService-Info.plist"; sourceTree = "<group>"; };
 		F3CE75CB21BC50F3538BBB7E /* main.mm */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.objcpp; path = main.mm; sourceTree = "<group>"; };
 		F7901816740D69630F3B437B /* Metal.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Metal.framework; path = System/Library/Frameworks/Metal.framework; sourceTree = SDKROOT; };
 		FAB7C07F4D8AFB086B4B56A3 /* main.rs */ = {isa = PBXFileReference; lastKnownFileType = text; path = main.rs; sourceTree = "<group>"; };
@@ -186,6 +187,7 @@
 		D4BC2AD9E6297DA32BCED7C8 /* raaheHidayat_iOS */ = {
 			isa = PBXGroup;
 			children = (
+				36B9C234303489A9000DD6A3 /* raaheHidayat_iOSrelease.entitlements */,
 				C8C29D3BB9B8B13B0F9F0BD0 /* Info.plist */,
 				A83B65E5D15F75CF423A2E3D /* raaheHidayat_iOS.entitlements */,
 				DFDC5E621F55E4916FBFBDD1 /* GoogleService-Info.plist */,
@@ -292,7 +294,7 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "set -e\nCONFIG=\"${CONFIGURATION:?}\"\nif [ \"$CONFIG\" = \"release\" ]; then\n\tCARGO_FLAG=\"--release\"\n\tCARGO_OUT_DIR=\"release\"\nelse\n\tCARGO_FLAG=\"\"\n\tCARGO_OUT_DIR=\"debug\"\nfi\n\ncd \"${SRCROOT}/../..\"\n\nfor ARCH in ${ARCHS:?}; do\n\tcase \"$ARCH\" in\n\t\tarm64) RUST_TARGET=\"aarch64-apple-ios\" ;;\n\t\tx86_64) RUST_TARGET=\"x86_64-apple-ios\" ;;\n\t\t*) echo \"error: unsupported arch $ARCH\" >&2; exit 1 ;;\n\tesac\n\t. \"$HOME/.cargo/env\" 2>/dev/null || true\n\tcargo build $CARGO_FLAG --target \"$RUST_TARGET\" --lib\n\tmkdir -p \"${SRCROOT}/Externals/${ARCH}/${CONFIG}\"\n\tcp \"target/${RUST_TARGET}/${CARGO_OUT_DIR}/libapp_lib.a\" \"${SRCROOT}/Externals/${ARCH}/${CONFIG}/libapp.a\"\ndone";
+			shellScript = "set -e\nCONFIG=\"${CONFIGURATION:?}\"\nif [ \"$CONFIG\" = \"release\" ]; then\n\tCARGO_FLAG=\"--release\"\n\tCARGO_OUT_DIR=\"release\"\n\tFEATURE_FLAG=\"--features tauri/custom-protocol\"\nelse\n\tCARGO_FLAG=\"\"\n\tCARGO_OUT_DIR=\"debug\"\n\tFEATURE_FLAG=\"\"\nfi\n\ncd \"${SRCROOT}/../..\"\n\nfor ARCH in ${ARCHS:?}; do\n\tcase \"$ARCH\" in\n\t\tarm64) RUST_TARGET=\"aarch64-apple-ios\" ;;\n\t\tx86_64) RUST_TARGET=\"x86_64-apple-ios\" ;;\n\t\t*) echo \"error: unsupported arch $ARCH\" >&2; exit 1 ;;\n\tesac\n\t. \"$HOME/.cargo/env\" 2>/dev/null || true\n\tcargo build $CARGO_FLAG $FEATURE_FLAG --target \"$RUST_TARGET\" --lib\n\tmkdir -p \"${SRCROOT}/Externals/${ARCH}/${CONFIG}\"\n\tcp \"target/${RUST_TARGET}/${CARGO_OUT_DIR}/libapp_lib.a\" \"${SRCROOT}/Externals/${ARCH}/${CONFIG}/libapp.a\"\ndone";
 		};
 /* End PBXShellScriptBuildPhase section */
 
@@ -380,10 +382,10 @@
 					x86_64,
 				);
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
-				CODE_SIGN_ENTITLEMENTS = raaheHidayat_iOS/raaheHidayat_iOS.entitlements;
+				CODE_SIGN_ENTITLEMENTS = raaheHidayat_iOS/raaheHidayat_iOSrelease.entitlements;
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
-				DEVELOPMENT_TEAM = "R8953SWC87";
+				DEVELOPMENT_TEAM = R8953SWC87;
 				ENABLE_BITCODE = NO;
 				"EXCLUDED_ARCHS[sdk=iphoneos*]" = x86_64;
 				FRAMEWORK_SEARCH_PATHS = (
@@ -487,7 +489,7 @@
 				CODE_SIGN_ENTITLEMENTS = raaheHidayat_iOS/raaheHidayat_iOS.entitlements;
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
-				DEVELOPMENT_TEAM = "R8953SWC87";
+				DEVELOPMENT_TEAM = R8953SWC87;
 				ENABLE_BITCODE = NO;
 				"EXCLUDED_ARCHS[sdk=iphoneos*]" = x86_64;
 				FRAMEWORK_SEARCH_PATHS = (
