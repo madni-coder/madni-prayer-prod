@@ -90,8 +90,8 @@ export default function DownloadAppBanner() {
                     className="flex items-center justify-center gap-1.5 rounded-xl bg-black border border-white/10 px-2.5 py-2 hover:border-white/20 hover:bg-black/80 transition-colors"
                 >
                     <FaGooglePlay size={15} className="text-white shrink-0" />
-                    <span className="flex flex-col items-start leading-[1.05]">
-                        <span className="text-[8px] text-gray-400 tracking-wide">GET IT ON</span>
+                    <span className="flex flex-col items-start gap-0.5 leading-tight">
+                        <span className="text-[8px] text-white tracking-wide">GET IT ON</span>
                         <span className="text-[11.5px] font-semibold text-white">Google Play</span>
                     </span>
                 </a>
@@ -103,8 +103,8 @@ export default function DownloadAppBanner() {
                     className="flex items-center justify-center gap-1.5 rounded-xl bg-black border border-white/10 px-2.5 py-2 hover:border-white/20 hover:bg-black/80 transition-colors"
                 >
                     <FaApple size={16} className="text-white shrink-0" />
-                    <span className="flex flex-col items-start leading-[1.05]">
-                        <span className="text-[8px] text-gray-400 tracking-wide">Download on the</span>
+                    <span className="flex flex-col items-start gap-0.5 leading-tight">
+                        <span className="text-[8px] text-white tracking-wide">Download on the</span>
                         <span className="text-[11.5px] font-semibold text-white">App Store</span>
                     </span>
                 </a>
