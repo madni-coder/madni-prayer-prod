@@ -21,6 +21,8 @@ import {
     FaMosque
 
 } from "react-icons/fa";
+import { FaUserGroup } from "react-icons/fa6";
+import { CalendarRange } from "lucide-react";
 import TasbihSvgIcon from "../components/TasbihSvgIcon";
 
 const navLinks = [
@@ -31,41 +33,58 @@ const navLinks = [
         icon: <FaPeopleArrows className="text-lg text-pink-500" />,
     },
     {
+        name: "Events & Programs",
+        href: "/events",
+        icon: <CalendarRange className="text-lg text-rose-500" />,
+    },
+    {
         name: "Prayer Times",
         href: "/prayer-times",
         icon: <FaClock className="text-lg text-yellow-500" />,
     },
-    { name: "Quran", href: "/quran", icon: <FaQuran className="text-lg text-green-400" /> },
-   
     {
         name: "Qibla",
         href: "/qibla",
         icon: <FaRegCompass className="text-lg text-blue-400" />,
     },
+    { name: "Quran", href: "/quran", icon: <FaQuran className="text-lg text-green-400" /> },
     {
         name: "Tasbih",
         href: "/tasbih",
         icon: <TasbihSvgIcon className="w-6 h-6" />,
     },
     { name: "Zikr", href: "/zikr", icon: <img src="/iconZikr.png" alt="Zikr" className="w-6 h-6 object-contain bg-white rounded-full p-0.5" /> },
-    {
-        name: "All Masjids",
-        href: "/masjidLists",
-        icon: <FaMosque className="text-lg text-teal-400" />,
-    },
     { name: "Rewards", href: "/rewards", icon: <FaGift className="text-lg text-red-400" /> },
     {
         name: "Aelaan Naama",
         href: "/notice",
         icon: <FaMicrophone className="text-lg text-sky-400" />,
     },
-
+    {
+        name: "Raahe Tijarat",
+        href: "/local-stores",
+        icon: <FaStore className="text-lg text-emerald-400" />,
+    },
     { name: "Job Portal", href: "/jobPortal/jobLists", icon: <FaBriefcase className="text-lg text-purple-400" /> },
-
+    {
+        name: "Masjid Committee",
+        href: "/committee",
+        icon: <FaUserGroup className="text-lg text-indigo-400" />,
+    },
+    {
+        name: "All Masjids",
+        href: "/masjidLists",
+        icon: <FaMosque className="text-lg text-teal-400" />,
+    },
     {
         name: "Contact Us",
         href: "/contactUs",
         icon: <FaRegIdBadge className="text-lg text-amber-400" />,
+    },
+    {
+        name: "Privacy Policy",
+        href: "/privacy",
+        icon: <FaFileAlt className="text-lg text-slate-400" />,
     },
     {
         name: "My Profile",
@@ -98,9 +117,13 @@ export default function TopNav() {
     // New: control mobile nav open state for 3D animation
     const [mobileOpen, setMobileOpen] = React.useState(false);
 
+    // Desktop nav: collapsed = single scrollable row, expanded = wraps to show all items
+    const [navExpanded, setNavExpanded] = React.useState(false);
+
     // Close mobile nav when route changes
     React.useEffect(() => {
         setMobileOpen(false);
+        setNavExpanded(false);
     }, [pathname]);
 
     // Close on Escape
@@ -126,43 +149,75 @@ export default function TopNav() {
             className={`${isNotice ? "relative w-full z-50" : "sticky top-0 z-50"
                 } bg-base-100 backdrop-blur border-b border-base-300 shadow-sm rounded-2xl`}
         >
-            <div className="max-w-5xl mx-auto flex items-center justify-between px-4 py-2 mt-10">
-                <div className="flex items-center gap-2">
-                    <Link href="/">
-                        <img
-                            src="/logo.png"
-                            alt="Raah-e-Hidayat Logo"
-                            className="w-24 h-auto object-contain"
-                        />
-                    </Link>
-                </div>
+            <div className="w-full px-4 lg:px-8 py-2 mt-6 flex items-center gap-3">
+                <Link href="/" className="flex items-center gap-2 flex-shrink-0">
+                    <img
+                        src="/logo.png"
+                        alt="Raah-e-Hidayat Logo"
+                        className="w-10 h-10 object-contain"
+                    />
+                    <span className="hidden lg:inline text-sm font-semibold tracking-wide text-base-content whitespace-nowrap">
+                        Raah-e-Hidayat
+                    </span>
+                </Link>
 
-                <ul className="hidden md:flex items-center gap-1 xl:gap-2 flex-wrap">
-                    {navLinks.map((link) => (
-                        <li key={link.name} className="relative group">
-                            <a
-                                href={link.href}
-                                className={`flex items-center gap-1 xl:gap-2 px-2 xl:px-4 py-2 rounded-lg text-xs xl:text-sm font-medium text-base-content hover:bg-primary hover:text-primary-content transition-all duration-200 transform hover:scale-105
-                                    ${pathname === link.href
-                                        ? "bg-primary text-primary-content shadow-md"
-                                        : ""
-                                    }
-                                `}
-                            >
-                                <span className="flex-shrink-0 text-sm xl:text-base">
-                                    {link.icon}
-                                </span>
-                                <span className="whitespace-nowrap hidden xl:inline">
-                                    {link.name}
-                                </span>
-                                <span className="whitespace-nowrap xl:hidden text-xs">
-                                    {link.name.split(" ")[0]}
-                                </span>
-                            </a>
-                            {/* Tooltip removed */}
-                        </li>
-                    ))}
+                <ul
+                    id="desktop-nav-list"
+                    className={`hidden md:flex items-center gap-1.5 flex-1 min-w-0 py-1 ${navExpanded
+                            ? "flex-wrap"
+                            : "flex-nowrap overflow-x-auto no-scrollbar"
+                        }`}
+                >
+                    {navLinks.map((link) => {
+                        const isActive = pathname === link.href;
+                        return (
+                            <li key={link.name} className="relative group list-none flex-shrink-0">
+                                <a
+                                    href={link.href}
+                                    className={`flex items-center gap-1.5 px-3 py-2 rounded-lg border text-xs font-medium whitespace-nowrap transition-all duration-200 transform hover:-translate-y-0.5 hover:shadow-md
+                                        ${isActive
+                                            ? "bg-primary text-primary-content border-primary shadow-md"
+                                            : "bg-base-200/60 text-base-content border-base-300 hover:bg-primary hover:text-primary-content hover:border-primary"
+                                        }
+                                    `}
+                                >
+                                    <span
+                                        className={`flex items-center justify-center w-6 h-6 rounded-full flex-shrink-0 transition-colors duration-200 ${isActive
+                                                ? "bg-primary-content/20"
+                                                : "bg-base-100 group-hover:bg-primary-content/20"
+                                            }`}
+                                    >
+                                        {link.icon}
+                                    </span>
+                                    <span>{link.name}</span>
+                                </a>
+                            </li>
+                        );
+                    })}
                 </ul>
+
+                <button
+                    type="button"
+                    aria-expanded={navExpanded}
+                    aria-controls="desktop-nav-list"
+                    onClick={() => setNavExpanded((s) => !s)}
+                    title={navExpanded ? "Collapse menu" : "Expand menu"}
+                    className="hidden md:flex items-center justify-center w-8 h-8 rounded-full flex-shrink-0 border border-base-300 bg-base-200/60 text-base-content hover:bg-primary hover:text-primary-content hover:border-primary transition-all duration-200"
+                >
+                    <svg
+                        width="16"
+                        height="16"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="2.5"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        viewBox="0 0 24 24"
+                        className={`transition-transform duration-300 ${navExpanded ? "rotate-180" : ""}`}
+                    >
+                        <path d="M6 9l6 6 6-6" />
+                    </svg>
+                </button>
 
                 {/* Mobile dropdown - replaced with controlled 3D animated menu */}
                 <div
