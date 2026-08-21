@@ -149,12 +149,12 @@ export default function TopNav() {
             className={`${isNotice ? "relative w-full z-50" : "sticky top-0 z-50"
                 } bg-base-100 backdrop-blur border-b border-base-300 shadow-sm rounded-2xl`}
         >
-            <div className="w-full px-4 lg:px-8 py-2 mt-6 flex items-center gap-3">
+            <div className="w-full px-4 lg:px-8 py-2 mt-6 flex items-center justify-between gap-3">
                 <Link href="/" className="flex items-center gap-2 flex-shrink-0">
                     <img
                         src="/logo.png"
                         alt="Raah-e-Hidayat Logo"
-                        className="w-10 h-10 object-contain"
+                        className="w-24 h-auto md:w-10 md:h-10 object-contain"
                     />
                     <span className="hidden lg:inline text-sm font-semibold tracking-wide text-base-content whitespace-nowrap">
                         Raah-e-Hidayat

@@ -22,6 +22,7 @@ import { Megaphone, UsersRound, CalendarRange } from "lucide-react";
 import Image from "next/image";
 import TasbihSvgIcon from "../components/TasbihSvgIcon";
 import AppTitle from "../components/AppTitle.client";
+import DownloadAppBanner from "../components/DownloadAppBanner.client";
 import apiClient from "../lib/apiClient";
 
 const sections = [
@@ -300,7 +301,9 @@ export default function Home() {
             <div className="absolute bottom-0 right-0 w-[40vw] h-[40vw] max-w-[500px] max-h-[500px] bg-blue-600/15 rounded-full blur-[100px] pointer-events-none" />
 
             <header className=" text-center mb-15 sm:mb-14 relative z-15 w-full max-w-4xl mx-auto">
-                <div className="relative inline-flex flex-col items-center mt-[-30px]">
+                <div className="relative flex flex-col items-center mt-[-30px]">
+                    <DownloadAppBanner />
+
                     {/* Glowing background blur (base-200 like + white) */}
 
                     <AppTitle />
