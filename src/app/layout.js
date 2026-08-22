@@ -7,6 +7,7 @@ import BottomNav from "./BottomNav";
 import IosClassSetter from "./IosClassSetter.client";
 import UpdateBanner from "../components/UpdateBanner.client";
 import AppProviders from "../context/AppProviders";
+import RootErrorBoundary from "../components/RootErrorBoundary.client";
 
 const geistSans = Geist({
     variable: "--font-geist-sans",
@@ -34,9 +35,11 @@ export default function RootLayout({ children }) {
                 <IosClassSetter />
                 <UpdateBanner />
 
-                <AppProviders>
-                    {children}
-                </AppProviders>
+                <RootErrorBoundary>
+                    <AppProviders>
+                        {children}
+                    </AppProviders>
+                </RootErrorBoundary>
 
                 <ToastContainer
                     position="top-right"

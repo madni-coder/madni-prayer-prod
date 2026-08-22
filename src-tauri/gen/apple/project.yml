@@ -54,8 +54,10 @@ targets:
                     - UIInterfaceOrientationLandscapeRight
                 CFBundleShortVersionString: 3.0.0
                 CFBundleVersion: "3.0.0"
-        entitlements:
-            path: raaheHidayat_iOS/raaheHidayat_iOS.entitlements
+        # No top-level `entitlements:` here on purpose: that key applies one
+        # fixed entitlements file to every config and overrides the
+        # per-config CODE_SIGN_ENTITLEMENTS set below, silently forcing
+        # Release back onto the debug (development) entitlements file.
         scheme:
             environmentVariables:
                 RUST_BACKTRACE: full
@@ -75,13 +77,25 @@ targets:
             # token is rejected by production APNs with no error the app can
             # see. Declared here (not just in the .pbxproj) so re-running
             # xcodegen / `tauri ios init` does not silently drop it.
+            #
+            # Release is pinned to MANUAL signing with the exact distribution
+            # profile: with automatic signing + `xcodebuild -allowProvisioningUpdates`,
+            # Xcode is free to re-resolve signing on every archive and kept
+            # silently downgrading Release back to an Apple Development
+            # identity/profile (no push capability) even after this file
+            # specified Distribution. Manual signing removes Xcode's ability
+            # to make that call.
             configs:
                 debug:
                     CODE_SIGN_ENTITLEMENTS: raaheHidayat_iOS/raaheHidayat_iOS.entitlements
                     CODE_SIGN_IDENTITY: Apple Development
+                    CODE_SIGN_STYLE: Automatic
                 release:
                     CODE_SIGN_ENTITLEMENTS: raaheHidayat_iOS/raaheHidayat_iOSrelease.entitlements
                     CODE_SIGN_IDENTITY: Apple Distribution
+                    CODE_SIGN_STYLE: Manual
+                    PROVISIONING_PROFILE_SPECIFIER: "iOS Team Store Provisioning Profile: com.prayer.raahe"
+                    DEVELOPMENT_TEAM: R8953SWC87
             groups: [app]
         dependencies:
             - framework: libapp.a

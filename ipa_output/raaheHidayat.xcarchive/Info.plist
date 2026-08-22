@@ -13,9 +13,9 @@
 		<key>CFBundleIdentifier</key>
 		<string>com.prayer.raahe</string>
 		<key>CFBundleShortVersionString</key>
-		<string>9.0.3</string>
+		<string>9.0.5</string>
 		<key>CFBundleVersion</key>
-		<string>9.0.3</string>
+		<string>9.0.5</string>
 		<key>SigningIdentity</key>
 		<string>Apple Distribution: Abdul Nadim (R8953SWC87)</string>
 		<key>Team</key>

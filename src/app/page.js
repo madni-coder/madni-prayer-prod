@@ -214,26 +214,39 @@ export default function Home() {
         window.addEventListener("focus", onFocus);
 
         // ── Supabase Realtime: instant badge update when admin uploads ──────
-        const channel = supabase
-            .channel("notice-updates")
-            .on("broadcast", { event: "new-notice" }, ({ payload }) => {
-                if (!mounted) return;
-                const newTotal = payload?.total;
-                if (typeof newTotal === "number") {
-                    setCachedTotal(newTotal);
-                    setUnseenCount(computeUnseen(newTotal));
-                } else {
-                    // Fallback: invalidate cache so next focus re-fetches
-                    try { sessionStorage.removeItem("notice_total_cache"); } catch (_) { }
-                    fetchAndCache();
-                }
-            })
-            .subscribe();
+        // Wrapped in try/catch: with no internet, the underlying WebSocket
+        // connect can throw synchronously on some WebViews (observed on iOS
+        // offline). Since there's no root error boundary, an uncaught throw
+        // here would blank the entire app instead of just skipping realtime.
+        let channel = null;
+        try {
+            channel = supabase
+                .channel("notice-updates")
+                .on("broadcast", { event: "new-notice" }, ({ payload }) => {
+                    if (!mounted) return;
+                    const newTotal = payload?.total;
+                    if (typeof newTotal === "number") {
+                        setCachedTotal(newTotal);
+                        setUnseenCount(computeUnseen(newTotal));
+                    } else {
+                        // Fallback: invalidate cache so next focus re-fetches
+                        try { sessionStorage.removeItem("notice_total_cache"); } catch (_) { }
+                        fetchAndCache();
+                    }
+                })
+                .subscribe();
+        } catch (e) {
+            channel = null;
+        }
 
         return () => {
             mounted = false;
             window.removeEventListener("focus", onFocus);
-            supabase.removeChannel(channel);
+            if (channel) {
+                try {
+                    supabase.removeChannel(channel);
+                } catch (_) { }
+            }
         };
     }, []);
 
