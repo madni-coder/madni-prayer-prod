@@ -69,6 +69,19 @@ targets:
                 LIBRARY_SEARCH_PATHS[arch=arm64]: $(inherited) $(PROJECT_DIR)/Externals/arm64/$(CONFIGURATION) $(SDKROOT)/usr/lib/swift $(TOOLCHAIN_DIR)/usr/lib/swift/$(PLATFORM_NAME) $(TOOLCHAIN_DIR)/usr/lib/swift-5.0/$(PLATFORM_NAME)
                 ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES: true
                 EXCLUDED_ARCHS[sdk=iphoneos*]: x86_64
+            # Push notifications need a per-configuration aps-environment: a
+            # Release/TestFlight/App Store build signed with the debug
+            # entitlements registers against the APNs *sandbox*, and its device
+            # token is rejected by production APNs with no error the app can
+            # see. Declared here (not just in the .pbxproj) so re-running
+            # xcodegen / `tauri ios init` does not silently drop it.
+            configs:
+                debug:
+                    CODE_SIGN_ENTITLEMENTS: raaheHidayat_iOS/raaheHidayat_iOS.entitlements
+                    CODE_SIGN_IDENTITY: Apple Development
+                release:
+                    CODE_SIGN_ENTITLEMENTS: raaheHidayat_iOS/raaheHidayat_iOSrelease.entitlements
+                    CODE_SIGN_IDENTITY: Apple Distribution
             groups: [app]
         dependencies:
             - framework: libapp.a

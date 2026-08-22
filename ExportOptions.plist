@@ -6,14 +6,18 @@
     <string>app-store-connect</string>
     <key>teamID</key>
     <string>R8953SWC87</string>
+    <!-- Automatic, deliberately: this used to pin the manual "Raahe Hidayat"
+         profile, which was created before Push Notifications was enabled on the
+         App ID and therefore carries no aps-environment. Exporting against it
+         re-signed the IPA without that entitlement, so
+         registerForRemoteNotifications() failed on every shipped build and no
+         APNs token was ever issued. Automatic signing lets Xcode pick a profile
+         that actually satisfies aps-environment: production. -->
     <key>signingStyle</key>
-    <string>manual</string>
-    <key>provisioningProfiles</key>
-    <dict>
-        <key>com.prayer.raahe</key>
-        <string>Raahe Hidayat</string>
-    </dict>
-    <key>signingCertificate</key>
-    <string>Apple Distribution</string>
+    <string>automatic</string>
+    <key>stripSwiftSymbols</key>
+    <true/>
+    <key>uploadSymbols</key>
+    <true/>
 </dict>
 </plist>

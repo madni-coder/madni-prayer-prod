@@ -22,7 +22,8 @@
         "android:hot": "npm run set-dev-url && ./tauri-android-dev.sh",
         "ios:build": "npm run sync-version && ./fix-ios-plist.sh && npm run tauri ios build",
         "ios:dev": "npm run set-dev-url && ./fix-ios-plist.sh && npm run tauri ios dev -- --open",
-        "ios:appstore": "npm run sync-version && ./fix-ios-plist.sh && ./build-ios-appstore.sh"
+        "ios:appstore": "npm run sync-version && ./fix-ios-plist.sh && ./build-ios-appstore.sh",
+        "ios:check-push": "./scripts/check-ios-push-profiles.sh"
     },
     "dependencies": {
         "@choochmeque/tauri-plugin-notifications-api": "^0.4.6",

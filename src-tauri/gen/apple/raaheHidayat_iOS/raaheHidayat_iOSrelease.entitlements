@@ -2,7 +2,14 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
+	<!-- Release/TestFlight/App Store builds MUST be "production": the value here
+	     decides which APNs environment the device token belongs to, and it must
+	     match PUSH_APNS_SANDBOX on the server (production => sandbox=false).
+	     It also decides which provisioning profile Xcode picks — a profile
+	     without aps-environment silently strips this entitlement, and then
+	     registerForRemoteNotifications() fails with "no valid aps-environment
+	     entitlement string found for application" and no token is ever issued. -->
 	<key>aps-environment</key>
-	<string>development</string>
+	<string>production</string>
 </dict>
 </plist>
