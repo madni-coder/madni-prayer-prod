@@ -97,6 +97,50 @@ html[data-hide-navs="1"] [data-app-top-nav] {
     animation: slide-down 0.3s ease-out;
 }
 
+/* Download page: soft floating motion for the app icon */
+@keyframes dl-float {
+    0%, 100% {
+        transform: translateY(0px);
+    }
+    50% {
+        transform: translateY(-10px);
+    }
+}
+
+.animate-dl-float {
+    animation: dl-float 4s ease-in-out infinite;
+}
+
+/* Download page: breathing glow ring behind the app icon / CTA */
+@keyframes dl-glow {
+    0%, 100% {
+        opacity: 0.55;
+        transform: scale(1);
+    }
+    50% {
+        opacity: 1;
+        transform: scale(1.08);
+    }
+}
+
+.animate-dl-glow {
+    animation: dl-glow 2.6s ease-in-out infinite;
+}
+
+/* Download page: shine sweep across CTA buttons */
+@keyframes dl-shine {
+    0% {
+        transform: translateX(-150%) skewX(-20deg);
+    }
+    100% {
+        transform: translateX(250%) skewX(-20deg);
+    }
+}
+
+.animate-dl-shine {
+    animation: dl-shine 2.5s ease-in-out infinite;
+}
+
 /* iOS-specific: reduce extra top/bottom padding, APPLIED ONLY when
    `html.is-ios` is present (set by a small client script). This avoids
    affecting Android views which shouldn't receive these overrides. */
