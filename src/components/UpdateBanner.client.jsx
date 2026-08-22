@@ -88,13 +88,16 @@ export default function UpdateBanner() {
                           cfg?.store_url) ||
                     (os === "ios" ? IOS_STORE_URL : ANDROID_STORE_URL);
 
-                // Don't re-show a banner the user already dismissed for this version
+                // Don't re-show a banner the user already dismissed THIS app
+                // session (sessionStorage survives backgrounding/foregrounding
+                // since the webview stays alive, but is cleared when the app
+                // process is fully killed and relaunched — i.e. a fresh open).
                 const dismissKey = `${DISMISS_KEY_PREFIX}${os}_${version}`;
                 let alreadyDismissed = false;
                 try {
                     alreadyDismissed =
                         typeof window !== "undefined" &&
-                        window.localStorage.getItem(dismissKey) === "1";
+                        window.sessionStorage.getItem(dismissKey) === "1";
                 } catch {
                     /* ignore storage errors */
                 }
@@ -119,7 +122,7 @@ export default function UpdateBanner() {
     const handleDismiss = () => {
         try {
             if (platform) {
-                window.localStorage.setItem(
+                window.sessionStorage.setItem(
                     `${DISMISS_KEY_PREFIX}${platform}_${latestVersion}`,
                     "1",
                 );
