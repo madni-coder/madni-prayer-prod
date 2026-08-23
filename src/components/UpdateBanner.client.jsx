@@ -14,6 +14,23 @@ const IOS_STORE_URL =
 
 const DISMISS_KEY_PREFIX = "update_banner_dismissed_";
 
+// ⚠️ TEMP DIAGNOSTICS — remove once the banner is confirmed working ⚠️
+// Every bail-out path below is otherwise silent, so there is no way to tell
+// which condition stopped the banner. These logs show up in `adb logcat`
+// (filter: chromium) on Android and in Safari Web Inspector on iOS. The last
+// snapshot is also parked on window.__updateBannerDebug.
+function dbg(step, data) {
+    try {
+        console.log("[UpdateBanner]", step, JSON.stringify(data ?? null));
+        if (typeof window !== "undefined") {
+            window.__updateBannerDebug = window.__updateBannerDebug || [];
+            window.__updateBannerDebug.push({ step, data });
+        }
+    } catch {
+        /* never let logging break the banner */
+    }
+}
+
 // Convert semantic version to comparable integer (e.g., "9.3.1" -> 9003001)
 function versionToCode(version) {
     try {
@@ -34,18 +51,21 @@ async function getInstalledVersion() {
     try {
         const tauriApp = await import("@tauri-apps/api/app");
         const v = await tauriApp.getVersion();
+        dbg("tauri getVersion()", v);
         if (v) return v;
-    } catch {
-        /* fall through */
+    } catch (e) {
+        dbg("tauri getVersion() FAILED", e?.message || String(e));
     }
     // env var override
     if (process.env.NEXT_PUBLIC_APP_VERSION) {
+        dbg("fallback NEXT_PUBLIC_APP_VERSION", process.env.NEXT_PUBLIC_APP_VERSION);
         return process.env.NEXT_PUBLIC_APP_VERSION;
     }
     // window var override (useful for manual testing)
     if (typeof window !== "undefined" && window.__APP_VERSION) {
         return window.__APP_VERSION;
     }
+    dbg("installed version UNRESOLVED", null);
     return null;
 }
 
@@ -94,7 +114,8 @@ export default function UpdateBanner() {
 
         async function run() {
             const os = await detectPlatform();
-            if (!mounted || !os) return;
+            dbg("platform", os);
+            if (!mounted || !os) return dbg("BAIL: no platform / unmounted", { os, mounted });
             setPlatform(os);
 
             try {
@@ -125,15 +146,17 @@ export default function UpdateBanner() {
                 } finally {
                     clearTimeout(timeoutId);
                 }
-                if (!res.ok || !mounted) return;
+                dbg("fetched config", { configUrl, status: res.status });
+                if (!res.ok || !mounted) return dbg("BAIL: bad response", res.status);
                 const cfg = await res.json();
+                dbg("config body", cfg);
 
                 const showFlag =
                     os === "ios"
                         ? cfg?.ios_update_banner
                         : cfg?.android_update_banner;
 
-                if (!showFlag) return;
+                if (!showFlag) return dbg("BAIL: banner flag is off", showFlag);
 
                 const version =
                     (os === "ios"
@@ -157,9 +180,16 @@ export default function UpdateBanner() {
                 // banner rather than risk showing it to an up-to-date user.
                 const installedVersion =
                     debugInstalledVersion || (await getInstalledVersion());
-                if (!mounted || !installedVersion || !version) return;
+                dbg("compare", {
+                    installedVersion,
+                    latest: version,
+                    installedCode: versionToCode(installedVersion),
+                    latestCode: versionToCode(version),
+                });
+                if (!mounted || !installedVersion || !version)
+                    return dbg("BAIL: missing version", { installedVersion, version });
                 if (versionToCode(installedVersion) >= versionToCode(version)) {
-                    return;
+                    return dbg("BAIL: already up to date", null);
                 }
 
                 const link =
@@ -184,13 +214,15 @@ export default function UpdateBanner() {
                     /* ignore storage errors */
                 }
 
-                if (alreadyDismissed) return;
+                if (alreadyDismissed)
+                    return dbg("BAIL: dismissed this session", dismissKey);
 
+                dbg("SHOWING BANNER", { version, link });
                 setLatestVersion(version);
                 setStoreUrl(link);
                 setVisible(true);
-            } catch {
-                /* silently ignore — banner is non-critical */
+            } catch (e) {
+                dbg("BAIL: threw", e?.message || String(e));
             }
         }
 
