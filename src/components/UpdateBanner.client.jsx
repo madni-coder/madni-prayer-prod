@@ -39,7 +39,7 @@ async function getInstalledVersion() {
         /* fall through */
     }
     // env var override
-    if (process?.env?.NEXT_PUBLIC_APP_VERSION) {
+    if (process.env.NEXT_PUBLIC_APP_VERSION) {
         return process.env.NEXT_PUBLIC_APP_VERSION;
     }
     // window var override (useful for manual testing)
@@ -80,7 +80,7 @@ export default function UpdateBanner() {
                 // return null and the banner would never render. In dev,
                 // default to "android" (or pass ?platform=ios in the URL)
                 // so you can test straight from a normal desktop tab.
-                if (process?.env?.NEXT_PUBLIC_TAURI_BUILD !== "1") {
+                if (process.env.NEXT_PUBLIC_TAURI_BUILD !== "1") {
                     const forced = new URLSearchParams(
                         window.location.search,
                     ).get("platform");
@@ -107,9 +107,9 @@ export default function UpdateBanner() {
                 // public/app-config.json locally shows up on next reload —
                 // no deploy needed. Production builds still use the
                 // hardcoded Vercel URL.
-                const isDev = process?.env?.NEXT_PUBLIC_TAURI_BUILD !== "1";
+                const isDev = process.env.NEXT_PUBLIC_TAURI_BUILD !== "1";
                 const configUrl =
-                    process?.env?.NEXT_PUBLIC_UPDATE_CONFIG_URL ||
+                    process.env.NEXT_PUBLIC_UPDATE_CONFIG_URL ||
                     (isDev && typeof window !== "undefined"
                         ? `${window.location.origin}/app-config.json`
                         : HARDCODED_CONFIG_URL);
