@@ -14,6 +14,41 @@ const IOS_STORE_URL =
 
 const DISMISS_KEY_PREFIX = "update_banner_dismissed_";
 
+// Convert semantic version to comparable integer (e.g., "9.3.1" -> 9003001)
+function versionToCode(version) {
+    try {
+        const parts = String(version)
+            .split(".")
+            .map((n) => parseInt(n, 10) || 0);
+        const major = parts[0] || 0;
+        const minor = parts[1] || 0;
+        const patch = parts[2] || 0;
+        return major * 1000000 + minor * 1000 + patch;
+    } catch {
+        return 0;
+    }
+}
+
+async function getInstalledVersion() {
+    // Tauri API first (accurate in production builds)
+    try {
+        const tauriApp = await import("@tauri-apps/api/app");
+        const v = await tauriApp.getVersion();
+        if (v) return v;
+    } catch {
+        /* fall through */
+    }
+    // env var override
+    if (process?.env?.NEXT_PUBLIC_APP_VERSION) {
+        return process.env.NEXT_PUBLIC_APP_VERSION;
+    }
+    // window var override (useful for manual testing)
+    if (typeof window !== "undefined" && window.__APP_VERSION) {
+        return window.__APP_VERSION;
+    }
+    return null;
+}
+
 export default function UpdateBanner() {
     const [visible, setVisible] = useState(false);
     const [platform, setPlatform] = useState(null); // "android" | "ios"
@@ -38,6 +73,21 @@ export default function UpdateBanner() {
                 if (typeof navigator === "undefined") return null;
                 if (/iPad|iPhone|iPod/.test(navigator.userAgent)) return "ios";
                 if (/Android/.test(navigator.userAgent)) return "android";
+
+                // ⚠️ TEMP DEBUG — remove when testing is done ⚠️
+                // Desktop browser tabs have neither a Tauri OS plugin nor a
+                // mobile user agent, so platform detection would otherwise
+                // return null and the banner would never render. In dev,
+                // default to "android" (or pass ?platform=ios in the URL)
+                // so you can test straight from a normal desktop tab.
+                if (process?.env?.NEXT_PUBLIC_TAURI_BUILD !== "1") {
+                    const forced = new URLSearchParams(
+                        window.location.search,
+                    ).get("platform");
+                    if (forced === "ios" || forced === "android") return forced;
+                    return "android";
+                }
+
                 return null;
             }
         }
@@ -48,9 +98,21 @@ export default function UpdateBanner() {
             setPlatform(os);
 
             try {
+                // ⚠️ TEMP DEBUG — remove when testing is done ⚠️
+                // In a dev run (npm run dev / android:dev / ios:dev — none of
+                // these set NEXT_PUBLIC_TAURI_BUILD), fetch app-config.json
+                // relative to whatever host is currently serving the app
+                // (localhost:3000 or the LAN IP set-dev-url.js wrote into
+                // tauri.conf.json's devUrl). That way editing
+                // public/app-config.json locally shows up on next reload —
+                // no deploy needed. Production builds still use the
+                // hardcoded Vercel URL.
+                const isDev = process?.env?.NEXT_PUBLIC_TAURI_BUILD !== "1";
                 const configUrl =
                     process?.env?.NEXT_PUBLIC_UPDATE_CONFIG_URL ||
-                    HARDCODED_CONFIG_URL;
+                    (isDev && typeof window !== "undefined"
+                        ? `${window.location.origin}/app-config.json`
+                        : HARDCODED_CONFIG_URL);
 
                 const controller = new AbortController();
                 const timeoutId = setTimeout(() => controller.abort(), 10000);
@@ -79,6 +141,26 @@ export default function UpdateBanner() {
                         : cfg?.latest_version_android) ||
                     cfg?.current_version ||
                     "";
+
+                // ⚠️ TEMP DEBUG OVERRIDE — remove when testing is done ⚠️
+                // Lets you fake the "installed version" from app-config.json
+                // (debug_installed_version_android / _ios) so you can test
+                // the banner without rebuilding the native app each time.
+                const debugInstalledVersion =
+                    os === "ios"
+                        ? cfg?.debug_installed_version_ios
+                        : cfg?.debug_installed_version_android;
+
+                // Only show if the installed app is actually behind the
+                // latest version. If we can't determine the installed
+                // version (e.g. running outside the native app), skip the
+                // banner rather than risk showing it to an up-to-date user.
+                const installedVersion =
+                    debugInstalledVersion || (await getInstalledVersion());
+                if (!mounted || !installedVersion || !version) return;
+                if (versionToCode(installedVersion) >= versionToCode(version)) {
+                    return;
+                }
 
                 const link =
                     (os === "ios"
@@ -179,13 +261,13 @@ export default function UpdateBanner() {
     );
 }
 
+// In-flow (not fixed) so it pushes page content down instead of floating
+// on top of it — sits neatly under the nav bar rather than overlapping it.
 const bannerWrapStyle = {
-    position: "fixed",
-    top: 0,
-    left: 0,
-    right: 0,
-    zIndex: 99999,
-    padding: "clamp(8px, 2vw, 16px)",
+    position: "relative",
+    zIndex: 40,
+    width: "100%",
+    padding: "clamp(6px, 1.5vw, 12px) clamp(10px, 2.5vw, 16px)",
     boxSizing: "border-box",
 };
 
@@ -199,9 +281,9 @@ const bannerInnerStyle = {
     margin: "0 auto",
     background: "linear-gradient(135deg, #16a34a, #0f766e)",
     color: "#fff",
-    padding: "clamp(10px, 2.5vw, 16px) clamp(14px, 3vw, 20px)",
-    borderRadius: "12px",
-    boxShadow: "0 8px 24px rgba(0,0,0,0.25)",
+    padding: "clamp(8px, 2vw, 12px) clamp(12px, 2.5vw, 18px)",
+    borderRadius: "10px",
+    boxShadow: "0 4px 14px rgba(0,0,0,0.18)",
     boxSizing: "border-box",
 };
 
