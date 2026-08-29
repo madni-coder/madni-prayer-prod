@@ -1,7 +1,7 @@
 {
     "$schema": "../node_modules/@tauri-apps/cli/config.schema.json",
     "productName": "Raahe Hidayat",
-    "version": "9.0.6",
+    "version": "9.0.7",
     "identifier": "com.prayer.madni",
     "build": {
         "frontendDist": "../out",
@@ -35,7 +35,7 @@
         ],
         "android": {
             "minSdkVersion": 24,
-            "versionCode": 9006
+            "versionCode": 9007
         },
         "iOS": {
             "developmentTeam": "R8953SWC87",
