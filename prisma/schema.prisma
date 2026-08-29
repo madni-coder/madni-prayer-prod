@@ -154,6 +154,8 @@ model JobSeeker {
   email          String   @unique
   password       String   @default("password123")
   mobile         String?
+  dateOfBirth    String?  // Stored as dd/mm/yyyy string
+  gender         String?  // e.g. "Male", "Female", "Other"
   jobCategory    String
   otherCategory  String?
   expectedSalary String

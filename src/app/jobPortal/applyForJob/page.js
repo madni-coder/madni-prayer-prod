@@ -14,9 +14,30 @@ import {
     FaCity,
     FaCheckCircle,
     FaPhone,
+    FaCalendarAlt,
+    FaVenusMars,
 } from "react-icons/fa";
 import AnimatedLooader from "../../../components/animatedLooader";
 import apiClient from "../../../lib/apiClient";
+
+// Calculate age from dd/mm/yyyy string
+function calculateAge(dob) {
+    if (!dob || dob.length < 10) return null;
+    const parts = dob.split("/");
+    if (parts.length !== 3) return null;
+    const [day, month, year] = parts.map(Number);
+    if (!day || !month || !year || year < 1900 || year > new Date().getFullYear()) return null;
+    const birthDate = new Date(year, month - 1, day);
+    if (isNaN(birthDate.getTime())) return null;
+    const today = new Date();
+    let age = today.getFullYear() - birthDate.getFullYear();
+    const m = today.getMonth() - birthDate.getMonth();
+    if (m < 0 || (m === 0 && today.getDate() < birthDate.getDate())) {
+        age--;
+    }
+    if (age < 0 || age > 120) return null;
+    return age;
+}
 
 export default function JobSeekersPage() {
     const router = useRouter();
@@ -26,6 +47,8 @@ export default function JobSeekersPage() {
         fullName: "",
         email: "",
         mobile: "",
+        dateOfBirth: "",
+        gender: "",
         jobCategory: "",
         otherCategory: "",
         expectedSalary: "",
@@ -51,37 +74,43 @@ export default function JobSeekersPage() {
         "Other"
     ];
 
+    const genderOptions = ["Male", "Female", "Other"];
+
+    // Auto-format DOB input as dd/mm/yyyy while typing
+    const formatDob = (raw) => {
+        // Strip non-digits
+        const digits = raw.replace(/\D/g, "");
+        let formatted = digits;
+        if (digits.length > 2 && digits.length <= 4) {
+            formatted = digits.slice(0, 2) + "/" + digits.slice(2);
+        } else if (digits.length > 4) {
+            formatted = digits.slice(0, 2) + "/" + digits.slice(2, 4) + "/" + digits.slice(4, 8);
+        }
+        return formatted;
+    };
+
     const handleChange = (e) => {
         const { name, value } = e.target;
 
-        // For mobile and expectedSalary, allow only numbers
-        if (name === 'mobile' || name === 'expectedSalary') {
-            const numericValue = value.replace(/[^0-9]/g, '');
-            setFormData((prev) => ({
-                ...prev,
-                [name]: numericValue,
-            }));
+        if (name === "mobile" || name === "expectedSalary") {
+            const numericValue = value.replace(/[^0-9]/g, "");
+            setFormData((prev) => ({ ...prev, [name]: numericValue }));
+        } else if (name === "dateOfBirth") {
+            const formatted = formatDob(value);
+            setFormData((prev) => ({ ...prev, dateOfBirth: formatted }));
         } else {
-            setFormData((prev) => ({
-                ...prev,
-                [name]: value,
-            }));
+            setFormData((prev) => ({ ...prev, [name]: value }));
         }
 
         if (errors[name]) {
-            setErrors((prev) => ({
-                ...prev,
-                [name]: "",
-            }));
+            setErrors((prev) => ({ ...prev, [name]: "" }));
         }
     };
 
     const validateForm = () => {
         const newErrors = {};
 
-        if (!formData.fullName.trim()) {
-            newErrors.fullName = "Full name is required";
-        }
+        if (!formData.fullName.trim()) newErrors.fullName = "Full name is required";
 
         if (!formData.email.trim()) {
             newErrors.email = "Email is required";
@@ -95,15 +124,23 @@ export default function JobSeekersPage() {
             newErrors.mobile = "Invalid mobile number";
         }
 
+        if (formData.dateOfBirth && formData.dateOfBirth.length > 0) {
+            if (formData.dateOfBirth.length < 10) {
+                newErrors.dateOfBirth = "Please enter a complete date (dd/mm/yyyy)";
+            } else if (calculateAge(formData.dateOfBirth) === null) {
+                newErrors.dateOfBirth = "Invalid date of birth";
+            }
+        }
+
+        if (!formData.gender) newErrors.gender = "Please select your gender";
+
         if (!formData.jobCategory) {
             newErrors.jobCategory = "Please select a job category";
         } else if (formData.jobCategory === "Other" && !formData.otherCategory.trim()) {
             newErrors.otherCategory = "Please specify your job category";
         }
 
-        if (!formData.expectedSalary.trim()) {
-            newErrors.expectedSalary = "Expected salary is required";
-        }
+        if (!formData.expectedSalary.trim()) newErrors.expectedSalary = "Expected salary is required";
 
         if (!formData.experience.trim()) {
             newErrors.experience = "Years of experience is required";
@@ -111,17 +148,9 @@ export default function JobSeekersPage() {
             newErrors.experience = "Please enter a valid number";
         }
 
-        if (!formData.skills.trim()) {
-            newErrors.skills = "Skills are required";
-        }
-
-        if (!formData.address.trim()) {
-            newErrors.address = "Address is required";
-        }
-
-        if (!formData.city.trim()) {
-            newErrors.city = "City is required";
-        }
+        if (!formData.skills.trim()) newErrors.skills = "Skills are required";
+        if (!formData.address.trim()) newErrors.address = "Address is required";
+        if (!formData.city.trim()) newErrors.city = "City is required";
 
         setErrors(newErrors);
         return Object.keys(newErrors).length === 0;
@@ -138,7 +167,6 @@ export default function JobSeekersPage() {
                     setShowLoader(false);
                     setShowSuccess(true);
 
-                    // Save the job seeker ID in localStorage for profile access
                     if (response.data && response.data.id) {
                         localStorage.setItem("jobSeekerId", response.data.id);
                     }
@@ -149,6 +177,8 @@ export default function JobSeekersPage() {
                             fullName: "",
                             email: "",
                             mobile: "",
+                            dateOfBirth: "",
+                            gender: "",
                             jobCategory: "",
                             otherCategory: "",
                             expectedSalary: "",
@@ -171,6 +201,8 @@ export default function JobSeekersPage() {
     const handleBack = () => {
         router.push("/jobPortal/jobLists");
     };
+
+    const computedAge = calculateAge(formData.dateOfBirth);
 
     return (
         <div className="min-h-screen bg-[#09152a] text-gray-200 p-4 sm:p-6 pb-24">
@@ -272,6 +304,66 @@ export default function JobSeekersPage() {
                             />
                             {errors.mobile && (
                                 <p className="text-red-400 text-xs mt-1">{errors.mobile}</p>
+                            )}
+                        </div>
+
+                        {/* Date of Birth */}
+                        <div>
+                            <label className="flex items-center gap-2 text-sm font-semibold mb-2 text-purple-400">
+                                <FaCalendarAlt />
+                                Date of Birth (dd/mm/yyyy)
+                            </label>
+                            <div className="relative">
+                                <input
+                                    type="text"
+                                    name="dateOfBirth"
+                                    value={formData.dateOfBirth}
+                                    onChange={handleChange}
+                                    inputMode="numeric"
+                                    maxLength="10"
+                                    className={`w-full px-4 py-3 bg-[#1e2f3f] border ${errors.dateOfBirth ? "border-red-500" : "border-[#2d3f54]"
+                                        } rounded-lg focus:outline-none focus:border-purple-500 transition-colors text-white placeholder-gray-500 pr-28`}
+                                    placeholder="dd/mm/yyyy"
+                                />
+                                {/* Live Age Badge */}
+                                {computedAge !== null && (
+                                    <span className="absolute right-3 top-1/2 -translate-y-1/2 bg-purple-600/80 text-white text-xs font-semibold px-2 py-1 rounded-full pointer-events-none">
+                                        Age: {computedAge} yrs
+                                    </span>
+                                )}
+                            </div>
+                            {errors.dateOfBirth && (
+                                <p className="text-red-400 text-xs mt-1">{errors.dateOfBirth}</p>
+                            )}
+                            {computedAge !== null && (
+                                <p className="text-purple-300 text-xs mt-1">
+                                    ✓ Your age is <strong>{computedAge} years</strong>
+                                </p>
+                            )}
+                        </div>
+
+                        {/* Gender */}
+                        <div>
+                            <label className="flex items-center gap-2 text-sm font-semibold mb-2 text-purple-400">
+                                <FaVenusMars />
+                                Gender *
+                            </label>
+                            <select
+                                name="gender"
+                                value={formData.gender}
+                                onChange={handleChange}
+                                className={`w-full px-4 py-3 bg-[#1e2f3f] border ${errors.gender ? "border-red-500" : "border-[#2d3f54]"
+                                    } rounded-lg focus:outline-none focus:border-purple-500 transition-colors text-white`}
+                            >
+                                <option value="">Select gender</option>
+                                {genderOptions.map((g) => (
+                                    <option key={g} value={g}>
+                                        {g}
+                                    </option>
+                                ))}
+                            </select>
+                            {errors.gender && (
+                                <p className="text-red-400 text-xs mt-1">{errors.gender}</p>
                             )}
                         </div>
 

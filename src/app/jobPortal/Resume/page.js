@@ -1,12 +1,11 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { FaArrowLeft, FaEdit, FaBriefcase, FaEnvelope, FaPhone, FaMapMarkerAlt, FaMoneyBillWave, FaClock, FaTools, FaSignOutAlt, FaTrash } from "react-icons/fa";
 import axios from "axios";
 
-// module-level guard to prevent duplicate requests (helps in dev StrictMode)
-let _profileRequested = false;
+// (module-level guard removed — use useRef instead to avoid HMR stale state)
 
 export default function ResumePage() {
     const router = useRouter();
@@ -15,6 +14,7 @@ export default function ResumePage() {
     const [error, setError] = useState(null);
     const [showDeleteModal, setShowDeleteModal] = useState(false);
     const [deleting, setDeleting] = useState(false);
+    const profileRequestedRef = useRef(false);
 
     useEffect(() => {
         // Check authentication
@@ -24,11 +24,9 @@ export default function ResumePage() {
             return;
         }
 
-        // Prevent duplicate requests
-        if (_profileRequested) {
-            return;
-        }
-        _profileRequested = true;
+        // Prevent duplicate requests in StrictMode (useRef resets on fresh mount)
+        if (profileRequestedRef.current) return;
+        profileRequestedRef.current = true;
 
         fetchProfile();
     }, []);
@@ -69,7 +67,7 @@ export default function ResumePage() {
 
     const handleEdit = () => {
         // Reset profile guard so fresh data is fetched when returning from edit page
-        _profileRequested = false;
+        profileRequestedRef.current = false;
         router.push("/jobPortal/Resume/editResume");
     };
 
@@ -80,7 +78,7 @@ export default function ResumePage() {
         localStorage.removeItem("jobSeekerEmail");
 
         // Reset request guard
-        _profileRequested = false;
+        profileRequestedRef.current = false;
 
         // Redirect to sign-in page
         router.push("/jobPortal/auth/signin");
@@ -90,6 +88,17 @@ export default function ResumePage() {
         setDeleting(true);
         try {
             const userId = localStorage.getItem("jobSeekerId");
+
+            if (!userId || userId === "null" || isNaN(parseInt(userId))) {
+                // No valid ID — just clear local state and redirect
+                localStorage.removeItem("jobSeekerAuth");
+                localStorage.removeItem("jobSeekerId");
+                localStorage.removeItem("jobSeekerEmail");
+                profileRequestedRef.current = false;
+                router.push("/jobPortal/auth/signin");
+                return;
+            }
+
             await axios.delete(`/api/api-job-seekers?id=${userId}`);
 
             // Clear localStorage
@@ -98,7 +107,7 @@ export default function ResumePage() {
             localStorage.removeItem("jobSeekerEmail");
 
             // Reset request guard
-            _profileRequested = false;
+            profileRequestedRef.current = false;
 
             // Redirect to job portal
             router.push("/jobPortal/jobLists");

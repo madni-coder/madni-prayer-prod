@@ -8,9 +8,13 @@ export async function GET(request) {
         const id = searchParams.get("id");
 
         if (id) {
+            const parsedId = parseInt(id);
+            if (isNaN(parsedId)) {
+                return NextResponse.json({ error: "Invalid ID" }, { status: 400 });
+            }
             // Fetch single job seeker
             const seeker = await prisma.jobSeeker.findUnique({
-                where: { id: parseInt(id) },
+                where: { id: parsedId },
             });
 
             if (!seeker) {
@@ -47,6 +51,8 @@ export async function POST(request) {
             email,
             password,
             mobile,
+            dateOfBirth,
+            gender,
             jobCategory,
             otherCategory,
             expectedSalary,
@@ -56,8 +62,8 @@ export async function POST(request) {
             city,
         } = body;
 
-        // Validation
-        if (!fullName || !email || !password || !jobCategory || !expectedSalary || !experience || !skills || !address || !city) {
+        // Validation — password is optional (DB default: "password123")
+        if (!fullName || !email || !jobCategory || !expectedSalary || !experience || !skills || !address || !city) {
             return NextResponse.json(
                 { error: "Missing required fields" },
                 { status: 400 }
@@ -80,8 +86,10 @@ export async function POST(request) {
             data: {
                 fullName,
                 email,
-                password,
-                mobile,
+                ...(password ? { password } : {}),   // DB default used if not provided
+                mobile: mobile || null,
+                dateOfBirth: dateOfBirth || null,
+                gender: gender || null,
                 jobCategory,
                 otherCategory: otherCategory || null,
                 expectedSalary,
@@ -122,6 +130,8 @@ export async function PUT(request) {
             fullName,
             email,
             mobile,
+            dateOfBirth,
+            gender,
             jobCategory,
             otherCategory,
             expectedSalary,
@@ -137,6 +147,8 @@ export async function PUT(request) {
                 ...(fullName && { fullName }),
                 ...(email && { email }),
                 ...(mobile && { mobile }),
+                ...(dateOfBirth !== undefined && { dateOfBirth }),
+                ...(gender !== undefined && { gender }),
                 ...(jobCategory && { jobCategory }),
                 ...(otherCategory !== undefined && { otherCategory }),
                 ...(expectedSalary && { expectedSalary }),
@@ -170,8 +182,13 @@ export async function DELETE(request) {
             );
         }
 
+        const parsedId = parseInt(id);
+        if (isNaN(parsedId)) {
+            return NextResponse.json({ error: "Invalid ID" }, { status: 400 });
+        }
+
         await prisma.jobSeeker.delete({
-            where: { id: parseInt(id) },
+            where: { id: parsedId },
         });
 
         return NextResponse.json({ message: "Job seeker deleted successfully" });
@@ -203,6 +220,8 @@ export async function PATCH(request) {
             email,
             password,
             mobile,
+            dateOfBirth,
+            gender,
             jobCategory,
             otherCategory,
             expectedSalary,
@@ -218,6 +237,8 @@ export async function PATCH(request) {
         if (email !== undefined) updateData.email = email;
         if (password !== undefined) updateData.password = password;
         if (mobile !== undefined) updateData.mobile = mobile;
+        if (dateOfBirth !== undefined) updateData.dateOfBirth = dateOfBirth;
+        if (gender !== undefined) updateData.gender = gender;
         if (jobCategory !== undefined) updateData.jobCategory = jobCategory;
         if (otherCategory !== undefined) updateData.otherCategory = otherCategory;
         if (expectedSalary !== undefined) updateData.expectedSalary = expectedSalary;

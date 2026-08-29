@@ -61,6 +61,8 @@ export default function JobSeekersAdminPage() {
                                     <th className="text-left text-white px-4 py-3 border-b">S.No</th>
                                     <th className="text-left text-white px-4 py-3 border-b">Full Name</th>
                                     <th className="text-left text-white px-4 py-3 border-b">Email</th>
+                                    <th className="text-left text-white px-4 py-3 border-b">Gender</th>
+                                    <th className="text-left text-white px-4 py-3 border-b">DOB / Age</th>
                                     <th className="text-left text-white px-4 py-3 border-b">Job Category</th>
                                     <th className="text-left text-white px-4 py-3 border-b">City</th>
                                     <th className="text-left text-white px-4 py-3 border-b">Experience</th>
@@ -70,7 +72,7 @@ export default function JobSeekersAdminPage() {
                             <tbody>
                                 {seekers.length === 0 ? (
                                     <tr>
-                                        <td colSpan="7" className="px-4 py-8 text-center text-gray-500">
+                                        <td colSpan="9" className="px-4 py-8 text-center text-gray-500">
                                             No job seekers found.
                                         </td>
                                     </tr>
@@ -90,6 +92,20 @@ export default function JobSeekersAdminPage() {
                                                 <td className="px-4 py-3 text-gray-800">{start + idx + 1}</td>
                                                 <td className="px-4 py-3 text-gray-800 font-semibold">{seeker.fullName}</td>
                                                 <td className="px-4 py-3 text-gray-800">{seeker.email}</td>
+                                                <td className="px-4 py-3 text-gray-800">
+                                                    {seeker.gender ? (
+                                                        <span className={`px-2 py-1 text-xs rounded font-medium ${
+                                                            seeker.gender === 'Male' ? 'bg-blue-100 text-blue-800' :
+                                                            seeker.gender === 'Female' ? 'bg-pink-100 text-pink-800' :
+                                                            'bg-gray-100 text-gray-700'
+                                                        }`}>{seeker.gender}</span>
+                                                    ) : <span className="text-gray-400 text-xs">—</span>}
+                                                </td>
+                                                <td className="px-4 py-3 text-gray-800 text-sm">
+                                                    {seeker.dateOfBirth ? (
+                                                        <span>{seeker.dateOfBirth}</span>
+                                                    ) : <span className="text-gray-400">—</span>}
+                                                </td>
                                                 <td className="px-4 py-3 text-gray-800">
                                                     <span className="px-2 py-1 bg-cyan-100 text-cyan-800 text-xs rounded">
                                                         {seeker.jobCategory}

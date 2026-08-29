@@ -2,12 +2,29 @@
 import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useJobSeekerContext } from "../../../../context/JobSeekerContext";
-import { ArrowLeft, Trash2, Mail, Phone, Copy, MapPin, Briefcase, DollarSign, Clock, Award, Home } from "lucide-react";
+import { ArrowLeft, Trash2, Mail, Phone, Copy, MapPin, Briefcase, DollarSign, Clock, Award, Home, Calendar, Users } from "lucide-react";
+
+// Calculate age from dd/mm/yyyy string
+function calculateAge(dob) {
+    if (!dob || dob.length < 10) return null;
+    const parts = dob.split("/");
+    if (parts.length !== 3) return null;
+    const [day, month, year] = parts.map(Number);
+    if (!day || !month || !year || year < 1900 || year > new Date().getFullYear()) return null;
+    const birthDate = new Date(year, month - 1, day);
+    if (isNaN(birthDate.getTime())) return null;
+    const today = new Date();
+    let age = today.getFullYear() - birthDate.getFullYear();
+    const m = today.getMonth() - birthDate.getMonth();
+    if (m < 0 || (m === 0 && today.getDate() < birthDate.getDate())) age--;
+    if (age < 0 || age > 120) return null;
+    return age;
+}
 
 export default function JobSeekerDetailClient({ id }) {
     const router = useRouter();
     const seekerId = id;
-    const { seekers, loading: contextLoading, fetchAll, getById, remove } = useJobSeekerContext();
+    const { remove } = useJobSeekerContext();
 
     const [loading, setLoading] = useState(true);
     const [seeker, setSeeker] = useState(null);
@@ -19,26 +36,26 @@ export default function JobSeekerDetailClient({ id }) {
             router.push("/login");
             return;
         }
-        if (seekerId) {
-            // If seekers not loaded yet, fetch them
-            if (seekers.length === 0) {
-                fetchAll();
-            }
-        }
-    }, [seekerId, router, fetchAll]);
 
-    // Update seeker whenever seekers array changes
-    useEffect(() => {
-        if (seekerId && seekers.length > 0) {
-            const found = getById(seekerId);
-            if (found) {
-                setSeeker(found);
-                setLoading(false);
-            } else if (!contextLoading) {
-                setLoading(false);
-            }
+        // Use relative URL — always hits the current server (localhost in dev, Vercel in prod)
+        // Do NOT use apiClient here — it always points to NEXT_PUBLIC_API_BASE_URL (Vercel)
+        if (seekerId) {
+            setLoading(true);
+            fetch(`/api/api-job-seekers?id=${seekerId}`)
+                .then((res) => {
+                    if (!res.ok) throw new Error("Not found");
+                    return res.json();
+                })
+                .then((data) => {
+                    setSeeker(data);
+                })
+                .catch((err) => {
+                    console.error("Failed to load job seeker:", err);
+                    setSeeker(null);
+                })
+                .finally(() => setLoading(false));
         }
-    }, [seekerId, seekers, getById, contextLoading]);
+    }, [seekerId, router]);
 
     const handleDelete = async () => {
         if (!confirm("Are you sure you want to delete this job seeker application?")) return;
@@ -53,7 +70,7 @@ export default function JobSeekerDetailClient({ id }) {
         }
     };
 
-    if (loading || contextLoading) {
+    if (loading) {
         return (
             <div className="min-h-screen flex items-center justify-center">
                 <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-blue-500"></div>
@@ -64,6 +81,8 @@ export default function JobSeekerDetailClient({ id }) {
     if (!seeker) {
         return <div>Job seeker not found</div>;
     }
+
+    const age = calculateAge(seeker.dateOfBirth);
 
     return (
         <div className="max-w-4xl mx-auto p-4">
@@ -86,6 +105,7 @@ export default function JobSeekerDetailClient({ id }) {
             </div>
 
             <div className="bg-white rounded-xl shadow p-6">
+                {/* Name + contact */}
                 <div className="mb-6">
                     <h1 className="text-3xl font-bold text-black mb-2">{seeker.fullName}</h1>
                     <div className="flex flex-col text-gray-600">
@@ -125,6 +145,51 @@ export default function JobSeekerDetailClient({ id }) {
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+
+                    {/* Gender — always shown */}
+                    <div className="bg-gray-100 p-4 rounded-lg">
+                        <div className="flex items-center gap-3">
+                            <div className="bg-cyan-100 p-3 rounded-full">
+                                <Users className="w-5 h-5 text-cyan-600" />
+                            </div>
+                            <div>
+                                <p className="text-xs text-gray-500">Gender</p>
+                                {seeker.gender ? (
+                                    <span className={`inline-block mt-0.5 px-2 py-0.5 text-sm font-semibold rounded ${
+                                        seeker.gender === "Male" ? "bg-blue-100 text-blue-800" :
+                                        seeker.gender === "Female" ? "bg-pink-100 text-pink-800" :
+                                        "bg-gray-200 text-gray-700"
+                                    }`}>{seeker.gender}</span>
+                                ) : (
+                                    <p className="font-semibold text-gray-400 italic">Not provided</p>
+                                )}
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Date of Birth & Age — always shown */}
+                    <div className="bg-gray-100 p-4 rounded-lg">
+                        <div className="flex items-center gap-3">
+                            <div className="bg-cyan-100 p-3 rounded-full">
+                                <Calendar className="w-5 h-5 text-cyan-600" />
+                            </div>
+                            <div>
+                                <p className="text-xs text-gray-500">Date of Birth</p>
+                                {seeker.dateOfBirth ? (
+                                    <>
+                                        <p className="font-semibold text-gray-900">{seeker.dateOfBirth}</p>
+                                        {age !== null && (
+                                            <p className="text-xs text-cyan-600 font-medium mt-0.5">Age: {age} years</p>
+                                        )}
+                                    </>
+                                ) : (
+                                    <p className="font-semibold text-gray-400 italic">Not provided</p>
+                                )}
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Job Category */}
                     <div className="bg-gray-100 p-4 rounded-lg">
                         <div className="flex items-center gap-3">
                             <div className="bg-cyan-100 p-3 rounded-full">
@@ -140,6 +205,7 @@ export default function JobSeekerDetailClient({ id }) {
                         </div>
                     </div>
 
+                    {/* Expected Salary */}
                     <div className="bg-gray-100 p-4 rounded-lg">
                         <div className="flex items-center gap-3">
                             <div className="bg-cyan-100 p-3 rounded-full">
@@ -152,6 +218,7 @@ export default function JobSeekerDetailClient({ id }) {
                         </div>
                     </div>
 
+                    {/* Experience */}
                     <div className="bg-gray-100 p-4 rounded-lg">
                         <div className="flex items-center gap-3">
                             <div className="bg-cyan-100 p-3 rounded-full">
@@ -164,6 +231,7 @@ export default function JobSeekerDetailClient({ id }) {
                         </div>
                     </div>
 
+                    {/* City */}
                     <div className="bg-gray-100 p-4 rounded-lg">
                         <div className="flex items-center gap-3">
                             <div className="bg-cyan-100 p-3 rounded-full">
@@ -177,6 +245,7 @@ export default function JobSeekerDetailClient({ id }) {
                     </div>
                 </div>
 
+                {/* Skills */}
                 <div className="mb-6">
                     <div className="flex items-center gap-2 mb-3">
                         <Award className="w-5 h-5 text-cyan-600" />
@@ -187,6 +256,7 @@ export default function JobSeekerDetailClient({ id }) {
                     </div>
                 </div>
 
+                {/* Address */}
                 <div className="mb-6">
                     <div className="flex items-center gap-2 mb-3">
                         <Home className="w-5 h-5 text-cyan-600" />
@@ -197,6 +267,7 @@ export default function JobSeekerDetailClient({ id }) {
                     </div>
                 </div>
 
+                {/* Footer */}
                 <div className="border-t pt-4">
                     <div className="text-sm text-gray-500">
                         <p>Applied: {new Date(seeker.createdAt).toLocaleString()}</p>
