@@ -300,7 +300,7 @@ export default function JobSeekersPage() {
                                 maxLength="15"
                                 className={`w-full px-4 py-3 bg-[#1e2f3f] border ${errors.mobile ? "border-red-500" : "border-[#2d3f54]"
                                     } rounded-lg focus:outline-none focus:border-purple-500 transition-colors text-white placeholder-gray-500`}
-                                placeholder="03001234567"
+                                placeholder="9876543210"
                             />
                             {errors.mobile && (
                                 <p className="text-red-400 text-xs mt-1">{errors.mobile}</p>

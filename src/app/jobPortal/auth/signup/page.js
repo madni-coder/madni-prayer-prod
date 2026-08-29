@@ -193,7 +193,7 @@ export default function SignUp() {
                                 value={formData.mobile}
                                 onChange={(e) => setFormData({ ...formData, mobile: e.target.value })}
                                 className="w-full px-4 py-3 bg-[#1e2f3f] border border-[#2d3f54] rounded-lg focus:outline-none focus:border-purple-500 transition-colors text-white placeholder-gray-500"
-                                placeholder="03001234567"
+                                placeholder="9876543210"
                             />
                         </div>
 

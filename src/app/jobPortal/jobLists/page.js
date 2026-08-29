@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { FaBriefcase, FaMapMarkerAlt, FaClock, FaRupeeSign, FaArrowLeft, FaBullhorn, FaSearch, FaCopy, FaPhone, FaUser } from "react-icons/fa";
+import { FaBriefcase, FaMapMarkerAlt, FaClock, FaRupeeSign, FaArrowLeft, FaBullhorn, FaSearch, FaCopy, FaPhone, FaUser, FaPlusCircle } from "react-icons/fa";
 import AnimatedLooader from "../../../components/animatedLooader";
 import apiClient from "../../../lib/apiClient";
 
@@ -63,13 +63,21 @@ export default function ViewJobsPage() {
     const jobsPerPage = 5; // show pagination after every 5 entries
 
     useEffect(() => {
-        if (_jobListsRequested) {
+        // A job was just posted elsewhere in this session — bypass the cache
+        // so the newly created job shows up immediately.
+        const needsRefresh = typeof window !== "undefined" && sessionStorage.getItem("jp_refresh_joblists");
+
+        if (_jobListsRequested && !needsRefresh) {
             // another mount already requested; reuse cached data if available
             if (_jobListsCache) {
                 setJobs(_jobListsCache);
                 setLoading(false);
             }
             return;
+        }
+
+        if (needsRefresh) {
+            sessionStorage.removeItem("jp_refresh_joblists");
         }
 
         _jobListsRequested = true;
@@ -135,6 +143,13 @@ export default function ViewJobsPage() {
         }, 500);
     };
 
+    const handlePostJobRedirect = () => {
+        setShowLoader(true);
+        setTimeout(() => {
+            router.push("/jobPortal/postJob");
+        }, 500);
+    };
+
     const handleMyProfile = () => {
         setShowLoader(true);
         setTimeout(() => {
@@ -188,6 +203,14 @@ export default function ViewJobsPage() {
                             >
                                 <FaBullhorn className="text-sm sm:text-base group-hover:scale-110 transition-transform duration-300" />
                                 <span className="font-semibold">Hire Now</span>
+                            </button>
+
+                            <button
+                                onClick={handlePostJobRedirect}
+                                className="group flex items-center gap-1.5 sm:gap-2 px-3 sm:px-5 py-2 sm:py-2.5 bg-gradient-to-r from-purple-500 to-pink-600 hover:from-purple-600 hover:to-pink-700 rounded-lg sm:rounded-xl transition-all duration-300 transform hover:scale-105 hover:shadow-[0_0_20px_rgba(168,85,247,0.4)] shadow-lg text-sm sm:text-base"
+                            >
+                                <FaPlusCircle className="text-sm sm:text-base group-hover:scale-110 transition-transform duration-300" />
+                                <span className="font-semibold">Post a Job</span>
                             </button>
                         </div>
                     </div>
