@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import axios from "axios";
+import apiClient from "@/lib/apiClient";
 import { FaUser, FaEnvelope, FaLock, FaPhone, FaBriefcase, FaRupeeSign, FaClock, FaTools, FaMapMarkerAlt, FaCity, FaArrowLeft, FaCalendarAlt, FaVenusMars } from "react-icons/fa";
 
 // Calculate age from dd/mm/yyyy string
@@ -76,7 +76,7 @@ export default function SignUp() {
         localStorage.removeItem("jobSeekerEmail");
 
         try {
-            const response = await axios.post("/api/api-job-seekers", formData);
+            const response = await apiClient.post("/api/api-job-seekers", formData);
 
             // Save authentication data to localStorage
             localStorage.setItem("jobSeekerEmail", response.data.email);

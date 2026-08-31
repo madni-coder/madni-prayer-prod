@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { FaArrowLeft, FaSave, FaBriefcase } from "react-icons/fa";
-import axios from "axios";
+import apiClient from "@/lib/apiClient";
 
 // module-level guard to prevent duplicate requests (helps in dev StrictMode)
 let _editProfileRequested = false;
@@ -48,7 +48,7 @@ export default function EditResumePage() {
 
             if (!userId) {
                 // Try to fetch all and get the first one
-                const response = await axios.get("/api/api-job-seekers");
+                const response = await apiClient.get("/api/api-job-seekers");
                 if (response.data && response.data.length > 0) {
                     const profile = response.data[0];
                     localStorage.setItem("jobSeekerId", profile.id);
@@ -57,7 +57,7 @@ export default function EditResumePage() {
                     throw new Error("No profile found. Please create a profile first.");
                 }
             } else {
-                const response = await axios.get(`/api/api-job-seekers?id=${userId}`);
+                const response = await apiClient.get(`/api/api-job-seekers?id=${userId}`);
                 setFormData(response.data);
             }
         } catch (err) {
@@ -92,7 +92,7 @@ export default function EditResumePage() {
             }
 
             // Use PATCH request to update (excluding fullName and email)
-            await axios.patch(`/api/api-job-seekers?id=${formData.id}`, {
+            await apiClient.patch(`/api/api-job-seekers?id=${formData.id}`, {
                 mobile: formData.mobile,
                 jobCategory: formData.jobCategory,
                 otherCategory: formData.otherCategory,

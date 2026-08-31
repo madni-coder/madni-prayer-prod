@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { FaArrowLeft, FaEdit, FaBriefcase, FaEnvelope, FaPhone, FaMapMarkerAlt, FaMoneyBillWave, FaClock, FaTools, FaSignOutAlt, FaTrash } from "react-icons/fa";
-import axios from "axios";
+import apiClient from "@/lib/apiClient";
 
 // (module-level guard removed — use useRef instead to avoid HMR stale state)
 
@@ -43,7 +43,7 @@ export default function ResumePage() {
                 return;
             }
 
-            const response = await axios.get(`/api/api-job-seekers?id=${userId}`);
+            const response = await apiClient.get(`/api/api-job-seekers?id=${userId}`);
             setProfile(response.data);
         } catch (err) {
             console.error("Error fetching profile:", err);
@@ -99,7 +99,7 @@ export default function ResumePage() {
                 return;
             }
 
-            await axios.delete(`/api/api-job-seekers?id=${userId}`);
+            await apiClient.delete(`/api/api-job-seekers?id=${userId}`);
 
             // Clear localStorage
             localStorage.removeItem("jobSeekerAuth");

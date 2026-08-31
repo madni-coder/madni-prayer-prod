@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import axios from "axios";
+import apiClient from "@/lib/apiClient";
 import { FaEnvelope, FaLock, FaSignInAlt, FaArrowLeft } from "react-icons/fa";
 
 export default function SignIn() {
@@ -20,7 +20,7 @@ export default function SignIn() {
         setError("");
 
         try {
-            const response = await axios.post("/api/api-job-seekers/auth", formData);
+            const response = await apiClient.post("/api/api-job-seekers/auth", formData);
 
             if (response.data.success) {
                 // Save authentication data to localStorage
