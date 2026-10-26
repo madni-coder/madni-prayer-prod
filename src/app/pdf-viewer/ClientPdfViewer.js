@@ -3,14 +3,6 @@ import React, { useEffect, useState, useRef, useCallback } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import QuranLoader from "../../components/QuranLoader";
 
-const isIOS = () => {
-    if (typeof window === "undefined") return false;
-    return (
-        /iPad|iPhone|iPod/.test(navigator.userAgent) ||
-        (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1)
-    );
-};
-
 export default function ClientPdfViewer({ file: fileProp, zoom = 1 }) {
     const router = useRouter();
     const searchParams = useSearchParams?.();
@@ -33,6 +25,7 @@ export default function ClientPdfViewer({ file: fileProp, zoom = 1 }) {
     const [pages, setPages] = useState([]);
     const [pdfDoc, setPdfDoc] = useState(null);
     const [renderedPages, setRenderedPages] = useState(new Set());
+    const [retryKey, setRetryKey] = useState(0);
 
     const observerRef = useRef(null);
     const pageRefsRef = useRef({});
@@ -62,7 +55,7 @@ export default function ClientPdfViewer({ file: fileProp, zoom = 1 }) {
         setCurrentPage(0);
         setTotalPages(0);
         if (!file) { setUrl(""); setLoading(false); return; }
-        try { setUrl(decodeURIComponent(file)); } catch { setUrl(file); }
+        setUrl(file);
     }, [file]);
 
     // ── PDF loading & rendering ────────────────────────────────────────────────
@@ -127,7 +120,7 @@ export default function ClientPdfViewer({ file: fileProp, zoom = 1 }) {
                         await page
                             .render({ canvasContext: canvas.getContext("2d"), viewport })
                             .promise;
-                        pageArray[i - 1] = canvas.toDataURL("image/png");
+                        pageArray[i - 1] = canvas.toDataURL("image/jpeg", 0.9);
                         newRendered.add(i);
                     } catch (pe) {
                         console.error(`Error rendering page ${i}:`, pe);
@@ -149,7 +142,7 @@ export default function ClientPdfViewer({ file: fileProp, zoom = 1 }) {
 
         loadPdf();
         return () => { cancelled = true; };
-    }, [url]);
+    }, [url, retryKey]);
 
     // ── Lazy page rendering ────────────────────────────────────────────────────
     const renderPage = useCallback(
@@ -164,7 +157,7 @@ export default function ClientPdfViewer({ file: fileProp, zoom = 1 }) {
                 await page
                     .render({ canvasContext: canvas.getContext("2d"), viewport })
                     .promise;
-                const dataUrl = canvas.toDataURL("image/png");
+                const dataUrl = canvas.toDataURL("image/jpeg", 0.9);
                 setPages((prev) => {
                     const n = [...prev];
                     n[pageNum - 1] = dataUrl;
@@ -297,21 +290,13 @@ export default function ClientPdfViewer({ file: fileProp, zoom = 1 }) {
                             Unable to display PDF
                         </p>
                         <p style={{ fontSize: 14 }}>{err}</p>
-                        {isIOS() && (
-                            <p style={{ fontSize: 14, marginTop: 8 }}>
-                                iOS Safari has limitations with inline PDF preview. Use the
-                                button below.
-                            </p>
-                        )}
                     </div>
-                    <a
+                    <button
                         className="btn btn-primary"
-                        href={url}
-                        target="_blank"
-                        rel="noreferrer"
+                        onClick={() => setRetryKey((k) => k + 1)}
                     >
-                        Open PDF in {isIOS() ? "Safari" : "External Viewer"}
-                    </a>
+                        Retry
+                    </button>
                 </div>
             ) : (
                 <div

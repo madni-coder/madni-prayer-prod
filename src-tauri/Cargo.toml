@@ -28,3 +28,11 @@ tauri-plugin-os = "2.0"
 tauri-plugin-haptics = "2.0"
 tauri-plugin-geolocation = "2"
 tauri-plugin-notifications = { version = "0.4", features = ["push-notifications"] }
+
+# Smaller release binary (Tauri's recommended size settings)
+[profile.release]
+codegen-units = 1
+lto = true
+opt-level = "s"
+panic = "abort"
+strip = true

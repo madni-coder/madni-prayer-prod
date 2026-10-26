@@ -44,3 +44,5 @@ next-env.d.ts
 # Android signing artifacts (do NOT commit)
 key.properties
 upload-keystore.jks
+# Quran PDFs bundled into the Tauri app (scripts/download-quran-pdfs.js)
+/public/quran-pdfs/

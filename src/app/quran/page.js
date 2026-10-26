@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { FaAngleLeft } from "react-icons/fa";
 import apiClient from "../../lib/apiClient";
 import ClientPdfViewer from "../pdf-viewer/ClientPdfViewer";
+import surahs from "./surahs.json";
 
 // Detect Tauri environment
 const isTauri = process.env.NEXT_PUBLIC_TAURI_BUILD === "1";
@@ -12,16 +13,8 @@ const isTauri = process.env.NEXT_PUBLIC_TAURI_BUILD === "1";
 // Base URL of deployed site for API calls when running inside Tauri (static build has no Next API)
 const REMOTE_API_BASE = process.env.NEXT_PUBLIC_API_BASE_URL;
 
-// Sample Surah data (in real app, fetch from API or static JSON)
-const surahs = [
-    { number: 1, name: "Surah Yaseen", arabic: " يٰسٓ", ayahs: 83 },
-    { number: 2, name: "Surah Baqrah", arabic: "البقرة", ayahs: 286 },
-    { number: 3, name: "Surah Muzammil", arabic: "المزمل", ayahs: 200 },
-    { number: 4, name: "Surah Waqi'a", arabic: "الواقعة", ayahs: 96 },
-    { number: 5, name: "Surah Maryam", arabic: "مريم", ayahs: 98 },
-    { number: 6, name: "Surah Mulk", arabic: "الملك", ayahs: 30 },
-    // ...add more or fetch dynamically
-];
+// Para/Surah PDFs bundled into the app (scripts/download-quran-pdfs.js) — work offline
+const OFFLINE_PDF_BASE = "/quran-pdfs";
 
 // Static Para (Juz) data: 1-30 with custom names and Arabic only (ruku removed)
 const paraNames = [
@@ -95,7 +88,6 @@ export default function Page() {
     const [readerUrl, setReaderUrl] = useState("");
     const [zoom, setZoom] = useState(1);
     const [currentObjectUrl, setCurrentObjectUrl] = useState(null);
-    const [loadingPara, setLoadingPara] = useState(null);
     const [kanzulLoading, setKanzulLoading] = useState(false);
     const router = useRouter();
 
@@ -203,17 +195,10 @@ export default function Page() {
     // Open reader modal for a surah
     const openSurahReader = async (surah) => {
         try {
-            const surahFileName = surah.name;
-            console.log('[openSurahReader] Opening surah:', surahFileName);
-
-            const fileUrl = await getSurahPdf(surahFileName);
-            console.log('[openSurahReader] Got fileUrl:', fileUrl);
-
             const proxied = isTauri
-                ? `${REMOTE_API_BASE}/api/pdf-proxy?url=${encodeURIComponent(fileUrl)}`
-                : `/api/pdf-proxy?url=${encodeURIComponent(fileUrl)}`;
+                ? `${OFFLINE_PDF_BASE}/surah-${surah.number}.pdf`
+                : `/api/pdf-proxy?url=${encodeURIComponent(await getSurahPdf(surah.name))}`;
 
-            console.log("[openSurahReader] PDF proxied URL:", proxied);
             setZoom(1);
             setCurrentPara(surah.number);
             setCurrentTitle(`${surah.number}. ${surah.name}`);
@@ -238,85 +223,21 @@ export default function Page() {
     const increaseZoom = () => setZoom(z => Math.min(zoomMax, +(z + zoomStep).toFixed(2)));
     const decreaseZoom = () => setZoom(z => Math.max(zoomMin, +(z - zoomStep).toFixed(2)));
 
-    const openReader = async (p) => {
-        const file = files.find((f) => f.id === p.number);
-        if (!file) {
-            console.error('Para file not found:', p.number);
-            return;
-        }
-        const urlBase = file.fileUrl;
-
-        console.log('[openReader] Para:', p.number, 'URL:', urlBase);
-
-        const proxied = `/api/pdf-proxy?url=${encodeURIComponent(urlBase)}`;
-        const proxiedFinal = isTauri
-            ? `${REMOTE_API_BASE}/api/pdf-proxy?url=${encodeURIComponent(
-                urlBase
-            )}`
-            : proxied;
-
-        console.log('[openReader] Proxied URL:', proxiedFinal);
-
-        // indicate loading state for this para card
-        setLoadingPara(p.number);
-
-        try {
-            const storageKey = `para_pdf_${p.number}`;
-            const saved = localStorage.getItem(storageKey);
-
-            // Note: We no longer use blob URLs from localStorage cache because
-            // blob URLs don't work across page navigations in mobile/Tauri environments.
-            // Instead, we always fetch via the proxied URL.
-            // The cache is still useful for offline scenarios but we'll handle that differently.
-
-            // Fetch the proxied PDF and try to save it (if small enough) for offline use
-            const resp = await axios.get(proxiedFinal, {
-                responseType: "blob",
-            });
-            const blob = resp.data;
-
-            // If blob is small enough (approx < 4.5MB), store as base64 in localStorage (async)
-            const maxSaveBytes = 4.5 * 1024 * 1024; // 4.5 MB
-            if (blob.size <= maxSaveBytes) {
-                const reader = new FileReader();
-                reader.onload = function (e) {
-                    try {
-                        const result = e.target.result; // data:application/pdf;base64,....
-                        const payload = JSON.stringify({ type: "base64", data: result, size: blob.size, savedAt: Date.now() });
-                        try {
-                            localStorage.setItem(storageKey, payload);
-                            console.log(`Para ${p.number} PDF saved to localStorage`);
-                        } catch (err) {
-                            console.warn("Failed to save para PDF to localStorage", err);
-                        }
-                    } catch (err) {
-                        console.warn("Error converting blob to base64", err);
-                    }
-                };
-                reader.readAsDataURL(blob);
-            } else {
-                // Save metadata with URL for fallback
-                try {
-                    localStorage.setItem(storageKey, JSON.stringify({ type: "url", url: proxiedFinal, size: blob.size, savedAt: Date.now() }));
-                } catch (err) {
-                    // ignore
-                }
+    const openReader = (p) => {
+        let url = `${OFFLINE_PDF_BASE}/para-${p.number}.pdf`;
+        if (!isTauri) {
+            const file = files.find((f) => f.id === p.number);
+            if (!file) {
+                console.error('Para file not found:', p.number);
+                return;
             }
-
-            // Use the proxied URL directly for ClientPdfViewer component
-            console.log("PDF proxied URL", { proxied: proxiedFinal });
-            setZoom(1);
-            setCurrentPara(p.number);
-            setCurrentTitle(`Para ${p.number}`);
-            setReaderUrl(proxiedFinal);
-            setShowReader(true);
-        } catch (error) {
-            console.error("Error opening para:", error);
-            // Swallow alert popups; errors are logged to console instead
-        } finally {
-            // clear loading indicator for this para
-            setLoadingPara(null);
+            url = `/api/pdf-proxy?url=${encodeURIComponent(file.fileUrl)}`;
         }
+        setZoom(1);
+        setCurrentPara(p.number);
+        setCurrentTitle(`Para ${p.number}`);
+        setReaderUrl(url);
+        setShowReader(true);
     };
 
     const openKanzul = async () => {
@@ -373,6 +294,7 @@ export default function Page() {
     };
 
     useEffect(() => {
+        if (isTauri) return; // app uses bundled PDFs, no API needed
         getPara()
             .then((files) => {
                 setFiles(files || []);
@@ -512,11 +434,10 @@ export default function Page() {
                         ))
                     ) : view === "para" ? (
                         filteredParas.map((p) => {
-                            const isLoading = loadingPara === p.number;
                             return (
                                 <div
                                     key={p.number}
-                                    className={`neumorph-card flex flex-col items-center justify-between transition hover:scale-105 active:scale-95 hover:shadow-lg active:shadow-md ${isLoading ? 'opacity-70 pointer-events-none' : 'cursor-pointer'} bg-base-100 border border-primary`}
+                                    className="neumorph-card flex flex-col items-center justify-between transition hover:scale-105 active:scale-95 hover:shadow-lg active:shadow-md cursor-pointer bg-base-100 border border-primary"
                                     style={{
                                         minHeight: 140,
                                         height: 140,
@@ -536,19 +457,9 @@ export default function Page() {
                                         </span>
                                     </div>
 
-                                    {isLoading ? (
-                                        <div className="flex flex-col items-center justify-center w-full mt-2">
-                                            <svg className="animate-spin h-8 w-8 text-primary" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                                                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                                                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"></path>
-                                            </svg>
-                                            <div className="text-sm text-primary mt-2">Opening...</div>
-                                        </div>
-                                    ) : (
-                                        <span className="text-2xl mb-1 mt-2 text-center text-white" style={{ fontWeight: 600 }}>
-                                            {p.arabic}
-                                        </span>
-                                    )}
+                                    <span className="text-2xl mb-1 mt-2 text-center text-white" style={{ fontWeight: 600 }}>
+                                        {p.arabic}
+                                    </span>
 
                                     <div className="w-full flex justify-end items-end mt-auto">
                                         <span className="text-xs text-primary" style={{ fontFamily: "serif" }}>

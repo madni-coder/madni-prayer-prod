@@ -9,7 +9,7 @@
         "delete:build": "rm -rf .next && rm -rf out",
         "sync-version": "node scripts/sync-version.js",
         "build": "npm run move-api && npm run db:generate && npm run db:migrate && next build",
-        "build:tauri": "npm run sync-version && npm run delete:build && npm run move-api-back && npm run db:generate && NEXT_PUBLIC_TAURI_BUILD=1 NEXT_PUBLIC_TAURI_STATIC_EXPORT=1 NEXT_PUBLIC_API_BASE_URL=https://raahehidayat.vercel.app NODE_ENV=production next build",
+        "build:tauri": "npm run sync-version && node scripts/download-quran-pdfs.js && npm run delete:build && npm run move-api-back && npm run db:generate && NEXT_PUBLIC_TAURI_BUILD=1 NEXT_PUBLIC_TAURI_STATIC_EXPORT=1 NEXT_PUBLIC_API_BASE_URL=https://raahehidayat.vercel.app NODE_ENV=production next build",
         "start": "next start",
         "lint": "eslint",
         "db:migrate": "prisma migrate",
